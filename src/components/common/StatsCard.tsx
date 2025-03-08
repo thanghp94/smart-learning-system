@@ -13,9 +13,11 @@ const StatsCard = ({
   icon,
   className
 }: StatsCardProps) => {
-  const IconComponent = icon 
-    ? (LucideIcons as Record<string, React.ComponentType<any>>)[icon] || LucideIcons.CircleDot
-    : null;
+  // Get the icon component using a type assertion
+  let IconComponent = null;
+  if (icon && typeof icon === "string" && icon in LucideIcons) {
+    IconComponent = (LucideIcons as any)[icon];
+  }
 
   return (
     <div className={cn(

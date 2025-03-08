@@ -17,10 +17,13 @@ const Sidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Dynamically get icon component
+  // Dynamically get icon component with type assertion
   const getIconComponent = (iconName: string) => {
-    const LucideIcon = (LucideIcons as Record<string, React.ComponentType<any>>)[iconName] || LucideIcons.CircleDot;
-    return <LucideIcon size={20} />;
+    if (iconName && typeof iconName === "string" && iconName in LucideIcons) {
+      const Icon = (LucideIcons as any)[iconName];
+      return <Icon size={20} />;
+    }
+    return <LucideIcons.CircleDot size={20} />;
   };
 
   return (

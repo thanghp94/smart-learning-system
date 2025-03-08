@@ -1,4 +1,3 @@
-
 export interface Student {
   id: string;
   ten_hoc_sinh: string;
@@ -117,4 +116,8 @@ export interface DataTableProps<T> {
   };
   searchable?: boolean;
   searchPlaceholder?: string;
+}
+
+export interface RecentActivityProps {
+  activities: ActivityItem[];
 }

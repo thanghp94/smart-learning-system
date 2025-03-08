@@ -16,6 +16,36 @@ const chartData = [
   { name: "T5", students: 256, revenue: 6000 },
 ];
 
+// Sample activities data for RecentActivity component
+const activities = [
+  {
+    id: "1",
+    action: "Thêm mới",
+    type: "Học sinh",
+    name: "Nguyễn Văn A",
+    user: "Trần Thị B",
+    timestamp: "2023-08-15T10:30:00",
+    status: "active"
+  },
+  {
+    id: "2",
+    action: "Cập nhật",
+    type: "Lớp học",
+    name: "Lớp Tiếng Anh Cơ Bản",
+    user: "Lê Văn C",
+    timestamp: "2023-08-15T09:45:00"
+  },
+  {
+    id: "3",
+    action: "Xóa",
+    type: "Buổi dạy",
+    name: "Buổi dạy ngày 15/08",
+    user: "Phạm Thị D",
+    timestamp: "2023-08-14T16:20:00",
+    status: "inactive"
+  }
+];
+
 const Index = () => {
   return (
     <div className="space-y-8">
@@ -31,7 +61,7 @@ const Index = () => {
             title={stat.title}
             value={stat.value}
             change={stat.change}
-            changeType={stat.changeType}
+            changeType={stat.changeType as "increase" | "decrease" | "neutral"}
             icon={stat.icon}
           />
         ))}
@@ -105,7 +135,7 @@ const Index = () => {
         </Card>
       </div>
       
-      <RecentActivity />
+      <RecentActivity activities={activities} />
     </div>
   );
 };
