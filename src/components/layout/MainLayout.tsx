@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from "./Sidebar";
 import { Bell, Sun, Moon, Search } from "lucide-react";
@@ -57,13 +56,10 @@ const MainLayout = () => {
               </Avatar>
             </div>
           </header>
-          <main className="flex-1 p-6 animate-fade-in">
-            <Outlet />
-          </main>
         </div>
       </div>
     </SidebarProvider>
   );
-};
+}
 
 export default MainLayout;

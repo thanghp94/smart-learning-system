@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { 
   Student, Class, TeachingSession, Employee, 
@@ -401,7 +400,7 @@ export const assetTransferService = {
 
 // Add utility to upload files to Supabase storage
 export const storageService = {
-  uploadFile: async (bucket: string, path: string, file: File): Promise<string> => {
+  uploadFile: async (bucket: string, path: string, file: Blob | ArrayBuffer | ArrayBufferView): Promise<string> => {
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(path, file, {

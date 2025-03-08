@@ -13,14 +13,17 @@ function App() {
   return (
     <DatabaseProvider>
       <Router>
-        <MainLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/students" element={<Students />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </MainLayout>
-        <Toaster />
+        <div>
+          <MainLayout />
+          <main>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/students" element={<Students />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Toaster />
+        </div>
       </Router>
     </DatabaseProvider>
   );
