@@ -32,8 +32,22 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
       setIsLoading(true);
       const data = await studentService.getAll();
       console.log("Students data received:", data);
-      // Cast the data to Student[] type to avoid TypeScript errors
-      setStudents(data as unknown as Student[] || []);
+      
+      if (Array.isArray(data)) {
+        // Ensure we have proper Student objects with all required fields
+        const studentsWithRequiredFields = data.map(student => ({
+          ...student,
+          id: student.id || crypto.randomUUID(),
+          ten_hoc_sinh: student.ten_hoc_sinh || '',
+          co_so_id: student.co_so_id || '',
+          trang_thai: student.trang_thai || 'active'
+        })) as Student[];
+        
+        setStudents(studentsWithRequiredFields);
+      } else {
+        console.error("Invalid students data format:", data);
+        setStudents([]);
+      }
     } catch (error) {
       console.error("Error fetching students:", error);
       toast({
@@ -41,6 +55,7 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
         description: "Không thể tải danh sách học sinh. Vui lòng thử lại sau.",
         variant: "destructive",
       });
+      setStudents([]);
     } finally {
       setIsLoading(false);
     }

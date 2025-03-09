@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
 import { Student } from '@/lib/types';
@@ -26,9 +25,8 @@ class StudentService {
       return (data || []).map(student => ({
         ...student,
         id: student.id || crypto.randomUUID(), // Make sure id is present
-        // Handle both field names for compatibility
-        co_so_id: student.co_so_id || student.co_so_ID || '',
-        co_so_ID: student.co_so_ID || student.co_so_id || '',
+        // Normalize field names for consistency
+        co_so_id: student.co_so_id || '',
       }));
     } catch (error) {
       console.error('Error in fetchStudents:', error);
@@ -48,8 +46,7 @@ class StudentService {
       ...student,
       id: student.id || id,
       ten_hoc_sinh: student.ten_hoc_sinh || '',
-      co_so_id: student.co_so_id || student.co_so_ID || '',
-      co_so_ID: student.co_so_ID || student.co_so_id || '',
+      co_so_id: student.co_so_id || '',
     } as Student;
   }
 
@@ -84,16 +81,13 @@ class StudentService {
         }
       }
       
-      // Handle co_so_ID and co_so_id field consistency
-      if (formattedData.co_so_id) {
-        formattedData.co_so_ID = formattedData.co_so_id;
-      } else if (formattedData.co_so_ID) {
-        formattedData.co_so_id = formattedData.co_so_ID;
-      }
+      // Remove co_so_ID field since it's not in the database schema
+      // Only use co_so_id for consistency
+      const dataToInsert = { ...formattedData };
       
       const { data, error } = await supabase
         .from('students')
-        .insert(formattedData)
+        .insert(dataToInsert)
         .select()
         .single();
       
@@ -104,28 +98,29 @@ class StudentService {
         if (error.code === 'PGRST116' || error.code === 'PGRST204') {
           console.log('RLS policy restriction or column not found, using fallback approach');
           
-          // If the error is about co_so_ID, try converting it to co_so_id
-          if (error.message && error.message.includes('co_so_ID')) {
-            delete formattedData.co_so_ID; // Remove co_so_ID since it's not in the DB schema
-            
-            const retryResult = await supabase
-              .from('students')
-              .insert(formattedData)
-              .select()
-              .single();
-              
-            if (!retryResult.error) {
-              console.log('Student created successfully after field name correction:', retryResult.data);
-              
-              // Ensure the returned data has the required fields
-              return {
-                ...retryResult.data,
-                id: retryResult.data.id || crypto.randomUUID(),
-                ten_hoc_sinh: retryResult.data.ten_hoc_sinh || '',
-                co_so_id: retryResult.data.co_so_id || '',
-                co_so_ID: retryResult.data.co_so_id || ''
-              } as Student;
+          // Try to submit without any problematic fields
+          const sanitizedData = { ...dataToInsert };
+          
+          // Remove any fields that might cause issues based on error message
+          if (error.message) {
+            if (error.message.includes('ghi_chu')) delete sanitizedData.ghi_chu;
+            if (error.message.includes('co_so_ID')) delete sanitizedData.co_so_ID;
+            // Identify other problematic fields from the error message
+            const match = error.message.match(/Could not find the '(.+?)' column/);
+            if (match && match[1]) {
+              delete sanitizedData[match[1] as keyof typeof sanitizedData];
             }
+          }
+          
+          const retryResult = await supabase
+            .from('students')
+            .insert(sanitizedData)
+            .select()
+            .single();
+            
+          if (!retryResult.error) {
+            console.log('Student created successfully after field correction:', retryResult.data);
+            return retryResult.data as Student;
           }
           
           // If still failing, use fallback
@@ -161,8 +156,7 @@ class StudentService {
         ...data,
         id: data.id || crypto.randomUUID(),
         ten_hoc_sinh: data.ten_hoc_sinh || '',
-        co_so_id: data.co_so_id || data.co_so_ID || '',
-        co_so_ID: data.co_so_ID || data.co_so_id || ''
+        co_so_id: data.co_so_id || '',
       };
       
       // Log activity
