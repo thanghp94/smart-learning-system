@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -103,49 +102,18 @@ const Evaluations = () => {
   const handleSubmitEvaluation = async (evaluationData: Partial<TeachingSession>) => {
     try {
       if (selectedSession) {
-        // Update existing evaluation
-        const scores = [
-          Number(evaluationData.nhan_xet_1 || 0),
-          Number(evaluationData.nhan_xet_2 || 0),
-          Number(evaluationData.nhan_xet_3 || 0),
-          Number(evaluationData.nhan_xet_4 || 0),
-          Number(evaluationData.nhan_xet_5 || 0),
-          Number(evaluationData.nhan_xet_6 || 0)
-        ].filter(score => score > 0);
-        
-        const avg = scores.length > 0 
-          ? scores.reduce((acc, score) => acc + score, 0) / scores.length
-          : 0;
-        
-        await teachingSessionService.update(selectedSession.id, {
-          ...evaluationData,
-          trung_binh: avg
-        });
+        // Update existing evaluation - we don't need to send trung_binh as it's calculated by the database
+        await teachingSessionService.update(selectedSession.id, evaluationData);
         
         toast({
           title: "Thành công",
           description: "Đã cập nhật đánh giá buổi học",
         });
       } else {
-        // Create new evaluation
-        const scores = [
-          Number(evaluationData.nhan_xet_1 || 0),
-          Number(evaluationData.nhan_xet_2 || 0),
-          Number(evaluationData.nhan_xet_3 || 0),
-          Number(evaluationData.nhan_xet_4 || 0),
-          Number(evaluationData.nhan_xet_5 || 0),
-          Number(evaluationData.nhan_xet_6 || 0)
-        ].filter(score => score > 0);
-        
-        const avg = scores.length > 0 
-          ? scores.reduce((acc, score) => acc + score, 0) / scores.length
-          : 0;
-        
-        // Ensure all required fields are present when creating a new session
+        // Create new evaluation - ensure all required fields are present
         const completeSessionData = {
           ...DEFAULT_EMPTY_SESSION,
           ...evaluationData,
-          trung_binh: avg
         };
         
         await teachingSessionService.create(completeSessionData);

@@ -1,3 +1,4 @@
+
 import { TeachingSession } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
@@ -15,22 +16,25 @@ export const teachingSessionService = {
         throw new Error("Missing required fields for teaching session");
       }
       
+      // Remove trung_binh field as it's a generated column
+      const { trung_binh, ...sessionData } = session;
+      
       // Convert numeric values to strings before saving to match the database schema
       const formattedSession: Partial<TeachingSession> = {
-        ...session,
-        loai_bai_hoc: session.loai_bai_hoc || 'Standard',
-        nhan_xet_1: session.nhan_xet_1 !== undefined && session.nhan_xet_1 !== null ? 
-          String(session.nhan_xet_1) : null,
-        nhan_xet_2: session.nhan_xet_2 !== undefined && session.nhan_xet_2 !== null ? 
-          String(session.nhan_xet_2) : null,
-        nhan_xet_3: session.nhan_xet_3 !== undefined && session.nhan_xet_3 !== null ? 
-          String(session.nhan_xet_3) : null,
-        nhan_xet_4: session.nhan_xet_4 !== undefined && session.nhan_xet_4 !== null ? 
-          String(session.nhan_xet_4) : null,
-        nhan_xet_5: session.nhan_xet_5 !== undefined && session.nhan_xet_5 !== null ? 
-          String(session.nhan_xet_5) : null,
-        nhan_xet_6: session.nhan_xet_6 !== undefined && session.nhan_xet_6 !== null ? 
-          String(session.nhan_xet_6) : null,
+        ...sessionData,
+        loai_bai_hoc: sessionData.loai_bai_hoc || 'Standard',
+        nhan_xet_1: sessionData.nhan_xet_1 !== undefined && sessionData.nhan_xet_1 !== null ? 
+          String(sessionData.nhan_xet_1) : null,
+        nhan_xet_2: sessionData.nhan_xet_2 !== undefined && sessionData.nhan_xet_2 !== null ? 
+          String(sessionData.nhan_xet_2) : null,
+        nhan_xet_3: sessionData.nhan_xet_3 !== undefined && sessionData.nhan_xet_3 !== null ? 
+          String(sessionData.nhan_xet_3) : null,
+        nhan_xet_4: sessionData.nhan_xet_4 !== undefined && sessionData.nhan_xet_4 !== null ? 
+          String(sessionData.nhan_xet_4) : null,
+        nhan_xet_5: sessionData.nhan_xet_5 !== undefined && sessionData.nhan_xet_5 !== null ? 
+          String(sessionData.nhan_xet_5) : null,
+        nhan_xet_6: sessionData.nhan_xet_6 !== undefined && sessionData.nhan_xet_6 !== null ? 
+          String(sessionData.nhan_xet_6) : null,
       };
       
       // Make a direct insert to get better error visibility
@@ -56,23 +60,26 @@ export const teachingSessionService = {
     try {
       console.log("Updating teaching session with data:", updates);
       
+      // Remove trung_binh field as it's a generated column
+      const { trung_binh, ...updateData } = updates;
+      
       // Similar conversion for updates
       const formattedUpdates: Partial<TeachingSession> = {
-        ...updates,
+        ...updateData,
         // Ensure the field name matches the database column
-        loai_bai_hoc: updates.loai_bai_hoc, // Using lowercase field name
-        nhan_xet_1: updates.nhan_xet_1 !== undefined && updates.nhan_xet_1 !== null ? 
-          String(updates.nhan_xet_1) : updates.nhan_xet_1,
-        nhan_xet_2: updates.nhan_xet_2 !== undefined && updates.nhan_xet_2 !== null ? 
-          String(updates.nhan_xet_2) : updates.nhan_xet_2,
-        nhan_xet_3: updates.nhan_xet_3 !== undefined && updates.nhan_xet_3 !== null ? 
-          String(updates.nhan_xet_3) : updates.nhan_xet_3,
-        nhan_xet_4: updates.nhan_xet_4 !== undefined && updates.nhan_xet_4 !== null ? 
-          String(updates.nhan_xet_4) : updates.nhan_xet_4,
-        nhan_xet_5: updates.nhan_xet_5 !== undefined && updates.nhan_xet_5 !== null ? 
-          String(updates.nhan_xet_5) : updates.nhan_xet_5,
-        nhan_xet_6: updates.nhan_xet_6 !== undefined && updates.nhan_xet_6 !== null ? 
-          String(updates.nhan_xet_6) : updates.nhan_xet_6,
+        loai_bai_hoc: updateData.loai_bai_hoc, // Using lowercase field name
+        nhan_xet_1: updateData.nhan_xet_1 !== undefined && updateData.nhan_xet_1 !== null ? 
+          String(updateData.nhan_xet_1) : updateData.nhan_xet_1,
+        nhan_xet_2: updateData.nhan_xet_2 !== undefined && updateData.nhan_xet_2 !== null ? 
+          String(updateData.nhan_xet_2) : updateData.nhan_xet_2,
+        nhan_xet_3: updateData.nhan_xet_3 !== undefined && updateData.nhan_xet_3 !== null ? 
+          String(updateData.nhan_xet_3) : updateData.nhan_xet_3,
+        nhan_xet_4: updateData.nhan_xet_4 !== undefined && updateData.nhan_xet_4 !== null ? 
+          String(updateData.nhan_xet_4) : updateData.nhan_xet_4,
+        nhan_xet_5: updateData.nhan_xet_5 !== undefined && updateData.nhan_xet_5 !== null ? 
+          String(updateData.nhan_xet_5) : updateData.nhan_xet_5,
+        nhan_xet_6: updateData.nhan_xet_6 !== undefined && updateData.nhan_xet_6 !== null ? 
+          String(updateData.nhan_xet_6) : updateData.nhan_xet_6,
       };
       
       return update<TeachingSession>('teaching_sessions', id, formattedUpdates);
