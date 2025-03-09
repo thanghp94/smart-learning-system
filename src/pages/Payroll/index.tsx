@@ -81,7 +81,10 @@ const PayrollPage = () => {
   const handleAddFormSubmit = async (formData: Partial<Payroll>) => {
     try {
       console.log("Inserting record into payrolls:", formData);
+      
+      // The phu_cap field will be removed in the service layer
       await payrollService.create(formData);
+      
       toast({
         title: "Thành công",
         description: "Thêm bảng lương mới thành công",
@@ -92,7 +95,7 @@ const PayrollPage = () => {
       console.error("Error adding payroll:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể thêm bảng lương mới",
+        description: "Không thể thêm bảng lương mới. Vui lòng kiểm tra lại dữ liệu.",
         variant: "destructive"
       });
     }

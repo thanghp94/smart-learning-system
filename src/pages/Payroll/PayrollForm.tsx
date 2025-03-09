@@ -29,6 +29,7 @@ const payrollSchema = z.object({
   ngay: z.string().optional(),
   co_so_id: z.string().optional(),
   luong: z.coerce.number().min(0, { message: "Lương không thể âm" }).default(0),
+  // Note: phu_cap is kept in the form schema but will be removed before submission
   phu_cap: z.coerce.number().optional(),
   pc_tnhiem: z.coerce.number().optional(),
   pc_an_o: z.coerce.number().optional(),
@@ -66,7 +67,7 @@ const PayrollForm: React.FC<PayrollFormProps> = ({
       ngay: initialData?.ngay || "",
       co_so_id: initialData?.co_so_id || "",
       luong: initialData?.luong || 0,
-      phu_cap: 0, // Added explicit default value 
+      phu_cap: 0, // Default value that will be removed before submission
       pc_tnhiem: initialData?.pc_tnhiem || 0,
       pc_an_o: initialData?.pc_an_o || 0,
       pc_dthoai: initialData?.pc_dthoai || 0,
@@ -85,7 +86,7 @@ const PayrollForm: React.FC<PayrollFormProps> = ({
   const watchPC4 = form.watch("pc_xang_xe") || 0;
 
   React.useEffect(() => {
-    const totalIncome = watchSalary + watchPC1 + watchPC2 + watchPC3 + watchPC4;
+    const totalIncome = Number(watchSalary) + Number(watchPC1) + Number(watchPC2) + Number(watchPC3) + Number(watchPC4);
     form.setValue("tong_thu_nhap", totalIncome);
   }, [watchSalary, watchPC1, watchPC2, watchPC3, watchPC4, form]);
 

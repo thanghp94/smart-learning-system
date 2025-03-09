@@ -1866,6 +1866,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_session: {
+        Args: {
+          session_data: Json
+        }
+        Returns: Json
+      }
       get_schema_info: {
         Args: Record<PropertyKey, never>
         Returns: {

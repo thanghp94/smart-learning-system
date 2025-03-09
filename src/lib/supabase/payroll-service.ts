@@ -6,8 +6,16 @@ import { supabase } from './client';
 export const payrollService = {
   getAll: () => fetchAll<Payroll>('payrolls'),
   getById: (id: string) => fetchById<Payroll>('payrolls', id),
-  create: (payroll: Partial<Payroll>) => insert<Payroll>('payrolls', payroll),
-  update: (id: string, updates: Partial<Payroll>) => update<Payroll>('payrolls', id, updates),
+  create: (payroll: Partial<Payroll>) => {
+    // Remove phu_cap field as it doesn't exist in the database
+    const { phu_cap, ...validPayroll } = payroll;
+    return insert<Payroll>('payrolls', validPayroll);
+  },
+  update: (id: string, updates: Partial<Payroll>) => {
+    // Remove phu_cap field as it doesn't exist in the database
+    const { phu_cap, ...validUpdates } = updates;
+    return update<Payroll>('payrolls', id, validUpdates);
+  },
   delete: (id: string) => remove('payrolls', id),
   
   // Get payrolls by employee
