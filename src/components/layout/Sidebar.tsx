@@ -26,7 +26,7 @@ const NAVIGATION_CATEGORIES = [
       { title: "Học Sinh", path: "/students", icon: "GraduationCap" },
       { title: "Lớp Học", path: "/classes", icon: "BookOpen" },
       { title: "Buổi Học", path: "/teaching-sessions", icon: "CalendarDays" },
-      { title: "Bài Học", path: "/sessions", icon: "FileText" },
+      { title: "Bài Học", path: "/lessons", icon: "FileText" },
       { title: "Ghi Danh", path: "/enrollments", icon: "ClipboardCheck" },
       { title: "Đánh Giá", path: "/evaluations", icon: "Star" }
     ]

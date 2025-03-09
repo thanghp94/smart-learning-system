@@ -5,6 +5,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import { DatabaseProvider } from '@/contexts/DatabaseContext';
 import Index from '@/pages/Index';
 import Students from '@/pages/Students';
+import StudentForm from '@/pages/Students/StudentForm';
 import Employees from '@/pages/Employees';
 import Classes from '@/pages/Classes';
 import TeachingSessions from '@/pages/TeachingSessions';
@@ -25,6 +26,7 @@ import Files from '@/pages/Files';
 import Requests from '@/pages/Requests';
 import Contacts from '@/pages/Contacts';
 import Lessons from '@/pages/Lessons';
+import Sessions from '@/pages/Sessions';
 
 import '@/App.css';
 
@@ -36,6 +38,8 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Index />} />
             <Route path="/students" element={<Students />} />
+            <Route path="/students/add" element={<StudentForm />} />
+            <Route path="/students/edit/:id" element={<StudentForm />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/teaching-sessions" element={<TeachingSessions />} />
@@ -54,6 +58,7 @@ function App() {
             <Route path="/requests" element={<Requests />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/lessons" element={<Lessons />} />
+            <Route path="/sessions" element={<Sessions />} />
             <Route path="/database-schema" element={<DatabaseSchema />} />
             <Route path="*" element={<NotFound />} />
           </Route>
