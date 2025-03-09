@@ -89,8 +89,8 @@ const ClassDetail = ({ classItem }: ClassDetailProps = {}) => {
         } else if (id) {
           // Fetch real data if not in demo mode
           const result = await getClassById(id);
-          if (result.data) {
-            setClassData(result.data);
+          if (result) { // Remove .data reference since getClassById returns Class directly
+            setClassData(result);
             // In a real app, you would fetch teacher and enrollments here
           } else {
             toast({
