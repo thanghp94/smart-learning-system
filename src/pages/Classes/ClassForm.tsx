@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { facilityService, employeeService } from "@/lib/supabase";
 
 const classSchema = z.object({
-  Ten_lop_full: z.string().min(2, { message: "Tên lớp đầy đủ phải có ít nhất 2 ký tự" }),
+  ten_lop_full: z.string().min(2, { message: "Tên lớp đầy đủ phải có ít nhất 2 ký tự" }),
   ten_lop: z.string().min(1, { message: "Tên lớp phải có ít nhất 1 ký tự" }),
   ct_hoc: z.string().optional(),
   co_so: z.string().optional(),
@@ -94,11 +94,11 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel }
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
     defaultValues: {
-      Ten_lop_full: initialData?.Ten_lop_full || "",
+      ten_lop_full: initialData?.Ten_lop_full || "",
       ten_lop: initialData?.ten_lop || "",
       ct_hoc: initialData?.ct_hoc || "",
       co_so: initialData?.co_so as string || "",
-      gv_chinh: initialData?.gv_chinh as string || "",
+      gv_chinh: initialData?.GV_chinh as string || "",
       ngay_bat_dau: initialData?.ngay_bat_dau 
         ? new Date(initialData.ngay_bat_dau).toISOString().split("T")[0] 
         : "",
@@ -112,10 +112,18 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel }
     try {
       // Convert form data to match the API expectations
       const submissionData = {
-        ...values,
-        ngay_bat_dau: values.ngay_bat_dau ? new Date(values.ngay_bat_dau) : undefined,
+        Ten_lop_full: values.ten_lop_full,
+        ten_lop: values.ten_lop,
+        ct_hoc: values.ct_hoc,
+        co_so: values.co_so,
+        GV_chinh: values.gv_chinh,
+        ngay_bat_dau: values.ngay_bat_dau ? new Date(values.ngay_bat_dau).toISOString() : undefined,
+        tinh_trang: values.tinh_trang,
+        ghi_chu: values.ghi_chu,
+        unit_id: values.unit_id
       };
       
+      console.log("Form data to submit:", submissionData);
       onSubmit(submissionData);
     } catch (error) {
       console.error("Error submitting class form:", error);
@@ -133,7 +141,7 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel }
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="Ten_lop_full"
+            name="ten_lop_full"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Tên lớp đầy đủ <span className="text-red-500">*</span></FormLabel>

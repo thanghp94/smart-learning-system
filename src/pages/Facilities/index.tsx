@@ -60,8 +60,8 @@ const Facilities = () => {
 
   const handleAddFacility = async (data: any) => {
     try {
+      // In demo mode, just initialize the database and refresh
       if (isDemoMode) {
-        // Handle demo mode
         await initializeDatabase();
         toast({
           title: "Chế độ Demo",
@@ -72,21 +72,35 @@ const Facilities = () => {
         return;
       }
 
-      // In real mode, add the facility
+      // In real mode, add the facility with proper error handling
+      console.log("Adding facility with data:", data);
       const newFacility = await facilityService.create(data);
-      setFacilities([...facilities, newFacility]);
-      toast({
-        title: "Thành công",
-        description: "Đã thêm cơ sở mới vào hệ thống",
-      });
-      setShowAddDialog(false);
-    } catch (error) {
+      
+      if (newFacility) {
+        setFacilities([...facilities, newFacility]);
+        toast({
+          title: "Thành công",
+          description: "Đã thêm cơ sở mới vào hệ thống",
+        });
+        setShowAddDialog(false);
+      }
+    } catch (error: any) {
       console.error("Error adding facility:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể thêm cơ sở mới. Vui lòng kiểm tra quyền truy cập của bạn.",
-        variant: "destructive"
-      });
+      
+      // Specific message for row-level security policy violations
+      if (error.code === '42501' || error.message?.includes('row-level security policy')) {
+        toast({
+          title: "Lỗi bảo mật",
+          description: "Bạn không có quyền thêm cơ sở mới. Vui lòng kiểm tra quyền truy cập hoặc đăng nhập với tài khoản có quyền quản trị.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Lỗi",
+          description: "Không thể thêm cơ sở mới: " + (error.message || "Lỗi không xác định"),
+          variant: "destructive"
+        });
+      }
     }
   };
 

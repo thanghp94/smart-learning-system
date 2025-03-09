@@ -10,7 +10,24 @@ export const getClassById = async (id: string): Promise<Class | null> => {
 export const classService = {
   getAll: () => fetchAll<Class>('classes'),
   getById: getClassById,
-  create: (classData: Partial<Class>) => insert<Class>('classes', classData),
+  create: async (classData: Partial<Class>) => {
+    console.log("Creating class with data:", classData);
+    
+    // Make sure we're using the right case for column names as defined in the database
+    const formattedData = {
+      ten_lop_full: classData.Ten_lop_full,
+      ten_lop: classData.ten_lop,
+      ct_hoc: classData.ct_hoc,
+      co_so: classData.co_so,
+      gv_chinh: classData.GV_chinh,
+      ngay_bat_dau: classData.ngay_bat_dau,
+      tinh_trang: classData.tinh_trang,
+      ghi_chu: classData.ghi_chu,
+      unit_id: classData.unit_id
+    };
+    
+    return insert<Class>('classes', formattedData);
+  },
   update: (id: string, updates: Partial<Class>) => update<Class>('classes', id, updates),
   delete: (id: string) => remove('classes', id),
   
