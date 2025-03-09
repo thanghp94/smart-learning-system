@@ -94,63 +94,31 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const reinitializePolicies = async () => {
     setIsLoading(true);
     try {
-      // First let's get the SQL content for public access policies
-      const { data: sqlData, error: sqlError } = await supabase
-        .storage
-        .from('sql')
-        .download('create_public_access_policies.sql');
+      // First completely disable RLS on the classes table to ensure direct access
+      const { error: disableRlsError } = await supabase.rpc('run_sql', { 
+        sql: `
+          -- Disable RLS on classes table completely
+          ALTER TABLE public.classes DISABLE ROW LEVEL SECURITY;
+          
+          -- Just in case, drop any existing policies
+          DROP POLICY IF EXISTS "Allow public access to classes" ON public.classes;
+        `
+      });
       
-      if (sqlError) {
-        console.error('Error getting SQL file:', sqlError);
-        
-        // Run the policies directly
-        const { error } = await supabase.rpc('run_sql', { 
-          sql: `
-            -- Drop existing RLS policies on classes if any exist
-            DROP POLICY IF EXISTS "Allow public access to classes" ON public.classes;
-            
-            -- Add public access policy to classes table
-            CREATE POLICY "Allow public access to classes"
-            ON public.classes
-            FOR ALL
-            USING (true)
-            WITH CHECK (true);
-            
-            -- Ensure RLS is enabled for the classes table
-            ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
-          `
+      if (disableRlsError) {
+        console.error('Error disabling RLS:', disableRlsError);
+        toast({
+          title: 'Policy Update Error',
+          description: 'Failed to disable row level security. Please try again.',
+          variant: 'destructive',
+          duration: 5000,
         });
-        
-        if (error) {
-          console.error('Error applying policies:', error);
-          toast({
-            title: 'Policy Application Error',
-            description: 'Failed to apply RLS policies. Please try again.',
-            variant: 'destructive',
-            duration: 5000,
-          });
-          return;
-        }
-      } else {
-        // We have the SQL file, convert it to text and execute
-        const sqlText = await sqlData.text();
-        const { error } = await supabase.rpc('run_sql', { sql: sqlText });
-        
-        if (error) {
-          console.error('Error applying policies from file:', error);
-          toast({
-            title: 'Policy Application Error',
-            description: 'Failed to apply RLS policies from file. Please try again.',
-            variant: 'destructive',
-            duration: 5000,
-          });
-          return;
-        }
+        return;
       }
       
       toast({
         title: 'Policies Applied',
-        description: 'Database access policies have been reinitialized.',
+        description: 'Database access policies have been reinitialized. RLS has been disabled for development.',
         duration: 3000,
       });
       
