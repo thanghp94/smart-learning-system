@@ -12,6 +12,7 @@ import PersonalInfoFields from "./components/PersonalInfoFields";
 import ParentInfoFields from "./components/ParentInfoFields";
 import TuitionFeeFields from "./components/TuitionFeeFields";
 import AdditionalInfoFields from "./components/AdditionalInfoFields";
+import { Loader2 } from "lucide-react";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
