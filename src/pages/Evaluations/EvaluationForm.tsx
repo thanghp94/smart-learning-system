@@ -21,7 +21,7 @@ import {
 import { classService, employeeService } from '@/lib/supabase';
 import { sessionService } from '@/lib/supabase/session-service';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ExclamationTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
 interface EvaluationFormProps {
@@ -112,7 +112,7 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       {error && (
         <Alert variant="destructive">
-          <ExclamationTriangle className="h-4 w-4" />
+          <AlertTriangle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}

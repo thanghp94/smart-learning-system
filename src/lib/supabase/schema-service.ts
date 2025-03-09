@@ -39,3 +39,9 @@ export const getSchemaInfo = async () => {
     return { success: false, error };
   }
 };
+
+// Create and export a service object to maintain consistency with other services
+export const schemaService = {
+  setupSchemaFunction,
+  getSchemaInfo
+};
