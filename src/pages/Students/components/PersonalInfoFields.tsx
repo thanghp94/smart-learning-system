@@ -76,7 +76,6 @@ const PersonalInfoFields: React.FC<PersonalInfoFieldsProps> = ({
                 <DatePicker
                   date={field.value}
                   setDate={field.onChange}
-                  placeholder="Chọn ngày sinh"
                 />
                 <FormMessage />
               </FormItem>

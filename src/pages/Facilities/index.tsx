@@ -14,6 +14,8 @@ import FacilityForm from "./FacilityForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import { useDatabase } from "@/contexts/DatabaseContext";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const Facilities = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -21,6 +23,8 @@ const Facilities = () => {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { toast } = useToast();
   const { isDemoMode, initializeDatabase } = useDatabase();
 
@@ -87,13 +91,10 @@ const Facilities = () => {
     } catch (error: any) {
       console.error("Error adding facility:", error);
       
-      // Specific message for row-level security policy violations
-      if (error.code === '42501' || error.message?.includes('row-level security policy')) {
-        toast({
-          title: "Lỗi bảo mật",
-          description: "Bạn không có quyền thêm cơ sở mới. Vui lòng kiểm tra quyền truy cập hoặc đăng nhập với tài khoản có quyền quản trị.",
-          variant: "destructive"
-        });
+      // Handle Row Level Security policy errors
+      if (error.code === '42501' || (error.message && error.message.includes('row-level security policy'))) {
+        setErrorMessage("Bạn không có quyền thêm cơ sở mới. Vui lòng kiểm tra quyền truy cập hoặc đăng nhập với tài khoản có quyền quản trị.");
+        setShowErrorDialog(true);
       } else {
         toast({
           title: "Lỗi",
@@ -101,6 +102,28 @@ const Facilities = () => {
           variant: "destructive"
         });
       }
+    }
+  };
+
+  const handleInitDatabase = async () => {
+    try {
+      setIsLoading(true);
+      await initializeDatabase();
+      toast({
+        title: "Thành công",
+        description: "Đã khởi tạo lại cơ sở dữ liệu và quyền truy cập",
+      });
+      fetchFacilities();
+      setShowErrorDialog(false);
+    } catch (error) {
+      console.error("Error initializing database:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể khởi tạo lại cơ sở dữ liệu",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -206,6 +229,23 @@ const Facilities = () => {
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Lỗi bảo mật</AlertDialogTitle>
+            <AlertDialogDescription>
+              {errorMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Đóng</AlertDialogCancel>
+            <AlertDialogAction onClick={handleInitDatabase}>
+              Khởi tạo lại cơ sở dữ liệu
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
