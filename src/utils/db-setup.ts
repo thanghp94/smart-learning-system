@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase/client';
 
 // Function to create the database schema
@@ -117,24 +118,56 @@ export const seedDatabase = async (): Promise<boolean> => {
 export const applyPublicAccessPolicies = async () => {
   try {
     // Read the SQL script content for public access policies
-    const response = await fetch('/src/lib/supabase/sql/create_public_access_policies.sql');
-    
-    if (!response.ok) {
-      console.error('Failed to fetch SQL script for public access policies');
-      return false;
-    }
-    
-    const sql = await response.text();
+    const sql = `
+      -- Drop existing RLS policies on facilities if any exist
+      DROP POLICY IF EXISTS "Allow public access to facilities" ON public.facilities;
+      
+      -- Add public access policy to facilities table
+      CREATE POLICY "Allow public access to facilities"
+      ON public.facilities
+      FOR ALL
+      USING (true)
+      WITH CHECK (true);
+      
+      -- Ensure RLS is enabled for the facilities table
+      ALTER TABLE public.facilities ENABLE ROW LEVEL SECURITY;
+      
+      -- Drop existing RLS policies on classes if any exist
+      DROP POLICY IF EXISTS "Allow public access to classes" ON public.classes;
+      
+      -- Add public access policy to classes table
+      CREATE POLICY "Allow public access to classes"
+      ON public.classes
+      FOR ALL
+      USING (true)
+      WITH CHECK (true);
+      
+      -- Ensure RLS is enabled for the classes table
+      ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
+      
+      -- Drop existing RLS policies on students if any exist
+      DROP POLICY IF EXISTS "Allow public access to students" ON public.students;
+      
+      -- Add public access policy to students table
+      CREATE POLICY "Allow public access to students"
+      ON public.students
+      FOR ALL
+      USING (true)
+      WITH CHECK (true);
+      
+      -- Ensure RLS is enabled for the students table
+      ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+    `;
     
     // Execute the SQL script via Supabase
-    const { data, error } = await supabase.rpc('run_sql', { sql });
+    const { error } = await supabase.rpc('run_sql', { sql });
     
     if (error) {
       console.error('Error applying public access policies:', error);
       return false;
     }
     
-    console.log('Successfully applied public access policies:', data);
+    console.log('Successfully applied public access policies');
     return true;
   } catch (error) {
     console.error('Exception applying public access policies:', error);

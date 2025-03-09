@@ -1867,6 +1867,12 @@ export type Database = {
           column_count: number
         }[]
       }
+      run_sql: {
+        Args: {
+          sql: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
