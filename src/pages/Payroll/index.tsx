@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { payrollService, employeeService } from "@/lib/supabase";
-import { Payroll, Employee } from "@/lib/types";
+import { payrollService, employeeService, facilityService } from "@/lib/supabase";
+import { Payroll, Employee, Facility } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
@@ -14,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 const PayrollPage = () => {
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
@@ -21,6 +21,7 @@ const PayrollPage = () => {
   useEffect(() => {
     fetchPayrolls();
     fetchEmployees();
+    fetchFacilities();
   }, []);
 
   const fetchPayrolls = async () => {
@@ -46,6 +47,15 @@ const PayrollPage = () => {
       setEmployees(data);
     } catch (error) {
       console.error("Error fetching employees:", error);
+    }
+  };
+  
+  const fetchFacilities = async () => {
+    try {
+      const data = await facilityService.getAll();
+      setFacilities(data);
+    } catch (error) {
+      console.error("Error fetching facilities:", error);
     }
   };
 
@@ -139,46 +149,30 @@ const PayrollPage = () => {
     </div>
   );
 
-  if (payrolls.length === 0 && !isLoading) {
-    return (
-      <>
+  return (
+    <>
+      {payrolls.length === 0 && !isLoading ? (
         <PlaceholderPage
           title="Lương"
           description="Quản lý bảng lương nhân viên"
           icon={<DollarSign className="h-16 w-16 text-muted-foreground/40" />}
           addButtonAction={handleAddClick}
         />
-        
-        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Tạo Bảng Lương Mới</DialogTitle>
-            </DialogHeader>
-            <PayrollForm 
-              onSubmit={handleAddFormSubmit}
-              onCancel={handleAddFormCancel}
-            />
-          </DialogContent>
-        </Dialog>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <TablePageLayout
-        title="Lương"
-        description="Quản lý bảng lương nhân viên"
-        actions={tableActions}
-      >
-        <DataTable
-          columns={columns}
-          data={payrolls}
-          isLoading={isLoading}
-          searchable={true}
-          searchPlaceholder="Tìm kiếm bảng lương..."
-        />
-      </TablePageLayout>
+      ) : (
+        <TablePageLayout
+          title="Lương"
+          description="Quản lý bảng lương nhân viên"
+          actions={tableActions}
+        >
+          <DataTable
+            columns={columns}
+            data={payrolls}
+            isLoading={isLoading}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm bảng lương..."
+          />
+        </TablePageLayout>
+      )}
 
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
         <DialogContent className="sm:max-w-[600px]">
@@ -188,6 +182,8 @@ const PayrollPage = () => {
           <PayrollForm 
             onSubmit={handleAddFormSubmit}
             onCancel={handleAddFormCancel}
+            employees={employees}
+            facilities={facilities}
           />
         </DialogContent>
       </Dialog>

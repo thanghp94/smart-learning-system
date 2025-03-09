@@ -1,94 +1,165 @@
 
 import React, { useState, useEffect } from "react";
-import { Calendar, Plus } from "lucide-react";
+import { Plus, FileDown, Filter, RotateCw, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import DataTable from "@/components/ui/DataTable";
+import { eventService } from "@/lib/supabase";
+import { Event } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import TablePageLayout from "@/components/common/TablePageLayout";
+import { Badge } from "@/components/ui/badge";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import EventForm from "./EventForm";
-import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-
-// This would need to be created/imported from a service file
-// const eventService = {
-//   getAll: () => [],
-//   create: (data) => Promise.resolve(data)
-// };
+import { formatDate } from "@/lib/utils";
 
 const Events = () => {
-  const [events, setEvents] = useState([]);
-  const [showDialog, setShowDialog] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
-  // Uncomment when the event service is available
-  // useEffect(() => {
-  //   const fetchEvents = async () => {
-  //     try {
-  //       const data = await eventService.getAll();
-  //       setEvents(data);
-  //     } catch (error) {
-  //       console.error("Error fetching events:", error);
-  //       toast({
-  //         title: "Lỗi",
-  //         description: "Không thể tải danh sách sự kiện",
-  //         variant: "destructive",
-  //       });
-  //     }
-  //   };
-  //   fetchEvents();
-  // }, [toast]);
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
-  const handleAddEvent = async (data: any) => {
-    console.log("Adding event:", data);
-    // When the event service is available:
-    // try {
-    //   await eventService.create(data);
-    //   toast({
-    //     title: "Thành công",
-    //     description: "Đã thêm sự kiện mới",
-    //   });
-    //   setShowDialog(false);
-    //   // Refresh the events
-    //   const updatedEvents = await eventService.getAll();
-    //   setEvents(updatedEvents);
-    // } catch (error) {
-    //   console.error("Error adding event:", error);
-    //   toast({
-    //     title: "Lỗi",
-    //     description: "Không thể thêm sự kiện mới",
-    //     variant: "destructive",
-    //   });
-    // }
-    
-    // For now just show a toast and close the dialog
-    toast({
-      title: "Thông báo",
-      description: "Chức năng đang được phát triển",
-    });
-    setShowDialog(false);
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const data = await eventService.getAll();
+      setEvents(data);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh sách sự kiện",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAddClick = () => {
-    setShowDialog(true);
+    setShowAddForm(true);
   };
 
-  const renderEventForm = () => {
-    return <EventForm onSubmit={handleAddEvent} />;
+  const handleAddFormCancel = () => {
+    setShowAddForm(false);
   };
 
-  return (
-    <>
+  const handleAddFormSubmit = async (formData: Partial<Event>) => {
+    try {
+      await eventService.create(formData);
+      toast({
+        title: "Thành công",
+        description: "Thêm sự kiện mới thành công",
+      });
+      setShowAddForm(false);
+      fetchEvents();
+    } catch (error) {
+      console.error("Error adding event:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thêm sự kiện mới",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const columns = [
+    {
+      title: "Tên sự kiện",
+      key: "ten_su_kien",
+      sortable: true,
+    },
+    {
+      title: "Loại",
+      key: "loai_su_kien",
+      sortable: true,
+    },
+    {
+      title: "Địa điểm",
+      key: "dia_diem",
+    },
+    {
+      title: "Ngày bắt đầu",
+      key: "ngay_bat_dau",
+      sortable: true,
+      render: (value: string) => formatDate(value),
+    },
+    {
+      title: "Trạng thái",
+      key: "trang_thai",
+      sortable: true,
+      render: (value: string) => (
+        <Badge variant={
+          value === "completed" ? "success" : 
+          value === "canceled" ? "destructive" : 
+          value === "pending" ? "warning" : 
+          "secondary"
+        }>
+          {value === "completed" ? "Hoàn thành" : 
+          value === "canceled" ? "Hủy" : 
+          value === "pending" ? "Chờ xử lý" : value}
+        </Badge>
+      ),
+    },
+  ];
+
+  const tableActions = (
+    <div className="flex items-center space-x-2">
+      <Button variant="outline" size="sm" className="h-8" onClick={fetchEvents}>
+        <RotateCw className="h-4 w-4 mr-1" /> Làm mới
+      </Button>
+      <Button variant="outline" size="sm" className="h-8">
+        <Filter className="h-4 w-4 mr-1" /> Lọc
+      </Button>
+      <Button variant="outline" size="sm" className="h-8">
+        <FileDown className="h-4 w-4 mr-1" /> Xuất
+      </Button>
+      <Button size="sm" className="h-8" onClick={handleAddClick}>
+        <Plus className="h-4 w-4 mr-1" /> Thêm sự kiện
+      </Button>
+    </div>
+  );
+
+  if (events.length === 0 && !isLoading) {
+    return (
       <PlaceholderPage
         title="Sự Kiện"
-        description="Quản lý các sự kiện trong hệ thống"
+        description="Quản lý các sự kiện và lịch trình"
         icon={<Calendar className="h-16 w-16 text-muted-foreground/40" />}
         addButtonAction={handleAddClick}
       />
-      
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+    );
+  }
+
+  return (
+    <>
+      <TablePageLayout
+        title="Sự Kiện"
+        description="Quản lý các sự kiện và lịch trình"
+        actions={tableActions}
+      >
+        <DataTable
+          columns={columns}
+          data={events}
+          isLoading={isLoading}
+          searchable={true}
+          searchPlaceholder="Tìm kiếm sự kiện..."
+        />
+      </TablePageLayout>
+
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Thêm mới sự kiện</DialogTitle>
+            <DialogTitle>Thêm Sự Kiện Mới</DialogTitle>
           </DialogHeader>
-          {renderEventForm()}
+          <EventForm 
+            onSubmit={handleAddFormSubmit}
+            onCancel={handleAddFormCancel}
+          />
         </DialogContent>
       </Dialog>
     </>

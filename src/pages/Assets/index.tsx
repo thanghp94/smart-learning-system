@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -145,39 +144,39 @@ const Assets = () => {
     </div>
   );
 
-  if (assets.length === 0 && !isLoading) {
-    return (
-      <PlaceholderPage
-        title="Tài Sản"
-        description="Quản lý thông tin tài sản và cơ sở vật chất"
-        addButtonAction={handleAddClick}
-      />
-    );
-  }
-
   return (
-    <TablePageLayout
-      title="Tài Sản"
-      description="Quản lý thông tin tài sản và cơ sở vật chất"
-      actions={tableActions}
-    >
-      <DataTable
-        columns={columns}
-        data={assets}
-        isLoading={isLoading}
-        onRowClick={handleRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm tài sản..."
-      />
-
-      {selectedAsset && (
-        <DetailPanel
-          title="Thông Tin Tài Sản"
-          isOpen={showDetail}
-          onClose={closeDetail}
+    <>
+      {assets.length === 0 && !isLoading ? (
+        <PlaceholderPage
+          title="Tài Sản"
+          description="Quản lý thông tin tài sản và cơ sở vật chất"
+          addButtonAction={handleAddClick}
+        />
+      ) : (
+        <TablePageLayout
+          title="Tài Sản"
+          description="Quản lý thông tin tài sản và cơ sở vật chất"
+          actions={tableActions}
         >
-          <AssetDetail asset={selectedAsset} />
-        </DetailPanel>
+          <DataTable
+            columns={columns}
+            data={assets}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm tài sản..."
+          />
+
+          {selectedAsset && (
+            <DetailPanel
+              title="Thông Tin Tài Sản"
+              isOpen={showDetail}
+              onClose={closeDetail}
+            >
+              <AssetDetail asset={selectedAsset} />
+            </DetailPanel>
+          )}
+        </TablePageLayout>
       )}
 
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
@@ -191,7 +190,7 @@ const Assets = () => {
           />
         </DialogContent>
       </Dialog>
-    </TablePageLayout>
+    </>
   );
 };
 
