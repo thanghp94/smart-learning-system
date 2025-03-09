@@ -23,8 +23,6 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
 
   const handleSubmit = (data: SessionFormData) => {
     try {
-      console.log("Form data being submitted:", data);
-      
       // Convert session_id to string if it's a number
       if (typeof data.session_id === 'number') {
         data.session_id = String(data.session_id);
@@ -52,8 +50,6 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
         nhan_xet_chung: data.nhan_xet_chung,
         ghi_chu: data.ghi_chu
       };
-      
-      console.log("Formatted session data:", sessionData);
       
       // Submit session data through the onSubmit prop
       onSubmit(sessionData);
