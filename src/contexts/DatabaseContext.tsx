@@ -28,16 +28,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const checkDatabaseStatus = async () => {
     try {
-      // Check if we're in demo mode based on environment variables
-      const demoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
-      setIsDemoMode(demoMode);
-      
-      if (demoMode) {
-        // In demo mode, set initialized to true without checking database
-        setIsInitialized(true);
-        setIsLoading(false);
-        return;
-      }
+      // Always use real Supabase mode, not demo mode
+      setIsDemoMode(false);
       
       // Check if at least one table exists and has data
       const { data, error } = await supabase
@@ -47,12 +39,26 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('Error checking database status:', error);
         setIsInitialized(false);
+        
+        toast({
+          title: 'Database Error',
+          description: 'Could not connect to database. Please check your configuration.',
+          variant: 'destructive',
+          duration: 5000,
+        });
       } else {
         setIsInitialized(true);
       }
     } catch (error) {
       console.error('Error checking database status:', error);
       setIsInitialized(false);
+      
+      toast({
+        title: 'Database Error',
+        description: 'Could not connect to database. Please check your configuration.',
+        variant: 'destructive',
+        duration: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -61,16 +67,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const initializeDatabase = async () => {
     setIsLoading(true);
     try {
-      if (isDemoMode) {
-        toast({
-          title: 'Demo Mode',
-          description: 'Database initialization is not available in demo mode. Please configure Supabase credentials.',
-          duration: 5000,
-        });
-        setIsLoading(false);
-        return;
-      }
-      
       const success = await setupDatabase(true, true);
       setIsInitialized(success);
     } catch (error) {

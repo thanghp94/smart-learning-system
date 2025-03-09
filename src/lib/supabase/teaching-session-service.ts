@@ -1,4 +1,3 @@
-
 import { TeachingSession } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
@@ -6,9 +5,24 @@ import { supabase } from './client';
 export const teachingSessionService = {
   getAll: () => fetchAll<TeachingSession>('teaching_sessions'),
   getById: (id: string) => fetchById<TeachingSession>('teaching_sessions', id),
-  create: (session: Partial<TeachingSession>) => insert<TeachingSession>('teaching_sessions', session),
+  
+  create: (session: Partial<TeachingSession>) => {
+    const formattedSession: Partial<TeachingSession> = {
+      ...session,
+      nhan_xet_1: session.nhan_xet_1?.toString(),
+      nhan_xet_2: session.nhan_xet_2?.toString(),
+      nhan_xet_3: session.nhan_xet_3?.toString(),
+      nhan_xet_4: session.nhan_xet_4?.toString(),
+      nhan_xet_5: session.nhan_xet_5?.toString(),
+      nhan_xet_6: session.nhan_xet_6?.toString(),
+    };
+    
+    return insert<TeachingSession>('teaching_sessions', formattedSession);
+  },
+  
   update: (id: string, updates: Partial<TeachingSession>) => update<TeachingSession>('teaching_sessions', id, updates),
   delete: (id: string) => remove('teaching_sessions', id),
+  
   getByClass: async (classId: string): Promise<TeachingSession[]> => {
     const { data, error } = await supabase
       .from('teaching_sessions')
@@ -22,9 +36,8 @@ export const teachingSessionService = {
     
     return data as TeachingSession[];
   },
-  // Get sessions with computed average score
+  
   getWithAvgScore: async (): Promise<(TeachingSession & { avg_score: number })[]> => {
-    // Use the view we created in the SQL script
     const { data, error } = await supabase
       .from('teaching_sessions_with_avg_score')
       .select('*');
@@ -36,7 +49,7 @@ export const teachingSessionService = {
     
     return data || [];
   },
-  // Get sessions by teacher
+  
   getByTeacher: async (teacherId: string): Promise<TeachingSession[]> => {
     const { data, error } = await supabase
       .from('teaching_sessions')
@@ -50,7 +63,7 @@ export const teachingSessionService = {
     
     return data as TeachingSession[];
   },
-  // Get sessions by date range
+  
   getByDateRange: async (startDate: string, endDate: string): Promise<TeachingSession[]> => {
     const { data, error } = await supabase
       .from('teaching_sessions')
@@ -65,7 +78,7 @@ export const teachingSessionService = {
     
     return data as TeachingSession[];
   },
-  // Calculate the average score for a session
+  
   calculateAverageScore: (session: TeachingSession): number => {
     const scores = [
       session.nhan_xet_1, 
@@ -81,7 +94,7 @@ export const teachingSessionService = {
     const sum = scores.reduce((acc, score) => acc + Number(score), 0);
     return sum / scores.length;
   },
-  // Record teacher's time
+  
   recordTeacherTime: async (
     sessionId: string, 
     startTime: string, 

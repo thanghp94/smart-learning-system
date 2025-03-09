@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -87,6 +86,7 @@ const TeachingSessions = () => {
 
   const handleSessionSubmit = async (sessionData: Partial<TeachingSession>) => {
     try {
+      console.log("Submitting session data:", sessionData);
       await teachingSessionService.create(sessionData);
       toast({
         title: "Thành công",
@@ -102,6 +102,10 @@ const TeachingSessions = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleCancelForm = () => {
+    setShowAddForm(false);
   };
 
   const columns = [
@@ -199,7 +203,10 @@ const TeachingSessions = () => {
           <DialogHeader>
             <DialogTitle>Thêm Buổi Học Mới</DialogTitle>
           </DialogHeader>
-          <SessionForm onSubmit={handleSessionSubmit} />
+          <SessionForm 
+            onSubmit={handleSessionSubmit} 
+            onCancel={handleCancelForm}
+          />
         </DialogContent>
       </Dialog>
     </TablePageLayout>

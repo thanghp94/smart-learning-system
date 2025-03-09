@@ -31,6 +31,21 @@ export const NAVIGATION_ITEMS = [
     icon: "ClipboardCheck"
   },
   {
+    title: "Sự kiện",
+    path: "/events",
+    icon: "CalendarDays"
+  },
+  {
+    title: "Công việc",
+    path: "/tasks",
+    icon: "CheckSquare"
+  },
+  {
+    title: "Ghi danh",
+    path: "/enrollments",
+    icon: "ClipboardList"
+  },
+  {
     title: "Tài sản",
     path: "/assets",
     icon: "Package"
@@ -44,6 +59,41 @@ export const NAVIGATION_ITEMS = [
     title: "Cơ sở",
     path: "/facilities",
     icon: "Building"
+  },
+  {
+    title: "Hình ảnh",
+    path: "/images",
+    icon: "Image"
+  },
+  {
+    title: "Cài đặt",
+    path: "/settings",
+    icon: "Settings"
+  },
+  {
+    title: "Lương",
+    path: "/payroll",
+    icon: "DollarSign"
+  },
+  {
+    title: "Tài chính",
+    path: "/finance",
+    icon: "CreditCard"
+  },
+  {
+    title: "Hồ sơ",
+    path: "/files",
+    icon: "FileText"
+  },
+  {
+    title: "Đề xuất",
+    path: "/requests",
+    icon: "FileSignature"
+  },
+  {
+    title: "Liên hệ",
+    path: "/contacts",
+    icon: "Phone"
   },
   {
     title: "Cấu trúc DB",

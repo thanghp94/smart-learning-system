@@ -14,6 +14,16 @@ import DatabaseSchema from '@/pages/DatabaseSchema';
 import NotFound from '@/pages/NotFound';
 import Evaluations from '@/pages/Evaluations';
 import Facilities from '@/pages/Facilities';
+import Events from '@/pages/Events';
+import Tasks from '@/pages/Tasks';
+import Enrollments from '@/pages/Enrollments';
+import Images from '@/pages/Images';
+import Settings from '@/pages/Settings';
+import Payroll from '@/pages/Payroll';
+import Finance from '@/pages/Finance';
+import Files from '@/pages/Files';
+import Requests from '@/pages/Requests';
+import Contacts from '@/pages/Contacts';
 
 import '@/App.css';
 
@@ -32,6 +42,16 @@ function App() {
             <Route path="/assets" element={<Assets />} />
             <Route path="/assets/transfers" element={<TransferManagement />} />
             <Route path="/facilities" element={<Facilities />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/enrollments" element={<Enrollments />} />
+            <Route path="/images" element={<Images />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/payroll" element={<Payroll />} />
+            <Route path="/finance" element={<Finance />} />
+            <Route path="/files" element={<Files />} />
+            <Route path="/requests" element={<Requests />} />
+            <Route path="/contacts" element={<Contacts />} />
             <Route path="/database-schema" element={<DatabaseSchema />} />
             <Route path="*" element={<NotFound />} />
           </Route>

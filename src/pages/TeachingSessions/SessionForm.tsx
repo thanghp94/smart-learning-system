@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,9 +45,10 @@ interface SessionFormProps {
   initialData?: Partial<TeachingSession>;
   onSubmit: (data: Partial<TeachingSession>) => void;
   isEdit?: boolean;
+  onCancel?: () => void;
 }
 
-const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps) => {
+const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: SessionFormProps) => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,7 +80,7 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
         setIsLoading(true);
         const [classesData, teachersData] = await Promise.all([
           classService.getAll(),
-          employeeService.getByRole("Giáo viên") // This will now work with our added function
+          employeeService.getByRole("Giáo viên")
         ]);
         
         setClasses(classesData);
@@ -120,19 +120,8 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
       }
     }
     
-    // Ensure all fields that should be numbers are converted
-    const sessionData = {
-      ...data,
-      // Convert string scores to numbers if they exist
-      nhan_xet_1: data.nhan_xet_1 ? Number(data.nhan_xet_1) : null,
-      nhan_xet_2: data.nhan_xet_2 ? Number(data.nhan_xet_2) : null,
-      nhan_xet_3: data.nhan_xet_3 ? Number(data.nhan_xet_3) : null,
-      nhan_xet_4: data.nhan_xet_4 ? Number(data.nhan_xet_4) : null,
-      nhan_xet_5: data.nhan_xet_5 ? Number(data.nhan_xet_5) : null,
-      nhan_xet_6: data.nhan_xet_6 ? Number(data.nhan_xet_6) : null,
-    };
-    
-    onSubmit(sessionData);
+    // Submit session data directly without additional type conversion as our service will handle it
+    onSubmit(data);
   };
 
   return (
@@ -369,7 +358,7 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
         </div>
         
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>Hủy</Button>
+          <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
           <Button type="submit">{isEdit ? "Cập nhật" : "Thêm mới"}</Button>
         </div>
       </form>
