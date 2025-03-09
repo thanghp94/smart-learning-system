@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -157,26 +156,25 @@ const SessionBasicInfoFields = ({ form, classes, teachers, isLoading }: SessionB
       
       <FormField
         control={form.control}
-        name="Loai_bai_hoc"
+        name="loai_bai_hoc"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Loại bài học</FormLabel>
-            <FormControl>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
+            <FormLabel>
+              Loại bài học <span className="text-red-500">*</span>
+            </FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn loại bài học" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Học mới">Học mới</SelectItem>
-                  <SelectItem value="Ôn tập">Ôn tập</SelectItem>
-                  <SelectItem value="Kiểm tra">Kiểm tra</SelectItem>
-                  <SelectItem value="Thực hành">Thực hành</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="Bài mới">Bài mới</SelectItem>
+                <SelectItem value="Ôn tập">Ôn tập</SelectItem>
+                <SelectItem value="Kiểm tra">Kiểm tra</SelectItem>
+                <SelectItem value="Test">Test</SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}

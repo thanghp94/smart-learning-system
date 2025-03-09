@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Class, Employee, TeachingSession } from '@/lib/types';
+import { format, parseISO } from 'date-fns';
 
 interface EvaluationFormProps {
   initialData: TeachingSession;
@@ -53,6 +53,14 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
     onSubmit(processedData);
   };
 
+  const selectedSessionDisplay = session ? (
+    <div className="bg-gray-100 p-2 rounded">
+      <p>Lớp: {session.class_name}</p>
+      <p>Ngày học: {format(parseISO(session.ngay_hoc), 'dd/MM/yyyy')}</p>
+      <p>Loại bài học: {session.loai_bai_hoc}</p>
+    </div>
+  ) : null;
+
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       {classInfo && teacherInfo && (
@@ -68,6 +76,8 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
           </div>
         </div>
       )}
+
+      {selectedSessionDisplay}
 
       <div>
         <Label htmlFor="ten_danh_gia">Tên đánh giá*</Label>

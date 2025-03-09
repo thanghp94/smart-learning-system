@@ -7,13 +7,15 @@ export const payrollService = {
   getAll: () => fetchAll<Payroll>('payrolls'),
   getById: (id: string) => fetchById<Payroll>('payrolls', id),
   create: (payroll: Partial<Payroll>) => {
-    // Remove phu_cap field as it doesn't exist in the database
-    const { phu_cap, ...validPayroll } = payroll;
+    // We need to use a type assertion to safely remove phu_cap which doesn't exist in the database
+    const payrollAny = payroll as any;
+    const { phu_cap, ...validPayroll } = payrollAny;
     return insert<Payroll>('payrolls', validPayroll);
   },
   update: (id: string, updates: Partial<Payroll>) => {
-    // Remove phu_cap field as it doesn't exist in the database
-    const { phu_cap, ...validUpdates } = updates;
+    // We need to use a type assertion to safely remove phu_cap which doesn't exist in the database
+    const updatesAny = updates as any;
+    const { phu_cap, ...validUpdates } = updatesAny;
     return update<Payroll>('payrolls', id, validUpdates);
   },
   delete: (id: string) => remove('payrolls', id),
