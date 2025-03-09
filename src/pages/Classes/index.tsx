@@ -13,6 +13,7 @@ import ClassDetail from "./ClassDetail";
 import ClassForm from "./ClassForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
+import { useDatabase } from "@/contexts/DatabaseContext";
 
 const Classes = () => {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -20,7 +21,10 @@ const Classes = () => {
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { toast } = useToast();
+  const { initializeDatabase } = useDatabase();
 
   useEffect(() => {
     fetchClasses();
@@ -91,11 +95,42 @@ const Classes = () => {
       });
       setShowAddForm(false);
       fetchClasses();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding class:", error);
+      
+      // Show a more detailed error message
+      let errorMsg = "Không thể thêm lớp học mới";
+      if (error && error.message) {
+        errorMsg += `: ${error.message}`;
+      }
+      
+      if (error && error.code === 'PGRST204') {
+        // This is likely a database schema issue
+        setErrorMessage("Có vấn đề với cấu trúc cơ sở dữ liệu. Bạn có muốn khởi tạo lại cấu trúc cơ sở dữ liệu không?");
+        setShowErrorDialog(true);
+      } else {
+        toast({
+          title: "Lỗi",
+          description: errorMsg,
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const handleInitializeDatabase = async () => {
+    try {
+      await initializeDatabase();
+      setShowErrorDialog(false);
+      toast({
+        title: "Thành công",
+        description: "Đã khởi tạo lại cơ sở dữ liệu. Vui lòng thử lại.",
+      });
+    } catch (error) {
+      console.error("Error initializing database:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể thêm lớp học mới",
+        description: "Không thể khởi tạo lại cơ sở dữ liệu",
         variant: "destructive"
       });
     }
@@ -104,7 +139,7 @@ const Classes = () => {
   const columns = [
     {
       title: "Tên Lớp Đầy Đủ",
-      key: "Ten_lop_full",
+      key: "ten_lop_full",
       sortable: true,
     },
     {
@@ -198,6 +233,21 @@ const Classes = () => {
             onSubmit={handleAddFormSubmit}
             onCancel={handleAddFormCancel}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Lỗi</DialogTitle>
+            <DialogDescription>
+              {errorMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button variant="outline" onClick={() => setShowErrorDialog(false)}>Hủy</Button>
+            <Button onClick={handleInitializeDatabase}>Khởi tạo lại cơ sở dữ liệu</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

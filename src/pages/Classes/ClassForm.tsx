@@ -94,11 +94,11 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel }
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
     defaultValues: {
-      ten_lop_full: initialData?.Ten_lop_full || "",
+      ten_lop_full: initialData?.ten_lop_full || "",
       ten_lop: initialData?.ten_lop || "",
       ct_hoc: initialData?.ct_hoc || "",
       co_so: initialData?.co_so as string || "",
-      gv_chinh: initialData?.GV_chinh as string || "",
+      gv_chinh: initialData?.gv_chinh as string || "",
       ngay_bat_dau: initialData?.ngay_bat_dau 
         ? new Date(initialData.ngay_bat_dau).toISOString().split("T")[0] 
         : "",
@@ -112,11 +112,11 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel }
     try {
       // Convert form data to match the API expectations
       const submissionData = {
-        Ten_lop_full: values.ten_lop_full,
+        ten_lop_full: values.ten_lop_full,
         ten_lop: values.ten_lop,
         ct_hoc: values.ct_hoc,
         co_so: values.co_so,
-        GV_chinh: values.gv_chinh,
+        gv_chinh: values.gv_chinh,
         ngay_bat_dau: values.ngay_bat_dau ? new Date(values.ngay_bat_dau).toISOString() : undefined,
         tinh_trang: values.tinh_trang,
         ghi_chu: values.ghi_chu,

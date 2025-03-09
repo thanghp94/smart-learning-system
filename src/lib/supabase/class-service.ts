@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
 import { Class } from '@/lib/types';
@@ -26,12 +25,11 @@ class ClassService {
       return (data || []).map(classData => ({
         ...classData,
         id: classData.id || crypto.randomUUID(),
-        ten_lop_full: classData.ten_lop_full || classData.Ten_lop_full || '',
+        ten_lop_full: classData.ten_lop_full || '',
         ten_lop: classData.ten_lop || '',
         ct_hoc: classData.ct_hoc || '',
         co_so: classData.co_so || '',
-        gv_chinh: classData.gv_chinh || classData.GV_chinh || '',
-        GV_chinh: classData.GV_chinh || classData.gv_chinh || '',
+        gv_chinh: classData.gv_chinh || '',
         ngay_bat_dau: classData.ngay_bat_dau || null,
         tinh_trang: classData.tinh_trang || 'pending'
       }));
@@ -52,13 +50,11 @@ class ClassService {
     return {
       ...classData,
       id: classData.id || id,
-      ten_lop_full: classData.ten_lop_full || classData.Ten_lop_full || '',
-      Ten_lop_full: classData.Ten_lop_full || classData.ten_lop_full || '',
+      ten_lop_full: classData.ten_lop_full || '',
       ten_lop: classData.ten_lop || '',
       ct_hoc: classData.ct_hoc || '',
       co_so: classData.co_so || '',
-      gv_chinh: classData.gv_chinh || classData.GV_chinh || '',
-      GV_chinh: classData.GV_chinh || classData.gv_chinh || '',
+      gv_chinh: classData.gv_chinh || '',
       ngay_bat_dau: classData.ngay_bat_dau || null,
       tinh_trang: classData.tinh_trang || 'pending'
     } as Class;

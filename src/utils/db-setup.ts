@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase/client';
 
 // Function to create the database schema
@@ -9,7 +8,17 @@ export const createDatabaseSchema = async (): Promise<boolean> => {
       CREATE TABLE IF NOT EXISTS public.classes (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-        ten_lop TEXT
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+        ten_lop_full TEXT NOT NULL,
+        ten_lop TEXT NOT NULL,
+        ct_hoc TEXT,
+        co_so UUID,
+        gv_chinh UUID,
+        ngay_bat_dau DATE,
+        tinh_trang TEXT DEFAULT 'active',
+        ghi_chu TEXT,
+        unit_id TEXT,
+        tg_tao TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
       );
       
       CREATE TABLE IF NOT EXISTS public.students (
@@ -35,13 +44,17 @@ export const createDatabaseSchema = async (): Promise<boolean> => {
       CREATE TABLE IF NOT EXISTS public.facilities (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-        ten_co_so TEXT,
-        loai_co_so TEXT,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+        ten_co_so TEXT NOT NULL,
+        loai_co_so TEXT NOT NULL,
         dia_chi_co_so TEXT,
         phone TEXT,
         email TEXT,
-        trang_thai TEXT,
-        nguoi_phu_trach UUID
+        trang_thai TEXT DEFAULT 'active',
+        nguoi_phu_trach UUID,
+        ghi_chu TEXT,
+        nguoi_chu TEXT,
+        tg_tao TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
       );
     `;
 
@@ -175,7 +188,71 @@ export const applyPublicAccessPolicies = async () => {
   }
 };
 
-// Update the setupDatabase function to include applying public access policies
+// Add a function to create the class function
+export const createClassFunction = async (): Promise<boolean> => {
+  try {
+    // SQL script to create the class function
+    const sql = `
+      CREATE OR REPLACE FUNCTION create_class(class_data JSONB)
+      RETURNS JSONB
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public
+      AS $$
+      DECLARE
+        new_class_id UUID;
+        new_class JSONB;
+      BEGIN
+        INSERT INTO classes (
+          ten_lop_full, 
+          ten_lop, 
+          ct_hoc, 
+          co_so, 
+          gv_chinh, 
+          ngay_bat_dau, 
+          tinh_trang, 
+          ghi_chu, 
+          unit_id
+        )
+        VALUES (
+          class_data->>'ten_lop_full',
+          class_data->>'ten_lop',
+          class_data->>'ct_hoc',
+          (class_data->>'co_so')::UUID,
+          (class_data->>'gv_chinh')::UUID,
+          (class_data->>'ngay_bat_dau')::DATE,
+          class_data->>'tinh_trang',
+          class_data->>'ghi_chu',
+          class_data->>'unit_id'
+        )
+        RETURNING id INTO new_class_id;
+        
+        SELECT row_to_json(c)::JSONB INTO new_class
+        FROM classes c
+        WHERE c.id = new_class_id;
+        
+        RETURN new_class;
+      END;
+      $$;
+    `;
+    
+    // Execute the SQL script
+    const { error } = await supabase.rpc('run_sql', { sql });
+    
+    if (error) {
+      console.error('Error creating class function:', error);
+      return false;
+    }
+    
+    console.log('Class function created successfully');
+    return true;
+  } catch (error) {
+    console.error('Error creating class function:', error);
+    return false;
+  }
+};
+
+// Update the setupDatabase function to include creating the class function
 export const setupDatabase = async (
   includeSchemaSetup = true,
   includeSeedData = false
@@ -190,6 +267,14 @@ export const setupDatabase = async (
       if (!success) {
         console.error('Failed to create database schema');
         return false;
+      }
+      
+      // Create class function
+      success = await createClassFunction();
+      
+      if (!success) {
+        console.error('Failed to create class function');
+        // Continue anyway, as this might not be critical
       }
       
       // Apply public access policies
