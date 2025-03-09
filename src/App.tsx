@@ -13,6 +13,7 @@ import TransferManagement from '@/pages/Assets/TransferManagement';
 import DatabaseSchema from '@/pages/DatabaseSchema';
 import NotFound from '@/pages/NotFound';
 import Evaluations from '@/pages/Evaluations';
+import Facilities from '@/pages/Facilities';
 
 import '@/App.css';
 
@@ -30,6 +31,7 @@ function App() {
             <Route path="/evaluations" element={<Evaluations />} />
             <Route path="/assets" element={<Assets />} />
             <Route path="/assets/transfers" element={<TransferManagement />} />
+            <Route path="/facilities" element={<Facilities />} />
             <Route path="/database-schema" element={<DatabaseSchema />} />
             <Route path="*" element={<NotFound />} />
           </Route>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,10 @@ import { Employee } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
 import EmployeeDetail from "./EmployeeDetail";
-import EmployeeForm from "./EmployeeForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import EmployeeForm from "./EmployeeForm";
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -76,22 +76,22 @@ const Employees = () => {
 
   const columns = [
     {
-      title: "Tên Nhân Viên",
+      title: "Họ và tên",
       key: "ten_nhan_su",
       sortable: true,
     },
     {
-      title: "Bộ Phận",
+      title: "Bộ phận",
       key: "bo_phan",
       sortable: true,
     },
     {
-      title: "Chức Danh",
+      title: "Chức danh",
       key: "chuc_danh",
       sortable: true,
     },
     {
-      title: "SĐT",
+      title: "Điện thoại",
       key: "dien_thoai",
     },
     {
@@ -99,20 +99,14 @@ const Employees = () => {
       key: "email",
     },
     {
-      title: "Trạng Thái",
+      title: "Trạng thái",
       key: "tinh_trang_lao_dong",
       sortable: true,
       render: (value: string) => (
-        <Badge variant={value === "active" ? "success" : "secondary"}>
-          {value === "active" ? "Đang làm việc" : value}
+        <Badge variant={value === "active" ? "success" : "destructive"}>
+          {value === "active" ? "Đang làm việc" : "Đã nghỉ việc"}
         </Badge>
       ),
-    },
-    {
-      title: "Ngày Sinh",
-      key: "ngay_sinh",
-      sortable: true,
-      render: (value: string) => <span>{formatDate(value)}</span>,
     },
   ];
 
