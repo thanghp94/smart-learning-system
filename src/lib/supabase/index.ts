@@ -10,6 +10,14 @@ import { assetService } from './asset-service';
 import { assetTransferService } from './asset-transfer-service';
 import { requestService } from './request-service';
 import { evaluationService } from './evaluation-service';
+import { contactService } from './contact-service';
+import { fileService } from './file-service';
+import { financeService } from './finance-service';
+import { imageService } from './image-service';
+import { eventService } from './event-service';
+import { settingService } from './setting-service';
+import { payrollService } from './payroll-service';
+import { activityService } from './activity-service';
 
 export {
   employeeService,
@@ -22,5 +30,13 @@ export {
   assetService,
   assetTransferService,
   requestService,
-  evaluationService
+  evaluationService,
+  contactService,
+  fileService,
+  financeService,
+  imageService,
+  eventService,
+  settingService,
+  payrollService,
+  activityService
 };
