@@ -1,4 +1,3 @@
-
 import { TeachingSession } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
@@ -11,11 +10,15 @@ export const teachingSessionService = {
     try {
       console.log("Creating teaching session with data:", session);
       
+      // Validate required fields
+      if (!session.lop_chi_tiet_id || !session.session_id || !session.giao_vien || !session.ngay_hoc) {
+        throw new Error("Missing required fields for teaching session");
+      }
+      
       // Convert numeric values to strings before saving to match the database schema
       const formattedSession: Partial<TeachingSession> = {
         ...session,
-        // Ensure the field name matches the database column
-        loai_bai_hoc: session.loai_bai_hoc, // Using lowercase field name
+        loai_bai_hoc: session.loai_bai_hoc || 'Standard',
         nhan_xet_1: session.nhan_xet_1 !== undefined && session.nhan_xet_1 !== null ? 
           String(session.nhan_xet_1) : null,
         nhan_xet_2: session.nhan_xet_2 !== undefined && session.nhan_xet_2 !== null ? 
@@ -50,26 +53,33 @@ export const teachingSessionService = {
   },
   
   update: (id: string, updates: Partial<TeachingSession>) => {
-    // Similar conversion for updates
-    const formattedUpdates: Partial<TeachingSession> = {
-      ...updates,
-      // Ensure the field name matches the database column
-      loai_bai_hoc: updates.loai_bai_hoc, // Using lowercase field name
-      nhan_xet_1: updates.nhan_xet_1 !== undefined && updates.nhan_xet_1 !== null ? 
-        String(updates.nhan_xet_1) : updates.nhan_xet_1,
-      nhan_xet_2: updates.nhan_xet_2 !== undefined && updates.nhan_xet_2 !== null ? 
-        String(updates.nhan_xet_2) : updates.nhan_xet_2,
-      nhan_xet_3: updates.nhan_xet_3 !== undefined && updates.nhan_xet_3 !== null ? 
-        String(updates.nhan_xet_3) : updates.nhan_xet_3,
-      nhan_xet_4: updates.nhan_xet_4 !== undefined && updates.nhan_xet_4 !== null ? 
-        String(updates.nhan_xet_4) : updates.nhan_xet_4,
-      nhan_xet_5: updates.nhan_xet_5 !== undefined && updates.nhan_xet_5 !== null ? 
-        String(updates.nhan_xet_5) : updates.nhan_xet_5,
-      nhan_xet_6: updates.nhan_xet_6 !== undefined && updates.nhan_xet_6 !== null ? 
-        String(updates.nhan_xet_6) : updates.nhan_xet_6,
-    };
-    
-    return update<TeachingSession>('teaching_sessions', id, formattedUpdates);
+    try {
+      console.log("Updating teaching session with data:", updates);
+      
+      // Similar conversion for updates
+      const formattedUpdates: Partial<TeachingSession> = {
+        ...updates,
+        // Ensure the field name matches the database column
+        loai_bai_hoc: updates.loai_bai_hoc, // Using lowercase field name
+        nhan_xet_1: updates.nhan_xet_1 !== undefined && updates.nhan_xet_1 !== null ? 
+          String(updates.nhan_xet_1) : updates.nhan_xet_1,
+        nhan_xet_2: updates.nhan_xet_2 !== undefined && updates.nhan_xet_2 !== null ? 
+          String(updates.nhan_xet_2) : updates.nhan_xet_2,
+        nhan_xet_3: updates.nhan_xet_3 !== undefined && updates.nhan_xet_3 !== null ? 
+          String(updates.nhan_xet_3) : updates.nhan_xet_3,
+        nhan_xet_4: updates.nhan_xet_4 !== undefined && updates.nhan_xet_4 !== null ? 
+          String(updates.nhan_xet_4) : updates.nhan_xet_4,
+        nhan_xet_5: updates.nhan_xet_5 !== undefined && updates.nhan_xet_5 !== null ? 
+          String(updates.nhan_xet_5) : updates.nhan_xet_5,
+        nhan_xet_6: updates.nhan_xet_6 !== undefined && updates.nhan_xet_6 !== null ? 
+          String(updates.nhan_xet_6) : updates.nhan_xet_6,
+      };
+      
+      return update<TeachingSession>('teaching_sessions', id, formattedUpdates);
+    } catch (error) {
+      console.error("Error updating teaching session:", error);
+      throw error;
+    }
   },
   
   delete: (id: string) => remove('teaching_sessions', id),
@@ -89,16 +99,21 @@ export const teachingSessionService = {
   },
   
   getWithAvgScore: async (): Promise<(TeachingSession & { avg_score: number })[]> => {
-    const { data, error } = await supabase
-      .from('teaching_sessions_with_avg_score')
-      .select('*');
-    
-    if (error) {
-      console.error('Error fetching sessions with average score:', error);
+    try {
+      const { data, error } = await supabase
+        .from('teaching_sessions_with_avg_score')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching sessions with average score:', error);
+        throw error;
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Exception in getWithAvgScore:', error);
       throw error;
     }
-    
-    return data || [];
   },
   
   getByTeacher: async (teacherId: string): Promise<TeachingSession[]> => {

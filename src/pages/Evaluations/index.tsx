@@ -13,6 +13,18 @@ import DetailPanel from "@/components/ui/DetailPanel";
 import EvaluationForm from "./EvaluationForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
+// Default empty session with required fields
+const DEFAULT_EMPTY_SESSION: TeachingSession = {
+  id: "",
+  lop_chi_tiet_id: "",
+  session_id: "",
+  loai_bai_hoc: "",
+  ngay_hoc: new Date().toISOString().split('T')[0],
+  thoi_gian_bat_dau: "09:00",
+  thoi_gian_ket_thuc: "10:30",
+  giao_vien: "",
+};
+
 const Evaluations = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
   const [classes, setClasses] = useState<Record<string, Class>>({});
@@ -129,10 +141,14 @@ const Evaluations = () => {
           ? scores.reduce((acc, score) => acc + score, 0) / scores.length
           : 0;
         
-        await teachingSessionService.create({
+        // Ensure all required fields are present when creating a new session
+        const completeSessionData = {
+          ...DEFAULT_EMPTY_SESSION,
           ...evaluationData,
           trung_binh: avg
-        });
+        };
+        
+        await teachingSessionService.create(completeSessionData);
         
         toast({
           title: "Thành công",
@@ -249,7 +265,7 @@ const Evaluations = () => {
             )}
           </DialogHeader>
           <EvaluationForm 
-            initialData={selectedSession || {}} 
+            initialData={selectedSession || DEFAULT_EMPTY_SESSION} 
             onSubmit={handleSubmitEvaluation}
             classInfo={selectedSession ? classes[selectedSession.lop_chi_tiet_id] : undefined}
             teacherInfo={selectedSession ? teachers[selectedSession.giao_vien] : undefined}
