@@ -1,4 +1,3 @@
-
 export interface Student {
   id: string;
   ten_hoc_sinh: string;
@@ -73,6 +72,7 @@ export interface Employee {
   co_so_id: string[];
   hinh_anh?: string;
   tg_tao?: string;
+  ghi_chu?: string;
 }
 
 export interface Facility {

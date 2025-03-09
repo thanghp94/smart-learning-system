@@ -27,12 +27,13 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
       chuc_danh: initialData?.chuc_danh || '',
       dien_thoai: initialData?.dien_thoai || '',
       email: initialData?.email || '',
-      co_so_id: initialData?.co_so_id ? initialData.co_so_id[0] : '',
+      co_so_id: initialData?.co_so_id?.length ? initialData.co_so_id[0] : '',
       tinh_trang_lao_dong: initialData?.tinh_trang_lao_dong || 'active',
       ngay_sinh: initialData?.ngay_sinh || '',
       dia_chi: initialData?.dia_chi || '',
       gioi_tinh: initialData?.gioi_tinh || '',
-      ghi_chu: initialData?.ghi_chu || '',
+      // Ensure this matches the Employee type definition
+      ghi_chu: ''
     }
   });
 

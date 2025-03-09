@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,27 +12,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Evaluation, TeachingSession } from '@/lib/types';
+import { Class, Employee, TeachingSession } from '@/lib/types';
 
 interface EvaluationFormProps {
-  teachingSession?: TeachingSession;
+  initialData: TeachingSession;
   onSubmit: (data: any) => void;
-  onCancel: () => void;
+  onCancel?: () => void;
+  classInfo?: Class;
+  teacherInfo?: Employee;
 }
 
-const EvaluationForm = ({ teachingSession, onSubmit, onCancel }: EvaluationFormProps) => {
+const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInfo }: EvaluationFormProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
-      ten_danh_gia: teachingSession ? `Đánh giá buổi dạy ${teachingSession.ngay_hoc}` : '',
+      ten_danh_gia: `Đánh giá buổi dạy ${initialData?.ngay_hoc || ''}`,
       doi_tuong: 'teaching_session',
       ghi_chu: '',
-      nhan_xet_1: teachingSession?.nhan_xet_1 || '',
-      nhan_xet_2: teachingSession?.nhan_xet_2 || '',
-      nhan_xet_3: teachingSession?.nhan_xet_3 || '',
-      nhan_xet_4: teachingSession?.nhan_xet_4 || '',
-      nhan_xet_5: teachingSession?.nhan_xet_5 || '',
-      nhan_xet_6: teachingSession?.nhan_xet_6 || '',
-      nhan_xet_chung: teachingSession?.nhan_xet_chung || '',
+      nhan_xet_1: initialData?.nhan_xet_1 || '',
+      nhan_xet_2: initialData?.nhan_xet_2 || '',
+      nhan_xet_3: initialData?.nhan_xet_3 || '',
+      nhan_xet_4: initialData?.nhan_xet_4 || '',
+      nhan_xet_5: initialData?.nhan_xet_5 || '',
+      nhan_xet_6: initialData?.nhan_xet_6 || '',
+      nhan_xet_chung: initialData?.nhan_xet_chung || '',
     }
   });
 
@@ -53,6 +55,20 @@ const EvaluationForm = ({ teachingSession, onSubmit, onCancel }: EvaluationFormP
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      {classInfo && teacherInfo && (
+        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md mb-4">
+          <div>
+            <p className="text-sm font-medium">Lớp: <span className="font-normal">{classInfo.Ten_lop_full}</span></p>
+            <p className="text-sm font-medium">Buổi học số: <span className="font-normal">{initialData.session_id}</span></p>
+            <p className="text-sm font-medium">Ngày học: <span className="font-normal">{initialData.ngay_hoc}</span></p>
+          </div>
+          <div>
+            <p className="text-sm font-medium">Giáo viên: <span className="font-normal">{teacherInfo.ten_nhan_su}</span></p>
+            <p className="text-sm font-medium">Loại bài học: <span className="font-normal">{initialData.Loai_bai_hoc || 'N/A'}</span></p>
+          </div>
+        </div>
+      )}
+
       <div>
         <Label htmlFor="ten_danh_gia">Tên đánh giá*</Label>
         <Input
@@ -194,7 +210,9 @@ const EvaluationForm = ({ teachingSession, onSubmit, onCancel }: EvaluationFormP
       </div>
 
       <div className="pt-4 flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
+        )}
         <Button type="submit">Lưu đánh giá</Button>
       </div>
     </form>
