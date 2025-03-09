@@ -29,13 +29,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const checkDatabaseStatus = async () => {
     try {
-      // Check if at least one table exists and has data
+      // Check if we can connect to the database
       const { data, error } = await supabase
-        .from('facilities')
+        .from('classes')
         .select('count');
       
       if (error) {
         console.error('Error checking database status:', error);
+        console.log('Setting isInitialized to false due to error');
         setIsInitialized(false);
         
         toast({
@@ -45,10 +46,12 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           duration: 5000,
         });
       } else {
+        console.log('Database connection successful, setting isInitialized to true');
         setIsInitialized(true);
       }
     } catch (error) {
       console.error('Error checking database status:', error);
+      console.log('Setting isInitialized to false due to exception');
       setIsInitialized(false);
       
       toast({
@@ -65,7 +68,12 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const initializeDatabase = async () => {
     setIsLoading(true);
     try {
-      const success = await setupDatabase(true, true);
+      const success = await setupDatabase(true, false); // Disable seeding by default
+      if (success) {
+        console.log('Database initialized successfully');
+      } else {
+        console.log('Database initialization failed');
+      }
       setIsInitialized(success);
     } catch (error) {
       console.error('Error initializing database:', error);

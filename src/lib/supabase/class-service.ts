@@ -17,22 +17,23 @@ export const classService = {
     const formattedData: any = {
       ten_lop_full: classData.Ten_lop_full || classData.ten_lop_full,
       ten_lop: classData.ten_lop,
-      ct_hoc: classData.ct_hoc,
-      co_so: classData.co_so,
-      gv_chinh: classData.GV_chinh || classData.gv_chinh,
-      ngay_bat_dau: classData.ngay_bat_dau,
-      tinh_trang: classData.tinh_trang,
-      ghi_chu: classData.ghi_chu,
-      unit_id: classData.unit_id
+      ct_hoc: classData.ct_hoc || '',
+      co_so: classData.co_so || null,
+      gv_chinh: classData.GV_chinh || classData.gv_chinh || null,
+      ngay_bat_dau: classData.ngay_bat_dau || null,
+      tinh_trang: classData.tinh_trang || 'active',
+      ghi_chu: classData.ghi_chu || '',
+      unit_id: classData.unit_id || null
     };
     
-    // Format date fields if they exist
+    // Format date fields if they exist and are not null
     if (formattedData.ngay_bat_dau && typeof formattedData.ngay_bat_dau !== 'string') {
       formattedData.ngay_bat_dau = new Date(formattedData.ngay_bat_dau).toISOString().split('T')[0];
     }
     
     try {
-      // Ensure that required UUIDs are not empty strings
+      // Ensure that UUID fields are either valid UUIDs or null
+      // Empty strings are not valid for UUID fields
       if (formattedData.co_so === '') {
         formattedData.co_so = null;
       }
