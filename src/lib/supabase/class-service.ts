@@ -10,6 +10,9 @@ export const classService = {
   update: (id: string, updates: Partial<Class>) => update<Class>('classes', id, updates),
   delete: (id: string) => remove('classes', id),
   
+  // Alias for getById to match the import in ClassDetail.tsx
+  getClassById: (id: string) => fetchById<Class>('classes', id),
+  
   // Get classes with student count using the view
   getAllWithStudentCount: async (): Promise<(Class & { so_hs: number })[]> => {
     const { data, error } = await supabase

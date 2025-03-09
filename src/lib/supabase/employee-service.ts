@@ -53,5 +53,20 @@ export const employeeService = {
     }
     
     return data as Employee[];
+  },
+  
+  // Get employees by role
+  getByRole: async (role: string): Promise<Employee[]> => {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('*')
+      .eq('chuc_danh', role);
+    
+    if (error) {
+      console.error('Error fetching employees by role:', error);
+      throw error;
+    }
+    
+    return data as Employee[];
   }
 };
