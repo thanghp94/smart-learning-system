@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase/client';
 
 // Function to create the database schema
@@ -368,7 +367,7 @@ export const createClassFunction = async (): Promise<boolean> => {
   }
 };
 
-// Add a function to disable RLS for tables in development
+// Update the disableRLSForDevelopment function to explicitly disable RLS for classes
 export const disableRLSForDevelopment = async (): Promise<boolean> => {
   try {
     const sql = `
@@ -377,6 +376,7 @@ export const disableRLSForDevelopment = async (): Promise<boolean> => {
       ALTER TABLE public.students DISABLE ROW LEVEL SECURITY;
       ALTER TABLE public.facilities DISABLE ROW LEVEL SECURITY;
       ALTER TABLE public.sessions DISABLE ROW LEVEL SECURITY;
+      ALTER TABLE public.teaching_sessions DISABLE ROW LEVEL SECURITY;
     `;
     
     const { error } = await supabase.rpc('run_sql', { sql });
