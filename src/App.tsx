@@ -19,23 +19,20 @@ function App() {
   return (
     <DatabaseProvider>
       <Router>
-        <div>
-          <MainLayout />
-          <main>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/students" element={<Students />} />
-              <Route path="/employees" element={<Employees />} />
-              <Route path="/classes" element={<Classes />} />
-              <Route path="/teaching-sessions" element={<TeachingSessions />} />
-              <Route path="/assets" element={<Assets />} />
-              <Route path="/assets/transfers" element={<TransferManagement />} />
-              <Route path="/database-schema" element={<DatabaseSchema />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          <Toaster />
-        </div>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Index />} />
+            <Route path="/students" element={<Students />} />
+            <Route path="/employees" element={<Employees />} />
+            <Route path="/classes" element={<Classes />} />
+            <Route path="/teaching-sessions" element={<TeachingSessions />} />
+            <Route path="/assets" element={<Assets />} />
+            <Route path="/assets/transfers" element={<TransferManagement />} />
+            <Route path="/database-schema" element={<DatabaseSchema />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+        <Toaster />
       </Router>
     </DatabaseProvider>
   );

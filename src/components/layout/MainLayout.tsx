@@ -6,6 +6,7 @@ import { Bell, Sun, Moon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { Outlet } from "react-router-dom";
 
 const MainLayout = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -56,8 +57,9 @@ const MainLayout = () => {
               </Avatar>
             </div>
           </header>
-          <div className="container mx-auto p-6">
-            {/* This is where the child content (routes) will be rendered */}
+          <div className="container mx-auto p-6 flex-1">
+            {/* This will render the current route component */}
+            <Outlet />
           </div>
         </div>
       </div>

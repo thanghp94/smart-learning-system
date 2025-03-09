@@ -60,7 +60,7 @@ function createMockClient() {
       })
     },
     auth: {
-      onAuthStateChange: () => ({ data: null, error: null }),
+      onAuthStateChange: () => ({ data: null, error: null, unsubscribe: () => {} }),
       getSession: () => Promise.resolve({ data: { session: null }, error: null })
     }
   };
