@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
 import EvaluationForm from "./EvaluationForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Evaluations = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
@@ -82,32 +83,62 @@ const Evaluations = () => {
     setShowEvaluationForm(true);
   };
 
+  const handleAddEvaluation = () => {
+    setSelectedSession(null);
+    setShowEvaluationForm(true);
+  };
+
   const handleSubmitEvaluation = async (evaluationData: Partial<TeachingSession>) => {
     try {
-      if (!selectedSession) return;
-      
-      const scores = [
-        Number(evaluationData.nhan_xet_1 || 0),
-        Number(evaluationData.nhan_xet_2 || 0),
-        Number(evaluationData.nhan_xet_3 || 0),
-        Number(evaluationData.nhan_xet_4 || 0),
-        Number(evaluationData.nhan_xet_5 || 0),
-        Number(evaluationData.nhan_xet_6 || 0)
-      ].filter(score => score > 0);
-      
-      const avg = scores.length > 0 
-        ? scores.reduce((acc, score) => acc + score, 0) / scores.length
-        : 0;
-      
-      await teachingSessionService.update(selectedSession.id, {
-        ...evaluationData,
-        trung_binh: avg
-      });
-      
-      toast({
-        title: "Thành công",
-        description: "Đã cập nhật đánh giá buổi học",
-      });
+      if (selectedSession) {
+        // Update existing evaluation
+        const scores = [
+          Number(evaluationData.nhan_xet_1 || 0),
+          Number(evaluationData.nhan_xet_2 || 0),
+          Number(evaluationData.nhan_xet_3 || 0),
+          Number(evaluationData.nhan_xet_4 || 0),
+          Number(evaluationData.nhan_xet_5 || 0),
+          Number(evaluationData.nhan_xet_6 || 0)
+        ].filter(score => score > 0);
+        
+        const avg = scores.length > 0 
+          ? scores.reduce((acc, score) => acc + score, 0) / scores.length
+          : 0;
+        
+        await teachingSessionService.update(selectedSession.id, {
+          ...evaluationData,
+          trung_binh: avg
+        });
+        
+        toast({
+          title: "Thành công",
+          description: "Đã cập nhật đánh giá buổi học",
+        });
+      } else {
+        // Create new evaluation
+        const scores = [
+          Number(evaluationData.nhan_xet_1 || 0),
+          Number(evaluationData.nhan_xet_2 || 0),
+          Number(evaluationData.nhan_xet_3 || 0),
+          Number(evaluationData.nhan_xet_4 || 0),
+          Number(evaluationData.nhan_xet_5 || 0),
+          Number(evaluationData.nhan_xet_6 || 0)
+        ].filter(score => score > 0);
+        
+        const avg = scores.length > 0 
+          ? scores.reduce((acc, score) => acc + score, 0) / scores.length
+          : 0;
+        
+        await teachingSessionService.create({
+          ...evaluationData,
+          trung_binh: avg
+        });
+        
+        toast({
+          title: "Thành công",
+          description: "Đã thêm đánh giá buổi học mới",
+        });
+      }
       
       setShowEvaluationForm(false);
       fetchData();
@@ -187,6 +218,9 @@ const Evaluations = () => {
       <Button variant="outline" size="sm" className="h-8">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
+      <Button size="sm" className="h-8" onClick={handleAddEvaluation}>
+        <Plus className="h-4 w-4 mr-1" /> Thêm Đánh Giá
+      </Button>
     </div>
   );
 
@@ -207,16 +241,19 @@ const Evaluations = () => {
       <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Đánh Giá Buổi Dạy</DialogTitle>
+            <DialogTitle>{selectedSession ? "Đánh Giá Buổi Dạy" : "Thêm Đánh Giá Mới"}</DialogTitle>
+            {!selectedSession && (
+              <DialogDescription>
+                Nhập thông tin đánh giá buổi học mới
+              </DialogDescription>
+            )}
           </DialogHeader>
-          {selectedSession && (
-            <EvaluationForm 
-              initialData={selectedSession} 
-              onSubmit={handleSubmitEvaluation}
-              classInfo={classes[selectedSession.lop_chi_tiet_id]}
-              teacherInfo={teachers[selectedSession.giao_vien]}
-            />
-          )}
+          <EvaluationForm 
+            initialData={selectedSession || {}} 
+            onSubmit={handleSubmitEvaluation}
+            classInfo={selectedSession ? classes[selectedSession.lop_chi_tiet_id] : undefined}
+            teacherInfo={selectedSession ? teachers[selectedSession.giao_vien] : undefined}
+          />
         </DialogContent>
       </Dialog>
     </TablePageLayout>
