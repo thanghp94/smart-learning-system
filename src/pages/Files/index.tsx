@@ -50,7 +50,16 @@ const FilesPage = () => {
 
   const handleAddFormSubmit = async (formData: Partial<FileDocument>) => {
     try {
-      await fileService.create(formData);
+      console.log("Submitting file data:", formData);
+
+      // Convert dates to ISO strings for the API
+      const formattedData = {
+        ...formData,
+        ngay_cap: formData.ngay_cap ? formData.ngay_cap.toISOString().split('T')[0] : null,
+        han_tai_lieu: formData.han_tai_lieu ? formData.han_tai_lieu.toISOString().split('T')[0] : null,
+      };
+
+      await fileService.create(formattedData);
       toast({
         title: "Thành công",
         description: "Thêm hồ sơ mới thành công",
