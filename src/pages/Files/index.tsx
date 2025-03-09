@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import FileForm from "./FileForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 import { FileFormValues } from "./schemas/fileSchema";
 
@@ -173,6 +174,9 @@ const FilesPage = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Thêm Hồ Sơ Mới</DialogTitle>
+            <DialogDescription>
+              Điền thông tin hồ sơ mới và nhấn lưu để tạo hồ sơ.
+            </DialogDescription>
           </DialogHeader>
           <FileForm 
             onSubmit={handleAddFormSubmit}

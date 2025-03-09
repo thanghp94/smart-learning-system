@@ -22,15 +22,15 @@ interface AssetFormProps {
 const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
-      ten_tai_san: initialData?.ten_tai_san || '',
+      ten_csvc: initialData?.ten_csvc || '',
       loai: initialData?.loai || '',
       danh_muc: initialData?.danh_muc || '',
       so_luong: initialData?.so_luong || 0,
       don_vi: initialData?.don_vi || '',
-      gia_tri: initialData?.gia_tri || 0,
+      so_tien_mua: initialData?.so_tien_mua || '',
       tinh_trang: initialData?.tinh_trang || 'good',
       trang_thai_so_huu: initialData?.trang_thai_so_huu || '',
-      mo_ta: initialData?.mo_ta || '',
+      mo_ta_1: initialData?.mo_ta_1 || '',
       ghi_chu: initialData?.ghi_chu || ''
     }
   });
@@ -39,13 +39,13 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="ten_tai_san">Tên tài sản*</Label>
+          <Label htmlFor="ten_csvc">Tên tài sản*</Label>
           <Input
-            id="ten_tai_san"
-            {...register('ten_tai_san', { required: true })}
-            className={errors.ten_tai_san ? 'border-red-500' : ''}
+            id="ten_csvc"
+            {...register('ten_csvc', { required: true })}
+            className={errors.ten_csvc ? 'border-red-500' : ''}
           />
-          {errors.ten_tai_san && <p className="text-red-500 text-xs mt-1">Vui lòng nhập tên tài sản</p>}
+          {errors.ten_csvc && <p className="text-red-500 text-xs mt-1">Vui lòng nhập tên tài sản</p>}
         </div>
 
         <div>
@@ -82,11 +82,10 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
         </div>
 
         <div>
-          <Label htmlFor="gia_tri">Giá trị</Label>
+          <Label htmlFor="so_tien_mua">Giá trị</Label>
           <Input
-            id="gia_tri"
-            type="number"
-            {...register('gia_tri', { valueAsNumber: true })}
+            id="so_tien_mua"
+            {...register('so_tien_mua')}
           />
         </div>
 
@@ -117,8 +116,8 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
       </div>
 
       <div>
-        <Label htmlFor="mo_ta">Mô tả</Label>
-        <Textarea id="mo_ta" {...register('mo_ta')} rows={3} />
+        <Label htmlFor="mo_ta_1">Mô tả</Label>
+        <Textarea id="mo_ta_1" {...register('mo_ta_1')} rows={3} />
       </div>
 
       <div>

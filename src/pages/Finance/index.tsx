@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,7 @@ const FinancePage = () => {
       const preparedData = {
         ...formData,
         tong_tien: formData.tong_tien ? Number(formData.tong_tien) : 0,
+        ngay: formData.ngay || new Date().toISOString().split('T')[0],
       };
       
       await financeService.create(preparedData);
