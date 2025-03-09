@@ -23,14 +23,11 @@ export const useDatabase = () => useContext(DatabaseContext);
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false); // Set to false to disable demo mode
   const { toast } = useToast();
 
   const checkDatabaseStatus = async () => {
     try {
-      // Always use real Supabase mode, not demo mode
-      setIsDemoMode(false);
-      
       // Check if at least one table exists and has data
       const { data, error } = await supabase
         .from('facilities')
