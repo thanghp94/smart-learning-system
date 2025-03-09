@@ -15,11 +15,14 @@ import {
 import { 
   Class, 
   Employee, 
-  TeachingSession 
+  TeachingSession,
+  Session
 } from '@/lib/types';
-import { classService, employeeService, sessionService } from '@/lib/supabase';
+import { classService, employeeService } from '@/lib/supabase';
+import { sessionService } from '@/lib/supabase/session-service';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ExclamationTriangleIcon } from 'lucide-react';
+import { ExclamationTriangle } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
 
 interface EvaluationFormProps {
   initialData: TeachingSession;
@@ -32,7 +35,7 @@ interface EvaluationFormProps {
 const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInfo }: EvaluationFormProps) => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Employee[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | undefined>(classInfo);
   const [selectedTeacher, setSelectedTeacher] = useState<Employee | undefined>(teacherInfo);
@@ -102,7 +105,6 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
   };
 
   const handleFormSubmit = (data: TeachingSession) => {
-    // Convert string ratings to numbers for the database
     onSubmit(data);
   };
 
@@ -110,7 +112,7 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       {error && (
         <Alert variant="destructive">
-          <ExclamationTriangleIcon className="h-4 w-4" />
+          <ExclamationTriangle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}

@@ -19,27 +19,30 @@ export const teachingSessionService = {
       // Remove trung_binh field as it's a generated column
       const { trung_binh, ...sessionData } = session;
       
-      // Ensure session_id is a valid UUID
-      if (typeof sessionData.session_id === 'string' && 
-          !sessionData.session_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        // If session_id is not a valid UUID, we need to generate one
+      // Handle session_id
+      let finalSessionId = sessionData.session_id;
+      
+      // Check if session_id is a valid UUID
+      if (typeof finalSessionId === 'string' && 
+          !finalSessionId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
         console.log("Converting non-UUID session_id to UUID");
         try {
           // Try to fetch the session by buoi_hoc_so from sessions table
-          const { data: sessionData } = await supabase
+          const { data: sessionResult } = await supabase
             .from('sessions')
             .select('id')
-            .eq('buoi_hoc_so', session.session_id)
+            .eq('buoi_hoc_so', finalSessionId)
             .single();
             
-          if (sessionData && sessionData.id) {
-            sessionData.session_id = sessionData.id;
+          if (sessionResult && sessionResult.id) {
+            // If found, use the existing session ID
+            finalSessionId = sessionResult.id;
           } else {
-            // If not found, generate a new UUID
+            // If not found, generate a new session
             const { data: newSession } = await supabase
               .from('sessions')
               .insert({
-                buoi_hoc_so: session.session_id.toString(),
+                buoi_hoc_so: finalSessionId.toString(),
                 noi_dung_bai_hoc: 'Auto-generated session',
                 unit_id: 'AUTO'
               })
@@ -47,7 +50,7 @@ export const teachingSessionService = {
               .single();
               
             if (newSession) {
-              sessionData.session_id = newSession.id;
+              finalSessionId = newSession.id;
             } else {
               throw new Error("Could not create a new session");
             }
@@ -61,6 +64,7 @@ export const teachingSessionService = {
       // Convert numeric values to strings before saving to match the database schema
       const formattedSession: Partial<TeachingSession> = {
         ...sessionData,
+        session_id: finalSessionId,
         loai_bai_hoc: sessionData.loai_bai_hoc || 'Standard',
         nhan_xet_1: sessionData.nhan_xet_1 !== undefined && sessionData.nhan_xet_1 !== null ? 
           String(sessionData.nhan_xet_1) : null,

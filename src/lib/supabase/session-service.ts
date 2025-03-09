@@ -1,7 +1,7 @@
 
+import { Session } from '../types';
 import { supabase } from './client';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
-import { Session } from '@/lib/types';
 
 export const sessionService = {
   getAll: async (): Promise<Session[]> => {
@@ -9,45 +9,43 @@ export const sessionService = {
       const { data, error } = await supabase
         .from('sessions')
         .select('*')
-        .order('tg_tao', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching sessions:', error);
-        return [];
+        console.error("Error fetching sessions:", error);
+        throw error;
       }
       
-      console.log(`Successfully fetched ${data?.length || 0} sessions`);
       return data || [];
     } catch (error) {
-      console.error('Error in fetchSessions:', error);
+      console.error("Error in getAll sessions:", error);
       return [];
     }
   },
-
+  
   getById: (id: string) => fetchById<Session>('sessions', id),
   
   create: async (sessionData: Partial<Session>): Promise<Session | null> => {
     try {
-      console.log('Creating new session:', sessionData);
-      
-      // Use the RPC function to create the session
-      const { data, error } = await supabase.rpc(
-        'create_session',
-        { session_data: sessionData }
-      );
-      
-      if (error) {
-        console.error('Error creating session via RPC:', error);
-        
-        // Fallback to direct insert if RPC fails
-        console.log('Attempting direct insert as fallback...');
-        return insert<Session>('sessions', sessionData);
+      // Ensure required fields are present
+      if (!sessionData.buoi_hoc_so || !sessionData.noi_dung_bai_hoc) {
+        throw new Error("Missing required fields for session");
       }
       
-      console.log('Session created successfully via RPC:', data);
-      return data as Session;
+      const { data, error } = await supabase
+        .from('sessions')
+        .insert(sessionData)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error creating session:", error);
+        throw error;
+      }
+      
+      return data;
     } catch (error) {
-      console.error('Error in createSession:', error);
+      console.error("Error in create session:", error);
       throw error;
     }
   },
@@ -60,16 +58,33 @@ export const sessionService = {
     const { data, error } = await supabase
       .from('sessions')
       .select('*')
-      .eq('unit_id', unitId)
-      .order('buoi_hoc_so', { ascending: true });
+      .eq('unit_id', unitId);
     
     if (error) {
       console.error('Error fetching sessions by unit ID:', error);
       throw error;
     }
     
-    return data || [];
+    return data as Session[];
+  },
+  
+  getByBuoiHocSo: async (buoiHocSo: string): Promise<Session | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('buoi_hoc_so', buoiHocSo)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching session by buoi_hoc_so:', error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error in getByBuoiHocSo:', error);
+      return null;
+    }
   }
 };
-
-export default sessionService;
