@@ -6,6 +6,7 @@ import { Student } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import StudentForm from "../StudentForm";
 import PageHeader from "@/components/common/PageHeader";
+import { studentService } from "@/lib/supabase";
 
 interface StudentFormContainerProps {
   studentId?: string;
@@ -30,8 +31,6 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
   const fetchStudentById = async (id: string) => {
     try {
       setIsLoading(true);
-      // Import dynamically to avoid circular dependencies
-      const { studentService } = await import("@/lib/supabase/student-service");
       const data = await studentService.getById(id);
       
       if (data) {
@@ -60,11 +59,31 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
   const handleFormSubmit = async (data: any) => {
     try {
       console.log("Submitting student data:", data);
-      // Import dynamically to avoid circular dependencies
-      const { studentService } = await import("@/lib/supabase/student-service");
+      
+      // Convert field names to match database column names
+      // Column name in database is co_so_ID, not co_so_id
+      if (data.co_so_id) {
+        data.co_so_ID = data.co_so_id;
+        delete data.co_so_id;
+      }
+      
+      // Ensure all date fields are properly formatted for Supabase
+      if (data.ngay_sinh && data.ngay_sinh instanceof Date) {
+        data.ngay_sinh = data.ngay_sinh.toISOString().split('T')[0];
+      }
+      
+      if (data.han_hoc_phi && data.han_hoc_phi instanceof Date) {
+        data.han_hoc_phi = data.han_hoc_phi.toISOString().split('T')[0];
+      }
+      
+      if (data.ngay_bat_dau_hoc_phi && data.ngay_bat_dau_hoc_phi instanceof Date) {
+        data.ngay_bat_dau_hoc_phi = data.ngay_bat_dau_hoc_phi.toISOString().split('T')[0];
+      }
+      
+      console.log("Formatted student data for submission:", data);
       
       if (!isAdd && student) {
-        await studentService.update(student.id, data);
+        await studentService.update(student.id!, data);
         toast({
           title: "Thành công",
           description: "Cập nhật thông tin học sinh thành công",

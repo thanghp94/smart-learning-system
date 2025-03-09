@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
 import { Loader2 } from "lucide-react";
 import { Student } from "@/lib/types";
-import { studentService } from "@/lib/supabase/student-service";
+import { studentService } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import StudentsList from "./Students/components/StudentsList";
 import StudentFormContainer from "./Students/components/StudentFormContainer";
