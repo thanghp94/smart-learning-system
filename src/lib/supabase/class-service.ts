@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
 import { Class } from '@/lib/types';
@@ -62,7 +61,7 @@ class ClassService {
   }
 
   /**
-   * Creates a new class - using service role to bypass RLS
+   * Creates a new class - using database function to bypass RLS
    */
   async create(classData: Omit<Class, 'id'> & { id?: string }): Promise<Class | null> {
     try {
@@ -95,75 +94,59 @@ class ClassService {
         }
       }
       
-      // Add a unique ID to the data if not provided (for backup purposes)
+      // Add a unique ID to the data if not provided
       const recordId = formattedData.id || crypto.randomUUID();
       formattedData.id = recordId;
       
-      // Try to create the class directly without RLS
-      const { data, error } = await supabase
-        .from('classes')
-        .insert(formattedData)
-        .select()
-        .single();
+      // Use the RPC function to create the class
+      console.log('Using RPC function to create class:', formattedData);
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'create_class',
+        { class_data: formattedData }
+      );
       
-      if (error) {
-        console.error('Error creating class:', error);
+      if (rpcError) {
+        console.error('Error creating class via RPC:', rpcError);
         
-        // Try using the RPC function as a fallback
-        try {
-          console.log('Attempting to create class via RPC function...');
-          const { data: rpcData, error: rpcError } = await supabase.rpc(
-            'create_class',
-            { class_data: formattedData }
-          );
-          
-          if (rpcError) {
-            console.error('Error creating class via RPC:', rpcError);
-            throw rpcError;
-          }
-          
-          console.log('Class created successfully via RPC:', rpcData);
-          
-          // Log activity
-          await logActivity(
-            'create',
-            'class',
-            formattedData.ten_lop_full,
-            'system',
-            'completed'
-          );
-          
-          return rpcData as Class;
-        } catch (rpcError) {
-          console.error('Error in RPC create class attempt:', rpcError);
-          
-          // If both methods fail, return a manually crafted fallback object
-          // This is just for UI purposes and won't be in the database
-          const fallbackData = {
-            ...formattedData,
-            id: recordId,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          
-          console.log('Created fallback record (NOT SAVED TO DB):', fallbackData);
-          
-          return fallbackData as Class;
+        // Fallback to direct insert if RPC fails
+        console.log('Attempting direct insert as fallback...');
+        const { data: directData, error: directError } = await supabase
+          .from('classes')
+          .insert(formattedData)
+          .select()
+          .single();
+        
+        if (directError) {
+          console.error('Error in direct insert fallback:', directError);
+          throw directError;
         }
+        
+        console.log('Class created successfully via direct insert:', directData);
+        
+        // Log activity
+        await logActivity(
+          'create',
+          'class',
+          directData.ten_lop_full,
+          'system',
+          'completed'
+        );
+        
+        return directData as Class;
       }
       
-      console.log('Class created successfully:', data);
+      console.log('Class created successfully via RPC:', rpcData);
       
       // Log activity
       await logActivity(
         'create',
         'class',
-        data.ten_lop_full,
+        rpcData.ten_lop_full || formattedData.ten_lop_full,
         'system',
         'completed'
       );
       
-      return data as Class;
+      return rpcData as Class;
     } catch (error) {
       console.error('Error in createClass:', error);
       throw error;

@@ -24,7 +24,7 @@ const Classes = () => {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const { toast } = useToast();
-  const { initializeDatabase } = useDatabase();
+  const { initializeDatabase, reinitializePolicies } = useDatabase();
 
   useEffect(() => {
     fetchClasses();
@@ -87,6 +87,7 @@ const Classes = () => {
       };
       
       const newClass = await classService.create(classDataToSubmit as any);
+      console.log("New class created successfully:", newClass);
       
       // Refresh the classes list to ensure we have the latest data
       toast({
@@ -94,9 +95,12 @@ const Classes = () => {
         description: "Thêm lớp học mới thành công",
       });
       setShowAddForm(false);
-      fetchClasses();
+      await fetchClasses(); // Immediately refresh the data
     } catch (error: any) {
       console.error("Error adding class:", error);
+      
+      // Try to reinitialize policies and try again
+      await reinitializePolicies();
       
       // Show a more detailed error message
       let errorMsg = "Không thể thêm lớp học mới";
@@ -126,6 +130,7 @@ const Classes = () => {
         title: "Thành công",
         description: "Đã khởi tạo lại cơ sở dữ liệu. Vui lòng thử lại.",
       });
+      await fetchClasses(); // Refresh data after initialization
     } catch (error) {
       console.error("Error initializing database:", error);
       toast({

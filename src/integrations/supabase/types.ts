@@ -1856,6 +1856,12 @@ export type Database = {
       }
     }
     Functions: {
+      create_class: {
+        Args: {
+          class_data: Json
+        }
+        Returns: Json
+      }
       create_schema_info_function: {
         Args: Record<PropertyKey, never>
         Returns: undefined

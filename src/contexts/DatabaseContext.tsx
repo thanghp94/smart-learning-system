@@ -73,6 +73,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const success = await setupDatabase(true, false); // Disable seeding by default
       if (success) {
         console.log('Database initialized successfully');
+        // Ensure RLS is disabled for classes table after initialization
+        await disableRLSForClasses();
       } else {
         console.log('Database initialization failed');
       }
@@ -91,8 +93,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const reinitializePolicies = async () => {
-    setIsLoading(true);
+  const disableRLSForClasses = async () => {
     try {
       // First completely disable RLS on the classes table to ensure direct access
       const { error: disableRlsError } = await supabase.rpc('run_sql', { 
@@ -107,21 +108,36 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       if (disableRlsError) {
         console.error('Error disabling RLS:', disableRlsError);
+        return false;
+      }
+      
+      console.log('Successfully disabled RLS for classes table');
+      return true;
+    } catch (error) {
+      console.error('Error disabling RLS for classes:', error);
+      return false;
+    }
+  };
+
+  const reinitializePolicies = async () => {
+    setIsLoading(true);
+    try {
+      const success = await disableRLSForClasses();
+      
+      if (success) {
+        toast({
+          title: 'Policies Applied',
+          description: 'Database access policies have been reinitialized. RLS has been disabled for development.',
+          duration: 3000,
+        });
+      } else {
         toast({
           title: 'Policy Update Error',
           description: 'Failed to disable row level security. Please try again.',
           variant: 'destructive',
           duration: 5000,
         });
-        return;
       }
-      
-      toast({
-        title: 'Policies Applied',
-        description: 'Database access policies have been reinitialized. RLS has been disabled for development.',
-        duration: 3000,
-      });
-      
     } catch (error) {
       console.error('Error reinitializing policies:', error);
       toast({

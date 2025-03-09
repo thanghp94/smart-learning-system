@@ -38,11 +38,8 @@ BEGIN
     COALESCE(class_data->>'tinh_trang', 'active'),
     class_data->>'ghi_chu',
     class_data->>'unit_id'
-  );
-  
-  SELECT row_to_json(c)::JSONB INTO new_class
-  FROM classes c
-  WHERE c.id = new_class_id;
+  )
+  RETURNING to_jsonb(classes.*) INTO new_class;
   
   RETURN new_class;
 EXCEPTION
