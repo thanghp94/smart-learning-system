@@ -1,16 +1,139 @@
 
-import React from "react";
-import { DollarSign } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, FileDown, Filter, RotateCw, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import DataTable from "@/components/ui/DataTable";
+import { payrollService, employeeService } from "@/lib/supabase";
+import { Payroll, Employee } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import TablePageLayout from "@/components/common/TablePageLayout";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 
-const Payroll = () => {
+const PayrollPage = () => {
+  const [payrolls, setPayrolls] = useState<Payroll[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchPayrolls();
+    fetchEmployees();
+  }, []);
+
+  const fetchPayrolls = async () => {
+    try {
+      setIsLoading(true);
+      const data = await payrollService.getAll();
+      setPayrolls(data);
+    } catch (error) {
+      console.error("Error fetching payrolls:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải dữ liệu bảng lương",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const data = await employeeService.getAll();
+      setEmployees(data);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    }
+  };
+
+  const getEmployeeName = (employeeId: string) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    return employee ? employee.ten_nhan_su : 'N/A';
+  };
+
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined) return 'N/A';
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+
+  const columns = [
+    {
+      title: "Nhân Viên",
+      key: "nhan_su_id",
+      render: (value: string) => getEmployeeName(value),
+      sortable: true,
+    },
+    {
+      title: "Tháng/Năm",
+      key: "thang",
+      render: (value: string, record: Payroll) => `${value}/${record.nam}`,
+      sortable: true,
+    },
+    {
+      title: "Lương",
+      key: "luong",
+      render: (value: number) => formatCurrency(value),
+      sortable: true,
+    },
+    {
+      title: "Tổng Thu Nhập",
+      key: "tong_thu_nhap",
+      render: (value: number) => formatCurrency(value),
+      sortable: true,
+    },
+    {
+      title: "Trạng Thái",
+      key: "trang_thai",
+      render: (value: string) => 
+        value === 'pending' ? 'Chờ duyệt' : 
+        value === 'approved' ? 'Đã duyệt' : 
+        value === 'paid' ? 'Đã thanh toán' : value,
+      sortable: true,
+    },
+  ];
+
+  const tableActions = (
+    <div className="flex items-center space-x-2">
+      <Button variant="outline" size="sm" className="h-8" onClick={fetchPayrolls}>
+        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
+      </Button>
+      <Button variant="outline" size="sm" className="h-8">
+        <Filter className="h-4 w-4 mr-1" /> Lọc
+      </Button>
+      <Button variant="outline" size="sm" className="h-8">
+        <FileDown className="h-4 w-4 mr-1" /> Xuất
+      </Button>
+      <Button size="sm" className="h-8">
+        <Plus className="h-4 w-4 mr-1" /> Tạo Bảng Lương
+      </Button>
+    </div>
+  );
+
+  if (payrolls.length === 0 && !isLoading) {
+    return (
+      <PlaceholderPage
+        title="Lương"
+        description="Quản lý bảng lương nhân viên"
+        icon={<DollarSign className="h-16 w-16 text-muted-foreground/40" />}
+      />
+    );
+  }
+
   return (
-    <PlaceholderPage
+    <TablePageLayout
       title="Lương"
       description="Quản lý bảng lương nhân viên"
-      icon={<DollarSign className="h-16 w-16 text-muted-foreground/40" />}
-    />
+      actions={tableActions}
+    >
+      <DataTable
+        columns={columns}
+        data={payrolls}
+        isLoading={isLoading}
+        searchable={true}
+        searchPlaceholder="Tìm kiếm bảng lương..."
+      />
+    </TablePageLayout>
   );
 };
 
-export default Payroll;
+export default PayrollPage;

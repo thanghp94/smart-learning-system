@@ -160,7 +160,7 @@ const Classes = () => {
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <ClassDetail classData={selectedClass} />
+          <ClassDetail classInfo={selectedClass} />
         </DetailPanel>
       )}
 
