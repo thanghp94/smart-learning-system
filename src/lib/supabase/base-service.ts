@@ -1,21 +1,34 @@
 
 import { supabase } from './client';
 
+// Enhanced error logging
+const logError = (error: any, operation: string, table: string) => {
+  console.error(`Error in ${operation} for ${table}:`, error);
+  console.error('Error details:', {
+    message: error.message,
+    code: error.code,
+    details: error.details,
+    hint: error.hint
+  });
+};
+
 // Generic fetch function for any table
 export const fetchAll = async <T>(table: string): Promise<T[]> => {
   try {
+    console.log(`Fetching all records from ${table}...`);
     const { data, error } = await supabase
       .from(table)
       .select('*');
     
     if (error) {
-      console.error(`Error fetching ${table}:`, error);
+      logError(error, 'fetchAll', table);
       return [];
     }
     
+    console.log(`Successfully fetched ${data?.length || 0} records from ${table}`);
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error(`Unexpected error in fetchAll for ${table}:`, error);
+    logError(error, 'fetchAll', table);
     return [];
   }
 };
@@ -23,6 +36,7 @@ export const fetchAll = async <T>(table: string): Promise<T[]> => {
 // Generic fetch by ID
 export const fetchById = async <T>(table: string, id: string): Promise<T | null> => {
   try {
+    console.log(`Fetching record with ID ${id} from ${table}...`);
     const { data, error } = await supabase
       .from(table)
       .select('*')
@@ -30,13 +44,14 @@ export const fetchById = async <T>(table: string, id: string): Promise<T | null>
       .single();
     
     if (error) {
-      console.error(`Error fetching ${table} by ID:`, error);
+      logError(error, 'fetchById', table);
       return null;
     }
     
+    console.log(`Successfully fetched record from ${table}:`, data);
     return data as T;
   } catch (error) {
-    console.error(`Unexpected error in fetchById for ${table}:`, error);
+    logError(error, 'fetchById', table);
     return null;
   }
 };
@@ -44,6 +59,7 @@ export const fetchById = async <T>(table: string, id: string): Promise<T | null>
 // Generic insert function
 export const insert = async <T>(table: string, record: Partial<T>): Promise<T> => {
   try {
+    console.log(`Inserting record into ${table}:`, record);
     const { data, error } = await supabase
       .from(table)
       .insert(record)
@@ -51,13 +67,14 @@ export const insert = async <T>(table: string, record: Partial<T>): Promise<T> =
       .single();
     
     if (error) {
-      console.error(`Error inserting to ${table}:`, error);
+      logError(error, 'insert', table);
       throw error;
     }
     
+    console.log(`Successfully inserted record into ${table}:`, data);
     return data as T;
   } catch (error) {
-    console.error(`Unexpected error in insert for ${table}:`, error);
+    logError(error, 'insert', table);
     throw error;
   }
 };
@@ -65,6 +82,7 @@ export const insert = async <T>(table: string, record: Partial<T>): Promise<T> =
 // Generic update function
 export const update = async <T>(table: string, id: string, updates: Partial<T>): Promise<T> => {
   try {
+    console.log(`Updating record ${id} in ${table}:`, updates);
     const { data, error } = await supabase
       .from(table)
       .update(updates)
@@ -73,13 +91,14 @@ export const update = async <T>(table: string, id: string, updates: Partial<T>):
       .single();
     
     if (error) {
-      console.error(`Error updating ${table}:`, error);
+      logError(error, 'update', table);
       throw error;
     }
     
+    console.log(`Successfully updated record in ${table}:`, data);
     return data as T;
   } catch (error) {
-    console.error(`Unexpected error in update for ${table}:`, error);
+    logError(error, 'update', table);
     throw error;
   }
 };
@@ -87,17 +106,20 @@ export const update = async <T>(table: string, id: string, updates: Partial<T>):
 // Generic delete function
 export const remove = async (table: string, id: string): Promise<void> => {
   try {
+    console.log(`Removing record ${id} from ${table}...`);
     const { error } = await supabase
       .from(table)
       .delete()
       .eq('id', id);
     
     if (error) {
-      console.error(`Error deleting from ${table}:`, error);
+      logError(error, 'remove', table);
       throw error;
     }
+    
+    console.log(`Successfully removed record ${id} from ${table}`);
   } catch (error) {
-    console.error(`Unexpected error in remove for ${table}:`, error);
+    logError(error, 'remove', table);
     throw error;
   }
 };
@@ -115,19 +137,22 @@ export const logActivity = async (
       action,
       type,
       name,
-      user,
+      username: user,
       timestamp: new Date().toISOString(),
       status
     };
     
+    console.log(`Logging activity:`, activity);
     const { error } = await supabase
       .from('activities')
       .insert(activity);
     
     if (error) {
-      console.error('Error logging activity:', error);
+      logError(error, 'logActivity', 'activities');
+    } else {
+      console.log('Activity logged successfully');
     }
   } catch (error) {
-    console.error('Unexpected error in logActivity:', error);
+    logError(error, 'logActivity', 'activities');
   }
 };

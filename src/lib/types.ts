@@ -23,12 +23,12 @@ export interface Student {
 export interface Class {
   id: string;
   ten_lop_full: string;
-  Ten_lop_full: string;
+  Ten_lop_full?: string;
   ten_lop: string;
   ct_hoc: string;
   co_so: string;
   gv_chinh: string;
-  GV_chinh: string;
+  GV_chinh?: string;
   ngay_bat_dau: string;
   tinh_trang: string;
   ghi_chu?: string;

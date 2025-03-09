@@ -9,13 +9,23 @@ export const studentService = {
   create: async (student: Partial<Student>) => {
     console.log("Creating student with data:", student);
     
-    // Format the date fields properly if they exist
-    const formattedData = {
-      ...student,
-      ngay_sinh: student.ngay_sinh || null,
-      han_hoc_phi: student.han_hoc_phi || null,
-      ngay_bat_dau_hoc_phi: student.ngay_bat_dau_hoc_phi || null
+    // Format date fields properly for the database
+    const formattedData: Partial<Student> = {
+      ...student
     };
+    
+    // Convert Date objects to ISO strings if they exist
+    if (student.ngay_sinh instanceof Date) {
+      formattedData.ngay_sinh = student.ngay_sinh.toISOString().split('T')[0];
+    }
+    
+    if (student.han_hoc_phi instanceof Date) {
+      formattedData.han_hoc_phi = student.han_hoc_phi.toISOString().split('T')[0];
+    }
+    
+    if (student.ngay_bat_dau_hoc_phi instanceof Date) {
+      formattedData.ngay_bat_dau_hoc_phi = student.ngay_bat_dau_hoc_phi.toISOString().split('T')[0];
+    }
     
     return insert<Student>('students', formattedData);
   },
