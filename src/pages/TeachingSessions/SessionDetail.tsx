@@ -1,261 +1,228 @@
-
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from "react";
+import { TeachingSession, Class, Employee, Enrollment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { teachingSessionService } from "@/lib/supabase";
-import { TeachingSession, Class, Employee } from "@/lib/types";
-import { format } from "date-fns";
-import { classService, employeeService } from "@/lib/supabase";
-import { Separator } from "@/components/ui/separator";
+import { enrollmentService } from "@/lib/supabase";
+import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { ReloadIcon } from "@radix-ui/react-icons";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Clock, Users } from "lucide-react";
+import DataTable from "@/components/ui/DataTable";
 import { useToast } from "@/hooks/use-toast";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Progress } from "@/components/ui/progress";
 
-const SessionDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const [session, setSession] = useState<TeachingSession | null>(null);
-  const [classInfo, setClassInfo] = useState<Class | null>(null);
-  const [teacher, setTeacher] = useState<Employee | null>(null);
-  const [assistant, setAssistant] = useState<Employee | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
-  const navigate = useNavigate();
+interface SessionDetailProps {
+  session: TeachingSession;
+  class?: Class;
+  teacher?: Employee;
+}
+
+const SessionDetail = ({ session, class: classItem, teacher }: SessionDetailProps) => {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchEnrollments = async () => {
       try {
-        if (!id) return;
-        
-        // Fetch session
-        const sessionData = await teachingSessionService.getById(id);
-        setSession(sessionData);
-        
-        if (sessionData) {
-          // Fetch related class
-          const classData = await classService.getById(sessionData.lop_chi_tiet_id);
-          setClassInfo(classData);
-          
-          // Fetch teacher
-          if (sessionData.giao_vien) {
-            const teacherData = await employeeService.getById(sessionData.giao_vien);
-            setTeacher(teacherData);
-          }
-          
-          // Fetch assistant
-          if (sessionData.tro_giang) {
-            const assistantData = await employeeService.getById(sessionData.tro_giang);
-            setAssistant(assistantData);
-          }
-        }
+        setIsLoading(true);
+        const data = await enrollmentService.getBySession(session.id);
+        setEnrollments(data);
       } catch (error) {
-        console.error("Error fetching session details:", error);
+        console.error("Error fetching enrollments:", error);
         toast({
           title: "Lỗi",
-          description: "Không thể tải thông tin buổi học",
-          variant: "destructive",
+          description: "Không thể tải dữ liệu điểm danh",
+          variant: "destructive"
         });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
-    fetchData();
-  }, [id, toast]);
-
-  const handleDelete = async () => {
-    if (!id) return;
     
-    try {
-      setDeleting(true);
-      await teachingSessionService.delete(id);
-      toast({
-        title: "Thành công",
-        description: "Đã xóa buổi học",
-      });
-      navigate("/teaching-sessions");
-    } catch (error) {
-      console.error("Error deleting session:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể xóa buổi học",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleting(false);
-    }
+    fetchEnrollments();
+  }, [session.id]);
+
+  const getScoreClassName = (score?: string | number) => {
+    if (!score) return "bg-gray-300";
+    const numScore = Number(score);
+    if (numScore >= 8) return "bg-green-500";
+    if (numScore >= 6) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-        <span>Đang tải...</span>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <div>Không tìm thấy buổi học</div>;
-  }
+  const enrollmentColumns = [
+    {
+      title: "Học sinh ID",
+      key: "hoc_sinh_id",
+      sortable: true,
+    },
+    {
+      title: "Điểm danh",
+      key: "tinh_trang_diem_danh",
+      sortable: true,
+      render: (value: string) => (
+        <Badge variant={
+          value === "present" ? "success" : 
+          value === "absent" ? "destructive" : 
+          "secondary"
+        }>
+          {value === "present" ? "Có mặt" : 
+           value === "absent" ? "Vắng mặt" : 
+           value === "late" ? "Đi muộn" : value}
+        </Badge>
+      ),
+    },
+    {
+      title: "Ghi chú",
+      key: "ghi_chu",
+      render: (value: string) => <span>{value || "Không có"}</span>,
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">
-          Chi tiết buổi học
+      <div>
+        <h2 className="text-2xl font-bold">
+          {classItem?.Ten_lop_full} - Buổi {session.session_id}
         </h2>
-        <div className="flex space-x-2">
-          <Button onClick={() => navigate(`/teaching-sessions/edit/${id}`)}>
-            Chỉnh sửa
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">Xóa</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Bạn có chắc chắn muốn xóa buổi học này? Hành động này không thể hoàn tác.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Hủy</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-                  {deleting && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
-                  Xóa
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+        <p className="text-muted-foreground">Loại bài học: {session.Loai_bai_hoc}</p>
       </div>
 
-      <Tabs defaultValue="basic">
-        <TabsList>
-          <TabsTrigger value="basic">Thông tin cơ bản</TabsTrigger>
-          <TabsTrigger value="content">Nội dung</TabsTrigger>
-          <TabsTrigger value="evaluation">Đánh giá</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="basic" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin buổi học</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium">Lớp:</p>
-                <p>{classInfo?.ten_lop_full || classInfo?.Ten_lop_full || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Loại bài học:</p>
-                <p>{session.loai_bai_hoc || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Ngày học:</p>
-                <p>{session.ngay_hoc ? format(new Date(session.ngay_hoc), "dd/MM/yyyy") : "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Thời gian:</p>
-                <p>{session.thoi_gian_bat_dau} - {session.thoi_gian_ket_thuc}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Giáo viên:</p>
-                <p>{teacher?.ten_nhan_su || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Trợ giảng:</p>
-                <p>{assistant?.ten_nhan_su || "Không có"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Phòng học:</p>
-                <p>{session.phong_hoc_id || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Buổi học số:</p>
-                <p>{session.session_id}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="content">
-          <Card>
-            <CardHeader>
-              <CardTitle>Nội dung buổi học</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose max-w-none">
-                <p className="whitespace-pre-wrap">{session.noi_dung || "Không có nội dung"}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="evaluation" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Đánh giá buổi học</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-sm font-medium">Tiêu chí 1:</p>
-                  <p>{session.nhan_xet_1 || "Chưa đánh giá"}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Thông Tin Buổi Học</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium text-muted-foreground">Lớp:</span>
+              <span className="text-sm col-span-2">{classItem?.Ten_lop_full}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium text-muted-foreground">Ngày học:</span>
+              <span className="text-sm col-span-2">
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  {formatDate(session.ngay_hoc)}
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Tiêu chí 2:</p>
-                  <p>{session.nhan_xet_2 || "Chưa đánh giá"}</p>
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium text-muted-foreground">Thời gian:</span>
+              <span className="text-sm col-span-2">
+                <div className="flex items-center">
+                  <Clock className="h-4 w-4 mr-1" />
+                  {session.thoi_gian_bat_dau.substring(0, 5)} - {session.thoi_gian_ket_thuc.substring(0, 5)}
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Tiêu chí 3:</p>
-                  <p>{session.nhan_xet_3 || "Chưa đánh giá"}</p>
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium text-muted-foreground">Giáo viên:</span>
+              <span className="text-sm col-span-2">{teacher?.ten_nhan_su || session.giao_vien}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium text-muted-foreground">Trợ giảng:</span>
+              <span className="text-sm col-span-2">{session.tro_giang || "Không có"}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium text-muted-foreground">Phòng học:</span>
+              <span className="text-sm col-span-2">{session.phong_hoc_id || "Chưa chỉ định"}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Đánh Giá Buổi Học</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Điểm trung bình:</span>
+              <Badge variant="outline" className="text-lg">
+                {session.trung_binh?.toFixed(1) || "N/A"}
+              </Badge>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Tiêu chí 1</span>
+                  <span className="font-medium">{session.nhan_xet_1 || "N/A"}</span>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Tiêu chí 4:</p>
-                  <p>{session.nhan_xet_4 || "Chưa đánh giá"}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Tiêu chí 5:</p>
-                  <p>{session.nhan_xet_5 || "Chưa đánh giá"}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Tiêu chí 6:</p>
-                  <p>{session.nhan_xet_6 || "Chưa đánh giá"}</p>
-                </div>
+                <Progress value={Number(session.nhan_xet_1) * 10 || 0} className={getScoreClassName(session.nhan_xet_1)} />
               </div>
               
-              <Separator className="my-4" />
-              
-              <div>
-                <p className="text-sm font-medium">Điểm trung bình:</p>
-                <Badge variant="outline" className="text-lg mt-1">
-                  {session.trung_binh ? Number(session.trung_binh).toFixed(1) : "Chưa đánh giá"}
-                </Badge>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Tiêu chí 2</span>
+                  <span className="font-medium">{session.nhan_xet_2 || "N/A"}</span>
+                </div>
+                <Progress value={Number(session.nhan_xet_2) * 10 || 0} className={getScoreClassName(session.nhan_xet_2)} />
               </div>
               
-              <Separator className="my-4" />
-              
-              <div>
-                <p className="text-sm font-medium">Nhận xét chung:</p>
-                <p className="whitespace-pre-wrap">{session.nhan_xet_chung || "Không có nhận xét"}</p>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Tiêu chí 3</span>
+                  <span className="font-medium">{session.nhan_xet_3 || "N/A"}</span>
+                </div>
+                <Progress value={Number(session.nhan_xet_3) * 10 || 0} className={getScoreClassName(session.nhan_xet_3)} />
               </div>
               
-              <Separator className="my-4" />
-              
-              <div>
-                <p className="text-sm font-medium">Ghi chú:</p>
-                <p className="whitespace-pre-wrap">{session.ghi_chu || "Không có ghi chú"}</p>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Tiêu chí 4</span>
+                  <span className="font-medium">{session.nhan_xet_4 || "N/A"}</span>
+                </div>
+                <Progress value={Number(session.nhan_xet_4) * 10 || 0} className={getScoreClassName(session.nhan_xet_4)} />
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Tiêu chí 5</span>
+                  <span className="font-medium">{session.nhan_xet_5 || "N/A"}</span>
+                </div>
+                <Progress value={Number(session.nhan_xet_5) * 10 || 0} className={getScoreClassName(session.nhan_xet_5)} />
+              </div>
+              
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Tiêu chí 6</span>
+                  <span className="font-medium">{session.nhan_xet_6 || "N/A"}</span>
+                </div>
+                <Progress value={Number(session.nhan_xet_6) * 10 || 0} className={getScoreClassName(session.nhan_xet_6)} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Users className="h-5 w-5 mr-2" />
+            Điểm Danh Học Sinh
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={enrollmentColumns}
+            data={enrollments}
+            isLoading={isLoading}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm học sinh..."
+          />
+        </CardContent>
+      </Card>
+
+      {session.nhan_xet_chung && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Nhận Xét Chung</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{session.nhan_xet_chung}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

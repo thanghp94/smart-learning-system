@@ -8,7 +8,6 @@ import { useSessionForm } from "./hooks/useSessionForm";
 import SessionBasicInfoFields from "./components/SessionBasicInfoFields";
 import SessionContentField from "./components/SessionContentField";
 import SessionEvaluationFields from "./components/SessionEvaluationFields";
-import { useToast } from "@/hooks/use-toast";
 
 interface SessionFormProps {
   initialData?: Partial<TeachingSession>;
@@ -18,49 +17,41 @@ interface SessionFormProps {
 }
 
 const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: SessionFormProps) => {
-  const { form, classes, teachers, isLoading } = useSessionForm({ initialData });
-  const { toast } = useToast();
+  const { form, classes, teachers, isLoading, calculateAverageScore } = useSessionForm({ initialData });
 
   const handleSubmit = (data: SessionFormData) => {
-    try {
-      // Convert session_id to string if it's a number
-      if (typeof data.session_id === 'number') {
-        data.session_id = String(data.session_id);
-      }
-      
-      // Prepare the session data with all required fields for the database
-      // Note: We don't include trung_binh as it's a generated column in the database
-      const sessionData: Partial<TeachingSession> = {
-        lop_chi_tiet_id: data.lop_chi_tiet_id,
-        giao_vien: data.giao_vien,
-        ngay_hoc: data.ngay_hoc,
-        thoi_gian_bat_dau: data.thoi_gian_bat_dau,
-        thoi_gian_ket_thuc: data.thoi_gian_ket_thuc,
-        session_id: data.session_id,
-        loai_bai_hoc: data.loai_bai_hoc,
-        noi_dung: data.noi_dung,
-        nhan_xet_1: data.nhan_xet_1,
-        nhan_xet_2: data.nhan_xet_2,
-        nhan_xet_3: data.nhan_xet_3,
-        nhan_xet_4: data.nhan_xet_4,
-        nhan_xet_5: data.nhan_xet_5,
-        nhan_xet_6: data.nhan_xet_6,
-        phong_hoc_id: data.phong_hoc_id,
-        tro_giang: data.tro_giang,
-        nhan_xet_chung: data.nhan_xet_chung,
-        ghi_chu: data.ghi_chu
-      };
-      
-      // Submit session data through the onSubmit prop
-      onSubmit(sessionData);
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Lỗi",
-        description: "Có lỗi xảy ra khi lưu buổi học",
-        variant: "destructive"
-      });
+    // Convert session_id to string if it's a number
+    if (typeof data.session_id === 'number') {
+      data.session_id = String(data.session_id);
     }
+    
+    // Calculate average score if evaluation scores are provided
+    const trungBinh = calculateAverageScore(data);
+    
+    // Prepare the session data with all required fields for the database
+    const sessionData: Partial<TeachingSession> = {
+      lop_chi_tiet_id: data.lop_chi_tiet_id,
+      giao_vien: data.giao_vien,
+      ngay_hoc: data.ngay_hoc,
+      thoi_gian_bat_dau: data.thoi_gian_bat_dau,
+      thoi_gian_ket_thuc: data.thoi_gian_ket_thuc,
+      session_id: data.session_id,
+      loai_bai_hoc: data.loai_bai_hoc, // Changed from Loai_bai_hoc to loai_bai_hoc
+      nhan_xet_1: data.nhan_xet_1,
+      nhan_xet_2: data.nhan_xet_2,
+      nhan_xet_3: data.nhan_xet_3,
+      nhan_xet_4: data.nhan_xet_4,
+      nhan_xet_5: data.nhan_xet_5,
+      nhan_xet_6: data.nhan_xet_6,
+      trung_binh: trungBinh,
+      phong_hoc_id: data.phong_hoc_id,
+      tro_giang: data.tro_giang,
+      nhan_xet_chung: data.nhan_xet_chung,
+      ghi_chu: data.ghi_chu
+    };
+    
+    // Submit session data through the onSubmit prop
+    onSubmit(sessionData);
   };
 
   return (
