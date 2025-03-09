@@ -10,12 +10,16 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import DetailPanel from "@/components/ui/DetailPanel";
 import AssetDetail from "./AssetDetail";
+import AssetForm from "./AssetForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PlaceholderPage from "@/components/common/PlaceholderPage";
 
 const Assets = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,6 +50,33 @@ const Assets = () => {
 
   const closeDetail = () => {
     setShowDetail(false);
+  };
+
+  const handleAddClick = () => {
+    setShowAddForm(true);
+  };
+
+  const handleAddFormCancel = () => {
+    setShowAddForm(false);
+  };
+
+  const handleAddFormSubmit = async (formData: Partial<Asset>) => {
+    try {
+      const newAsset = await assetService.create(formData);
+      setAssets([...assets, newAsset]);
+      toast({
+        title: "Thành công",
+        description: "Thêm tài sản mới thành công",
+      });
+      setShowAddForm(false);
+    } catch (error) {
+      console.error("Error adding asset:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thêm tài sản mới",
+        variant: "destructive"
+      });
+    }
   };
 
   const columns = [
@@ -107,11 +138,21 @@ const Assets = () => {
       <Button variant="outline" size="sm" className="h-8">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
-      <Button size="sm" className="h-8">
+      <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Tài Sản
       </Button>
     </div>
   );
+
+  if (assets.length === 0 && !isLoading) {
+    return (
+      <PlaceholderPage
+        title="Tài Sản"
+        description="Quản lý thông tin tài sản và cơ sở vật chất"
+        addButtonAction={handleAddClick}
+      />
+    );
+  }
 
   return (
     <TablePageLayout
@@ -137,6 +178,18 @@ const Assets = () => {
           <AssetDetail asset={selectedAsset} />
         </DetailPanel>
       )}
+
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Thêm Tài Sản Mới</DialogTitle>
+          </DialogHeader>
+          <AssetForm 
+            onSubmit={handleAddFormSubmit}
+            onCancel={handleAddFormCancel}
+          />
+        </DialogContent>
+      </Dialog>
     </TablePageLayout>
   );
 };
