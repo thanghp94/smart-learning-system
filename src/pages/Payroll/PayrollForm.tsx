@@ -1,234 +1,329 @@
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Employee, Facility, Payroll } from "@/lib/types";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { employeeService } from "@/lib/supabase";
-import { Employee, Payroll } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+
+// Fixing the type error by allowing numbers in the schema but coercing them to string
+const payrollSchema = z.object({
+  nhan_su_id: z.string().min(1, { message: "Vui lòng chọn nhân viên" }),
+  nam: z.string().min(1, { message: "Vui lòng nhập năm" }),
+  thang: z.string().min(1, { message: "Vui lòng chọn tháng" }),
+  ngay: z.string().optional(),
+  co_so_id: z.string().optional(),
+  luong: z.coerce.number().min(0, { message: "Lương không thể âm" }).default(0),
+  tong_luong_tru_BH: z.coerce.number().optional(),
+  pc_tnhiem: z.coerce.number().optional(),
+  pc_an_o: z.coerce.number().optional(),
+  pc_dthoai: z.coerce.number().optional(),
+  pc_xang_xe: z.coerce.number().optional(),
+  tong_thu_nhap: z.coerce.number().optional(),
+  cong_chuan: z.coerce.number().optional(),
+  cong_thuc_lam: z.coerce.number().optional(),
+  trang_thai: z.string().default("pending"),
+});
+
+type PayrollFormValues = z.infer<typeof payrollSchema>;
 
 interface PayrollFormProps {
-  onSubmit: (data: Partial<Payroll>) => void;
-  onCancel?: () => void;
   initialData?: Partial<Payroll>;
+  employees?: Employee[];
+  facilities?: Facility[];
+  onSubmit: (data: PayrollFormValues) => void;
+  onCancel: () => void;
 }
 
-const PayrollForm = ({ onSubmit, onCancel, initialData }: PayrollFormProps) => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  
-  const [formData, setFormData] = useState<Partial<Payroll>>(
-    initialData || {
-      nhan_su_id: "",
-      nam: new Date().getFullYear().toString(),
-      thang: (new Date().getMonth() + 1).toString(),
-      luong: 0,
-      tong_thu_nhap: 0,
-      trang_thai: "pending",
-    }
-  );
+const PayrollForm: React.FC<PayrollFormProps> = ({ 
+  initialData, 
+  employees = [], 
+  facilities = [], 
+  onSubmit, 
+  onCancel 
+}) => {
+  const form = useForm<PayrollFormValues>({
+    resolver: zodResolver(payrollSchema),
+    defaultValues: {
+      nhan_su_id: initialData?.nhan_su_id || "",
+      nam: initialData?.nam || new Date().getFullYear().toString(),
+      thang: initialData?.thang || (new Date().getMonth() + 1).toString(),
+      ngay: initialData?.ngay || "",
+      co_so_id: initialData?.co_so_id || "",
+      luong: initialData?.luong || 0,
+      tong_luong_tru_BH: initialData?.tong_luong_tru_BH || 0,
+      pc_tnhiem: initialData?.pc_tnhiem || 0,
+      pc_an_o: initialData?.pc_an_o || 0,
+      pc_dthoai: initialData?.pc_dthoai || 0,
+      pc_xang_xe: initialData?.pc_xang_xe || 0,
+      tong_thu_nhap: initialData?.tong_thu_nhap || 0,
+      cong_chuan: initialData?.cong_chuan || 22,
+      cong_thuc_lam: initialData?.cong_thuc_lam || 22,
+      trang_thai: initialData?.trang_thai || "pending",
+    },
+  });
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
+  // Get all form values to calculate total income when salary, allowances change
+  const watchSalary = form.watch("luong");
+  const watchPC1 = form.watch("pc_tnhiem") || 0;
+  const watchPC2 = form.watch("pc_an_o") || 0;
+  const watchPC3 = form.watch("pc_dthoai") || 0;
+  const watchPC4 = form.watch("pc_xang_xe") || 0;
 
-  const fetchEmployees = async () => {
-    try {
-      setIsLoading(true);
-      const data = await employeeService.getAll();
-      setEmployees(data);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải danh sách nhân viên",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    let parsedValue = value;
-    
-    // Convert numeric fields to numbers
-    if (name === "luong" || name === "tong_thu_nhap" || name === "cong_chuan" || name === "cong_thuc_lam") {
-      parsedValue = value === "" ? 0 : parseFloat(value);
-    }
-    
-    setFormData({
-      ...formData,
-      [name]: parsedValue,
-    });
-    
-    // Auto-calculate total income when salary changes
-    if (name === "luong") {
-      const salary = parseFloat(value) || 0;
-      setFormData(prev => ({
-        ...prev,
-        tong_thu_nhap: salary,
-      }));
-    }
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
-  const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - 2 + i).toString());
+  // Calculate total income when any salary component changes
+  React.useEffect(() => {
+    const totalIncome = watchSalary + watchPC1 + watchPC2 + watchPC3 + watchPC4;
+    form.setValue("tong_thu_nhap", totalIncome);
+  }, [watchSalary, watchPC1, watchPC2, watchPC3, watchPC4, form]);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="nhan_su_id">Nhân Viên</Label>
-          <Select
-            value={formData.nhan_su_id?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("nhan_su_id", value)}
-            disabled={isLoading}
-          >
-            <SelectTrigger id="nhan_su_id">
-              <SelectValue placeholder="Chọn nhân viên" />
-            </SelectTrigger>
-            <SelectContent>
-              {employees.map((employee) => (
-                <SelectItem key={employee.id} value={employee.id}>
-                  {employee.ten_nhan_su}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="nhan_su_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nhân viên <span className="text-red-500">*</span></FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn nhân viên" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {employees.length > 0 ? (
+                      employees.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.ten_nhan_su}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="">Không có nhân viên</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-2">
-            <Label htmlFor="thang">Tháng</Label>
-            <Select
-              value={formData.thang || ""}
-              onValueChange={(value) => handleSelectChange("thang", value)}
-            >
-              <SelectTrigger id="thang">
-                <SelectValue placeholder="Tháng" />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month) => (
-                  <SelectItem key={month} value={month}>
-                    {month}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="nam">Năm</Label>
-            <Select
-              value={formData.nam || ""}
-              onValueChange={(value) => handleSelectChange("nam", value)}
-            >
-              <SelectTrigger id="nam">
-                <SelectValue placeholder="Năm" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
+          <FormField
+            control={form.control}
+            name="co_so_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cơ sở</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn cơ sở" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {facilities.length > 0 ? (
+                      facilities.map((facility) => (
+                        <SelectItem key={facility.id} value={facility.id}>
+                          {facility.ten_co_so}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="">Không có cơ sở</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="luong">Lương (VND)</Label>
-          <Input
-            id="luong"
+          <FormField
+            control={form.control}
+            name="thang"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tháng <span className="text-red-500">*</span></FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn tháng" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <SelectItem key={i + 1} value={(i + 1).toString()}>
+                        Tháng {i + 1}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="nam"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Năm <span className="text-red-500">*</span></FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn năm" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - 2 + i;
+                      return (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="luong"
-            type="number"
-            value={formData.luong || ""}
-            onChange={handleInputChange}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Lương cơ bản</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="tong_thu_nhap">Tổng Thu Nhập (VND)</Label>
-          <Input
-            id="tong_thu_nhap"
+          <FormField
+            control={form.control}
             name="tong_thu_nhap"
-            type="number"
-            value={formData.tong_thu_nhap || ""}
-            onChange={handleInputChange}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tổng thu nhập</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} disabled />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="pc_tnhiem"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phụ cấp trách nhiệm</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="pc_an_o"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phụ cấp ăn ở</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="pc_dthoai"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phụ cấp điện thoại</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="pc_xang_xe"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phụ cấp xăng xe</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="trang_thai"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Trạng thái</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn trạng thái" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="pending">Chờ duyệt</SelectItem>
+                    <SelectItem value="approved">Đã duyệt</SelectItem>
+                    <SelectItem value="paid">Đã thanh toán</SelectItem>
+                    <SelectItem value="rejected">Từ chối</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="cong_chuan">Công Chuẩn</Label>
-          <Input
-            id="cong_chuan"
-            name="cong_chuan"
-            type="number"
-            value={formData.cong_chuan || ""}
-            onChange={handleInputChange}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="cong_thuc_lam">Công Thực Làm</Label>
-          <Input
-            id="cong_thuc_lam"
-            name="cong_thuc_lam"
-            type="number"
-            value={formData.cong_thuc_lam || ""}
-            onChange={handleInputChange}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="trang_thai">Trạng Thái</Label>
-        <Select
-          value={formData.trang_thai || "pending"}
-          onValueChange={(value) => handleSelectChange("trang_thai", value)}
-        >
-          <SelectTrigger id="trang_thai">
-            <SelectValue placeholder="Chọn trạng thái" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pending">Chờ duyệt</SelectItem>
-            <SelectItem value="approved">Đã duyệt</SelectItem>
-            <SelectItem value="paid">Đã thanh toán</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex justify-end space-x-2 pt-4">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" type="button" onClick={onCancel}>
             Hủy
           </Button>
-        )}
-        <Button type="submit" disabled={isLoading}>
-          {initialData ? "Cập Nhật" : "Tạo Mới"}
-        </Button>
-      </div>
-    </form>
+          <Button type="submit">Lưu</Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 
