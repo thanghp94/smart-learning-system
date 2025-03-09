@@ -10,6 +10,7 @@ import Classes from '@/pages/Classes';
 import TeachingSessions from '@/pages/TeachingSessions';
 import Assets from '@/pages/Assets';
 import TransferManagement from '@/pages/Assets/TransferManagement';
+import DatabaseSchema from '@/pages/DatabaseSchema';
 import NotFound from '@/pages/NotFound';
 
 import '@/App.css';
@@ -29,6 +30,7 @@ function App() {
               <Route path="/teaching-sessions" element={<TeachingSessions />} />
               <Route path="/assets" element={<Assets />} />
               <Route path="/assets/transfers" element={<TransferManagement />} />
+              <Route path="/database-schema" element={<DatabaseSchema />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
