@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,7 @@ const PayrollPage = () => {
 
   const handleAddFormSubmit = async (formData: Partial<Payroll>) => {
     try {
+      console.log("Inserting record into payrolls:", formData);
       await payrollService.create(formData);
       toast({
         title: "Thành công",

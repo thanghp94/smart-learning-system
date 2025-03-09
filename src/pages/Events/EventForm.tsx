@@ -16,9 +16,10 @@ import {
 interface EventFormProps {
   initialData?: any;
   onSubmit: (data: any) => void;
+  onCancel: () => void; // Adding the missing onCancel prop
 }
 
-const EventForm = ({ initialData, onSubmit }: EventFormProps) => {
+const EventForm = ({ initialData, onSubmit, onCancel }: EventFormProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       ten_su_kien: initialData?.ten_su_kien || '',
@@ -112,6 +113,7 @@ const EventForm = ({ initialData, onSubmit }: EventFormProps) => {
       </div>
 
       <div className="pt-4 flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
         <Button type="submit">Lưu thông tin</Button>
       </div>
     </form>

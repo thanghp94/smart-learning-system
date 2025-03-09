@@ -12,13 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Facility } from '@/lib/types';
 
 interface FinanceFormProps {
   initialData?: any;
   onSubmit: (data: any) => void;
+  onCancel: () => void; // Adding the missing onCancel prop
+  facilities?: Facility[]; // Add facilities prop
 }
 
-const FinanceForm = ({ initialData, onSubmit }: FinanceFormProps) => {
+const FinanceForm = ({ initialData, onSubmit, onCancel, facilities = [] }: FinanceFormProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       loai_thu_chi: initialData?.loai_thu_chi || 'thu',
@@ -89,6 +92,7 @@ const FinanceForm = ({ initialData, onSubmit }: FinanceFormProps) => {
       </div>
 
       <div className="pt-4 flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
         <Button type="submit">Lưu thông tin</Button>
       </div>
     </form>

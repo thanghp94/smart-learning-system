@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ const Assets = () => {
 
   const handleAddFormSubmit = async (formData: Partial<Asset>) => {
     try {
+      console.log("Inserting record into assets:", formData);
       const newAsset = await assetService.create(formData);
       setAssets([...assets, newAsset]);
       toast({
@@ -81,8 +83,8 @@ const Assets = () => {
 
   const columns = [
     {
-      title: "Tên CSVC",
-      key: "ten_CSVC",
+      title: "Tên tài sản",
+      key: "ten_tai_san",
       sortable: true,
     },
     {

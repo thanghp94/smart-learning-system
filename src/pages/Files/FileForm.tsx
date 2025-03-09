@@ -16,9 +16,10 @@ import {
 interface FileFormProps {
   initialData?: any;
   onSubmit: (data: any) => void;
+  onCancel: () => void; // Adding the missing onCancel prop
 }
 
-const FileForm = ({ initialData, onSubmit }: FileFormProps) => {
+const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       ten_file: initialData?.ten_file || '',
@@ -86,6 +87,7 @@ const FileForm = ({ initialData, onSubmit }: FileFormProps) => {
       </div>
 
       <div className="pt-4 flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
         <Button type="submit">Lưu thông tin</Button>
       </div>
     </form>
