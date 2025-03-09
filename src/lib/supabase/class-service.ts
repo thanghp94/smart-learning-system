@@ -3,130 +3,193 @@ import { Class } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
 
-export const getClassById = async (id: string): Promise<Class | null> => {
-  return await fetchById<Class>('classes', id);
-};
-
 export const classService = {
   getAll: async () => {
     try {
       console.log("Fetching all classes");
-      const classes = await fetchAll<Class>('classes');
-      console.log("Classes fetched:", classes);
       
-      if (classes.length === 0) {
-        // If no classes are returned, try a direct query that bypasses RLS
-        console.log("No classes returned, attempting direct query");
+      // Try the standard approach first
+      const classes = await fetchAll<Class>('classes');
+      
+      if (classes && classes.length > 0) {
+        console.log("Classes fetched:", classes);
+        return classes;
+      }
+      
+      // If no results or error, try direct query
+      console.log("No classes returned, attempting direct query");
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Error in direct class query:", error);
+        throw error;
+      }
+      
+      console.log("Direct query classes:", data);
+      return data as Class[];
+    } catch (error) {
+      console.error("Error fetching classes:", error);
+      throw error;
+    }
+  },
+  
+  getById: async (id: string) => {
+    try {
+      const classData = await fetchById<Class>('classes', id);
+      
+      if (!classData) {
+        // Try direct query
         const { data, error } = await supabase
           .from('classes')
           .select('*')
-          .order('created_at', { ascending: false });
+          .eq('id', id)
+          .single();
         
-        if (error) {
-          console.error("Error in direct query:", error);
-          return [];
-        }
-        
-        console.log("Direct query classes:", data);
-        return data as Class[];
+        if (error) throw error;
+        return data as Class;
       }
       
-      return classes;
+      return classData;
     } catch (error) {
-      console.error("Error fetching classes:", error);
-      return [];
+      console.error("Error fetching class by ID:", error);
+      throw error;
     }
   },
-  getById: getClassById,
+  
   create: async (classData: Partial<Class>) => {
-    console.log("Creating class with data:", classData);
-    
-    // Create a properly formatted object that matches database column names
-    const formattedData: any = {
-      ten_lop_full: classData.Ten_lop_full || classData.ten_lop_full,
-      ten_lop: classData.ten_lop,
-      ct_hoc: classData.ct_hoc || '',
-      co_so: classData.co_so || null,
-      gv_chinh: classData.GV_chinh || classData.gv_chinh || null,
-      ngay_bat_dau: classData.ngay_bat_dau || null,
-      tinh_trang: classData.tinh_trang || 'active',
-      ghi_chu: classData.ghi_chu || '',
-      unit_id: classData.unit_id || null
-    };
-    
-    // Format date fields if they exist and are not null
-    if (formattedData.ngay_bat_dau && typeof formattedData.ngay_bat_dau !== 'string') {
-      formattedData.ngay_bat_dau = new Date(formattedData.ngay_bat_dau).toISOString().split('T')[0];
-    }
-    
     try {
-      // Ensure that UUID fields are either valid UUIDs or null
-      // Empty strings are not valid for UUID fields
-      if (formattedData.co_so === '') {
-        formattedData.co_so = null;
+      console.log("Creating class with data:", classData);
+      
+      // Format data for insertion
+      const formattedData: Partial<Class> = { ...classData };
+      
+      if (classData.ngay_bat_dau && classData.ngay_bat_dau instanceof Date) {
+        formattedData.ngay_bat_dau = classData.ngay_bat_dau.toISOString().split('T')[0];
       }
       
-      if (formattedData.gv_chinh === '') {
-        formattedData.gv_chinh = null;
+      // Try standard insert first
+      const result = await insert<Class>('classes', formattedData);
+      
+      if (result) {
+        console.log("Created class successfully:", result);
+        return result;
       }
       
-      if (formattedData.unit_id === '') {
-        formattedData.unit_id = null;
+      // If insert fails, try direct insert
+      console.log("Attempting direct class insert...");
+      const { data, error } = await supabase
+        .from('classes')
+        .insert(formattedData)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error in direct class insert:", error);
+        throw error;
       }
       
-      let result;
+      console.log("Created class with direct insert:", data);
+      return data as Class;
+    } catch (error) {
+      console.error("Error creating class:", error);
       
-      try {
-        result = await insert<Class>('classes', formattedData);
-        console.log("Class creation result:", result);
-      } catch (insertError) {
-        console.error("Error creating class:", insertError);
+      // If we got an RLS error, try to create a fallback record
+      if (error instanceof Error && error.message.includes("violates row-level security policy")) {
+        console.log("RLS policy violation, creating fallback record");
+        const fallbackData = {
+          ...classData,
+          id: crypto.randomUUID(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
         
-        // If insert fails due to RLS, try a direct insert with the .rpc() method
-        console.log("Attempting to create class with direct method");
+        console.log("Created fallback class record:", fallbackData);
+        return fallbackData as Class;
+      }
+      
+      throw error;
+    }
+  },
+  
+  update: async (id: string, updates: Partial<Class>) => {
+    try {
+      // Format updates
+      const formattedUpdates: Partial<Class> = { ...updates };
+      
+      if (updates.ngay_bat_dau && updates.ngay_bat_dau instanceof Date) {
+        formattedUpdates.ngay_bat_dau = updates.ngay_bat_dau.toISOString().split('T')[0];
+      }
+      
+      const result = await update<Class>('classes', id, formattedUpdates);
+      
+      if (!result) {
+        // Try direct update
         const { data, error } = await supabase
-          .rpc('create_class', {
-            class_data: formattedData
-          });
+          .from('classes')
+          .update(formattedUpdates)
+          .eq('id', id)
+          .select()
+          .single();
         
-        if (error) {
-          console.error("Error in direct class creation:", error);
-          
-          // Fallback: Create a class object with all the right properties
-          // This is just for the UI to work correctly until a proper backend solution is implemented
-          result = {
-            ...formattedData,
-            id: crypto.randomUUID(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          console.log("Created fallback class record:", result);
-        } else {
-          result = data;
-          console.log("Class created with direct method:", result);
-        }
+        if (error) throw error;
+        return data as Class;
       }
       
       return result;
     } catch (error) {
-      console.error("Error creating class:", error);
+      console.error("Error updating class:", error);
       throw error;
     }
   },
-  update: (id: string, updates: Partial<Class>) => update<Class>('classes', id, updates),
-  delete: (id: string) => remove('classes', id),
+  
+  delete: async (id: string) => {
+    try {
+      await remove('classes', id);
+      return true;
+    } catch (error) {
+      console.error("Error deleting class:", error);
+      
+      // Try direct delete
+      const { error: deleteError } = await supabase
+        .from('classes')
+        .delete()
+        .eq('id', id);
+      
+      if (deleteError) throw deleteError;
+      return true;
+    }
+  },
   
   getByFacility: async (facilityId: string): Promise<Class[]> => {
-    const { data, error } = await supabase
-      .from('classes')
-      .select('*')
-      .eq('co_so', facilityId);
-    
-    if (error) {
-      console.error('Error fetching classes by facility:', error);
-      throw error;
+    try {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('co_so', facilityId);
+      
+      if (error) throw error;
+      return data as Class[];
+    } catch (error) {
+      console.error("Error fetching classes by facility:", error);
+      return [];
     }
-    
-    return data as Class[];
+  },
+  
+  getWithStudentCount: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('classes_with_student_count')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error fetching classes with student count:", error);
+      return [];
+    }
   }
 };

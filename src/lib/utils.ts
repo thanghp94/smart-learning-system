@@ -1,4 +1,3 @@
-
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
  
@@ -6,22 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(dateString?: string): string {
+export function formatDate(dateString: string | Date): string {
   if (!dateString) return 'N/A';
   
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    
-    return new Intl.DateTimeFormat('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).format(date);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'N/A';
-  }
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return 'Invalid date';
+  
+  return date.toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
 }
 
 export function formatDateTime(dateString?: string, timeString?: string): string {

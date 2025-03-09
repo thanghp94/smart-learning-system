@@ -6,10 +6,7 @@ import DetailPanel from "@/components/ui/DetailPanel";
 import { Student } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Calendar, Mail, Phone, MapPin, School, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STATUS_COLORS } from "@/lib/constants";
 import StudentDetail from "./StudentDetail";
@@ -116,6 +113,8 @@ const StudentsList: React.FC<StudentsListProps> = ({
       sortable: true
     }
   ];
+
+  console.log("Students data in StudentsList:", students);
 
   return (
     <>

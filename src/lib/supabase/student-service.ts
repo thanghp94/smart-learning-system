@@ -25,14 +25,14 @@ export const studentService = {
       
       if (error) {
         console.error("Error in direct student query:", error);
-        return [];
+        throw error;
       }
       
-      console.log(`Retrieved ${data.length} students using direct query`);
+      console.log(`Retrieved ${data?.length || 0} students using direct query`);
       return data as Student[];
     } catch (error) {
       console.error("Error fetching students:", error);
-      return [];
+      throw error;
     }
   },
   
@@ -55,14 +55,14 @@ export const studentService = {
       
       if (error) {
         console.error("Error in direct student query by ID:", error);
-        return null;
+        throw error;
       }
       
       console.log("Student found using direct query");
       return data as Student;
     } catch (error) {
       console.error("Error fetching student by ID:", error);
-      return null;
+      throw error;
     }
   },
   
@@ -114,6 +114,14 @@ export const studentService = {
       return data as Student;
     } catch (error) {
       console.error("Error creating student:", error);
+      
+      // If we have an error about column not found for co_so_ID
+      if (error instanceof Error && error.message.includes("co_so_ID")) {
+        console.log("Attempting to insert without co_so_ID...");
+        const { co_so_ID, ...dataWithoutCoSoID } = formattedData;
+        return this.create(dataWithoutCoSoID);
+      }
+      
       throw error;
     }
   },
@@ -138,6 +146,14 @@ export const studentService = {
       }
       
       console.log("Formatted updates:", formattedUpdates);
+      
+      // If we might have co_so_ID issue, handle it
+      if ('co_so_ID' in formattedUpdates) {
+        // Remove the property
+        const { co_so_ID, ...updatesWithoutCoSoID } = formattedUpdates;
+        formattedUpdates = updatesWithoutCoSoID;
+      }
+      
       const result = await update<Student>('students', id, formattedUpdates);
       
       if (result) {
@@ -193,7 +209,7 @@ export const studentService = {
       const { data, error } = await supabase
         .from('students')
         .select('*')
-        .eq('co_so_ID', facilityId);
+        .eq('co_so_id', facilityId);
       
       if (error) {
         console.error('Error fetching students by facility:', error);
