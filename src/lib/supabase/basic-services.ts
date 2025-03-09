@@ -1,7 +1,6 @@
-
 import { 
   Session, Event, Task, Image, Setting, Payroll, 
-  Finance, Evaluation, File, Asset, Request, Contact
+  Finance, Evaluation, File, Request, Contact
 } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
@@ -90,14 +89,6 @@ export const fileService = {
   create: (file: Partial<File>) => insert<File>('files', file),
   update: (id: string, updates: Partial<File>) => update<File>('files', id, updates),
   delete: (id: string) => remove('files', id)
-};
-
-export const assetService = {
-  getAll: () => fetchAll<Asset>('assets'),
-  getById: (id: string) => fetchById<Asset>('assets', id),
-  create: (asset: Partial<Asset>) => insert<Asset>('assets', asset),
-  update: (id: string, updates: Partial<Asset>) => update<Asset>('assets', id, updates),
-  delete: (id: string) => remove('assets', id)
 };
 
 export const requestService = {
