@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,7 +66,13 @@ const FinancePage = () => {
   const handleAddFormSubmit = async (formData: Partial<Finance>) => {
     try {
       console.log("Submitting finance data:", formData);
-      await financeService.create(formData);
+      
+      const preparedData = {
+        ...formData,
+        tong_tien: formData.tong_tien ? Number(formData.tong_tien) : 0,
+      };
+      
+      await financeService.create(preparedData);
       toast({
         title: "Thành công",
         description: "Thêm dữ liệu tài chính mới thành công",

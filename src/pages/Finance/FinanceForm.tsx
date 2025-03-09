@@ -1,10 +1,19 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
@@ -14,15 +23,32 @@ import {
 } from '@/components/ui/select';
 import { Facility } from '@/lib/types';
 
+// Create a schema for form validation
+const financeSchema = z.object({
+  loai_thu_chi: z.string({
+    required_error: "Vui lòng chọn loại thu chi",
+  }),
+  dien_giai: z.string().min(1, { message: "Vui lòng nhập diễn giải" }),
+  tong_tien: z.string().min(1, { message: "Vui lòng nhập số tiền" }),
+  ngay: z.string().optional(),
+  co_so_id: z.string().optional(),
+  nguoi_thuc_hien: z.string().optional(),
+  tinh_trang: z.string().default("pending"),
+  ghi_chu: z.string().optional(),
+});
+
+type FinanceFormValues = z.infer<typeof financeSchema>;
+
 interface FinanceFormProps {
-  initialData?: any;
+  initialData?: Partial<FinanceFormValues>;
   onSubmit: (data: any) => void;
   onCancel: () => void;
   facilities?: Facility[];
 }
 
 const FinanceForm = ({ initialData, onSubmit, onCancel, facilities = [] }: FinanceFormProps) => {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+  const form = useForm<FinanceFormValues>({
+    resolver: zodResolver(financeSchema),
     defaultValues: {
       loai_thu_chi: initialData?.loai_thu_chi || 'income',
       dien_giai: initialData?.dien_giai || '',
@@ -35,107 +61,170 @@ const FinanceForm = ({ initialData, onSubmit, onCancel, facilities = [] }: Finan
     }
   });
 
+  const handleFormSubmit = (values: FinanceFormValues) => {
+    onSubmit(values);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <Label htmlFor="loai_thu_chi">Loại thu chi*</Label>
-        <Select
-          onValueChange={(value) => setValue('loai_thu_chi', value)}
-          defaultValue={watch('loai_thu_chi')}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Chọn loại" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="income">Thu</SelectItem>
-            <SelectItem value="expense">Chi</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="dien_giai">Diễn giải*</Label>
-        <Input
-          id="dien_giai"
-          {...register('dien_giai', { required: true })}
-          className={errors.dien_giai ? 'border-red-500' : ''}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="loai_thu_chi"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Loại thu chi*</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn loại" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="income">Thu</SelectItem>
+                  <SelectItem value="expense">Chi</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.dien_giai && <p className="text-red-500 text-xs mt-1">Vui lòng nhập diễn giải</p>}
-      </div>
 
-      <div>
-        <Label htmlFor="tong_tien">Số tiền*</Label>
-        <Input
-          id="tong_tien"
-          type="number"
-          {...register('tong_tien', { required: true })}
-          className={errors.tong_tien ? 'border-red-500' : ''}
+        <FormField
+          control={form.control}
+          name="dien_giai"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Diễn giải*</FormLabel>
+              <FormControl>
+                <Input placeholder="Nhập diễn giải" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.tong_tien && <p className="text-red-500 text-xs mt-1">Vui lòng nhập số tiền</p>}
-      </div>
 
-      <div>
-        <Label htmlFor="ngay">Ngày thực hiện</Label>
-        <Input
-          id="ngay"
-          type="date"
-          {...register('ngay')}
+        <FormField
+          control={form.control}
+          name="tong_tien"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Số tiền*</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="Nhập số tiền" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      {facilities.length > 0 && (
-        <div>
-          <Label htmlFor="co_so_id">Cơ sở</Label>
-          <Select
-            onValueChange={(value) => setValue('co_so_id', value)}
-            defaultValue={watch('co_so_id')}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn cơ sở" />
-            </SelectTrigger>
-            <SelectContent>
-              {facilities.map((facility) => (
-                <SelectItem key={facility.id} value={facility.id}>
-                  {facility.ten_co_so}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <FormField
+          control={form.control}
+          name="ngay"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ngày thực hiện</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {facilities.length > 0 && (
+          <FormField
+            control={form.control}
+            name="co_so_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cơ sở</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn cơ sở" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {facilities.map((facility) => (
+                      <SelectItem key={facility.id} value={facility.id}>
+                        {facility.ten_co_so}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <FormField
+          control={form.control}
+          name="nguoi_thuc_hien"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Người thực hiện</FormLabel>
+              <FormControl>
+                <Input placeholder="Nhập tên người thực hiện" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="tinh_trang"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Trạng thái</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn trạng thái" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="pending">Chờ duyệt</SelectItem>
+                  <SelectItem value="completed">Hoàn thành</SelectItem>
+                  <SelectItem value="rejected">Từ chối</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="ghi_chu"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ghi chú</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Nhập ghi chú" {...field} rows={3} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="pt-4 flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
+          <Button type="submit">Lưu thông tin</Button>
         </div>
-      )}
-
-      <div>
-        <Label htmlFor="nguoi_thuc_hien">Người thực hiện</Label>
-        <Input id="nguoi_thuc_hien" {...register('nguoi_thuc_hien')} />
-      </div>
-
-      <div>
-        <Label htmlFor="tinh_trang">Trạng thái</Label>
-        <Select
-          onValueChange={(value) => setValue('tinh_trang', value)}
-          defaultValue={watch('tinh_trang')}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Chọn trạng thái" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pending">Chờ duyệt</SelectItem>
-            <SelectItem value="completed">Hoàn thành</SelectItem>
-            <SelectItem value="rejected">Từ chối</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="ghi_chu">Ghi chú</Label>
-        <Textarea id="ghi_chu" {...register('ghi_chu')} rows={3} />
-      </div>
-
-      <div className="pt-4 flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
-        <Button type="submit">Lưu thông tin</Button>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 };
 
