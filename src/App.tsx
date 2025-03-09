@@ -9,6 +9,7 @@ import Employees from '@/pages/Employees';
 import Classes from '@/pages/Classes';
 import TeachingSessions from '@/pages/TeachingSessions';
 import Assets from '@/pages/Assets';
+import TransferManagement from '@/pages/Assets/TransferManagement';
 import NotFound from '@/pages/NotFound';
 
 import '@/App.css';
@@ -27,6 +28,7 @@ function App() {
               <Route path="/classes" element={<Classes />} />
               <Route path="/teaching-sessions" element={<TeachingSessions />} />
               <Route path="/assets" element={<Assets />} />
+              <Route path="/assets/transfers" element={<TransferManagement />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

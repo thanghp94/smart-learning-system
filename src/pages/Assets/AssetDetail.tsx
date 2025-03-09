@@ -6,9 +6,10 @@ import { assetService } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Package, RefreshCw } from "lucide-react";
+import { Calendar, Package, RefreshCw, ArrowRight } from "lucide-react";
 import DataTable from "@/components/ui/DataTable";
 import { useToast } from "@/hooks/use-toast";
+import AssetTransfer from "./AssetTransfer";
 
 interface AssetDetailProps {
   asset: Asset;
@@ -39,6 +40,16 @@ const AssetDetail = ({ asset }: AssetDetailProps) => {
     
     fetchTransfers();
   }, [asset.id]);
+
+  const handleTransferComplete = async () => {
+    // Refetch asset transfers after a successful transfer
+    try {
+      const data = await assetService.getTransfersByAssetId(asset.id);
+      setTransfers(data);
+    } catch (error) {
+      console.error("Error fetching transfers:", error);
+    }
+  };
 
   const transferColumns = [
     {
@@ -71,7 +82,9 @@ const AssetDetail = ({ asset }: AssetDetailProps) => {
       key: "status",
       sortable: true,
       render: (value: string) => (
-        <Badge variant={value === "completed" ? "success" : "secondary"}>
+        <Badge variant={value === "completed" ? "success" : 
+                       value === "pending" ? "secondary" : 
+                       "destructive"}>
           {value === "completed" ? "Hoàn thành" : 
            value === "pending" ? "Đang xử lý" : 
            value === "cancelled" ? "Đã hủy" : value}
@@ -101,106 +114,125 @@ const AssetDetail = ({ asset }: AssetDetailProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Package className="h-5 w-5 mr-2" />
-              Thông Tin Tài Sản
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Số lượng:</span>
-              <span className="text-sm col-span-2">{asset.so_luong} {asset.don_vi}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Thương hiệu:</span>
-              <span className="text-sm col-span-2">{asset.thuong_hieu || "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Cấu hình:</span>
-              <span className="text-sm col-span-2">{asset.cau_hinh || "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Chất liệu:</span>
-              <span className="text-sm col-span-2">{asset.chat_lieu || "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Màu:</span>
-              <span className="text-sm col-span-2">{asset.mau || "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Số seri:</span>
-              <span className="text-sm col-span-2">{asset.so_seri || "Không có"}</span>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="info">
+        <TabsList>
+          <TabsTrigger value="info">Thông Tin</TabsTrigger>
+          <TabsTrigger value="transfer-history">Lịch Sử Điều Chuyển</TabsTrigger>
+          <TabsTrigger value="create-transfer">Tạo Điều Chuyển</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="info" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Package className="h-5 w-5 mr-2" />
+                  Thông Tin Tài Sản
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Số lượng:</span>
+                  <span className="text-sm col-span-2">{asset.so_luong} {asset.don_vi}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Thương hiệu:</span>
+                  <span className="text-sm col-span-2">{asset.thuong_hieu || "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Cấu hình:</span>
+                  <span className="text-sm col-span-2">{asset.cau_hinh || "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Chất liệu:</span>
+                  <span className="text-sm col-span-2">{asset.chat_lieu || "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Màu:</span>
+                  <span className="text-sm col-span-2">{asset.mau || "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Số seri:</span>
+                  <span className="text-sm col-span-2">{asset.so_seri || "Không có"}</span>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2" />
-              Thông Tin Mua Sắm
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Ngày mua:</span>
-              <span className="text-sm col-span-2">{asset.ngay_mua ? formatDate(asset.ngay_mua) : "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Nơi mua:</span>
-              <span className="text-sm col-span-2">{asset.noi_mua || "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Số tiền mua:</span>
-              <span className="text-sm col-span-2">{asset.so_tien_mua || "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Ngày nhập:</span>
-              <span className="text-sm col-span-2">{asset.ngay_nhap ? formatDate(asset.ngay_nhap) : "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Thuộc đối tượng:</span>
-              <span className="text-sm col-span-2">{asset.doi_tuong ? `${asset.doi_tuong} - ${asset.doi_tuong_id}` : "Không có"}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Khu vực:</span>
-              <span className="text-sm col-span-2">{asset.khu_vuc || "Không có"}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-2" />
+                  Thông Tin Mua Sắm
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Ngày mua:</span>
+                  <span className="text-sm col-span-2">{asset.ngay_mua ? formatDate(asset.ngay_mua) : "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Nơi mua:</span>
+                  <span className="text-sm col-span-2">{asset.noi_mua || "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Số tiền mua:</span>
+                  <span className="text-sm col-span-2">{asset.so_tien_mua || "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Ngày nhập:</span>
+                  <span className="text-sm col-span-2">{asset.ngay_nhap ? formatDate(asset.ngay_nhap) : "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Thuộc đối tượng:</span>
+                  <span className="text-sm col-span-2">{asset.doi_tuong ? `${asset.doi_tuong} - ${asset.doi_tuong_id}` : "Không có"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Khu vực:</span>
+                  <span className="text-sm col-span-2">{asset.khu_vuc || "Không có"}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <RefreshCw className="h-5 w-5 mr-2" />
-            Lịch Sử Điều Chuyển
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={transferColumns}
-            data={transfers}
-            isLoading={isLoading}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm lịch sử điều chuyển..."
+          {asset.mo_ta_1 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Mô Tả</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{asset.mo_ta_1}</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="transfer-history">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <RefreshCw className="h-5 w-5 mr-2" />
+                Lịch Sử Điều Chuyển
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={transferColumns}
+                data={transfers}
+                isLoading={isLoading}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm lịch sử điều chuyển..."
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="create-transfer">
+          <AssetTransfer 
+            asset={asset} 
+            onTransferComplete={handleTransferComplete}
           />
-        </CardContent>
-      </Card>
-
-      {asset.mo_ta_1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Mô Tả</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{asset.mo_ta_1}</p>
-          </CardContent>
-        </Card>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
