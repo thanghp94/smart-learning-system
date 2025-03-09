@@ -1,7 +1,7 @@
 
 import { employeeService } from './employee-service';
 import { studentService } from './student-service';
-import { classService } from './class-service';
+import { classService } from './services/class';
 import { facilityService } from './facility-service';
 import { teachingSessionService } from './teaching-session-service';
 import { enrollmentService } from './enrollment-service';

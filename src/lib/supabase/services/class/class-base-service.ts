@@ -1,8 +1,12 @@
-import { supabase } from './client';
-import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
+
+import { supabase } from '../../client';
+import { logActivity } from '../../base-service';
 import { Class } from '@/lib/types';
 
-class ClassService {
+/**
+ * Base service class for core CRUD operations related to classes
+ */
+class ClassBaseService {
   /**
    * Fetches all classes from the database
    */
@@ -43,21 +47,37 @@ class ClassService {
    * Fetches a single class by ID
    */
   async getById(id: string): Promise<Class | null> {
-    const classData = await fetchById<Partial<Class>>('classes', id);
-    if (!classData) return null;
-    
-    // Ensure required fields are present
-    return {
-      ...classData,
-      id: classData.id || id,
-      ten_lop_full: classData.ten_lop_full || '',
-      ten_lop: classData.ten_lop || '',
-      ct_hoc: classData.ct_hoc || '',
-      co_so: classData.co_so || '',
-      gv_chinh: classData.gv_chinh || '',
-      ngay_bat_dau: classData.ngay_bat_dau || null,
-      tinh_trang: classData.tinh_trang || 'pending'
-    } as Class;
+    try {
+      console.log(`Fetching class with ID ${id}...`);
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching class by ID:', error);
+        return null;
+      }
+      
+      console.log('Successfully fetched class by ID:', data);
+      
+      // Ensure required fields are present
+      return {
+        ...data,
+        id: data.id || id,
+        ten_lop_full: data.ten_lop_full || '',
+        ten_lop: data.ten_lop || '',
+        ct_hoc: data.ct_hoc || '',
+        co_so: data.co_so || '',
+        gv_chinh: data.gv_chinh || '',
+        ngay_bat_dau: data.ngay_bat_dau || null,
+        tinh_trang: data.tinh_trang || 'pending'
+      } as Class;
+    } catch (error) {
+      console.error(`Error in getById for class ${id}:`, error);
+      return null;
+    }
   }
 
   /**
@@ -239,51 +259,6 @@ class ClassService {
       throw error;
     }
   }
-
-  /**
-   * Fetches all classes with student count
-   */
-  async getAllWithStudentCount(): Promise<any[]> {
-    try {
-      const { data, error } = await supabase
-        .from('classes_with_student_count')
-        .select('*')
-        .order('ten_lop_full', { ascending: true });
-      
-      if (error) {
-        console.error('Error fetching classes with student count:', error);
-        return [];
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error('Error in fetchClassesWithStudentCount:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetches classes for a specific facility
-   */
-  async getByFacility(facilityId: string): Promise<Class[]> {
-    try {
-      const { data, error } = await supabase
-        .from('classes')
-        .select('*')
-        .eq('co_so', facilityId)
-        .order('ten_lop_full', { ascending: true });
-      
-      if (error) {
-        console.error('Error fetching classes by facility:', error);
-        return [];
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error('Error in fetchClassesByFacility:', error);
-      return [];
-    }
-  }
 }
 
-export const classService = new ClassService();
+export default new ClassBaseService();
