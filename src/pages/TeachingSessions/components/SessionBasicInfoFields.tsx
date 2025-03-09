@@ -16,6 +16,9 @@ interface SessionBasicInfoFieldsProps {
 }
 
 const SessionBasicInfoFields = ({ form, classes, teachers, isLoading }: SessionBasicInfoFieldsProps) => {
+  console.log("SessionBasicInfoFields - classes:", classes);
+  console.log("SessionBasicInfoFields - teachers:", teachers);
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -34,11 +37,17 @@ const SessionBasicInfoFields = ({ form, classes, teachers, isLoading }: SessionB
                   <SelectValue placeholder="Chọn lớp học" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classes.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.Ten_lop_full || `Lớp ${cls.id}`}
+                  {classes.length > 0 ? (
+                    classes.map((cls) => (
+                      <SelectItem key={cls.id} value={cls.id}>
+                        {cls.Ten_lop_full || cls.ten_lop_full || cls.ten_lop || `Lớp ${cls.id}`}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-classes" disabled>
+                      Không có lớp học nào
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </FormControl>
@@ -63,11 +72,17 @@ const SessionBasicInfoFields = ({ form, classes, teachers, isLoading }: SessionB
                   <SelectValue placeholder="Chọn giáo viên" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teachers.map((teacher) => (
-                    <SelectItem key={teacher.id} value={teacher.id}>
-                      {teacher.ten_nhan_su}
+                  {teachers.length > 0 ? (
+                    teachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.ten_nhan_su}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-teachers" disabled>
+                      Không có giáo viên nào
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </FormControl>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,31 +31,29 @@ const TeachingSessions = () => {
     try {
       setIsLoading(true);
       
-      // Fetch sessions
-      const sessionsData = await teachingSessionService.getAll();
-      setSessions(sessionsData);
-      
-      // Get unique class IDs and teacher IDs
-      const classIds = [...new Set(sessionsData.map(s => s.lop_chi_tiet_id))];
-      const teacherIds = [...new Set(sessionsData.map(s => s.giao_vien))];
-      
-      // Fetch classes and teachers in parallel
-      const [classesData, teachersData] = await Promise.all([
-        Promise.all(classIds.map(id => classService.getById(id))),
-        Promise.all(teacherIds.map(id => employeeService.getById(id)))
+      // Fetch sessions and classes in parallel
+      const [sessionsData, classesArray, teachersData] = await Promise.all([
+        teachingSessionService.getAll(),
+        classService.getAll(),
+        employeeService.getByRole("Giáo viên")
       ]);
       
-      // Convert arrays to dictionaries for easier lookup
-      const classesDict = classesData.reduce((acc, cls) => {
+      console.log("Fetched classes:", classesArray);
+      console.log("Fetched sessions:", sessionsData);
+      
+      // Convert classes array to a lookup dictionary
+      const classesDict = classesArray.reduce((acc, cls) => {
         if (cls) acc[cls.id] = cls;
         return acc;
       }, {} as Record<string, Class>);
       
+      // Convert teachers array to a lookup dictionary
       const teachersDict = teachersData.reduce((acc, teacher) => {
         if (teacher) acc[teacher.id] = teacher;
         return acc;
       }, {} as Record<string, Employee>);
       
+      setSessions(sessionsData);
       setClasses(classesDict);
       setTeachers(teachersDict);
       
@@ -114,7 +111,7 @@ const TeachingSessions = () => {
       title: "Lớp",
       key: "lop_chi_tiet_id",
       sortable: true,
-      render: (value: string) => <span>{classes[value]?.Ten_lop_full || value}</span>,
+      render: (value: string) => <span>{classes[value]?.Ten_lop_full || classes[value]?.ten_lop_full || value}</span>,
     },
     {
       title: "Buổi học số",

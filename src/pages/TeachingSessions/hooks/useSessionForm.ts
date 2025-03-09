@@ -40,10 +40,14 @@ export const useSessionForm = ({ initialData }: UseSessionFormProps = {}) => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        
         const [classesData, teachersData] = await Promise.all([
           classService.getAll(),
           employeeService.getByRole("Giáo viên")
         ]);
+        
+        console.log("Form classes data:", classesData);
+        console.log("Form teachers data:", teachersData);
         
         setClasses(classesData);
         setTeachers(teachersData);
