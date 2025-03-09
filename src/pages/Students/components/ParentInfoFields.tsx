@@ -24,6 +24,9 @@ const ParentInfoFields: React.FC<ParentInfoFieldsProps> = ({ form }) => {
                 <Input placeholder="Nhập tên phụ huynh" {...field} />
               </FormControl>
               <FormMessage />
+              <p className="text-xs text-muted-foreground mt-1">
+                Lưu vào trường ten_ph trong CSDL
+              </p>
             </FormItem>
           )}
         />

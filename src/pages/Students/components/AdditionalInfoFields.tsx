@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { StudentFormValues } from "../schemas/studentSchema";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; 
 
 interface AdditionalInfoFieldsProps {
   form: UseFormReturn<StudentFormValues>;

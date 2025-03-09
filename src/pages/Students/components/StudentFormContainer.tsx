@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
@@ -69,11 +68,6 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
         han_hoc_phi: data.han_hoc_phi ? data.han_hoc_phi.toISOString().split('T')[0] : null,
         ngay_bat_dau_hoc_phi: data.ngay_bat_dau_hoc_phi ? data.ngay_bat_dau_hoc_phi.toISOString().split('T')[0] : null,
       };
-      
-      // Remove any fields that might cause issues with the database
-      // The mo_ta_hs field is in the database instead of ghi_chu, so we'll map it
-      formattedData.mo_ta_hs = formattedData.ghi_chu;
-      delete formattedData.ghi_chu;
       
       console.log("Formatted student data for submission:", formattedData);
       

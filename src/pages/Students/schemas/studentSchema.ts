@@ -6,7 +6,7 @@ export const studentSchema = z.object({
   gioi_tinh: z.string().optional(),
   ngay_sinh: z.date().optional().nullable(),
   co_so_id: z.string().optional(),
-  ten_PH: z.string().optional(),
+  ten_PH: z.string().optional(), // Kept as is for form, mapped in service
   sdt_ph1: z.string().optional(),
   email_ph1: z.string().optional(),
   dia_chi: z.string().optional(),
@@ -15,7 +15,7 @@ export const studentSchema = z.object({
   ct_hoc: z.string().optional(),
   han_hoc_phi: z.date().optional().nullable(),
   ngay_bat_dau_hoc_phi: z.date().optional().nullable(),
-  ghi_chu: z.string().optional(),
+  ghi_chu: z.string().optional(), // Kept as is for form, mapped in service
   parentpassword: z.string().optional(),
 });
 

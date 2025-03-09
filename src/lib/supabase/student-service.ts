@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
 import { Student } from '@/lib/types';
@@ -74,13 +75,31 @@ class StudentService {
     try {
       console.log('Creating new student:', studentData);
       
-      // Create a new object with only the fields that exist in the database
-      // Exclude fields that are not in the students table schema
-      const { ghi_chu, ...validStudentData } = studentData;
+      // Fix case sensitivity issues and field mapping
+      // Convert camelCase/PascalCase to snake_case for database
+      const mappedData = {
+        ten_hoc_sinh: studentData.ten_hoc_sinh,
+        gioi_tinh: studentData.gioi_tinh,
+        ngay_sinh: studentData.ngay_sinh,
+        co_so_id: studentData.co_so_id,
+        ten_ph: studentData.ten_PH, // Map to correct column name
+        sdt_ph1: studentData.sdt_ph1,
+        email_ph1: studentData.email_ph1,
+        dia_chi: studentData.dia_chi,
+        password: studentData.password,
+        parentpassword: studentData.parentpassword,
+        trang_thai: studentData.trang_thai,
+        ct_hoc: studentData.ct_hoc,
+        han_hoc_phi: studentData.han_hoc_phi,
+        ngay_bat_dau_hoc_phi: studentData.ngay_bat_dau_hoc_phi,
+        mo_ta_hs: studentData.ghi_chu,
+      };
+      
+      console.log('Mapped student data for insert:', mappedData);
       
       const { data, error } = await supabase
         .from('students')
-        .insert(validStudentData)
+        .insert(mappedData)
         .select()
         .single();
       
@@ -114,12 +133,31 @@ class StudentService {
     try {
       console.log('Updating student:', id, updates);
       
-      // Remove fields that don't exist in the database
-      const { ghi_chu, ...validUpdates } = updates;
+      // Fix case sensitivity issues and field mapping
+      const mappedUpdates: Record<string, any> = {};
+      
+      // Map fields explicitly to handle case differences
+      if (updates.ten_hoc_sinh !== undefined) mappedUpdates.ten_hoc_sinh = updates.ten_hoc_sinh;
+      if (updates.gioi_tinh !== undefined) mappedUpdates.gioi_tinh = updates.gioi_tinh;
+      if (updates.ngay_sinh !== undefined) mappedUpdates.ngay_sinh = updates.ngay_sinh;
+      if (updates.co_so_id !== undefined) mappedUpdates.co_so_id = updates.co_so_id;
+      if (updates.ten_PH !== undefined) mappedUpdates.ten_ph = updates.ten_PH;
+      if (updates.sdt_ph1 !== undefined) mappedUpdates.sdt_ph1 = updates.sdt_ph1;
+      if (updates.email_ph1 !== undefined) mappedUpdates.email_ph1 = updates.email_ph1;
+      if (updates.dia_chi !== undefined) mappedUpdates.dia_chi = updates.dia_chi;
+      if (updates.password !== undefined) mappedUpdates.password = updates.password;
+      if (updates.parentpassword !== undefined) mappedUpdates.parentpassword = updates.parentpassword;
+      if (updates.trang_thai !== undefined) mappedUpdates.trang_thai = updates.trang_thai;
+      if (updates.ct_hoc !== undefined) mappedUpdates.ct_hoc = updates.ct_hoc;
+      if (updates.han_hoc_phi !== undefined) mappedUpdates.han_hoc_phi = updates.han_hoc_phi;
+      if (updates.ngay_bat_dau_hoc_phi !== undefined) mappedUpdates.ngay_bat_dau_hoc_phi = updates.ngay_bat_dau_hoc_phi;
+      if (updates.ghi_chu !== undefined) mappedUpdates.mo_ta_hs = updates.ghi_chu;
+      
+      console.log('Mapped student data for update:', mappedUpdates);
       
       const { data, error } = await supabase
         .from('students')
-        .update(validUpdates)
+        .update(mappedUpdates)
         .eq('id', id)
         .select()
         .single();
