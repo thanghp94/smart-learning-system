@@ -15,16 +15,16 @@ export const studentService = {
     };
     
     // Convert Date objects to ISO strings if they exist
-    if (student.ngay_sinh instanceof Date) {
-      formattedData.ngay_sinh = student.ngay_sinh.toISOString().split('T')[0];
+    if (student.ngay_sinh && typeof student.ngay_sinh !== 'string') {
+      formattedData.ngay_sinh = new Date(student.ngay_sinh).toISOString().split('T')[0];
     }
     
-    if (student.han_hoc_phi instanceof Date) {
-      formattedData.han_hoc_phi = student.han_hoc_phi.toISOString().split('T')[0];
+    if (student.han_hoc_phi && typeof student.han_hoc_phi !== 'string') {
+      formattedData.han_hoc_phi = new Date(student.han_hoc_phi).toISOString().split('T')[0];
     }
     
-    if (student.ngay_bat_dau_hoc_phi instanceof Date) {
-      formattedData.ngay_bat_dau_hoc_phi = student.ngay_bat_dau_hoc_phi.toISOString().split('T')[0];
+    if (student.ngay_bat_dau_hoc_phi && typeof student.ngay_bat_dau_hoc_phi !== 'string') {
+      formattedData.ngay_bat_dau_hoc_phi = new Date(student.ngay_bat_dau_hoc_phi).toISOString().split('T')[0];
     }
     
     return insert<Student>('students', formattedData);

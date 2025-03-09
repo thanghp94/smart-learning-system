@@ -70,6 +70,8 @@ const Classes = () => {
         description: "Thêm lớp học mới thành công",
       });
       setShowAddForm(false);
+      // Refresh the classes list to ensure we have the latest data
+      fetchClasses();
     } catch (error) {
       console.error("Error adding class:", error);
       toast({
@@ -161,7 +163,7 @@ const Classes = () => {
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <ClassDetail classItem={selectedClass} />
+          <ClassDetail classData={selectedClass} />
         </DetailPanel>
       )}
 

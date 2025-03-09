@@ -15,11 +15,11 @@ export const classService = {
     
     // Create a properly formatted object that matches database column names
     const formattedData: any = {
-      ten_lop_full: classData.ten_lop_full || classData.Ten_lop_full,
+      ten_lop_full: classData.Ten_lop_full || classData.ten_lop_full,
       ten_lop: classData.ten_lop,
       ct_hoc: classData.ct_hoc,
       co_so: classData.co_so,
-      gv_chinh: classData.gv_chinh || classData.GV_chinh,
+      gv_chinh: classData.GV_chinh || classData.gv_chinh,
       ngay_bat_dau: classData.ngay_bat_dau,
       tinh_trang: classData.tinh_trang,
       ghi_chu: classData.ghi_chu,
@@ -27,11 +27,24 @@ export const classService = {
     };
     
     // Format date fields if they exist
-    if (formattedData.ngay_bat_dau instanceof Date) {
-      formattedData.ngay_bat_dau = formattedData.ngay_bat_dau.toISOString().split('T')[0];
+    if (formattedData.ngay_bat_dau && typeof formattedData.ngay_bat_dau !== 'string') {
+      formattedData.ngay_bat_dau = new Date(formattedData.ngay_bat_dau).toISOString().split('T')[0];
     }
     
     try {
+      // Ensure that required UUIDs are not empty strings
+      if (formattedData.co_so === '') {
+        formattedData.co_so = null;
+      }
+      
+      if (formattedData.gv_chinh === '') {
+        formattedData.gv_chinh = null;
+      }
+      
+      if (formattedData.unit_id === '') {
+        formattedData.unit_id = null;
+      }
+      
       const result = await insert<Class>('classes', formattedData);
       console.log("Class creation result:", result);
       return result;
