@@ -10,7 +10,7 @@ export const classService = {
   update: (id: string, updates: Partial<Class>) => update<Class>('classes', id, updates),
   delete: (id: string) => remove('classes', id),
   
-  // Add this specific alias for getClassById
+  // Make sure this alias is available for ClassDetail.tsx
   getClassById: (id: string) => fetchById<Class>('classes', id),
   
   // Get classes with student count using the view

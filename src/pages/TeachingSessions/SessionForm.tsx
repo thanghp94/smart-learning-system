@@ -120,7 +120,7 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
       }
     }
     
-    // Submit session data directly without additional type conversion as our service will handle it
+    // Submit session data through the onSubmit prop
     onSubmit(data);
   };
 

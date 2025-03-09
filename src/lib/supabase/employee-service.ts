@@ -7,7 +7,7 @@ export const employeeService = {
   getAll: () => fetchAll<Employee>('employees'),
   getById: (id: string) => fetchById<Employee>('employees', id),
   create: (employee: Partial<Employee>) => insert<Employee>('employees', employee),
-  update: (id: string, updates: Partial<Employee>) => update<Employee>('employees', employee),
+  update: (id: string, updates: Partial<Employee>) => update<Employee>('employees', id, updates),
   delete: (id: string) => remove('employees', id),
   
   // Get employees by role/position
