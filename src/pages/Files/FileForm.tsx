@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,12 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { fileSchema } from './schemas/fileSchema';
+import { fileSchema, FileFormValues } from './schemas/fileSchema';
 import { File } from '@/lib/types';
 
 interface FileFormProps {
   initialData?: Partial<File>;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: FileFormValues) => void;
   onCancel: () => void;
 }
 
@@ -47,12 +46,12 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
     trang_thai: initialData?.trang_thai || 'active',
   };
 
-  const form = useForm({
+  const form = useForm<FileFormValues>({
     resolver: zodResolver(fileSchema),
     defaultValues
   });
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = (values: FileFormValues) => {
     onSubmit(values);
   };
 
