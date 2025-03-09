@@ -66,7 +66,7 @@ export const classService = {
       // Format data for insertion
       const formattedData: Partial<Class> = { ...classData };
       
-      if (classData.ngay_bat_dau && classData.ngay_bat_dau instanceof Date) {
+      if (classData.ngay_bat_dau && typeof classData.ngay_bat_dau === 'object' && 'toISOString' in classData.ngay_bat_dau) {
         formattedData.ngay_bat_dau = classData.ngay_bat_dau.toISOString().split('T')[0];
       }
       
@@ -119,7 +119,7 @@ export const classService = {
       // Format updates
       const formattedUpdates: Partial<Class> = { ...updates };
       
-      if (updates.ngay_bat_dau && updates.ngay_bat_dau instanceof Date) {
+      if (updates.ngay_bat_dau && typeof updates.ngay_bat_dau === 'object' && 'toISOString' in updates.ngay_bat_dau) {
         formattedUpdates.ngay_bat_dau = updates.ngay_bat_dau.toISOString().split('T')[0];
       }
       

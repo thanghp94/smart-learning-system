@@ -4,12 +4,14 @@ import { supabase } from './client';
 // Enhanced error logging
 const logError = (error: any, operation: string, table: string) => {
   console.error(`Error in ${operation} for ${table}:`, error);
-  console.error('Error details:', {
-    message: error.message,
-    code: error.code,
-    details: error.details,
-    hint: error.hint
-  });
+  if (error) {
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    });
+  }
 };
 
 // Generic fetch function for any table
@@ -57,7 +59,7 @@ export const fetchById = async <T>(table: string, id: string): Promise<T | null>
 };
 
 // Generic insert function
-export const insert = async <T>(table: string, record: Partial<T>): Promise<T> => {
+export const insert = async <T>(table: string, record: Partial<T>): Promise<T | null> => {
   try {
     console.log(`Inserting record into ${table}:`, record);
     
@@ -99,7 +101,7 @@ export const insert = async <T>(table: string, record: Partial<T>): Promise<T> =
 };
 
 // Generic update function
-export const update = async <T>(table: string, id: string, updates: Partial<T>): Promise<T> => {
+export const update = async <T>(table: string, id: string, updates: Partial<T>): Promise<T | null> => {
   try {
     console.log(`Updating record ${id} in ${table}:`, updates);
     const { data, error } = await supabase

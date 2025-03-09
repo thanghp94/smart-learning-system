@@ -75,15 +75,15 @@ export const studentService = {
     };
     
     // Convert Date objects to ISO strings if they exist
-    if (student.ngay_sinh && student.ngay_sinh instanceof Date) {
+    if (student.ngay_sinh && typeof student.ngay_sinh === 'object' && student.ngay_sinh instanceof Date) {
       formattedData.ngay_sinh = student.ngay_sinh.toISOString().split('T')[0];
     }
     
-    if (student.han_hoc_phi && student.han_hoc_phi instanceof Date) {
+    if (student.han_hoc_phi && typeof student.han_hoc_phi === 'object' && student.han_hoc_phi instanceof Date) {
       formattedData.han_hoc_phi = student.han_hoc_phi.toISOString().split('T')[0];
     }
     
-    if (student.ngay_bat_dau_hoc_phi && student.ngay_bat_dau_hoc_phi instanceof Date) {
+    if (student.ngay_bat_dau_hoc_phi && typeof student.ngay_bat_dau_hoc_phi === 'object' && student.ngay_bat_dau_hoc_phi instanceof Date) {
       formattedData.ngay_bat_dau_hoc_phi = student.ngay_bat_dau_hoc_phi.toISOString().split('T')[0];
     }
     
@@ -131,17 +131,17 @@ export const studentService = {
       console.log(`Updating student with ID ${id}:`, updates);
       
       // Format date fields for update
-      const formattedUpdates: Partial<Student> = { ...updates };
+      let formattedUpdates: Partial<Student> = { ...updates };
       
-      if (updates.ngay_sinh && updates.ngay_sinh instanceof Date) {
+      if (updates.ngay_sinh && typeof updates.ngay_sinh === 'object' && updates.ngay_sinh instanceof Date) {
         formattedUpdates.ngay_sinh = updates.ngay_sinh.toISOString().split('T')[0];
       }
       
-      if (updates.han_hoc_phi && updates.han_hoc_phi instanceof Date) {
+      if (updates.han_hoc_phi && typeof updates.han_hoc_phi === 'object' && updates.han_hoc_phi instanceof Date) {
         formattedUpdates.han_hoc_phi = updates.han_hoc_phi.toISOString().split('T')[0];
       }
       
-      if (updates.ngay_bat_dau_hoc_phi && updates.ngay_bat_dau_hoc_phi instanceof Date) {
+      if (updates.ngay_bat_dau_hoc_phi && typeof updates.ngay_bat_dau_hoc_phi === 'object' && updates.ngay_bat_dau_hoc_phi instanceof Date) {
         formattedUpdates.ngay_bat_dau_hoc_phi = updates.ngay_bat_dau_hoc_phi.toISOString().split('T')[0];
       }
       

@@ -1,29 +1,31 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
+import { useParams, useNavigate } from "react-router-dom";
+import PageHeader from "@/components/common/PageHeader";
+import { Loader2 } from "lucide-react";
 import { Student } from "@/lib/types";
-import { studentService } from "@/lib/supabase";
+import { studentService } from "@/lib/supabase/student-service";
 import { useToast } from "@/hooks/use-toast";
-import TablePageLayout from "@/components/common/TablePageLayout";
-import { Badge } from "@/components/ui/badge";
-import DetailPanel from "@/components/ui/DetailPanel";
-import { Link, useNavigate } from "react-router-dom";
-import StudentDetail from "./StudentDetail";
-import { formatDate } from "@/lib/utils";
+import StudentsList from "./components/StudentsList";
+import StudentFormContainer from "./components/StudentFormContainer";
 
-const Students = () => {
+interface StudentsProps {
+  add?: boolean;
+  edit?: boolean;
+}
+
+const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
+  const { id } = useParams<{ id: string }>();
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [showDetail, setShowDetail] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    if (!add && !edit) {
+      fetchStudents();
+    }
+  }, [add, edit]);
 
   const fetchStudents = async () => {
     try {
@@ -34,105 +36,52 @@ const Students = () => {
     } catch (error) {
       console.error("Error fetching students:", error);
       toast({
-        title: "Error",
-        description: "Could not load students data",
-        variant: "destructive"
+        title: "Lỗi",
+        description: "Không thể tải danh sách học sinh. Vui lòng thử lại sau.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRowClick = (student: Student) => {
-    setSelectedStudent(student);
-    setShowDetail(true);
-  };
-
-  const closeDetail = () => {
-    setShowDetail(false);
-  };
-
-  const handleAddClick = () => {
+  const handleAddStudent = () => {
     navigate("/students/add");
   };
 
-  const columns = [
-    {
-      title: "Tên Học Sinh",
-      key: "ten_hoc_sinh",
-      sortable: true,
-    },
-    {
-      title: "Giới Tính",
-      key: "gioi_tinh",
-    },
-    {
-      title: "Ngày Sinh",
-      key: "ngay_sinh",
-      render: (value: string) => value ? formatDate(value) : "",
-    },
-    {
-      title: "Chương Trình Học",
-      key: "ct_hoc",
-    },
-    {
-      title: "Tên Phụ Huynh",
-      key: "ten_ph",
-    },
-    {
-      title: "Số ĐT Phụ Huynh",
-      key: "sdt_ph1",
-    },
-    {
-      title: "Trạng Thái",
-      key: "trang_thai",
-      render: (value: string) => (
-        <Badge variant={value === "active" ? "success" : "destructive"}>
-          {value === "active" ? "Đang Học" : "Đã Nghỉ"}
-        </Badge>
-      ),
-    },
-  ];
-
-  const tableActions = (
-    <div className="flex items-center space-x-2">
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
-      </Button>
-      <Button size="sm" className="h-8" onClick={handleAddClick}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Học Sinh
-      </Button>
-    </div>
-  );
+  // Show form for add/edit
+  if (add) {
+    return <StudentFormContainer isAdd={true} />;
+  }
+  
+  if (edit && id) {
+    return <StudentFormContainer studentId={id} />;
+  }
 
   return (
-    <TablePageLayout
-      title="Học Sinh"
-      description="Quản lý thông tin học sinh trong hệ thống"
-      actions={tableActions}
-    >
-      <DataTable
-        columns={columns}
-        data={students}
-        isLoading={isLoading}
-        onRowClick={handleRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm học sinh..."
+    <>
+      <PageHeader
+        title="Học sinh"
+        description="Quản lý danh sách học sinh trong hệ thống."
+        action={{
+          label: "Thêm học sinh",
+          onClick: handleAddStudent
+        }}
       />
-
-      {selectedStudent && (
-        <DetailPanel
-          title="Thông Tin Học Sinh"
-          isOpen={showDetail}
-          onClose={closeDetail}
-        >
-          <StudentDetail student={selectedStudent} />
-        </DetailPanel>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Đang tải dữ liệu...</span>
+        </div>
+      ) : (
+        <StudentsList 
+          students={students} 
+          isLoading={isLoading}
+          onAddStudent={handleAddStudent}
+        />
       )}
-    </TablePageLayout>
+    </>
   );
 };
 
