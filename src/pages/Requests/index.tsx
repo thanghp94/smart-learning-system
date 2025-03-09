@@ -8,25 +8,26 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import RequestsTable from "./RequestsTable";
 
-interface Request {
+// Define a consistent request interface matching with RequestsTable
+interface RequestData {
   id: string;
-  title?: string;
+  title: string;
   description?: string;
-  requester?: string;
-  status?: string;
+  requester: string;
+  status: string;
   priority?: string;
-  noi_dung: string;
-  ly_do?: string;
-  nguoi_de_xuat_id: string;
-  trang_thai: string;
-  ngay_de_xuat: string;
   created_at: string;
+  noi_dung?: string;
+  ly_do?: string;
+  nguoi_de_xuat_id?: string;
+  trang_thai?: string;
+  ngay_de_xuat?: string;
 }
 
 const Requests = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [requests, setRequests] = useState<Request[]>([]);
+  const [requests, setRequests] = useState<RequestData[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const { toast } = useToast();
 
@@ -58,8 +59,10 @@ const Requests = () => {
         return {
           ...req,
           requester: employee?.ten_nhan_su || 'Unknown',
-          title: req.noi_dung, // Map noi_dung to title for table display
+          title: req.noi_dung || 'No title', // Map noi_dung to title for table display
+          description: req.ly_do,
           status: req.trang_thai || 'pending',
+          priority: req.priority || 'Medium'
         };
       });
       
