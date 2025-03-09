@@ -1,273 +1,243 @@
-import React, { useState, useEffect } from "react";
-import { Class, TeachingSession, Enrollment, Employee } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { teachingSessionService, enrollmentService, employeeService } from "@/lib/supabase";
-import { formatDate } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock } from "lucide-react";
-import DataTable from "@/components/ui/DataTable";
+
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getClassById } from "@/lib/supabase/class-service";
+import { Class, Employee, Enrollment } from "@/lib/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, User, Calendar, School } from "lucide-react";
+import DetailPanel from "@/components/ui/DetailPanel";
+import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
-const sampleSessions: TeachingSession[] = [
-  {
-    id: "1",
-    lop_id: "1",
-    session_id: 1,
-    ngay_hoc: "2023-09-05",
-    thoi_gian_bat_dau: "08:00",
-    thoi_gian_ket_thuc: "09:30",
-    giao_vien: "Nguyễn Văn A",
-    ghi_chu: "Bài 1: Giới thiệu",
-    trang_thai: "completed",
-    trung_binh: 4.5
-  },
-  {
-    id: "2",
-    lop_id: "1", 
-    session_id: 2,
-    ngay_hoc: "2023-09-07",
-    thoi_gian_bat_dau: "08:00",
-    thoi_gian_ket_thuc: "09:30",
-    giao_vien: "Nguyễn Văn A",
-    ghi_chu: "Bài 2: Lý thuyết cơ bản",
-    trang_thai: "completed",
-    trung_binh: 4.2
-  }
-];
+// Sample data for demo mode
+const sampleClass: Class = {
+  id: "1",
+  Ten_lop_full: "Toán Nâng Cao 10A",
+  ten_lop: "10A",
+  ct_hoc: "Toán",
+  co_so: "1",
+  GV_chinh: "1",
+  ngay_bat_dau: "2023-09-01",
+  tinh_trang: "active",
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+};
+
+const sampleTeacher: Employee = {
+  id: "1",
+  ten_nhan_su: "Nguyễn Văn A",
+  dien_thoai: "0123456789",
+  email: "teacher@example.com",
+  tinh_trang_lao_dong: "active",
+  dia_chi: "Hà Nội",
+  bo_phan: "Giáo viên",
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+};
 
 const sampleEnrollments: Enrollment[] = [
   {
     id: "1",
-    lop_id: "1",
-    hoc_sinh_id: "HS001",
-    ngay_dang_ky: "2023-08-20",
+    hoc_sinh_id: "1",
+    lop_chi_tiet_id: "1",
     tinh_trang_diem_danh: "present",
-    ghi_chu: "Học sinh chăm chỉ"
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
     id: "2",
-    lop_id: "1",
-    hoc_sinh_id: "HS002",
-    ngay_dang_ky: "2023-08-22",
+    hoc_sinh_id: "2",
+    lop_chi_tiet_id: "1",
     tinh_trang_diem_danh: "absent",
-    ghi_chu: "Vắng có phép"
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
 ];
 
-const sampleTeacher: Employee = {
-  id: "NV001",
-  ten_nhan_su: "Nguyễn Văn A",
-  chuc_vu: "Giáo viên",
-  bo_phan: "Giảng dạy",
-  email: "teacher@example.com",
-  phone: "0123456789",
-  ngay_vao_lam: "2022-01-15",
-  trang_thai: "active",
-  co_so: "CS001"
-};
-
-interface ClassDetailProps {
-  classItem: Class;
-}
-
-const ClassDetail = ({ classItem }: ClassDetailProps) => {
-  const [sessions, setSessions] = useState<TeachingSession[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [teacher, setTeacher] = useState<Employee | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const ClassDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const [classData, setClassData] = useState<Class | null>(null);
+  const [teacher, setTeacher] = useState<Employee | null>(null);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  
   const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   useEffect(() => {
-    const fetchRelatedData = async () => {
+    const fetchClassDetail = async () => {
+      setLoading(true);
       try {
-        setIsLoading(true);
-        
         if (isDemoMode) {
-          setTimeout(() => {
-            setSessions(sampleSessions);
-            setEnrollments(sampleEnrollments);
-            setTeacher(sampleTeacher);
-            setIsLoading(false);
-          }, 800);
-          return;
+          // Use sample data in demo mode
+          setClassData(sampleClass);
+          setTeacher(sampleTeacher);
+          setEnrollments(sampleEnrollments);
+        } else if (id) {
+          // Fetch real data if not in demo mode
+          const result = await getClassById(id);
+          if (result.data) {
+            setClassData(result.data);
+            // In a real app, you would fetch teacher and enrollments here
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to load class details",
+              variant: "destructive",
+            });
+          }
         }
-        
-        const [sessionsData, enrollmentsData, teacherData] = await Promise.all([
-          teachingSessionService.getByClass(classItem.id),
-          enrollmentService.getByClass(classItem.id),
-          employeeService.getById(classItem.GV_chinh)
-        ]);
-        
-        setSessions(sessionsData);
-        setEnrollments(enrollmentsData);
-        setTeacher(teacherData);
       } catch (error) {
-        console.error("Error fetching related data:", error);
+        console.error("Error fetching class details:", error);
         toast({
-          title: "Lỗi",
-          description: "Không thể tải dữ liệu liên quan đến lớp học",
-          variant: "destructive"
+          title: "Error",
+          description: "Failed to load class details",
+          variant: "destructive",
         });
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-    
-    fetchRelatedData();
-  }, [classItem.id, classItem.GV_chinh, isDemoMode]);
 
-  const sessionColumns = [
-    {
-      title: "Buổi học số",
-      key: "session_id",
-      sortable: true,
-    },
-    {
-      title: "Ngày học",
-      key: "ngay_hoc",
-      sortable: true,
-      render: (value: string) => <span>{formatDate(value)}</span>,
-    },
-    {
-      title: "Thời gian",
-      key: "thoi_gian_bat_dau",
-      render: (value: string, record: TeachingSession) => (
-        <div className="flex items-center">
-          <Clock className="h-4 w-4 mr-1" />
-          {value.substring(0, 5)} - {record.thoi_gian_ket_thuc.substring(0, 5)}
-        </div>
-      ),
-    },
-    {
-      title: "Giáo viên",
-      key: "giao_vien",
-      sortable: true,
-    },
-    {
-      title: "Đánh giá TB",
-      key: "trung_binh",
-      sortable: true,
-      render: (value: number) => <span>{value?.toFixed(1) || "N/A"}</span>,
-    },
-  ];
+    fetchClassDetail();
+  }, [id, toast, isDemoMode]);
 
-  const enrollmentColumns = [
-    {
-      title: "Học sinh ID",
-      key: "hoc_sinh_id",
-      sortable: true,
-    },
-    {
-      title: "Điểm danh",
-      key: "tinh_trang_diem_danh",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={
-          value === "present" ? "success" : 
-          value === "absent" ? "destructive" : 
-          "secondary"
-        }>
-          {value === "present" ? "Có mặt" : 
-           value === "absent" ? "Vắng mặt" : 
-           value === "late" ? "Đi muộn" : value}
-        </Badge>
-      ),
-    },
-    {
-      title: "Ghi chú",
-      key: "ghi_chu",
-      render: (value: string) => <span>{value || "Không có"}</span>,
-    },
-  ];
+  const handleBack = () => {
+    navigate("/classes");
+  };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">{classItem.Ten_lop_full}</h2>
-        <p className="text-muted-foreground">Mã lớp: {classItem.ten_lop}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <Badge variant={classItem.tinh_trang === "active" ? "success" : "secondary"}>
-            {classItem.tinh_trang === "active" ? "Đang hoạt động" : classItem.tinh_trang}
-          </Badge>
-          <span className="text-sm text-muted-foreground">
-            {classItem.ct_hoc}
-          </span>
+  if (loading) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
         </div>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  if (!classData) {
+    return (
+      <div className="container mx-auto p-4">
+        <Button variant="outline" onClick={handleBack} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Classes
+        </Button>
         <Card>
-          <CardHeader>
-            <CardTitle>Thông Tin Lớp Học</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Chương trình:</span>
-              <span className="text-sm col-span-2">{classItem.ct_hoc}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Giáo viên:</span>
-              <span className="text-sm col-span-2">{teacher?.ten_nhan_su || classItem.GV_chinh}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Cơ sở:</span>
-              <span className="text-sm col-span-2">{classItem.co_so}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Ngày bắt đầu:</span>
-              <span className="text-sm col-span-2">
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {formatDate(classItem.ngay_bat_dau)}
-                </div>
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Số học sinh:</span>
-              <span className="text-sm col-span-2">{classItem.so_hs || enrollments.length || 0}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              <span className="text-sm font-medium text-muted-foreground">Ghi chú:</span>
-              <span className="text-sm col-span-2">{classItem.ghi_chu || "Không có"}</span>
-            </div>
+          <CardContent className="p-6 text-center">
+            <p className="text-muted-foreground">Class not found</p>
           </CardContent>
         </Card>
       </div>
+    );
+  }
 
-      {isDemoMode && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-          <strong>Chế độ demo:</strong> Hiển thị dữ liệu mẫu cho các buổi học và ghi danh.
+  return (
+    <div className="container mx-auto p-4">
+      <Button variant="outline" onClick={handleBack} className="mb-4">
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Classes
+      </Button>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2 space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-4">{classData.Ten_lop_full}</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="flex items-center">
+                  <School className="mr-2 h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Program</p>
+                    <p className="font-medium">{classData.ct_hoc}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Calendar className="mr-2 h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Start Date</p>
+                    <p className="font-medium">
+                      {classData.ngay_bat_dau 
+                        ? format(new Date(classData.ngay_bat_dau), 'dd/MM/yyyy') 
+                        : 'Not set'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <User className="mr-2 h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Main Teacher</p>
+                    <p className="font-medium">{teacher?.ten_nhan_su || 'Not assigned'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <School className="mr-2 h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    <p className="font-medium capitalize">{classData.tinh_trang}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <DetailPanel 
+            title="Student Enrollments" 
+            items={[
+              { label: "Number of Students", value: enrollments.length.toString() },
+            ]}
+          >
+            <div className="space-y-4 mt-4">
+              {enrollments.length > 0 ? (
+                enrollments.map((enrollment) => (
+                  <Card key={enrollment.id} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold">Student ID: {enrollment.hoc_sinh_id}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Attendance: {enrollment.tinh_trang_diem_danh}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-4">No students enrolled</p>
+              )}
+            </div>
+          </DetailPanel>
         </div>
-      )}
-
-      <Tabs defaultValue="sessions">
-        <TabsList>
-          <TabsTrigger value="sessions">Buổi Học</TabsTrigger>
-          <TabsTrigger value="enrollments">Ghi Danh</TabsTrigger>
-        </TabsList>
         
-        <TabsContent value="sessions" className="mt-4">
-          <DataTable
-            columns={sessionColumns}
-            data={sessions}
-            isLoading={isLoading}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm buổi học..."
+        <div className="space-y-6">
+          <DetailPanel 
+            title="Class Information" 
+            items={[
+              { label: "Class Name", value: classData.ten_lop },
+              { label: "Full Name", value: classData.Ten_lop_full },
+              { label: "Curriculum", value: classData.ct_hoc || "Not specified" },
+              { label: "Status", value: classData.tinh_trang },
+              { label: "Start Date", value: classData.ngay_bat_dau ? format(new Date(classData.ngay_bat_dau), 'dd/MM/yyyy') : 'Not set' },
+            ]}
           />
-        </TabsContent>
-        
-        <TabsContent value="enrollments" className="mt-4">
-          <DataTable
-            columns={enrollmentColumns}
-            data={enrollments}
-            isLoading={isLoading}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm học sinh..."
-          />
-        </TabsContent>
-      </Tabs>
+          
+          {teacher && (
+            <DetailPanel 
+              title="Teacher Information" 
+              items={[
+                { label: "Name", value: teacher.ten_nhan_su },
+                { label: "Contact", value: teacher.dien_thoai || "Not available" },
+                { label: "Email", value: teacher.email || "Not available" },
+                { label: "Department", value: teacher.bo_phan || "Not specified" },
+                { label: "Status", value: teacher.tinh_trang_lao_dong || "Not specified" },
+              ]}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 };

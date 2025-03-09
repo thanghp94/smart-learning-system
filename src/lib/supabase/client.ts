@@ -27,8 +27,7 @@ function createMockClient() {
           order: () => ({
             limit: () => Promise.resolve({ data: [], error: null })
           }),
-          limit: () => Promise.resolve({ data: [], error: null }),
-          select: () => Promise.resolve({ data: [], error: null })
+          limit: () => Promise.resolve({ data: [], error: null })
         }),
         order: () => ({
           limit: () => Promise.resolve({ data: [], error: null })

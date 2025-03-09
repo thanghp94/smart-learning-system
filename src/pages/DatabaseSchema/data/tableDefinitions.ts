@@ -151,6 +151,36 @@ export const views: ViewInfo[] = [
     name: "finance_by_facility",
     purpose: "View that aggregates financial data by facility, showing income and expenses grouped by month.",
     key: "finance-facility"
+  },
+  {
+    name: "teaching_session_evaluations",
+    purpose: "View that combines teaching sessions with their evaluation data for comprehensive analysis of teacher performance.",
+    key: "session-evaluations"
+  },
+  {
+    name: "student_evaluations_summary",
+    purpose: "View that summarizes student evaluation data across multiple criteria for performance tracking.",
+    key: "student-eval-summary"
+  },
+  {
+    name: "facility_asset_inventory",
+    purpose: "View that provides an inventory of assets by facility for easy tracking and management.",
+    key: "facility-assets"
+  },
+  {
+    name: "contact_by_purpose",
+    purpose: "View that organizes contacts by their relationship type or purpose for better contact management.",
+    key: "contact-purpose"
+  },
+  {
+    name: "task_completion_by_employee",
+    purpose: "View that summarizes task completion rates and statuses grouped by assigned employees.",
+    key: "task-completion"
+  },
+  {
+    name: "upcoming_events",
+    purpose: "View that lists upcoming events with relevant details for planning and preparation.",
+    key: "upcoming-events"
   }
 ];
 
