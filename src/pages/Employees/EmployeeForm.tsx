@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Employee } from '@/lib/types';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 interface EmployeeFormProps {
   initialData?: Partial<Employee>;
@@ -29,21 +30,23 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
       email: initialData?.email || '',
       co_so_id: initialData?.co_so_id?.length ? initialData.co_so_id[0] : '',
       tinh_trang_lao_dong: initialData?.tinh_trang_lao_dong || 'active',
-      ngay_sinh: initialData?.ngay_sinh || '',
+      ngay_sinh: initialData?.ngay_sinh || null, // Changed from empty string to null
       dia_chi: initialData?.dia_chi || '',
       gioi_tinh: initialData?.gioi_tinh || '',
-      // Ensure this matches the Employee type definition
-      ghi_chu: ''
+      ghi_chu: initialData?.ghi_chu || ''
     }
   });
 
   const processSubmit = (formData: any) => {
-    // Convert single co_so_id string to array as required by Employee type
-    const employeeData: Partial<Employee> = {
+    // Process the date field - if empty, set to null to avoid SQL date parsing errors
+    const processedData = {
       ...formData,
+      ngay_sinh: formData.ngay_sinh || null,
       co_so_id: formData.co_so_id ? [formData.co_so_id] : []
     };
-    onSubmit(employeeData);
+    
+    console.log("Submitting employee data:", processedData);
+    onSubmit(processedData);
   };
 
   return (
