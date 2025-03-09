@@ -6,12 +6,12 @@ import { supabase } from './client';
 export const payrollService = {
   getAll: () => fetchAll<Payroll>('payrolls'),
   getById: (id: string) => fetchById<Payroll>('payrolls', id),
-  create: (payroll: Partial<Payroll>) => {
+  create: (payroll: Partial<Payroll> & { phu_cap?: number }) => {
     // Remove phu_cap field as it doesn't exist in the database
     const { phu_cap, ...validPayroll } = payroll;
     return insert<Payroll>('payrolls', validPayroll);
   },
-  update: (id: string, updates: Partial<Payroll>) => {
+  update: (id: string, updates: Partial<Payroll> & { phu_cap?: number }) => {
     // Remove phu_cap field as it doesn't exist in the database
     const { phu_cap, ...validUpdates } = updates;
     return update<Payroll>('payrolls', id, validUpdates);

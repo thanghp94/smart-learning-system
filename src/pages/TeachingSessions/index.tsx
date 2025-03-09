@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +31,6 @@ const TeachingSessions = () => {
     try {
       setIsLoading(true);
       
-      // Fetch sessions and classes in parallel
       const [sessionsData, classesArray, teachersData] = await Promise.all([
         teachingSessionService.getAll(),
         classService.getAll(),
@@ -42,10 +40,8 @@ const TeachingSessions = () => {
       console.log("Fetched classes:", classesArray);
       console.log("Fetched sessions:", sessionsData);
       
-      // Convert classes array to a lookup dictionary with proper type handling
       const classesDict = (classesArray || []).reduce((acc, cls) => {
         if (cls) {
-          // Ensure required fields are present
           const completeClass = {
             ...cls,
             id: cls.id || crypto.randomUUID(),
@@ -64,7 +60,6 @@ const TeachingSessions = () => {
         return acc;
       }, {} as Record<string, Class>);
       
-      // Convert teachers array to a lookup dictionary
       const teachersDict = teachersData.reduce((acc, teacher) => {
         if (teacher) acc[teacher.id] = teacher;
         return acc;
@@ -112,7 +107,7 @@ const TeachingSessions = () => {
       });
       
       setShowAddForm(false);
-      fetchData(); // Refresh the list after adding a new session
+      fetchData();
     } catch (error) {
       console.error("Error adding session:", error);
       toast({
@@ -171,7 +166,7 @@ const TeachingSessions = () => {
     },
     {
       title: "Loại bài học",
-      key: "Loai_bai_hoc",
+      key: "loai_bai_hoc",
       sortable: true,
     },
   ];

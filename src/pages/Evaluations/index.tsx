@@ -29,21 +29,17 @@ const Evaluations = () => {
     try {
       setIsLoading(true);
       
-      // Fetch sessions with evaluation data
       const sessionsData = await teachingSessionService.getWithAvgScore();
       setSessions(sessionsData);
       
-      // Get unique class IDs and teacher IDs
       const classIds = [...new Set(sessionsData.map(s => s.lop_chi_tiet_id))];
       const teacherIds = [...new Set(sessionsData.map(s => s.giao_vien))];
       
-      // Fetch classes and teachers in parallel
       const [classesData, teachersData] = await Promise.all([
         Promise.all(classIds.map(id => classService.getById(id))),
         Promise.all(teacherIds.map(id => employeeService.getById(id)))
       ]);
       
-      // Convert arrays to dictionaries for easier lookup
       const classesDict = classesData.reduce((acc, cls) => {
         if (cls) {
           const normalizedClass = {
@@ -90,7 +86,6 @@ const Evaluations = () => {
     try {
       if (!selectedSession) return;
       
-      // Calculate average score
       const scores = [
         Number(evaluationData.nhan_xet_1 || 0),
         Number(evaluationData.nhan_xet_2 || 0),
@@ -104,7 +99,6 @@ const Evaluations = () => {
         ? scores.reduce((acc, score) => acc + score, 0) / scores.length
         : 0;
       
-      // Update session with evaluation data
       await teachingSessionService.update(selectedSession.id, {
         ...evaluationData,
         trung_binh: avg
@@ -116,7 +110,7 @@ const Evaluations = () => {
       });
       
       setShowEvaluationForm(false);
-      fetchData(); // Refresh the data
+      fetchData();
     } catch (error) {
       console.error("Error submitting evaluation:", error);
       toast({
@@ -164,7 +158,7 @@ const Evaluations = () => {
     },
     {
       title: "Loại bài học",
-      key: "Loai_bai_hoc",
+      key: "loai_bai_hoc",
       sortable: true,
     },
     {
@@ -210,7 +204,6 @@ const Evaluations = () => {
         searchPlaceholder="Tìm kiếm buổi học..."
       />
 
-      {/* Evaluation Form Dialog */}
       <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>

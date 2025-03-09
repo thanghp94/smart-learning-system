@@ -64,7 +64,7 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
           </div>
           <div>
             <p className="text-sm font-medium">Giáo viên: <span className="font-normal">{teacherInfo.ten_nhan_su}</span></p>
-            <p className="text-sm font-medium">Loại bài học: <span className="font-normal">{initialData.Loai_bai_hoc || 'N/A'}</span></p>
+            <p className="text-sm font-medium">Loại bài học: <span className="font-normal">{initialData.loai_bai_hoc || 'N/A'}</span></p>
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { TeachingSession, Class, Employee, Enrollment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,7 +85,7 @@ const SessionDetail = ({ session, class: classItem, teacher }: SessionDetailProp
         <h2 className="text-2xl font-bold">
           {classItem?.Ten_lop_full} - Buổi {session.session_id}
         </h2>
-        <p className="text-muted-foreground">Loại bài học: {session.Loai_bai_hoc}</p>
+        <p className="text-muted-foreground">Loại bài học: {session.loai_bai_hoc}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
