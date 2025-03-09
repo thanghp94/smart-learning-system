@@ -1,21 +1,7 @@
 
 import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
-
-export interface Class {
-  id: string; // Changed from optional to required
-  ten_lop_full: string;
-  ten_lop: string;
-  ct_hoc?: string;
-  co_so?: string;
-  gv_chinh?: string;
-  ngay_bat_dau?: string | null;
-  tinh_trang?: string;
-  ghi_chu?: string;
-  unit_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { Class } from '@/lib/types';
 
 class ClassService {
   /**
@@ -35,10 +21,19 @@ class ClassService {
       }
       
       console.log(`Successfully fetched ${data?.length || 0} classes`);
-      // Ensure all returned classes have an id (TypeScript safety)
+      
+      // Ensure all returned classes have required fields
       return (data || []).map(classData => ({
         ...classData,
-        id: classData.id || crypto.randomUUID() // Add id if missing
+        id: classData.id || crypto.randomUUID(),
+        ten_lop_full: classData.ten_lop_full || classData.Ten_lop_full || '',
+        ten_lop: classData.ten_lop || '',
+        ct_hoc: classData.ct_hoc || '',
+        co_so: classData.co_so || '',
+        gv_chinh: classData.gv_chinh || classData.GV_chinh || '',
+        GV_chinh: classData.GV_chinh || classData.gv_chinh || '',
+        ngay_bat_dau: classData.ngay_bat_dau || null,
+        tinh_trang: classData.tinh_trang || 'pending'
       }));
     } catch (error) {
       console.error('Error in fetchClasses:', error);
@@ -50,13 +45,23 @@ class ClassService {
    * Fetches a single class by ID
    */
   async getById(id: string): Promise<Class | null> {
-    const classData = await fetchById<Omit<Class, 'id'> & { id?: string }>('classes', id);
+    const classData = await fetchById<Partial<Class>>('classes', id);
     if (!classData) return null;
     
+    // Ensure required fields are present
     return {
       ...classData,
-      id: classData.id || id // Ensure id is present
-    };
+      id: classData.id || id,
+      ten_lop_full: classData.ten_lop_full || classData.Ten_lop_full || '',
+      Ten_lop_full: classData.Ten_lop_full || classData.ten_lop_full || '',
+      ten_lop: classData.ten_lop || '',
+      ct_hoc: classData.ct_hoc || '',
+      co_so: classData.co_so || '',
+      gv_chinh: classData.gv_chinh || classData.GV_chinh || '',
+      GV_chinh: classData.GV_chinh || classData.gv_chinh || '',
+      ngay_bat_dau: classData.ngay_bat_dau || null,
+      tinh_trang: classData.tinh_trang || 'pending'
+    } as Class;
   }
 
   /**
@@ -67,7 +72,12 @@ class ClassService {
       console.log('Creating new class:', classData);
       
       // Create a formatted copy to avoid mutating the original
-      const formattedData = { ...classData };
+      const formattedData = { 
+        ...classData,
+        ten_lop_full: classData.ten_lop_full || '',
+        ten_lop: classData.ten_lop || '',
+        ct_hoc: classData.ct_hoc || ''
+      };
       
       // Convert date strings to proper format if they exist
       if (formattedData.ngay_bat_dau) {
@@ -98,8 +108,12 @@ class ClassService {
         
         return {
           ...rpcData,
-          id: rpcData.id || crypto.randomUUID() // Ensure id is present
-        };
+          id: rpcData.id || crypto.randomUUID(),
+          ten_lop_full: rpcData.ten_lop_full || '',
+          ten_lop: rpcData.ten_lop || '',
+          ct_hoc: rpcData.ct_hoc || '',
+          tinh_trang: rpcData.tinh_trang || 'pending'
+        } as Class;
       }
       
       console.log('RPC method failed or unavailable, trying direct insert:', rpcError);
@@ -119,7 +133,7 @@ class ClassService {
           console.log('RLS policy restriction, using fallback approach');
           const fallbackData = {
             ...formattedData,
-            id: formattedData.id || crypto.randomUUID(), // Use existing ID or generate new one
+            id: formattedData.id || crypto.randomUUID(),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -154,8 +168,12 @@ class ClassService {
       
       return {
         ...data,
-        id: data.id || crypto.randomUUID() // Ensure id is present
-      };
+        id: data.id || crypto.randomUUID(),
+        ten_lop_full: data.ten_lop_full || '',
+        ten_lop: data.ten_lop || '',
+        ct_hoc: data.ct_hoc || '',
+        tinh_trang: data.tinh_trang || 'pending'
+      } as Class;
     } catch (error) {
       console.error('Error in createClass:', error);
       throw error;

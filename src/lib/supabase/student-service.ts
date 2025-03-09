@@ -1,30 +1,7 @@
+
 import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
-
-export interface Student {
-  id?: string;
-  ten_hoc_sinh: string;
-  gioi_tinh?: string;
-  ngay_sinh?: string | null;
-  co_so_id?: string;
-  co_so_ID?: string;
-  ten_PH?: string;
-  sdt_ph1?: string;
-  email_ph1?: string;
-  dia_chi?: string;
-  ct_hoc?: string;
-  trang_thai?: string;
-  hinh_anh_hoc_sinh?: string;
-  han_hoc_phi?: string | null;
-  mo_ta_hs?: string;
-  userID?: string;
-  password?: string;
-  parentID?: string;
-  parentpassword?: string;
-  ngay_bat_dau_hoc_phi?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
+import { Student } from '@/lib/types';
 
 class StudentService {
   /**
@@ -44,7 +21,15 @@ class StudentService {
       }
       
       console.log(`Successfully fetched ${data?.length || 0} students`);
-      return data || [];
+      
+      // Ensure all records have required fields
+      return (data || []).map(student => ({
+        ...student,
+        id: student.id || crypto.randomUUID(), // Make sure id is present
+        // Handle both field names for compatibility
+        co_so_id: student.co_so_id || student.co_so_ID || '',
+        co_so_ID: student.co_so_ID || student.co_so_id || '',
+      }));
     } catch (error) {
       console.error('Error in fetchStudents:', error);
       return [];
@@ -55,13 +40,23 @@ class StudentService {
    * Fetches a single student by ID
    */
   async getById(id: string): Promise<Student | null> {
-    return fetchById<Student>('students', id);
+    const student = await fetchById<Partial<Student>>('students', id);
+    if (!student) return null;
+    
+    // Ensure required fields and consistent naming
+    return {
+      ...student,
+      id: student.id || id,
+      ten_hoc_sinh: student.ten_hoc_sinh || '',
+      co_so_id: student.co_so_id || student.co_so_ID || '',
+      co_so_ID: student.co_so_ID || student.co_so_id || '',
+    } as Student;
   }
 
   /**
    * Creates a new student
    */
-  async create(studentData: Student): Promise<Student | null> {
+  async create(studentData: Omit<Student, 'id'> & { id?: string }): Promise<Student | null> {
     try {
       console.log('Creating new student:', studentData);
       
@@ -90,10 +85,10 @@ class StudentService {
       }
       
       // Handle co_so_ID and co_so_id field consistency
-      if (formattedData.co_so_ID) {
-        formattedData.co_so_id = formattedData.co_so_ID;
-      } else if (formattedData.co_so_id) {
+      if (formattedData.co_so_id) {
         formattedData.co_so_ID = formattedData.co_so_id;
+      } else if (formattedData.co_so_ID) {
+        formattedData.co_so_id = formattedData.co_so_ID;
       }
       
       const { data, error } = await supabase
@@ -121,7 +116,15 @@ class StudentService {
               
             if (!retryResult.error) {
               console.log('Student created successfully after field name correction:', retryResult.data);
-              return retryResult.data;
+              
+              // Ensure the returned data has the required fields
+              return {
+                ...retryResult.data,
+                id: retryResult.data.id || crypto.randomUUID(),
+                ten_hoc_sinh: retryResult.data.ten_hoc_sinh || '',
+                co_so_id: retryResult.data.co_so_id || '',
+                co_so_ID: retryResult.data.co_so_id || ''
+              } as Student;
             }
           }
           
@@ -129,6 +132,7 @@ class StudentService {
           const fallbackData = {
             ...formattedData,
             id: crypto.randomUUID(),
+            ten_hoc_sinh: formattedData.ten_hoc_sinh || '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -152,16 +156,25 @@ class StudentService {
       
       console.log('Student created successfully:', data);
       
+      // Ensure the returned data has the required fields
+      const completeData = {
+        ...data,
+        id: data.id || crypto.randomUUID(),
+        ten_hoc_sinh: data.ten_hoc_sinh || '',
+        co_so_id: data.co_so_id || data.co_so_ID || '',
+        co_so_ID: data.co_so_ID || data.co_so_id || ''
+      };
+      
       // Log activity
       await logActivity(
         'create',
         'student',
-        data.ten_hoc_sinh || 'Unknown',
+        completeData.ten_hoc_sinh || 'Unknown',
         'system',
         'completed'
       );
       
-      return data;
+      return completeData as Student;
     } catch (error) {
       console.error('Error in createStudent:', error);
       throw error;
@@ -200,9 +213,10 @@ class StudentService {
       }
       
       // Handle co_so_ID and co_so_id field consistency
-      if (formattedUpdates.co_so_ID) {
+      if (formattedUpdates.co_so_id) {
+        formattedUpdates.co_so_ID = formattedUpdates.co_so_id;
+      } else if (formattedUpdates.co_so_ID) {
         formattedUpdates.co_so_id = formattedUpdates.co_so_ID;
-        delete formattedUpdates.co_so_ID;
       }
       
       const { data, error } = await supabase
@@ -219,16 +233,25 @@ class StudentService {
       
       console.log('Student updated successfully:', data);
       
+      // Ensure the returned data has the required fields
+      const completeData = {
+        ...data,
+        id: data.id || id,
+        ten_hoc_sinh: data.ten_hoc_sinh || '',
+        co_so_id: data.co_so_id || data.co_so_ID || '',
+        co_so_ID: data.co_so_ID || data.co_so_id || ''
+      };
+      
       // Log activity
       await logActivity(
         'update',
         'student',
-        data.ten_hoc_sinh,
+        completeData.ten_hoc_sinh,
         'system',
         'completed'
       );
       
-      return data;
+      return completeData as Student;
     } catch (error) {
       console.error('Error in updateStudent:', error);
       throw error;

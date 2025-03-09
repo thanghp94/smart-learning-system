@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,25 @@ const TeachingSessions = () => {
       console.log("Fetched classes:", classesArray);
       console.log("Fetched sessions:", sessionsData);
       
-      // Convert classes array to a lookup dictionary
-      const classesDict = classesArray.reduce((acc, cls) => {
-        if (cls) acc[cls.id] = cls;
+      // Convert classes array to a lookup dictionary with proper type handling
+      const classesDict = (classesArray || []).reduce((acc, cls) => {
+        if (cls) {
+          // Ensure required fields are present
+          const completeClass = {
+            ...cls,
+            id: cls.id || crypto.randomUUID(),
+            ten_lop_full: cls.ten_lop_full || cls.Ten_lop_full || '',
+            Ten_lop_full: cls.Ten_lop_full || cls.ten_lop_full || '',
+            ten_lop: cls.ten_lop || '',
+            ct_hoc: cls.ct_hoc || '',
+            co_so: cls.co_so || '',
+            gv_chinh: cls.gv_chinh || cls.GV_chinh || '',
+            GV_chinh: cls.GV_chinh || cls.gv_chinh || '',
+            tinh_trang: cls.tinh_trang || 'pending'
+          } as Class;
+          
+          acc[cls.id] = completeClass;
+        }
         return acc;
       }, {} as Record<string, Class>);
       

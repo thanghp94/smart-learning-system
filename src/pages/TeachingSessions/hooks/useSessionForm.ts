@@ -55,7 +55,20 @@ export const useSessionForm = ({ initialData }: UseSessionFormProps = {}) => {
           classesData = await classService.getAll();
         } else {
           console.log("Directly fetched classes:", directClassesData);
-          classesData = directClassesData as Class[];
+          
+          // Ensure all required fields are present for each class
+          classesData = (directClassesData || []).map(cls => ({
+            ...cls,
+            id: cls.id || crypto.randomUUID(),
+            ten_lop_full: cls.ten_lop_full || cls.Ten_lop_full || '',
+            Ten_lop_full: cls.Ten_lop_full || cls.ten_lop_full || '',
+            ten_lop: cls.ten_lop || '',
+            ct_hoc: cls.ct_hoc || '',
+            co_so: cls.co_so || '',
+            gv_chinh: cls.gv_chinh || cls.GV_chinh || '',
+            GV_chinh: cls.GV_chinh || cls.gv_chinh || '',
+            tinh_trang: cls.tinh_trang || 'pending'
+          })) as Class[];
         }
         
         const teachersData = await employeeService.getByRole("Giáo viên");
@@ -63,7 +76,7 @@ export const useSessionForm = ({ initialData }: UseSessionFormProps = {}) => {
         console.log("Form classes data:", classesData);
         console.log("Form teachers data:", teachersData);
         
-        setClasses(classesData);
+        setClasses(classesData as Class[]);
         setTeachers(teachersData);
       } catch (error) {
         console.error("Error fetching form data:", error);

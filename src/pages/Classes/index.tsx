@@ -34,7 +34,8 @@ const Classes = () => {
       console.log("Classes data received:", data);
       
       if (data && Array.isArray(data)) {
-        setClasses(data);
+        // Cast to ensure interface compatibility
+        setClasses(data as unknown as Class[]);
         console.log("Classes set to state:", data.length);
       } else {
         console.error("Invalid classes data:", data);
@@ -73,7 +74,15 @@ const Classes = () => {
   const handleAddFormSubmit = async (formData: Partial<Class>) => {
     try {
       console.log("Submitting class data:", formData);
-      const newClass = await classService.create(formData);
+      // Ensure required fields are present
+      const classDataToSubmit = {
+        ...formData,
+        ten_lop_full: formData.ten_lop_full || '',
+        ten_lop: formData.ten_lop || '',
+        ct_hoc: formData.ct_hoc || ''
+      };
+      
+      const newClass = await classService.create(classDataToSubmit as any);
       
       // Refresh the classes list to ensure we have the latest data
       toast({

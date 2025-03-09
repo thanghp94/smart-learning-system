@@ -45,7 +45,19 @@ const Evaluations = () => {
       
       // Convert arrays to dictionaries for easier lookup
       const classesDict = classesData.reduce((acc, cls) => {
-        if (cls) acc[cls.id] = cls;
+        if (cls) {
+          const normalizedClass = {
+            ...cls,
+            id: cls.id || crypto.randomUUID(),
+            ten_lop_full: cls.ten_lop_full || cls.Ten_lop_full || '',
+            ten_lop: cls.ten_lop || '',
+            ct_hoc: cls.ct_hoc || '',
+            co_so: cls.co_so || '',
+            gv_chinh: cls.gv_chinh || '',
+            tinh_trang: cls.tinh_trang || 'pending'
+          } as Class;
+          acc[normalizedClass.id] = normalizedClass;
+        }
         return acc;
       }, {} as Record<string, Class>);
       
