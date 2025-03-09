@@ -121,16 +121,5 @@ export const teachingSessionService = {
     
     const sum = scores.reduce((acc, score) => acc + Number(score), 0);
     return sum / scores.length;
-  },
-  
-  recordTeacherTime: async (
-    sessionId: string, 
-    startTime: string, 
-    endTime: string
-  ): Promise<TeachingSession> => {
-    return update<TeachingSession>('teaching_sessions', sessionId, {
-      thoi_gian_bat_dau: startTime,
-      thoi_gian_ket_thuc: endTime
-    });
   }
 };

@@ -442,6 +442,13 @@ export type Database = {
             foreignKeyName: "enrollments_buoi_day_id_fkey"
             columns: ["buoi_day_id"]
             isOneToOne: false
+            referencedRelation: "teaching_sessions_with_avg_score"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_buoi_day_id_fkey"
+            columns: ["buoi_day_id"]
+            isOneToOne: false
             referencedRelation: "teaching_sessions_with_details"
             referencedColumns: ["id"]
           },
@@ -1685,6 +1692,13 @@ export type Database = {
             foreignKeyName: "enrollments_buoi_day_id_fkey"
             columns: ["buoi_day_id"]
             isOneToOne: false
+            referencedRelation: "teaching_sessions_with_avg_score"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_buoi_day_id_fkey"
+            columns: ["buoi_day_id"]
+            isOneToOne: false
             referencedRelation: "teaching_sessions_with_details"
             referencedColumns: ["id"]
           },
@@ -1707,6 +1721,69 @@ export type Database = {
             columns: ["lop_chi_tiet_id"]
             isOneToOne: false
             referencedRelation: "classes_with_student_count"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teaching_sessions_with_avg_score: {
+        Row: {
+          avg_score: number | null
+          created_at: string | null
+          ghi_chu: string | null
+          giao_vien: string | null
+          id: string | null
+          loai_bai_hoc: string | null
+          lop_chi_tiet_id: string | null
+          ngay_hoc: string | null
+          nhan_xet_1: string | null
+          nhan_xet_2: string | null
+          nhan_xet_3: string | null
+          nhan_xet_4: string | null
+          nhan_xet_5: string | null
+          nhan_xet_6: string | null
+          nhan_xet_chung: string | null
+          phong_hoc_id: string | null
+          session_id: string | null
+          thoi_gian_bat_dau: string | null
+          thoi_gian_ket_thuc: string | null
+          tro_giang: string | null
+          trung_binh: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teaching_sessions_giao_vien_fkey"
+            columns: ["giao_vien"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teaching_sessions_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teaching_sessions_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
+            referencedRelation: "classes_with_student_count"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teaching_sessions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teaching_sessions_tro_giang_fkey"
+            columns: ["tro_giang"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
