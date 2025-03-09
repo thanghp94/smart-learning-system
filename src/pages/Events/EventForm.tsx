@@ -17,7 +17,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 const eventSchema = z.object({
   ten_su_kien: z.string().min(1, { message: "Vui lòng nhập tên sự kiện" }),
-  mieu_ta: z.string().optional(),
+  mo_ta: z.string().optional(),
   ngay_bat_dau: z.string().min(1, { message: "Vui lòng chọn ngày bắt đầu" }),
   ngay_ket_thuc: z.string().optional(),
   dia_diem: z.string().optional(),
@@ -38,7 +38,7 @@ const EventForm = ({ initialData, onSubmit, onCancel }: EventFormProps) => {
     resolver: zodResolver(eventSchema),
     defaultValues: {
       ten_su_kien: initialData?.ten_su_kien || '',
-      mieu_ta: initialData?.mieu_ta || '',
+      mo_ta: initialData?.mo_ta || '',
       ngay_bat_dau: initialData?.ngay_bat_dau || '',
       ngay_ket_thuc: initialData?.ngay_ket_thuc || '',
       dia_diem: initialData?.dia_diem || '',
@@ -62,8 +62,8 @@ const EventForm = ({ initialData, onSubmit, onCancel }: EventFormProps) => {
       </div>
 
       <div>
-        <Label htmlFor="mieu_ta">Mô tả</Label>
-        <Textarea id="mieu_ta" {...register('mieu_ta')} rows={3} />
+        <Label htmlFor="mo_ta">Mô tả</Label>
+        <Textarea id="mo_ta" {...register('mo_ta')} rows={3} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
