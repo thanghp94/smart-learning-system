@@ -56,6 +56,9 @@ const MainLayout = () => {
               </Avatar>
             </div>
           </header>
+          <div className="container mx-auto p-6">
+            {/* This is where the child content (routes) will be rendered */}
+          </div>
         </div>
       </div>
     </SidebarProvider>
