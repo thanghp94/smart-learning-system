@@ -34,10 +34,7 @@ function createMockClient() {
         }),
         count: () => Promise.resolve({ data: [{ count: 0 }], error: null }),
         limit: () => Promise.resolve({ data: [], error: null }),
-        single: () => Promise.resolve({ data: null, error: null }),
-        eq: (column: string, value: any) => ({
-          select: () => Promise.resolve({ data: [], error: null })
-        })
+        single: () => Promise.resolve({ data: null, error: null })
       }),
       insert: (record: any) => ({
         select: () => ({

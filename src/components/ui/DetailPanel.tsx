@@ -6,20 +6,22 @@ import { Button } from "@/components/ui/button";
 
 interface DetailPanelProps {
   title: string;
-  children: React.ReactNode;
-  isOpen: boolean;
-  onClose: () => void;
+  children?: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
   footerContent?: React.ReactNode;
   className?: string;
+  items?: Array<{ label: string; value: string | React.ReactNode }>;
 }
 
 const DetailPanel = ({
   title,
   children,
-  isOpen,
+  isOpen = true,
   onClose,
   footerContent,
-  className
+  className,
+  items
 }: DetailPanelProps) => {
   return (
     <div
@@ -31,12 +33,24 @@ const DetailPanel = ({
     >
       <div className="flex h-16 items-center justify-between border-b px-6">
         <h2 className="text-lg font-semibold">{title}</h2>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-5 w-5" />
-        </Button>
+        {onClose && (
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </div>
       
       <div className="custom-scrollbar overflow-y-auto p-6" style={{ height: footerContent ? "calc(100vh - 16rem)" : "calc(100vh - 8rem)" }}>
+        {items && (
+          <div className="space-y-4 mb-6">
+            {items.map((item, index) => (
+              <div key={index} className="flex flex-col space-y-1">
+                <span className="text-sm font-medium text-muted-foreground">{item.label}</span>
+                <span className="font-medium">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {children}
       </div>
       

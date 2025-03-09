@@ -3,6 +3,9 @@ import { Class } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
 
+// Export the getClassById function directly
+export const getClassById = (id: string) => fetchById<Class>('classes', id);
+
 export const classService = {
   getAll: () => fetchAll<Class>('classes'),
   getById: (id: string) => fetchById<Class>('classes', id),

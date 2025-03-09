@@ -20,8 +20,7 @@ const sampleClass: Class = {
   GV_chinh: "1",
   ngay_bat_dau: "2023-09-01",
   tinh_trang: "active",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
+  tg_tao: new Date().toISOString(),
 };
 
 const sampleTeacher: Employee = {
@@ -32,8 +31,11 @@ const sampleTeacher: Employee = {
   tinh_trang_lao_dong: "active",
   dia_chi: "Hà Nội",
   bo_phan: "Giáo viên",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
+  gioi_tinh: "Nam",
+  ngay_sinh: "1990-01-01",
+  co_so_id: ["1"],
+  chuc_danh: "Giáo viên",
+  tg_tao: new Date().toISOString(),
 };
 
 const sampleEnrollments: Enrollment[] = [
@@ -42,20 +44,20 @@ const sampleEnrollments: Enrollment[] = [
     hoc_sinh_id: "1",
     lop_chi_tiet_id: "1",
     tinh_trang_diem_danh: "present",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
   },
   {
     id: "2",
     hoc_sinh_id: "2",
     lop_chi_tiet_id: "1",
     tinh_trang_diem_danh: "absent",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
   }
 ];
 
-const ClassDetail = () => {
+interface ClassDetailProps {
+  classItem?: Class;
+}
+
+const ClassDetail = ({ classItem }: ClassDetailProps = {}) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -67,6 +69,15 @@ const ClassDetail = () => {
   const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   useEffect(() => {
+    // If we received a classItem prop, use it directly
+    if (classItem) {
+      setClassData(classItem);
+      setTeacher(sampleTeacher); // In a real app, you would fetch the teacher based on classItem.GV_chinh
+      setEnrollments(sampleEnrollments);
+      setLoading(false);
+      return;
+    }
+
     const fetchClassDetail = async () => {
       setLoading(true);
       try {
@@ -102,7 +113,7 @@ const ClassDetail = () => {
     };
 
     fetchClassDetail();
-  }, [id, toast, isDemoMode]);
+  }, [id, toast, isDemoMode, classItem]);
 
   const handleBack = () => {
     navigate("/classes");
@@ -131,6 +142,30 @@ const ClassDetail = () => {
             <p className="text-muted-foreground">Class not found</p>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  // If we're rendering this component in a DetailPanel (via classItem prop),
+  // we should use a simplified layout
+  if (classItem) {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-xl font-bold">{classData.Ten_lop_full}</h3>
+        <div className="grid gap-4">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Program</p>
+            <p>{classData.ct_hoc}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Start Date</p>
+            <p>{classData.ngay_bat_dau ? format(new Date(classData.ngay_bat_dau), 'dd/MM/yyyy') : 'Not set'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Status</p>
+            <p className="capitalize">{classData.tinh_trang}</p>
+          </div>
+        </div>
       </div>
     );
   }

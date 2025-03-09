@@ -9,7 +9,7 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
-import ClassDetail from "./ClassDetail";
+import { useNavigate } from "react-router-dom";
 
 const sampleClasses: Class[] = [
   {
@@ -56,6 +56,7 @@ const Classes = () => {
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   useEffect(() => {
@@ -89,12 +90,12 @@ const Classes = () => {
   };
 
   const handleRowClick = (classItem: Class) => {
-    setSelectedClass(classItem);
-    setShowDetail(true);
+    navigate(`/classes/${classItem.id}`);
   };
 
   const closeDetail = () => {
     setShowDetail(false);
+    setSelectedClass(null);
   };
 
   const columns = [
@@ -176,16 +177,6 @@ const Classes = () => {
         searchable={true}
         searchPlaceholder="Tìm kiếm lớp học..."
       />
-
-      {selectedClass && (
-        <DetailPanel
-          title="Thông Tin Lớp Học"
-          isOpen={showDetail}
-          onClose={closeDetail}
-        >
-          <ClassDetail classItem={selectedClass} />
-        </DetailPanel>
-      )}
     </TablePageLayout>
   );
 };
