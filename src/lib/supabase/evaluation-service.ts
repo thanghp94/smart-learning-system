@@ -12,41 +12,86 @@ interface Evaluation {
 }
 
 export const evaluationService = {
-  getAll: () => fetchAll<Evaluation>('evaluations'),
+  getAll: async (): Promise<Evaluation[]> => {
+    try {
+      return await fetchAll<Evaluation>('evaluations');
+    } catch (error) {
+      console.error('Error fetching all evaluations:', error);
+      return [];
+    }
+  },
   
-  getById: (id: string) => fetchById<Evaluation>('evaluations', id),
+  getById: async (id: string): Promise<Evaluation | null> => {
+    try {
+      return await fetchById<Evaluation>('evaluations', id);
+    } catch (error) {
+      console.error('Error fetching evaluation by ID:', error);
+      return null;
+    }
+  },
   
-  create: (evaluation: Partial<Evaluation>) => insert<Evaluation>('evaluations', evaluation),
-  
-  update: (id: string, updates: Partial<Evaluation>) => update<Evaluation>('evaluations', id, updates),
-  
-  delete: (id: string) => remove('evaluations', id),
-  
-  getByStatus: async (status: string): Promise<Evaluation[]> => {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('*')
-      .eq('trang_thai', status);
-    
-    if (error) {
-      console.error('Error fetching evaluations by status:', error);
+  create: async (evaluation: Partial<Evaluation>): Promise<Evaluation | null> => {
+    try {
+      return await insert<Evaluation>('evaluations', evaluation);
+    } catch (error) {
+      console.error('Error creating evaluation:', error);
       throw error;
     }
-    
-    return data as Evaluation[];
+  },
+  
+  update: async (id: string, updates: Partial<Evaluation>): Promise<Evaluation | null> => {
+    try {
+      return await update<Evaluation>('evaluations', id, updates);
+    } catch (error) {
+      console.error('Error updating evaluation:', error);
+      throw error;
+    }
+  },
+  
+  delete: async (id: string): Promise<void> => {
+    try {
+      await remove('evaluations', id);
+    } catch (error) {
+      console.error('Error deleting evaluation:', error);
+      throw error;
+    }
+  },
+  
+  getByStatus: async (status: string): Promise<Evaluation[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('*')
+        .eq('trang_thai', status);
+      
+      if (error) {
+        console.error('Error fetching evaluations by status:', error);
+        throw error;
+      }
+      
+      return data as Evaluation[];
+    } catch (error) {
+      console.error('Error in getByStatus:', error);
+      return [];
+    }
   },
   
   getByTarget: async (target: string): Promise<Evaluation[]> => {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('*')
-      .eq('doi_tuong', target);
-    
-    if (error) {
-      console.error('Error fetching evaluations by target:', error);
-      throw error;
+    try {
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('*')
+        .eq('doi_tuong', target);
+      
+      if (error) {
+        console.error('Error fetching evaluations by target:', error);
+        throw error;
+      }
+      
+      return data as Evaluation[];
+    } catch (error) {
+      console.error('Error in getByTarget:', error);
+      return [];
     }
-    
-    return data as Evaluation[];
   }
 };

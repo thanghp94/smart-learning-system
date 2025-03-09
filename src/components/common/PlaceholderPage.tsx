@@ -3,13 +3,6 @@ import React from "react";
 import { FileText, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TablePageLayout from "@/components/common/TablePageLayout";
-import { 
-  Dialog, 
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
 
 interface PlaceholderPageProps {
   title: string;
@@ -26,13 +19,9 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({
   addButtonAction,
   renderForm,
 }) => {
-  const [showDialog, setShowDialog] = React.useState(false);
-
   const handleAddClick = () => {
     if (addButtonAction) {
       addButtonAction();
-    } else if (renderForm) {
-      setShowDialog(true);
     }
   };
 
@@ -58,17 +47,6 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({
           <Plus className="h-4 w-4 mr-1" /> Thêm mới {title.toLowerCase()}
         </Button>
       </div>
-
-      {renderForm && (
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Thêm mới {title.toLowerCase()}</DialogTitle>
-            </DialogHeader>
-            {renderForm()}
-          </DialogContent>
-        </Dialog>
-      )}
     </TablePageLayout>
   );
 };
