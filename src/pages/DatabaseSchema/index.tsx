@@ -1,8 +1,11 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TablePageLayout from "@/components/common/TablePageLayout";
+import { supabase } from "@/lib/supabase";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 // Table information structure
 interface TableInfo {
@@ -12,7 +15,60 @@ interface TableInfo {
   key: string;
 }
 
+// Database schema information
+interface SchemaInfo {
+  table_name: string;
+  column_count: number;
+}
+
 const DatabaseSchema = () => {
+  const [schemaData, setSchemaData] = useState<SchemaInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch database schema information from Supabase
+  useEffect(() => {
+    const fetchSchema = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_schema_info');
+        
+        if (error) {
+          console.error("Error fetching schema:", error);
+          toast({
+            title: "Error fetching schema",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else if (data) {
+          setSchemaData(data);
+        }
+      } catch (err) {
+        console.error("Error in schema fetch:", err);
+        // Fallback to metdata API if RPC fails
+        try {
+          const { data, error } = await supabase.from('pg_tables')
+            .select('tablename')
+            .eq('schemaname', 'public');
+          
+          if (error) {
+            console.error("Fallback error:", error);
+          } else if (data) {
+            setSchemaData(data.map(t => ({ 
+              table_name: t.tablename, 
+              column_count: 0 
+            })));
+          }
+        } catch (fallbackErr) {
+          console.error("Fallback fetch error:", fallbackErr);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchema();
+  }, [toast]);
+
   // Define tables and their purposes
   const tables: TableInfo[] = [
     {
@@ -205,6 +261,7 @@ const DatabaseSchema = () => {
           <TabsTrigger value="all-tables">Tất Cả Bảng</TabsTrigger>
           <TabsTrigger value="by-category">Theo Danh Mục</TabsTrigger>
           <TabsTrigger value="views">Views</TabsTrigger>
+          <TabsTrigger value="real-schema">Cấu Trúc Thực</TabsTrigger>
         </TabsList>
 
         {/* All Tables Tab */}
@@ -266,6 +323,53 @@ const DatabaseSchema = () => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        {/* Real Schema Tab */}
+        <TabsContent value="real-schema">
+          {loading ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={`skeleton-${i}`} className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <Skeleton className="h-5 w-3/4" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : schemaData.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {schemaData.map((table) => (
+                <Card key={table.table_name} className="shadow-sm hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex justify-between">
+                      <span className="font-bold text-primary">{table.table_name}</span>
+                      {table.column_count > 0 && (
+                        <span className="text-muted-foreground text-sm">{table.column_count} columns</span>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>
+                      {tables.find(t => t.name === table.table_name)?.purpose || 
+                      "Table from your Supabase database"}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="shadow-sm p-6 text-center">
+              <p className="text-muted-foreground">
+                No schema data found. Please make sure your Supabase database is properly configured 
+                and the get_schema_info function is created.
+              </p>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </TablePageLayout>

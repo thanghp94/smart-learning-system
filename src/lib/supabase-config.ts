@@ -1,5 +1,6 @@
 
 import { supabase } from './supabase';
+import { setupSchemaFunction } from './supabase/schema-service';
 
 // Initialize Supabase tables and configuration
 export const initializeSupabase = async () => {
@@ -15,6 +16,14 @@ export const initializeSupabase = async () => {
       console.error('Error creating storage buckets:', storageResponse.error);
     } else {
       console.log('Storage buckets created successfully');
+    }
+    
+    // Set up the schema info function
+    const schemaFunctionResult = await setupSchemaFunction();
+    if (!schemaFunctionResult.success) {
+      console.error('Error setting up schema function:', schemaFunctionResult.error);
+    } else {
+      console.log('Schema function set up successfully');
     }
     
     // Run SQL script to create database schema
