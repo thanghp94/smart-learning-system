@@ -1,26 +1,25 @@
+
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter, Calendar } from "lucide-react";
+import { Plus, FileDown, Filter, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { teachingSessionService, classService, employeeService } from "@/lib/supabase";
-import { TeachingSession, Class, Employee } from "@/lib/types";
+import { teachingSessionService, classService, employeeService, evaluationService } from "@/lib/supabase";
+import { TeachingSession, Class, Employee, Evaluation } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
-import SessionDetail from "./SessionDetail";
-import SessionForm from "./SessionForm";
+import EvaluationForm from "./EvaluationForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const TeachingSessions = () => {
+const Evaluations = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
   const [classes, setClasses] = useState<Record<string, Class>>({});
   const [teachers, setTeachers] = useState<Record<string, Employee>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<TeachingSession | null>(null);
-  const [showDetail, setShowDetail] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,8 +30,8 @@ const TeachingSessions = () => {
     try {
       setIsLoading(true);
       
-      // Fetch sessions
-      const sessionsData = await teachingSessionService.getAll();
+      // Fetch sessions with evaluation data
+      const sessionsData = await teachingSessionService.getWithAvgScore();
       setSessions(sessionsData);
       
       // Get unique class IDs and teacher IDs
@@ -63,7 +62,7 @@ const TeachingSessions = () => {
       console.error("Error fetching data:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể tải dữ liệu buổi học",
+        description: "Không thể tải dữ liệu đánh giá",
         variant: "destructive"
       });
     } finally {
@@ -71,33 +70,47 @@ const TeachingSessions = () => {
     }
   };
 
-  const handleRowClick = (session: TeachingSession) => {
+  const handleEvaluateSession = (session: TeachingSession) => {
     setSelectedSession(session);
-    setShowDetail(true);
+    setShowEvaluationForm(true);
   };
 
-  const closeDetail = () => {
-    setShowDetail(false);
-  };
-
-  const handleAddSession = () => {
-    setShowAddForm(true);
-  };
-
-  const handleSessionSubmit = async (sessionData: Partial<TeachingSession>) => {
+  const handleSubmitEvaluation = async (evaluationData: Partial<TeachingSession>) => {
     try {
-      await teachingSessionService.create(sessionData);
+      if (!selectedSession) return;
+      
+      // Calculate average score
+      const scores = [
+        Number(evaluationData.nhan_xet_1 || 0),
+        Number(evaluationData.nhan_xet_2 || 0),
+        Number(evaluationData.nhan_xet_3 || 0),
+        Number(evaluationData.nhan_xet_4 || 0),
+        Number(evaluationData.nhan_xet_5 || 0),
+        Number(evaluationData.nhan_xet_6 || 0)
+      ].filter(score => score > 0);
+      
+      const avg = scores.length > 0 
+        ? scores.reduce((acc, score) => acc + score, 0) / scores.length
+        : 0;
+      
+      // Update session with evaluation data
+      await teachingSessionService.update(selectedSession.id, {
+        ...evaluationData,
+        trung_binh: avg
+      });
+      
       toast({
         title: "Thành công",
-        description: "Đã thêm buổi học mới vào hệ thống",
+        description: "Đã cập nhật đánh giá buổi học",
       });
-      setShowAddForm(false);
-      fetchData(); // Refresh the list
+      
+      setShowEvaluationForm(false);
+      fetchData(); // Refresh the data
     } catch (error) {
-      console.error("Error adding session:", error);
+      console.error("Error submitting evaluation:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể thêm buổi học mới",
+        description: "Không thể cập nhật đánh giá",
         variant: "destructive"
       });
     }
@@ -122,16 +135,6 @@ const TeachingSessions = () => {
       render: (value: string) => <span>{formatDate(value)}</span>,
     },
     {
-      title: "Thời gian",
-      key: "thoi_gian_bat_dau",
-      render: (value: string, record: TeachingSession) => (
-        <div className="flex items-center">
-          <Calendar className="h-4 w-4 mr-1" />
-          {value.substring(0, 5)} - {record.thoi_gian_ket_thuc.substring(0, 5)}
-        </div>
-      ),
-    },
-    {
       title: "Giáo viên",
       key: "giao_vien",
       sortable: true,
@@ -141,12 +144,33 @@ const TeachingSessions = () => {
       title: "Đánh giá TB",
       key: "trung_binh",
       sortable: true,
-      render: (value: number) => <span>{value?.toFixed(1) || "N/A"}</span>,
+      render: (value: number) => (
+        <div className="flex items-center gap-1">
+          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+          <span>{value?.toFixed(1) || "N/A"}</span>
+        </div>
+      ),
     },
     {
       title: "Loại bài học",
       key: "Loai_bai_hoc",
       sortable: true,
+    },
+    {
+      title: "",
+      key: "actions",
+      render: (_: any, record: TeachingSession) => (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEvaluateSession(record);
+          }}
+        >
+          Đánh giá
+        </Button>
+      ),
     },
   ];
 
@@ -158,51 +182,41 @@ const TeachingSessions = () => {
       <Button variant="outline" size="sm" className="h-8">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
-      <Button size="sm" className="h-8" onClick={handleAddSession}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Buổi Học
-      </Button>
     </div>
   );
 
   return (
     <TablePageLayout
-      title="Buổi Học"
-      description="Quản lý thông tin buổi dạy trong hệ thống"
+      title="Đánh Giá Buổi Dạy"
+      description="Quản lý đánh giá chất lượng buổi dạy trong hệ thống"
       actions={tableActions}
     >
       <DataTable
         columns={columns}
         data={sessions}
         isLoading={isLoading}
-        onRowClick={handleRowClick}
         searchable={true}
         searchPlaceholder="Tìm kiếm buổi học..."
       />
 
-      {selectedSession && (
-        <DetailPanel
-          title="Thông Tin Buổi Học"
-          isOpen={showDetail}
-          onClose={closeDetail}
-        >
-          <SessionDetail 
-            session={selectedSession} 
-            class={classes[selectedSession.lop_chi_tiet_id]} 
-            teacher={teachers[selectedSession.giao_vien]}
-          />
-        </DetailPanel>
-      )}
-
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+      {/* Evaluation Form Dialog */}
+      <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Thêm Buổi Học Mới</DialogTitle>
+            <DialogTitle>Đánh Giá Buổi Dạy</DialogTitle>
           </DialogHeader>
-          <SessionForm onSubmit={handleSessionSubmit} />
+          {selectedSession && (
+            <EvaluationForm 
+              initialData={selectedSession} 
+              onSubmit={handleSubmitEvaluation}
+              classInfo={classes[selectedSession.lop_chi_tiet_id]}
+              teacherInfo={teachers[selectedSession.giao_vien]}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </TablePageLayout>
   );
 };
 
-export default TeachingSessions;
+export default Evaluations;

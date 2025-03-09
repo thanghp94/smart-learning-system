@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,12 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
 import EmployeeDetail from "./EmployeeDetail";
+import EmployeeForm from "./EmployeeForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -47,6 +49,29 @@ const Employees = () => {
 
   const closeDetail = () => {
     setShowDetail(false);
+  };
+
+  const handleAddEmployee = () => {
+    setShowAddForm(true);
+  };
+
+  const handleEmployeeSubmit = async (employeeData: Partial<Employee>) => {
+    try {
+      await employeeService.create(employeeData);
+      toast({
+        title: "Thành công",
+        description: "Đã thêm nhân viên mới vào hệ thống",
+      });
+      setShowAddForm(false);
+      fetchEmployees(); // Refresh the list
+    } catch (error) {
+      console.error("Error adding employee:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thêm nhân viên mới",
+        variant: "destructive"
+      });
+    }
   };
 
   const columns = [
@@ -99,7 +124,7 @@ const Employees = () => {
       <Button variant="outline" size="sm" className="h-8">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
-      <Button size="sm" className="h-8">
+      <Button size="sm" className="h-8" onClick={handleAddEmployee}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Nhân Viên
       </Button>
     </div>
@@ -129,6 +154,15 @@ const Employees = () => {
           <EmployeeDetail employee={selectedEmployee} />
         </DetailPanel>
       )}
+
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
+          </DialogHeader>
+          <EmployeeForm onSubmit={handleEmployeeSubmit} />
+        </DialogContent>
+      </Dialog>
     </TablePageLayout>
   );
 };
