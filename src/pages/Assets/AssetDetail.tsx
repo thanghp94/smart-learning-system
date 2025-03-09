@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Package, RefreshCw, ArrowRight } from "lucide-react";
 import DataTable from "@/components/ui/DataTable";
 import { useToast } from "@/hooks/use-toast";
-import AssetTransfer from "./AssetTransfer";
+import AssetTransferForm from "./AssetTransfer"; // Renamed the import
 
 interface AssetDetailProps {
   asset: Asset;
@@ -227,7 +227,7 @@ const AssetDetail = ({ asset }: AssetDetailProps) => {
         </TabsContent>
 
         <TabsContent value="create-transfer">
-          <AssetTransfer 
+          <AssetTransferForm 
             asset={asset} 
             onTransferComplete={handleTransferComplete}
           />
@@ -238,3 +238,4 @@ const AssetDetail = ({ asset }: AssetDetailProps) => {
 };
 
 export default AssetDetail;
+

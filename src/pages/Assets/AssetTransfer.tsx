@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Asset } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowRight, Calendar, Package } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
@@ -18,7 +17,7 @@ interface AssetTransferProps {
   onTransferComplete: () => void;
 }
 
-const AssetTransfer = ({ asset, onTransferComplete }: AssetTransferProps) => {
+const AssetTransferForm = ({ asset, onTransferComplete }: AssetTransferProps) => {
   const [quantity, setQuantity] = useState<number>(1);
   const [sourceType, setSourceType] = useState<string>(asset.doi_tuong || "facility");
   const [sourceId, setSourceId] = useState<string>(asset.doi_tuong_id || "");
@@ -236,4 +235,4 @@ const AssetTransfer = ({ asset, onTransferComplete }: AssetTransferProps) => {
   );
 };
 
-export default AssetTransfer;
+export default AssetTransferForm;
