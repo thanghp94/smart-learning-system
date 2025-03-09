@@ -1,8 +1,11 @@
 
 import React from "react";
-import { Check, X, AlertCircle, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { FileSignature, FileDown, Filter, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
+import TablePageLayout from "@/components/common/TablePageLayout";
+import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/utils";
 
 interface Request {
   id: string;
@@ -17,13 +20,13 @@ interface Request {
 interface RequestsTableProps {
   requests: Request[];
   isLoading: boolean;
-  onRowClick: (request: Request) => void;
+  onAddRequest: () => void;
 }
 
 const RequestsTable: React.FC<RequestsTableProps> = ({ 
   requests, 
   isLoading,
-  onRowClick
+  onAddRequest 
 }) => {
   const columns = [
     {
@@ -41,79 +44,63 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
       key: "status",
       sortable: true,
       render: (value: string) => {
-        let variant;
-        let icon;
+        let color = "default";
+        if (value === "Approved") color = "success";
+        if (value === "Rejected") color = "destructive";
+        if (value === "Pending") color = "warning";
         
-        switch (value) {
-          case "Approved":
-            variant = "success";
-            icon = <Check className="h-3 w-3 mr-1" />;
-            break;
-          case "Rejected":
-            variant = "destructive";
-            icon = <X className="h-3 w-3 mr-1" />;
-            break;
-          case "Pending":
-            variant = "outline";
-            icon = <Clock className="h-3 w-3 mr-1" />;
-            break;
-          default:
-            variant = "secondary";
-            icon = <AlertCircle className="h-3 w-3 mr-1" />;
-        }
-        
-        return (
-          <Badge variant={variant} className="flex items-center">
-            {icon}
-            {value}
-          </Badge>
-        );
-      }
+        return <Badge variant={color as any}>{value}</Badge>;
+      },
     },
     {
-      title: "Độ ưu tiên",
+      title: "Mức độ ưu tiên",
       key: "priority",
       sortable: true,
       render: (value: string) => {
-        let variant;
+        let color = "secondary";
+        if (value === "Critical") color = "destructive";
+        if (value === "High") color = "warning";
+        if (value === "Low") color = "outline";
         
-        switch (value) {
-          case "High":
-            variant = "destructive";
-            break;
-          case "Medium":
-            variant = "warning";
-            break;
-          case "Low":
-            variant = "outline";
-            break;
-          case "Critical":
-            variant = "destructive-pill";
-            break;
-          default:
-            variant = "secondary";
-        }
-        
-        return <Badge variant={variant}>{value}</Badge>;
-      }
+        return <Badge variant={color as any}>{value}</Badge>;
+      },
     },
     {
       title: "Ngày tạo",
       key: "created_at",
       sortable: true,
-      render: (value: string) => new Date(value).toLocaleDateString("vi-VN")
-    }
+      render: (value: string) => formatDate(value),
+    },
   ];
 
+  const tableActions = (
+    <div className="flex items-center space-x-2">
+      <Button size="sm" className="h-8" onClick={onAddRequest}>
+        <Plus className="h-4 w-4 mr-1" /> Thêm mới
+      </Button>
+      <Button variant="outline" size="sm" className="h-8">
+        <Filter className="h-4 w-4 mr-1" /> Lọc
+      </Button>
+      <Button variant="outline" size="sm" className="h-8">
+        <FileDown className="h-4 w-4 mr-1" /> Xuất
+      </Button>
+    </div>
+  );
+
   return (
-    <DataTable
-      columns={columns}
-      data={requests}
-      isLoading={isLoading}
-      onRowClick={onRowClick}
-      searchable={true}
-      searchPlaceholder="Tìm kiếm đề xuất..."
-    />
+    <TablePageLayout
+      title="Đề Xuất"
+      description="Quản lý các đề xuất xin phép"
+      actions={tableActions}
+    >
+      <DataTable
+        columns={columns}
+        data={requests}
+        isLoading={isLoading}
+        searchable={true}
+        searchPlaceholder="Tìm kiếm đề xuất..."
+      />
+    </TablePageLayout>
   );
 };
 

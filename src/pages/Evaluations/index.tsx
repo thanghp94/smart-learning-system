@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { teachingSessionService, classService, employeeService, evaluationService } from "@/lib/supabase";
+import { teachingSessionService, classService, employeeService } from "@/lib/supabase";
 import { TeachingSession, Class, Employee, Evaluation } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";

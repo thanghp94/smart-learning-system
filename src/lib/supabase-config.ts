@@ -1,5 +1,4 @@
-
-import { supabase } from './supabase';
+import { supabase } from './supabase/client';
 import { setupSchemaFunction } from './supabase/schema-service';
 import { toast } from '@/hooks/use-toast';
 

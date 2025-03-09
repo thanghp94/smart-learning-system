@@ -9,6 +9,7 @@ import { taskService } from './task-service';
 import { assetService } from './asset-service';
 import { assetTransferService } from './asset-transfer-service';
 import { requestService } from './request-service';
+import { evaluationService } from './evaluation-service';
 
 export {
   employeeService,
@@ -20,5 +21,6 @@ export {
   taskService,
   assetService,
   assetTransferService,
-  requestService
+  requestService,
+  evaluationService
 };

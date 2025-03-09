@@ -155,7 +155,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
                       )}
                     >
                       {field.value ? (
-                        formatDate(field.value)
+                        formatDate(field.value.toISOString())
                       ) : (
                         <span>Chọn ngày</span>
                       )}

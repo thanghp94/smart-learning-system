@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { getSchemaInfo, setupSchemaFunction } from "@/lib/supabase/schema-service";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 import { SchemaInfo } from "../types";
 import { useToast } from "@/hooks/use-toast";
 

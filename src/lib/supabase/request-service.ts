@@ -50,9 +50,5 @@ export const requestService = {
     }
     
     return data as Request[];
-  },
-  
-  updateStatus: async (id: string, status: string): Promise<Request> => {
-    return update<Request>('requests', id, { status });
   }
 };
