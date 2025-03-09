@@ -74,17 +74,13 @@ class StudentService {
     try {
       console.log('Creating new student:', studentData);
       
-      // Remove any undefined or null values that might cause issues
-      const cleanedData = Object.entries(studentData).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
+      // Create a new object with only the fields that exist in the database
+      // Exclude fields that are not in the students table schema
+      const { ghi_chu, ...validStudentData } = studentData;
       
       const { data, error } = await supabase
         .from('students')
-        .insert(cleanedData)
+        .insert(validStudentData)
         .select()
         .single();
       
@@ -118,17 +114,12 @@ class StudentService {
     try {
       console.log('Updating student:', id, updates);
       
-      // Remove any undefined or null values that might cause issues
-      const cleanedData = Object.entries(updates).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
+      // Remove fields that don't exist in the database
+      const { ghi_chu, ...validUpdates } = updates;
       
       const { data, error } = await supabase
         .from('students')
-        .update(cleanedData)
+        .update(validUpdates)
         .eq('id', id)
         .select()
         .single();

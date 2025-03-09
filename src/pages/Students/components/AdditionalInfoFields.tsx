@@ -18,11 +18,14 @@ const AdditionalInfoFields: React.FC<AdditionalInfoFieldsProps> = ({ form }) => 
         name="ghi_chu"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Ghi chú</FormLabel>
+            <FormLabel>Mô tả học sinh</FormLabel>
             <FormControl>
-              <Textarea placeholder="Ghi chú thêm về học sinh" {...field} />
+              <Textarea placeholder="Mô tả thêm về học sinh" {...field} />
             </FormControl>
             <FormMessage />
+            <p className="text-sm text-muted-foreground mt-1">
+              Thông tin này sẽ được lưu vào trường mo_ta_hs trong cơ sở dữ liệu
+            </p>
           </FormItem>
         )}
       />
