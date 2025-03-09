@@ -1,113 +1,124 @@
 
-import { AssetTransfer } from '../types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
+import { AssetTransfer, Asset } from '../types';
+import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
 import { supabase } from './client';
 import { assetService } from './asset-service';
-import { logActivity } from './base-service';
 
 export const assetTransferService = {
   getAll: () => fetchAll<AssetTransfer>('asset_transfers'),
   getById: (id: string) => fetchById<AssetTransfer>('asset_transfers', id),
-  create: async (transfer: Partial<AssetTransfer>) => {
-    // Get the asset to be transferred
-    const asset = await assetService.getById(transfer.asset_id!);
+  
+  create: async (transfer: Partial<AssetTransfer>): Promise<AssetTransfer> => {
+    // Validate transfer data
+    if (!transfer.asset_id || !transfer.source_type || !transfer.source_id || 
+        !transfer.destination_type || !transfer.destination_id || !transfer.quantity) {
+      throw new Error('Thiếu thông tin chuyển tài sản');
+    }
     
+    // Get current asset
+    const asset = await assetService.getById(transfer.asset_id);
     if (!asset) {
-      throw new Error('Asset not found');
+      throw new Error('Không tìm thấy tài sản');
     }
     
-    // Check if there are enough assets to transfer
-    if (asset.so_luong < transfer.quantity!) {
-      throw new Error('Not enough assets to transfer');
+    // Check if there's enough quantity to transfer
+    if (asset.so_luong < transfer.quantity) {
+      throw new Error(`Không đủ số lượng tài sản "${asset.ten_CSVC}" để chuyển`);
     }
     
-    // Start a transaction
-    const { data: newTransfer, error: transferError } = await supabase
-      .from('asset_transfers')
-      .insert({
-        asset_id: transfer.asset_id,
-        source_type: transfer.source_type,
-        source_id: transfer.source_id,
-        destination_type: transfer.destination_type,
-        destination_id: transfer.destination_id,
-        quantity: transfer.quantity,
-        transfer_date: transfer.transfer_date,
-        status: transfer.status || 'pending',
-        notes: transfer.notes
-      })
-      .select()
-      .single();
-    
-    if (transferError) {
-      console.error('Error creating asset transfer:', transferError);
-      throw transferError;
-    }
-    
-    // Update the asset quantity
-    await assetService.update(asset.id, {
-      so_luong: asset.so_luong - transfer.quantity!
+    // Begin transaction
+    const { data, error } = await supabase.rpc('create_asset_transfer', {
+      asset_id_param: transfer.asset_id,
+      source_type_param: transfer.source_type,
+      source_id_param: transfer.source_id,
+      destination_type_param: transfer.destination_type,
+      destination_id_param: transfer.destination_id,
+      quantity_param: transfer.quantity,
+      status_param: transfer.status || 'pending',
+      notes_param: transfer.notes || '',
+      transfer_date_param: transfer.transfer_date || new Date().toISOString().split('T')[0]
     });
     
-    // Log the activity
-    await logActivity(
-      'Chuyển',
-      'CSVC',
-      asset.ten_CSVC,
-      'Nhân viên system',
-      'completed'
-    );
-    
-    return newTransfer as AssetTransfer;
-  },
-  update: async (id: string, updates: Partial<AssetTransfer>) => {
-    const currentTransfer = await fetchById<AssetTransfer>('asset_transfers', id);
-    
-    if (!currentTransfer) {
-      throw new Error('Transfer not found');
+    if (error) {
+      console.error('Error creating asset transfer:', error);
+      throw error;
     }
     
-    // If updating the status to 'completed' and it was 'pending' before
-    if (updates.status === 'completed' && currentTransfer.status === 'pending') {
-      // Get the asset
-      const asset = await assetService.getById(currentTransfer.asset_id);
+    // Log activity
+    await logActivity(
+      'Tạo mới', 
+      'Chuyển tài sản', 
+      `Chuyển ${transfer.quantity} ${asset.ten_CSVC}`, 
+      'Hệ thống',
+      transfer.status
+    );
+    
+    return data as AssetTransfer;
+  },
+  
+  update: async (id: string, updates: Partial<AssetTransfer>): Promise<AssetTransfer> => {
+    // If status is being updated to 'completed', update the asset quantities
+    if (updates.status === 'completed') {
+      const transfer = await fetchById<AssetTransfer>('asset_transfers', id);
+      if (!transfer) {
+        throw new Error('Không tìm thấy giao dịch chuyển tài sản');
+      }
       
+      if (transfer.status === 'completed') {
+        throw new Error('Giao dịch đã được hoàn thành trước đó');
+      }
+      
+      // Get current asset
+      const asset = await assetService.getById(transfer.asset_id);
       if (!asset) {
-        throw new Error('Asset not found');
+        throw new Error('Không tìm thấy tài sản');
       }
       
-      // Create a new asset record for the destination if it doesn't exist
-      // This is a simplified approach - you might want to check if the asset already exists at the destination
-      if (currentTransfer.destination_type === 'facility') {
-        // Find if the asset exists at the destination facility
-        const { data: existingAssets } = await supabase
-          .from('assets')
-          .select()
-          .eq('ten_CSVC', asset.ten_CSVC)
-          .eq('doi_tuong', 'facility')
-          .eq('doi_tuong_id', currentTransfer.destination_id);
-        
-        if (existingAssets && existingAssets.length > 0) {
-          // Update existing asset
-          await assetService.update(existingAssets[0].id, {
-            so_luong: existingAssets[0].so_luong + currentTransfer.quantity
-          });
-        } else {
-          // Create new asset at destination
-          await assetService.create({
-            ...asset,
-            id: undefined, // Remove id to create a new record
-            doi_tuong: 'facility',
-            doi_tuong_id: currentTransfer.destination_id,
-            so_luong: currentTransfer.quantity,
-            trang_thai_so_huu: 'owned'
-          });
-        }
+      // Verify still enough quantity
+      if (asset.so_luong < transfer.quantity) {
+        throw new Error(`Không đủ số lượng tài sản "${asset.ten_CSVC}" để chuyển`);
       }
+      
+      // Update the asset with reduced quantity
+      await assetService.update(transfer.asset_id, {
+        so_luong: asset.so_luong - transfer.quantity
+      });
+      
+      // Log activity
+      await logActivity(
+        'Hoàn thành', 
+        'Chuyển tài sản', 
+        `Chuyển ${transfer.quantity} ${asset.ten_CSVC}`, 
+        'Hệ thống'
+      );
     }
     
     return update<AssetTransfer>('asset_transfers', id, updates);
   },
-  delete: (id: string) => remove('asset_transfers', id),
+  
+  delete: async (id: string): Promise<void> => {
+    const transfer = await fetchById<AssetTransfer>('asset_transfers', id);
+    if (!transfer) {
+      throw new Error('Không tìm thấy giao dịch chuyển tài sản');
+    }
+    
+    // Only allow deleting pending transfers
+    if (transfer.status === 'completed') {
+      throw new Error('Không thể xóa giao dịch đã hoàn thành');
+    }
+    
+    await remove('asset_transfers', id);
+    
+    // Log activity
+    await logActivity(
+      'Xóa', 
+      'Chuyển tài sản', 
+      `Hủy chuyển tài sản`, 
+      'Hệ thống'
+    );
+  },
+  
+  // Get transfers by asset
   getByAsset: async (assetId: string): Promise<AssetTransfer[]> => {
     const { data, error } = await supabase
       .from('asset_transfers')
@@ -121,6 +132,8 @@ export const assetTransferService = {
     
     return data as AssetTransfer[];
   },
+  
+  // Get transfers by source
   getBySource: async (sourceType: string, sourceId: string): Promise<AssetTransfer[]> => {
     const { data, error } = await supabase
       .from('asset_transfers')
@@ -135,6 +148,8 @@ export const assetTransferService = {
     
     return data as AssetTransfer[];
   },
+  
+  // Get transfers by destination
   getByDestination: async (destType: string, destId: string): Promise<AssetTransfer[]> => {
     const { data, error } = await supabase
       .from('asset_transfers')
@@ -148,5 +163,18 @@ export const assetTransferService = {
     }
     
     return data as AssetTransfer[];
+  },
+  
+  // Approve and process a transfer
+  approveTransfer: async (id: string): Promise<AssetTransfer> => {
+    return update<AssetTransfer>('asset_transfers', id, { status: 'completed' });
+  },
+  
+  // Reject a transfer
+  rejectTransfer: async (id: string, reason: string): Promise<AssetTransfer> => {
+    return update<AssetTransfer>('asset_transfers', id, { 
+      status: 'rejected', 
+      notes: reason 
+    });
   }
 };

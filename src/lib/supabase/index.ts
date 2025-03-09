@@ -22,12 +22,12 @@ export { enrollmentService } from './enrollment-service';
 export { assetService } from './asset-service';
 export { assetTransferService } from './asset-transfer-service';
 export { storageService } from './storage-service';
+export { taskService } from './task-service';
 
 // Basic services
 export {
   sessionService,
   eventService,
-  taskService,
   imageService,
   settingService,
   payrollService,

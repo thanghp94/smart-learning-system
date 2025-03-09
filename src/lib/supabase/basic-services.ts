@@ -1,5 +1,6 @@
+
 import { 
-  Session, Event, Task, Image, Setting, Payroll, 
+  Session, Event, Image, Setting, Payroll, 
   Finance, Evaluation, File, Request, Contact
 } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
@@ -20,27 +21,6 @@ export const eventService = {
   create: (event: Partial<Event>) => insert<Event>('events', event),
   update: (id: string, updates: Partial<Event>) => update<Event>('events', id, updates),
   delete: (id: string) => remove('events', id)
-};
-
-export const taskService = {
-  getAll: () => fetchAll<Task>('tasks'),
-  getById: (id: string) => fetchById<Task>('tasks', id),
-  create: (task: Partial<Task>) => insert<Task>('tasks', task),
-  update: (id: string, updates: Partial<Task>) => update<Task>('tasks', id, updates),
-  delete: (id: string) => remove('tasks', id),
-  getByAssignee: async (employeeId: string): Promise<Task[]> => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('nguoi_phu_trach', employeeId);
-    
-    if (error) {
-      console.error('Error fetching tasks by assignee:', error);
-      throw error;
-    }
-    
-    return data as Task[];
-  }
 };
 
 export const imageService = {
