@@ -9,6 +9,7 @@ interface DatabaseContextType {
   isLoading: boolean;
   isDemoMode: boolean;
   initializeDatabase: () => Promise<void>;
+  reinitializePolicies: () => Promise<void>;
 }
 
 const DatabaseContext = createContext<DatabaseContextType>({
@@ -16,6 +17,7 @@ const DatabaseContext = createContext<DatabaseContextType>({
   isLoading: false,
   isDemoMode: false,
   initializeDatabase: async () => {},
+  reinitializePolicies: async () => {},
 });
 
 export const useDatabase = () => useContext(DatabaseContext);
@@ -89,6 +91,82 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const reinitializePolicies = async () => {
+    setIsLoading(true);
+    try {
+      // First let's get the SQL content for public access policies
+      const { data: sqlData, error: sqlError } = await supabase
+        .storage
+        .from('sql')
+        .download('create_public_access_policies.sql');
+      
+      if (sqlError) {
+        console.error('Error getting SQL file:', sqlError);
+        
+        // Run the policies directly
+        const { error } = await supabase.rpc('run_sql', { 
+          sql: `
+            -- Drop existing RLS policies on classes if any exist
+            DROP POLICY IF EXISTS "Allow public access to classes" ON public.classes;
+            
+            -- Add public access policy to classes table
+            CREATE POLICY "Allow public access to classes"
+            ON public.classes
+            FOR ALL
+            USING (true)
+            WITH CHECK (true);
+            
+            -- Ensure RLS is enabled for the classes table
+            ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
+          `
+        });
+        
+        if (error) {
+          console.error('Error applying policies:', error);
+          toast({
+            title: 'Policy Application Error',
+            description: 'Failed to apply RLS policies. Please try again.',
+            variant: 'destructive',
+            duration: 5000,
+          });
+          return;
+        }
+      } else {
+        // We have the SQL file, convert it to text and execute
+        const sqlText = await sqlData.text();
+        const { error } = await supabase.rpc('run_sql', { sql: sqlText });
+        
+        if (error) {
+          console.error('Error applying policies from file:', error);
+          toast({
+            title: 'Policy Application Error',
+            description: 'Failed to apply RLS policies from file. Please try again.',
+            variant: 'destructive',
+            duration: 5000,
+          });
+          return;
+        }
+      }
+      
+      toast({
+        title: 'Policies Applied',
+        description: 'Database access policies have been reinitialized.',
+        duration: 3000,
+      });
+      
+    } catch (error) {
+      console.error('Error reinitializing policies:', error);
+      toast({
+        title: 'Policy Reinitialization Error',
+        description: 'Failed to reinitialize database policies. Please try again.',
+        variant: 'destructive',
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkDatabaseStatus();
   }, []);
@@ -100,6 +178,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isLoading,
         isDemoMode,
         initializeDatabase,
+        reinitializePolicies,
       }}
     >
       {children}
