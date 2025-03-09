@@ -10,12 +10,16 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import DetailPanel from "@/components/ui/DetailPanel";
 import FacilityDetail from "./FacilityDetail";
+import FacilityForm from "./FacilityForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PlaceholderPage from "@/components/common/PlaceholderPage";
 
 const Facilities = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,6 +50,29 @@ const Facilities = () => {
 
   const closeDetail = () => {
     setShowDetail(false);
+  };
+
+  const handleAddClick = () => {
+    setShowAddDialog(true);
+  };
+
+  const handleAddFacility = async (data: any) => {
+    try {
+      await facilityService.create(data);
+      toast({
+        title: "Thành công",
+        description: "Đã thêm cơ sở mới vào hệ thống",
+      });
+      setShowAddDialog(false);
+      fetchFacilities();
+    } catch (error) {
+      console.error("Error adding facility:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thêm cơ sở mới",
+        variant: "destructive"
+      });
+    }
   };
 
   const columns = [
@@ -91,26 +118,37 @@ const Facilities = () => {
       <Button variant="outline" size="sm" className="h-8">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
-      <Button size="sm" className="h-8">
+      <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Cơ Sở
       </Button>
     </div>
   );
 
   return (
-    <TablePageLayout
-      title="Cơ Sở"
-      description="Quản lý thông tin cơ sở trong hệ thống"
-      actions={tableActions}
-    >
-      <DataTable
-        columns={columns}
-        data={facilities}
-        isLoading={isLoading}
-        onRowClick={handleRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm cơ sở..."
-      />
+    <>
+      {facilities.length === 0 && !isLoading ? (
+        <PlaceholderPage
+          title="Cơ Sở"
+          description="Quản lý thông tin cơ sở trong hệ thống"
+          icon={<Plus className="h-16 w-16 text-muted-foreground/40" />}
+          addButtonAction={handleAddClick}
+        />
+      ) : (
+        <TablePageLayout
+          title="Cơ Sở"
+          description="Quản lý thông tin cơ sở trong hệ thống"
+          actions={tableActions}
+        >
+          <DataTable
+            columns={columns}
+            data={facilities}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm cơ sở..."
+          />
+        </TablePageLayout>
+      )}
 
       {selectedFacility && (
         <DetailPanel
@@ -121,7 +159,19 @@ const Facilities = () => {
           <FacilityDetail facility={selectedFacility} />
         </DetailPanel>
       )}
-    </TablePageLayout>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Thêm Cơ Sở Mới</DialogTitle>
+          </DialogHeader>
+          <FacilityForm 
+            onSubmit={handleAddFacility}
+            onCancel={() => setShowAddDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
