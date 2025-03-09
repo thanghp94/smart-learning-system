@@ -1,6 +1,6 @@
 
 import React from "react";
-import { FileSignature, FileDown, Filter, Plus } from "lucide-react";
+import { FileSignature, FileDown, Filter, Plus, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
 import TablePageLayout from "@/components/common/TablePageLayout";
@@ -13,7 +13,7 @@ interface Request {
   description?: string;
   requester: string;
   status: string;
-  priority: string;
+  priority?: string;
   created_at: string;
 }
 
@@ -21,12 +21,14 @@ interface RequestsTableProps {
   requests: Request[];
   isLoading: boolean;
   onAddRequest: () => void;
+  onRefresh: () => void;
 }
 
 const RequestsTable: React.FC<RequestsTableProps> = ({ 
   requests, 
   isLoading,
-  onAddRequest 
+  onAddRequest,
+  onRefresh
 }) => {
   const columns = [
     {
@@ -45,11 +47,15 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
       sortable: true,
       render: (value: string) => {
         let color = "default";
-        if (value === "Approved") color = "success";
-        if (value === "Rejected") color = "destructive";
-        if (value === "Pending") color = "warning";
+        if (value === "approved") color = "success";
+        if (value === "rejected") color = "destructive";
+        if (value === "pending") color = "warning";
         
-        return <Badge variant={color as any}>{value}</Badge>;
+        const label = value === "approved" ? "Đã duyệt" : 
+                     value === "rejected" ? "Từ chối" : 
+                     value === "pending" ? "Chờ duyệt" : value;
+        
+        return <Badge variant={color as any}>{label}</Badge>;
       },
     },
     {
@@ -62,7 +68,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
         if (value === "High") color = "warning";
         if (value === "Low") color = "outline";
         
-        return <Badge variant={color as any}>{value}</Badge>;
+        return <Badge variant={color as any}>{value || "Medium"}</Badge>;
       },
     },
     {
@@ -77,6 +83,9 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
     <div className="flex items-center space-x-2">
       <Button size="sm" className="h-8" onClick={onAddRequest}>
         <Plus className="h-4 w-4 mr-1" /> Thêm mới
+      </Button>
+      <Button variant="outline" size="sm" className="h-8" onClick={onRefresh}>
+        <RotateCw className="h-4 w-4 mr-1" /> Làm mới
       </Button>
       <Button variant="outline" size="sm" className="h-8">
         <Filter className="h-4 w-4 mr-1" /> Lọc

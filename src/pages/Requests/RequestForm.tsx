@@ -33,7 +33,7 @@ import { cn, formatDate } from "@/lib/utils";
 const requestSchema = z.object({
   title: z.string().min(1, "Vui lòng nhập tiêu đề"),
   description: z.string().optional(),
-  requester: z.string().min(1, "Vui lòng nhập người yêu cầu"),
+  requester: z.string().min(1, "Vui lòng chọn người yêu cầu"),
   priority: z.string().optional(),
   date: z.date().optional(),
 });
@@ -42,9 +42,10 @@ type RequestFormValues = z.infer<typeof requestSchema>;
 
 interface RequestFormProps {
   onSubmit: (data: RequestFormValues) => void;
+  employees: { id: string; ten_nhan_su: string }[];
 }
 
-const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
+const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, employees }) => {
   const form = useForm<RequestFormValues>({
     resolver: zodResolver(requestSchema),
     defaultValues: {
@@ -95,48 +96,60 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="requester"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Người yêu cầu</FormLabel>
+        <FormField
+          control={form.control}
+          name="requester"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Người yêu cầu</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
                 <FormControl>
-                  <Input placeholder="Tên người yêu cầu" {...field} />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn người yêu cầu" />
+                  </SelectTrigger>
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <SelectContent>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.ten_nhan_su}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Mức độ ưu tiên</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn mức độ ưu tiên" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Low">Thấp</SelectItem>
-                    <SelectItem value="Medium">Trung bình</SelectItem>
-                    <SelectItem value="High">Cao</SelectItem>
-                    <SelectItem value="Critical">Khẩn cấp</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="priority"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mức độ ưu tiên</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn mức độ ưu tiên" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Low">Thấp</SelectItem>
+                  <SelectItem value="Medium">Trung bình</SelectItem>
+                  <SelectItem value="High">Cao</SelectItem>
+                  <SelectItem value="Critical">Khẩn cấp</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

@@ -2,8 +2,8 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -11,19 +11,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Enrollment } from '@/lib/types';
+import { Enrollment, Student, Class } from '@/lib/types';
 
 interface EnrollmentFormProps {
   initialData?: Partial<Enrollment>;
   onSubmit: (data: Partial<Enrollment>) => void;
+  students: Student[];
+  classes: Class[];
 }
 
-const EnrollmentForm = ({ initialData, onSubmit }: EnrollmentFormProps) => {
+const EnrollmentForm = ({ initialData, onSubmit, students, classes }: EnrollmentFormProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       hoc_sinh_id: initialData?.hoc_sinh_id || '',
       lop_chi_tiet_id: initialData?.lop_chi_tiet_id || '',
-      buoi_day_id: initialData?.buoi_day_id || '',
       tinh_trang_diem_danh: initialData?.tinh_trang_diem_danh || 'present',
       ghi_chu: initialData?.ghi_chu || ''
     }
@@ -46,9 +47,11 @@ const EnrollmentForm = ({ initialData, onSubmit }: EnrollmentFormProps) => {
             <SelectValue placeholder="Chọn học sinh" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="student1">Học sinh 1</SelectItem>
-            <SelectItem value="student2">Học sinh 2</SelectItem>
-            <SelectItem value="student3">Học sinh 3</SelectItem>
+            {students.map((student) => (
+              <SelectItem key={student.id} value={student.id}>
+                {student.ten_hoc_sinh}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {errors.hoc_sinh_id && <p className="text-red-500 text-xs mt-1">Vui lòng chọn học sinh</p>}
@@ -64,29 +67,14 @@ const EnrollmentForm = ({ initialData, onSubmit }: EnrollmentFormProps) => {
             <SelectValue placeholder="Chọn lớp học" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="class1">Lớp 1</SelectItem>
-            <SelectItem value="class2">Lớp 2</SelectItem>
-            <SelectItem value="class3">Lớp 3</SelectItem>
+            {classes.map((classItem) => (
+              <SelectItem key={classItem.id} value={classItem.id}>
+                {classItem.ten_lop_full}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {errors.lop_chi_tiet_id && <p className="text-red-500 text-xs mt-1">Vui lòng chọn lớp học</p>}
-      </div>
-
-      <div>
-        <Label htmlFor="buoi_day_id">Buổi học (tùy chọn)</Label>
-        <Select
-          onValueChange={(value) => setValue('buoi_day_id', value)}
-          defaultValue={watch('buoi_day_id')}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Chọn buổi học" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="session1">Buổi 1</SelectItem>
-            <SelectItem value="session2">Buổi 2</SelectItem>
-            <SelectItem value="session3">Buổi 3</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div>
@@ -108,7 +96,7 @@ const EnrollmentForm = ({ initialData, onSubmit }: EnrollmentFormProps) => {
 
       <div>
         <Label htmlFor="ghi_chu">Ghi chú</Label>
-        <Input id="ghi_chu" {...register('ghi_chu')} />
+        <Textarea id="ghi_chu" {...register('ghi_chu')} />
       </div>
 
       <div className="pt-4 flex justify-end space-x-2">

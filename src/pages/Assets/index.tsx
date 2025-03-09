@@ -69,6 +69,7 @@ const Assets = () => {
         description: "Thêm tài sản mới thành công",
       });
       setShowAddForm(false);
+      fetchAssets(); // Refresh the data
     } catch (error) {
       console.error("Error adding asset:", error);
       toast({
