@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ const Events = () => {
 
   const handleAddFormSubmit = async (formData: Partial<Event>) => {
     try {
+      console.log("Submitting event data:", formData);
       await eventService.create(formData);
       toast({
         title: "Thành công",
@@ -68,7 +70,7 @@ const Events = () => {
       console.error("Error adding event:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể thêm sự kiện mới",
+        description: "Không thể thêm sự kiện mới: " + (error as Error).message,
         variant: "destructive"
       });
     }

@@ -157,7 +157,7 @@ const SessionBasicInfoFields = ({ form, classes, teachers, isLoading }: SessionB
       
       <FormField
         control={form.control}
-        name="Loai_bai_hoc"
+        name="loai_bai_hoc"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Loại bài học</FormLabel>
