@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,7 +66,7 @@ const PayrollForm: React.FC<PayrollFormProps> = ({
       ngay: initialData?.ngay || "",
       co_so_id: initialData?.co_so_id || "",
       luong: initialData?.luong || 0,
-      phu_cap: initialData?.phu_cap || 0,
+      phu_cap: 0, // Added explicit default value 
       pc_tnhiem: initialData?.pc_tnhiem || 0,
       pc_an_o: initialData?.pc_an_o || 0,
       pc_dthoai: initialData?.pc_dthoai || 0,

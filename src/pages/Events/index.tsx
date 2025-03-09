@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,13 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import EventForm from "./EventForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
+} from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 
 const Events = () => {
@@ -41,10 +46,12 @@ const Events = () => {
   };
 
   const handleAddClick = () => {
+    console.log("Opening add event form dialog");
     setShowAddForm(true);
   };
 
   const handleAddFormCancel = () => {
+    console.log("Closing add event form dialog");
     setShowAddForm(false);
   };
 
@@ -126,12 +133,29 @@ const Events = () => {
 
   if (events.length === 0 && !isLoading) {
     return (
-      <PlaceholderPage
-        title="Sự Kiện"
-        description="Quản lý các sự kiện và lịch trình"
-        icon={<Calendar className="h-16 w-16 text-muted-foreground/40" />}
-        addButtonAction={handleAddClick}
-      />
+      <>
+        <PlaceholderPage
+          title="Sự Kiện"
+          description="Quản lý các sự kiện và lịch trình"
+          icon={<Calendar className="h-16 w-16 text-muted-foreground/40" />}
+          addButtonAction={handleAddClick}
+        />
+        
+        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Thêm Sự Kiện Mới</DialogTitle>
+              <DialogDescription>
+                Điền thông tin sự kiện mới và nhấn lưu để tạo sự kiện.
+              </DialogDescription>
+            </DialogHeader>
+            <EventForm 
+              onSubmit={handleAddFormSubmit}
+              onCancel={handleAddFormCancel}
+            />
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 

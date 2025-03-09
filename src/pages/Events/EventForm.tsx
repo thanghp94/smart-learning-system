@@ -12,15 +12,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const eventSchema = z.object({
+  ten_su_kien: z.string().min(1, { message: "Vui lòng nhập tên sự kiện" }),
+  mo_ta: z.string().optional(),
+  ngay_bat_dau: z.string().min(1, { message: "Vui lòng chọn ngày bắt đầu" }),
+  ngay_ket_thuc: z.string().optional(),
+  dia_diem: z.string().optional(),
+  loai_su_kien: z.string().optional(),
+  trang_thai: z.string().default("upcoming")
+});
+
+type EventFormValues = z.infer<typeof eventSchema>;
 
 interface EventFormProps {
   initialData?: any;
   onSubmit: (data: any) => void;
-  onCancel: () => void; // Adding the missing onCancel prop
+  onCancel: () => void;
 }
 
 const EventForm = ({ initialData, onSubmit, onCancel }: EventFormProps) => {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<EventFormValues>({
+    resolver: zodResolver(eventSchema),
     defaultValues: {
       ten_su_kien: initialData?.ten_su_kien || '',
       mo_ta: initialData?.mo_ta || '',
@@ -31,6 +46,8 @@ const EventForm = ({ initialData, onSubmit, onCancel }: EventFormProps) => {
       trang_thai: initialData?.trang_thai || 'upcoming'
     }
   });
+
+  console.log("Rendering EventForm component");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
