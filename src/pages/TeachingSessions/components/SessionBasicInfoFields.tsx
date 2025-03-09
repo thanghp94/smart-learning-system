@@ -19,6 +19,14 @@ const SessionBasicInfoFields = ({ form, classes, teachers, isLoading }: SessionB
   console.log("SessionBasicInfoFields - classes:", classes);
   console.log("SessionBasicInfoFields - teachers:", teachers);
   
+  // Helper function to get class display name
+  const getClassDisplayName = (cls: Class) => {
+    if (cls.Ten_lop_full) return cls.Ten_lop_full;
+    if (cls.ten_lop_full) return cls.ten_lop_full;
+    if (cls.ten_lop) return cls.ten_lop;
+    return `Lớp ${cls.id}`;
+  };
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -37,10 +45,10 @@ const SessionBasicInfoFields = ({ form, classes, teachers, isLoading }: SessionB
                   <SelectValue placeholder="Chọn lớp học" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classes.length > 0 ? (
+                  {classes && classes.length > 0 ? (
                     classes.map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {cls.Ten_lop_full || cls.ten_lop_full || cls.ten_lop || `Lớp ${cls.id}`}
+                        {getClassDisplayName(cls)}
                       </SelectItem>
                     ))
                   ) : (
@@ -72,7 +80,7 @@ const SessionBasicInfoFields = ({ form, classes, teachers, isLoading }: SessionB
                   <SelectValue placeholder="Chọn giáo viên" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teachers.length > 0 ? (
+                  {teachers && teachers.length > 0 ? (
                     teachers.map((teacher) => (
                       <SelectItem key={teacher.id} value={teacher.id}>
                         {teacher.ten_nhan_su}

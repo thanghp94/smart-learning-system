@@ -29,8 +29,17 @@ const Classes = () => {
   const fetchClasses = async () => {
     try {
       setIsLoading(true);
+      console.log("Fetching classes...");
       const data = await classService.getAll();
-      setClasses(data);
+      console.log("Classes data received:", data);
+      
+      if (data && Array.isArray(data)) {
+        setClasses(data);
+        console.log("Classes set to state:", data.length);
+      } else {
+        console.error("Invalid classes data:", data);
+        setClasses([]);
+      }
     } catch (error) {
       console.error("Error fetching classes:", error);
       toast({
@@ -38,6 +47,7 @@ const Classes = () => {
         description: "Không thể tải danh sách lớp học",
         variant: "destructive"
       });
+      setClasses([]);
     } finally {
       setIsLoading(false);
     }
@@ -64,13 +74,13 @@ const Classes = () => {
     try {
       console.log("Submitting class data:", formData);
       const newClass = await classService.create(formData);
-      setClasses([...classes, newClass]);
+      
+      // Refresh the classes list to ensure we have the latest data
       toast({
         title: "Thành công",
         description: "Thêm lớp học mới thành công",
       });
       setShowAddForm(false);
-      // Refresh the classes list to ensure we have the latest data
       fetchClasses();
     } catch (error) {
       console.error("Error adding class:", error);
@@ -134,7 +144,7 @@ const Classes = () => {
 
   return (
     <>
-      {classes.length === 0 && !isLoading ? (
+      {(classes.length === 0 && !isLoading) ? (
         <PlaceholderPage
           title="Lớp Học"
           description="Quản lý thông tin lớp học"

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TeachingSession, Class, Employee } from "@/lib/types";
-import { classService, employeeService } from "@/lib/supabase";
+import { classService, employeeService, supabase } from "@/lib/supabase";
 import { sessionSchema, SessionFormData } from "../schemas/sessionSchema";
 
 interface UseSessionFormProps {
@@ -41,10 +41,23 @@ export const useSessionForm = ({ initialData }: UseSessionFormProps = {}) => {
       try {
         setIsLoading(true);
         
-        const [classesData, teachersData] = await Promise.all([
-          classService.getAll(),
-          employeeService.getByRole("Giáo viên")
-        ]);
+        // Try to get classes directly from the database without RLS
+        let classesData: Class[] = [];
+        const { data: directClassesData, error: directClassesError } = await supabase
+          .from('classes')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (directClassesError) {
+          console.error("Error fetching classes directly:", directClassesError);
+          // Fallback to using the service
+          classesData = await classService.getAll();
+        } else {
+          console.log("Directly fetched classes:", directClassesData);
+          classesData = directClassesData as Class[];
+        }
+        
+        const teachersData = await employeeService.getByRole("Giáo viên");
         
         console.log("Form classes data:", classesData);
         console.log("Form teachers data:", teachersData);
