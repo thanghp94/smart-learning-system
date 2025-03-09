@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
 import { Class } from '@/lib/types';
@@ -74,6 +75,16 @@ class ClassService {
         ten_lop: classData.ten_lop || '',
         ct_hoc: classData.ct_hoc || ''
       };
+      
+      // Handle empty teacher ID - set to null if empty string
+      if (formattedData.gv_chinh === '') {
+        formattedData.gv_chinh = null;
+      }
+      
+      // Handle empty facility ID - set to null if empty string
+      if (formattedData.co_so === '') {
+        formattedData.co_so = null;
+      }
       
       // Convert date strings to proper format if they exist
       if (formattedData.ngay_bat_dau) {

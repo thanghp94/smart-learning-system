@@ -29,8 +29,8 @@ const classSchema = z.object({
   ten_lop_full: z.string().min(2, { message: "Tên lớp đầy đủ phải có ít nhất 2 ký tự" }),
   ten_lop: z.string().min(1, { message: "Tên lớp phải có ít nhất 1 ký tự" }),
   ct_hoc: z.string().optional(),
-  co_so: z.string().optional(),
-  gv_chinh: z.string().optional(),
+  co_so: z.string().optional().nullable(),
+  gv_chinh: z.string().optional().nullable(),
   ngay_bat_dau: z.string().optional(),
   tinh_trang: z.string().default("active"),
   ghi_chu: z.string().optional(),
@@ -114,13 +114,13 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel }
       const submissionData = {
         ten_lop_full: values.ten_lop_full,
         ten_lop: values.ten_lop,
-        ct_hoc: values.ct_hoc,
-        co_so: values.co_so,
-        gv_chinh: values.gv_chinh,
-        ngay_bat_dau: values.ngay_bat_dau ? new Date(values.ngay_bat_dau).toISOString() : undefined,
+        ct_hoc: values.ct_hoc || '',
+        co_so: values.co_so || null,
+        gv_chinh: values.gv_chinh || null,
+        ngay_bat_dau: values.ngay_bat_dau ? new Date(values.ngay_bat_dau).toISOString() : null,
         tinh_trang: values.tinh_trang,
-        ghi_chu: values.ghi_chu,
-        unit_id: values.unit_id
+        ghi_chu: values.ghi_chu || '',
+        unit_id: values.unit_id || ''
       };
       
       console.log("Form data to submit:", submissionData);
