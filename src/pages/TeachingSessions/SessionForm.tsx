@@ -36,7 +36,7 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
       thoi_gian_bat_dau: data.thoi_gian_bat_dau,
       thoi_gian_ket_thuc: data.thoi_gian_ket_thuc,
       session_id: data.session_id,
-      Loai_bai_hoc: data.Loai_bai_hoc,
+      loai_bai_hoc: data.loai_bai_hoc, // Changed from Loai_bai_hoc to loai_bai_hoc
       nhan_xet_1: data.nhan_xet_1,
       nhan_xet_2: data.nhan_xet_2,
       nhan_xet_3: data.nhan_xet_3,

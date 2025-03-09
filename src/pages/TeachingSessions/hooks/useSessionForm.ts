@@ -25,7 +25,7 @@ export const useSessionForm = ({ initialData }: UseSessionFormProps = {}) => {
       thoi_gian_bat_dau: "08:00",
       thoi_gian_ket_thuc: "09:30",
       session_id: "1",
-      Loai_bai_hoc: "Học mới",
+      loai_bai_hoc: "Học mới", // Changed from Loai_bai_hoc to loai_bai_hoc
       noi_dung: "",
       nhan_xet_1: null,
       nhan_xet_2: null,

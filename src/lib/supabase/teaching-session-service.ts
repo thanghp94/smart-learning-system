@@ -14,6 +14,8 @@ export const teachingSessionService = {
       // Convert numeric values to strings before saving to match the database schema
       const formattedSession: Partial<TeachingSession> = {
         ...session,
+        // Ensure the field name matches the database column
+        loai_bai_hoc: session.loai_bai_hoc, // Using lowercase field name
         nhan_xet_1: session.nhan_xet_1 !== undefined && session.nhan_xet_1 !== null ? 
           String(session.nhan_xet_1) : null,
         nhan_xet_2: session.nhan_xet_2 !== undefined && session.nhan_xet_2 !== null ? 
@@ -51,6 +53,8 @@ export const teachingSessionService = {
     // Similar conversion for updates
     const formattedUpdates: Partial<TeachingSession> = {
       ...updates,
+      // Ensure the field name matches the database column
+      loai_bai_hoc: updates.loai_bai_hoc, // Using lowercase field name
       nhan_xet_1: updates.nhan_xet_1 !== undefined && updates.nhan_xet_1 !== null ? 
         String(updates.nhan_xet_1) : updates.nhan_xet_1,
       nhan_xet_2: updates.nhan_xet_2 !== undefined && updates.nhan_xet_2 !== null ? 

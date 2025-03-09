@@ -8,7 +8,7 @@ export const sessionSchema = z.object({
   thoi_gian_bat_dau: z.string().min(1, "Vui lòng nhập thời gian bắt đầu"),
   thoi_gian_ket_thuc: z.string().min(1, "Vui lòng nhập thời gian kết thúc"),
   session_id: z.string().min(1, "Vui lòng nhập số buổi học"),
-  Loai_bai_hoc: z.string().optional(),
+  loai_bai_hoc: z.string().optional(), // Changed from Loai_bai_hoc to loai_bai_hoc
   noi_dung: z.string().optional(),
   nhan_xet_1: z.string().nullable().optional(),
   nhan_xet_2: z.string().nullable().optional(),
