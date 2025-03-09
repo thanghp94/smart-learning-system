@@ -2,17 +2,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { setupDatabase } from '@/utils/db-setup';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface DatabaseContextType {
   isInitialized: boolean;
   isLoading: boolean;
+  isDemoMode: boolean;
   initializeDatabase: () => Promise<void>;
 }
 
 const DatabaseContext = createContext<DatabaseContextType>({
   isInitialized: false,
   isLoading: false,
+  isDemoMode: false,
   initializeDatabase: async () => {},
 });
 
@@ -21,9 +23,22 @@ export const useDatabase = () => useContext(DatabaseContext);
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const { toast } = useToast();
 
   const checkDatabaseStatus = async () => {
     try {
+      // Check if we're in demo mode based on environment variables
+      const demoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
+      setIsDemoMode(demoMode);
+      
+      if (demoMode) {
+        // In demo mode, set initialized to true without checking database
+        setIsInitialized(true);
+        setIsLoading(false);
+        return;
+      }
+      
       // Check if at least one table exists and has data
       const { data, error } = await supabase
         .from('facilities')
@@ -46,6 +61,16 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const initializeDatabase = async () => {
     setIsLoading(true);
     try {
+      if (isDemoMode) {
+        toast({
+          title: 'Demo Mode',
+          description: 'Database initialization is not available in demo mode. Please configure Supabase credentials.',
+          duration: 5000,
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       const success = await setupDatabase(true, true);
       setIsInitialized(success);
     } catch (error) {
@@ -71,6 +96,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value={{
         isInitialized,
         isLoading,
+        isDemoMode,
         initializeDatabase,
       }}
     >

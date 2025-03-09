@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,12 +11,52 @@ import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
 import ClassDetail from "./ClassDetail";
 
+const sampleClasses: Class[] = [
+  {
+    id: "1",
+    Ten_lop_full: "Lớp Toán 10A",
+    ten_lop: "T10A",
+    ct_hoc: "Chương trình chuẩn",
+    GV_chinh: "NV001",
+    so_hs: 25,
+    ngay_bat_dau: "2023-09-01",
+    tinh_trang: "active",
+    co_so: "CS001",
+    ghi_chu: "Lớp học buổi sáng"
+  },
+  {
+    id: "2",
+    Ten_lop_full: "Lớp Văn 11B",
+    ten_lop: "V11B",
+    ct_hoc: "Chương trình nâng cao",
+    GV_chinh: "NV002",
+    so_hs: 20,
+    ngay_bat_dau: "2023-09-05",
+    tinh_trang: "active",
+    co_so: "CS001",
+    ghi_chu: "Lớp học buổi chiều"
+  },
+  {
+    id: "3",
+    Ten_lop_full: "Lớp Anh 12C",
+    ten_lop: "A12C",
+    ct_hoc: "Chương trình IELTS",
+    GV_chinh: "NV003",
+    so_hs: 15,
+    ngay_bat_dau: "2023-08-15",
+    tinh_trang: "inactive",
+    co_so: "CS002",
+    ghi_chu: "Lớp học tối"
+  }
+];
+
 const Classes = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const { toast } = useToast();
+  const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   useEffect(() => {
     fetchClasses();
@@ -26,6 +65,15 @@ const Classes = () => {
   const fetchClasses = async () => {
     try {
       setIsLoading(true);
+      
+      if (isDemoMode) {
+        setTimeout(() => {
+          setClasses(sampleClasses);
+          setIsLoading(false);
+        }, 800);
+        return;
+      }
+      
       const data = await classService.getAll();
       setClasses(data);
     } catch (error) {
@@ -114,6 +162,12 @@ const Classes = () => {
       description="Quản lý thông tin lớp học trong hệ thống"
       actions={tableActions}
     >
+      {isDemoMode && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+          <strong>Chế độ demo:</strong> Hiển thị dữ liệu mẫu. Cấu hình Supabase để xem dữ liệu thực tế.
+        </div>
+      )}
+      
       <DataTable
         columns={columns}
         data={classes}

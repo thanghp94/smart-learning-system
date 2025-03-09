@@ -9,6 +9,64 @@ import { Calendar, Clock } from "lucide-react";
 import DataTable from "@/components/ui/DataTable";
 import { useToast } from "@/hooks/use-toast";
 
+const sampleSessions: TeachingSession[] = [
+  {
+    id: "1",
+    lop_id: "1",
+    session_id: 1,
+    ngay_hoc: "2023-09-05",
+    thoi_gian_bat_dau: "08:00",
+    thoi_gian_ket_thuc: "09:30",
+    giao_vien: "Nguyễn Văn A",
+    ghi_chu: "Bài 1: Giới thiệu",
+    trang_thai: "completed",
+    trung_binh: 4.5
+  },
+  {
+    id: "2",
+    lop_id: "1", 
+    session_id: 2,
+    ngay_hoc: "2023-09-07",
+    thoi_gian_bat_dau: "08:00",
+    thoi_gian_ket_thuc: "09:30",
+    giao_vien: "Nguyễn Văn A",
+    ghi_chu: "Bài 2: Lý thuyết cơ bản",
+    trang_thai: "completed",
+    trung_binh: 4.2
+  }
+];
+
+const sampleEnrollments: Enrollment[] = [
+  {
+    id: "1",
+    lop_id: "1",
+    hoc_sinh_id: "HS001",
+    ngay_dang_ky: "2023-08-20",
+    tinh_trang_diem_danh: "present",
+    ghi_chu: "Học sinh chăm chỉ"
+  },
+  {
+    id: "2",
+    lop_id: "1",
+    hoc_sinh_id: "HS002",
+    ngay_dang_ky: "2023-08-22",
+    tinh_trang_diem_danh: "absent",
+    ghi_chu: "Vắng có phép"
+  }
+];
+
+const sampleTeacher: Employee = {
+  id: "NV001",
+  ten_nhan_su: "Nguyễn Văn A",
+  chuc_vu: "Giáo viên",
+  bo_phan: "Giảng dạy",
+  email: "teacher@example.com",
+  phone: "0123456789",
+  ngay_vao_lam: "2022-01-15",
+  trang_thai: "active",
+  co_so: "CS001"
+};
+
 interface ClassDetailProps {
   classItem: Class;
 }
@@ -19,13 +77,23 @@ const ClassDetail = ({ classItem }: ClassDetailProps) => {
   const [teacher, setTeacher] = useState<Employee | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   useEffect(() => {
     const fetchRelatedData = async () => {
       try {
         setIsLoading(true);
         
-        // Fetch related data in parallel
+        if (isDemoMode) {
+          setTimeout(() => {
+            setSessions(sampleSessions);
+            setEnrollments(sampleEnrollments);
+            setTeacher(sampleTeacher);
+            setIsLoading(false);
+          }, 800);
+          return;
+        }
+        
         const [sessionsData, enrollmentsData, teacherData] = await Promise.all([
           teachingSessionService.getByClass(classItem.id),
           enrollmentService.getByClass(classItem.id),
@@ -48,7 +116,7 @@ const ClassDetail = ({ classItem }: ClassDetailProps) => {
     };
     
     fetchRelatedData();
-  }, [classItem.id, classItem.GV_chinh]);
+  }, [classItem.id, classItem.GV_chinh, isDemoMode]);
 
   const sessionColumns = [
     {
@@ -167,6 +235,12 @@ const ClassDetail = ({ classItem }: ClassDetailProps) => {
           </CardContent>
         </Card>
       </div>
+
+      {isDemoMode && (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+          <strong>Chế độ demo:</strong> Hiển thị dữ liệu mẫu cho các buổi học và ghi danh.
+        </div>
+      )}
 
       <Tabs defaultValue="sessions">
         <TabsList>
