@@ -10,7 +10,7 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import FinanceForm from "./FinanceForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 
 const FinancePage = () => {
@@ -66,6 +66,7 @@ const FinancePage = () => {
 
   const handleAddFormSubmit = async (formData: Partial<Finance>) => {
     try {
+      console.log("Submitting finance data:", formData);
       await financeService.create(formData);
       toast({
         title: "Thành công",
@@ -178,6 +179,9 @@ const FinancePage = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Thêm Giao Dịch Mới</DialogTitle>
+            <DialogDescription>
+              Điền thông tin giao dịch mới và nhấn lưu để tạo giao dịch.
+            </DialogDescription>
           </DialogHeader>
           <FinanceForm 
             onSubmit={handleAddFormSubmit}

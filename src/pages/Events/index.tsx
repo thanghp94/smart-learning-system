@@ -10,7 +10,7 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import EventForm from "./EventForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 
 const Events = () => {
@@ -155,6 +155,9 @@ const Events = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Thêm Sự Kiện Mới</DialogTitle>
+            <DialogDescription>
+              Điền thông tin sự kiện mới và nhấn lưu để tạo sự kiện.
+            </DialogDescription>
           </DialogHeader>
           <EventForm 
             onSubmit={handleAddFormSubmit}
