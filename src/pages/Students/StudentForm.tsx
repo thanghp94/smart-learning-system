@@ -18,13 +18,18 @@ interface StudentFormProps {
   initialData?: Partial<Student>;
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  isSaving?: boolean;
 }
 
-const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCancel }) => {
+const StudentForm: React.FC<StudentFormProps> = ({ 
+  initialData, 
+  onSubmit, 
+  onCancel,
+  isSaving = false
+}) => {
   const { toast } = useToast();
   const [facilities, setFacilities] = useState<any[]>([]);
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadFacilities = async () => {
@@ -50,12 +55,15 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
   // Process initial data to match form structure
   const processedInitialData = initialData ? {
     ...initialData,
+    ngay_sinh: initialData.ngay_sinh ? new Date(initialData.ngay_sinh) : undefined,
+    han_hoc_phi: initialData.han_hoc_phi ? new Date(initialData.han_hoc_phi) : undefined,
+    ngay_bat_dau_hoc_phi: initialData.ngay_bat_dau_hoc_phi ? new Date(initialData.ngay_bat_dau_hoc_phi) : undefined,
   } : undefined;
   
   const defaultValues: Partial<StudentFormValues> = {
     ten_hoc_sinh: processedInitialData?.ten_hoc_sinh || "",
     gioi_tinh: processedInitialData?.gioi_tinh || "",
-    ngay_sinh: processedInitialData?.ngay_sinh ? new Date(processedInitialData.ngay_sinh) : undefined,
+    ngay_sinh: processedInitialData?.ngay_sinh,
     co_so_id: processedInitialData?.co_so_id || "",
     ten_PH: processedInitialData?.ten_PH || "",
     sdt_ph1: processedInitialData?.sdt_ph1 || "",
@@ -64,8 +72,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
     password: processedInitialData?.password || "",
     trang_thai: processedInitialData?.trang_thai || "active",
     ct_hoc: processedInitialData?.ct_hoc || "",
-    han_hoc_phi: processedInitialData?.han_hoc_phi ? new Date(processedInitialData.han_hoc_phi) : undefined,
-    ngay_bat_dau_hoc_phi: processedInitialData?.ngay_bat_dau_hoc_phi ? new Date(processedInitialData.ngay_bat_dau_hoc_phi) : undefined,
+    han_hoc_phi: processedInitialData?.han_hoc_phi,
+    ngay_bat_dau_hoc_phi: processedInitialData?.ngay_bat_dau_hoc_phi,
     ghi_chu: processedInitialData?.ghi_chu || "",
     parentpassword: processedInitialData?.parentpassword || "",
   };
@@ -75,30 +83,11 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
     defaultValues
   });
 
+  console.log("Current form values:", form.getValues());
+
   const handleSubmit = async (values: StudentFormValues) => {
-    try {
-      setIsSubmitting(true);
-      console.log("Form data to submit:", values);
-      
-      // Format the data for API submission
-      const formattedData = {
-        ...values,
-        ngay_sinh: values.ngay_sinh ? values.ngay_sinh : null,
-        han_hoc_phi: values.han_hoc_phi ? values.han_hoc_phi : null,
-        ngay_bat_dau_hoc_phi: values.ngay_bat_dau_hoc_phi ? values.ngay_bat_dau_hoc_phi : null,
-      };
-      
-      await onSubmit(formattedData);
-    } catch (error) {
-      console.error("Error submitting student form:", error);
-      toast({
-        title: "Lỗi",
-        description: "Có lỗi xảy ra khi lưu thông tin học sinh",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    console.log("Form values submitted:", values);
+    await onSubmit(values);
   };
 
   return (
@@ -117,11 +106,11 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
         <AdditionalInfoFields form={form} />
 
         <div className="flex justify-end space-x-2">
-          <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
+          <Button variant="outline" type="button" onClick={onCancel} disabled={isSaving}>
             Hủy
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
+          <Button type="submit" disabled={isSaving}>
+            {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Đang lưu...

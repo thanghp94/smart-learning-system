@@ -19,6 +19,7 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
 }) => {
   const [student, setStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -58,30 +59,40 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
 
   const handleFormSubmit = async (data: any) => {
     try {
+      setIsSaving(true);
       console.log("Submitting student data:", data);
       
       // Format the data for API submission
       const formattedData = {
         ...data,
-        ngay_sinh: data.ngay_sinh ? data.ngay_sinh : null,
-        han_hoc_phi: data.han_hoc_phi ? data.han_hoc_phi : null,
-        ngay_bat_dau_hoc_phi: data.ngay_bat_dau_hoc_phi ? data.ngay_bat_dau_hoc_phi : null,
+        ngay_sinh: data.ngay_sinh ? data.ngay_sinh.toISOString().split('T')[0] : null,
+        han_hoc_phi: data.han_hoc_phi ? data.han_hoc_phi.toISOString().split('T')[0] : null,
+        ngay_bat_dau_hoc_phi: data.ngay_bat_dau_hoc_phi ? data.ngay_bat_dau_hoc_phi.toISOString().split('T')[0] : null,
       };
       
       console.log("Formatted student data for submission:", formattedData);
       
+      let response;
       if (!isAdd && student) {
-        await studentService.update(student.id, formattedData);
-        toast({
-          title: "Thành công",
-          description: "Cập nhật thông tin học sinh thành công",
-        });
+        response = await studentService.update(student.id, formattedData);
+        if (response) {
+          toast({
+            title: "Thành công",
+            description: "Cập nhật thông tin học sinh thành công",
+          });
+        } else {
+          throw new Error("Không thể cập nhật thông tin học sinh");
+        }
       } else {
-        await studentService.create(formattedData);
-        toast({
-          title: "Thành công",
-          description: "Thêm học sinh mới thành công",
-        });
+        response = await studentService.create(formattedData);
+        if (response) {
+          toast({
+            title: "Thành công",
+            description: "Thêm học sinh mới thành công",
+          });
+        } else {
+          throw new Error("Không thể thêm học sinh mới");
+        }
       }
       
       navigate("/students");
@@ -92,6 +103,8 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
         description: "Có lỗi xảy ra khi lưu thông tin học sinh",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -116,6 +129,7 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
           initialData={student}
           onSubmit={handleFormSubmit}
           onCancel={handleFormCancel}
+          isSaving={isSaving}
         />
       )}
     </div>
