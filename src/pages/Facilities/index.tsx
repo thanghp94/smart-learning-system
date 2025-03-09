@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter } from "lucide-react";
+import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
 import { facilityService } from "@/lib/supabase";
@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import DetailPanel from "@/components/ui/DetailPanel";
 import FacilityDetail from "./FacilityDetail";
 import FacilityForm from "./FacilityForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
+import { useDatabase } from "@/contexts/DatabaseContext";
 
 const Facilities = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -21,6 +22,7 @@ const Facilities = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
+  const { isDemoMode, initializeDatabase } = useDatabase();
 
   useEffect(() => {
     fetchFacilities();
@@ -58,18 +60,31 @@ const Facilities = () => {
 
   const handleAddFacility = async (data: any) => {
     try {
-      await facilityService.create(data);
+      if (isDemoMode) {
+        // Handle demo mode
+        await initializeDatabase();
+        toast({
+          title: "Chế độ Demo",
+          description: "Đã khởi tạo dữ liệu demo. Vui lòng thử lại thao tác của bạn.",
+        });
+        fetchFacilities();
+        setShowAddDialog(false);
+        return;
+      }
+
+      // In real mode, add the facility
+      const newFacility = await facilityService.create(data);
+      setFacilities([...facilities, newFacility]);
       toast({
         title: "Thành công",
         description: "Đã thêm cơ sở mới vào hệ thống",
       });
       setShowAddDialog(false);
-      fetchFacilities();
     } catch (error) {
       console.error("Error adding facility:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể thêm cơ sở mới",
+        description: "Không thể thêm cơ sở mới. Vui lòng kiểm tra quyền truy cập của bạn.",
         variant: "destructive"
       });
     }
@@ -112,6 +127,9 @@ const Facilities = () => {
 
   const tableActions = (
     <div className="flex items-center space-x-2">
+      <Button variant="outline" size="sm" className="h-8" onClick={fetchFacilities}>
+        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
+      </Button>
       <Button variant="outline" size="sm" className="h-8">
         <Filter className="h-4 w-4 mr-1" /> Lọc
       </Button>
@@ -164,6 +182,9 @@ const Facilities = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Thêm Cơ Sở Mới</DialogTitle>
+            <DialogDescription>
+              Nhập thông tin cơ sở mới vào mẫu dưới đây
+            </DialogDescription>
           </DialogHeader>
           <FacilityForm 
             onSubmit={handleAddFacility}

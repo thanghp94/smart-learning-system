@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import DetailPanel from "@/components/ui/DetailPanel";
 import StudentDetail from "./StudentDetail";
 import StudentForm from "./StudentForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
+import { useDatabase } from "@/contexts/DatabaseContext";
 
 const Students = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -21,6 +22,7 @@ const Students = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
+  const { isDemoMode, initializeDatabase } = useDatabase();
 
   useEffect(() => {
     fetchStudents();
@@ -60,8 +62,21 @@ const Students = () => {
     setShowAddForm(false);
   };
 
-  const handleAddFormSubmit = async (formData: Partial<Student>) => {
+  const handleAddFormSubmit = async (formData: any) => {
     try {
+      if (isDemoMode) {
+        // Handle demo mode
+        await initializeDatabase();
+        toast({
+          title: "Chế độ Demo",
+          description: "Đã khởi tạo dữ liệu demo. Vui lòng thử lại thao tác của bạn.",
+        });
+        fetchStudents();
+        setShowAddForm(false);
+        return;
+      }
+
+      // In real mode, add the student
       const newStudent = await studentService.create(formData);
       setStudents([...students, newStudent]);
       toast({
@@ -81,40 +96,54 @@ const Students = () => {
 
   const columns = [
     {
-      title: "Tên Học Sinh",
+      title: "Họ và Tên",
       key: "ten_hoc_sinh",
       sortable: true,
     },
     {
       title: "Giới Tính",
       key: "gioi_tinh",
-      sortable: true,
     },
     {
       title: "Ngày Sinh",
       key: "ngay_sinh",
-      sortable: true,
-      render: (value: string) => value ? new Date(value).toLocaleDateString('vi-VN') : '',
+      render: (value: string) => value ? new Date(value).toLocaleDateString('vi-VN') : "",
     },
     {
-      title: "Phụ Huynh",
+      title: "Tên Phụ Huynh",
       key: "ten_PH",
     },
     {
-      title: "Số ĐT",
+      title: "Số Điện Thoại",
       key: "sdt_ph1",
     },
     {
-      title: "Chương Trình",
+      title: "Chương Trình Học",
       key: "ct_hoc",
     },
     {
-      title: "Trạng Thái",
+      title: "Hạn Học Phí",
+      key: "han_hoc_phi",
+      render: (value: string) => {
+        if (!value) return "";
+        const date = new Date(value);
+        const today = new Date();
+        const isExpired = date < today;
+        
+        return (
+          <span className={isExpired ? "text-red-500 font-medium" : ""}>
+            {date.toLocaleDateString('vi-VN')}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Tình Trạng",
       key: "trang_thai",
       sortable: true,
       render: (value: string) => (
         <Badge variant={value === "active" ? "success" : value === "inactive" ? "destructive" : "secondary"}>
-          {value === "active" ? "Đang học" : value === "inactive" ? "Nghỉ học" : "Chờ xử lý"}
+          {value === "active" ? "Đang học" : value === "inactive" ? "Đã nghỉ" : "Chờ xử lý"}
         </Badge>
       ),
     },
@@ -137,30 +166,30 @@ const Students = () => {
     </div>
   );
 
-  if (students.length === 0 && !isLoading) {
-    return (
-      <PlaceholderPage
-        title="Học Sinh"
-        description="Quản lý thông tin học sinh"
-        addButtonAction={handleAddClick}
-      />
-    );
-  }
-
   return (
-    <TablePageLayout
-      title="Học Sinh"
-      description="Quản lý thông tin học sinh"
-      actions={tableActions}
-    >
-      <DataTable
-        columns={columns}
-        data={students}
-        isLoading={isLoading}
-        onRowClick={handleRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm học sinh..."
-      />
+    <>
+      {students.length === 0 && !isLoading ? (
+        <PlaceholderPage
+          title="Học Sinh"
+          description="Quản lý thông tin học sinh"
+          addButtonAction={handleAddClick}
+        />
+      ) : (
+        <TablePageLayout
+          title="Học Sinh"
+          description="Quản lý thông tin học sinh"
+          actions={tableActions}
+        >
+          <DataTable
+            columns={columns}
+            data={students}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm học sinh..."
+          />
+        </TablePageLayout>
+      )}
 
       {selectedStudent && (
         <DetailPanel
@@ -176,14 +205,17 @@ const Students = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Thêm Học Sinh Mới</DialogTitle>
+            <DialogDescription>
+              Nhập thông tin học sinh mới vào mẫu dưới đây
+            </DialogDescription>
           </DialogHeader>
-          <StudentForm 
+          <StudentForm
             onSubmit={handleAddFormSubmit}
             onCancel={handleAddFormCancel}
           />
         </DialogContent>
       </Dialog>
-    </TablePageLayout>
+    </>
   );
 };
 

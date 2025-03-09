@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import DetailPanel from "@/components/ui/DetailPanel";
 import ClassDetail from "./ClassDetail";
 import ClassForm from "./ClassForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 
 const Classes = () => {
@@ -62,6 +62,7 @@ const Classes = () => {
 
   const handleAddFormSubmit = async (formData: Partial<Class>) => {
     try {
+      console.log("Submitting class data:", formData);
       const newClass = await classService.create(formData);
       setClasses([...classes, newClass]);
       toast({
@@ -168,6 +169,9 @@ const Classes = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Thêm Lớp Học Mới</DialogTitle>
+            <DialogDescription>
+              Nhập thông tin lớp học mới vào mẫu dưới đây
+            </DialogDescription>
           </DialogHeader>
           <ClassForm 
             onSubmit={handleAddFormSubmit}

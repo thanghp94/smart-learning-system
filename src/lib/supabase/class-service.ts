@@ -18,7 +18,7 @@ export const classService = {
     const { data, error } = await supabase
       .from('classes')
       .select('*')
-      .eq('facility_id', facilityId);
+      .eq('co_so', facilityId);
     
     if (error) {
       console.error('Error fetching classes by facility:', error);

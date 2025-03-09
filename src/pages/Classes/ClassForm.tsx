@@ -30,7 +30,7 @@ const classSchema = z.object({
   ten_lop: z.string().min(1, { message: "Tên lớp phải có ít nhất 1 ký tự" }),
   ct_hoc: z.string().optional(),
   co_so: z.string().optional(),
-  GV_chinh: z.string().optional(),
+  gv_chinh: z.string().optional(),
   ngay_bat_dau: z.string().optional(),
   tinh_trang: z.string().default("active"),
   ghi_chu: z.string().optional(),
@@ -98,7 +98,7 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel }
       ten_lop: initialData?.ten_lop || "",
       ct_hoc: initialData?.ct_hoc || "",
       co_so: initialData?.co_so as string || "",
-      GV_chinh: initialData?.GV_chinh as string || "",
+      gv_chinh: initialData?.gv_chinh as string || "",
       ngay_bat_dau: initialData?.ngay_bat_dau 
         ? new Date(initialData.ngay_bat_dau).toISOString().split("T")[0] 
         : "",
@@ -218,7 +218,7 @@ const ClassForm: React.FC<ClassFormProps> = ({ initialData, onSubmit, onCancel }
 
           <FormField
             control={form.control}
-            name="GV_chinh"
+            name="gv_chinh"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Giáo viên chính</FormLabel>
