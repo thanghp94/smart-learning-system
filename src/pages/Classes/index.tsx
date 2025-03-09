@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -129,30 +128,30 @@ const Classes = () => {
     </div>
   );
 
-  if (classes.length === 0 && !isLoading) {
-    return (
-      <PlaceholderPage
-        title="Lớp Học"
-        description="Quản lý thông tin lớp học"
-        addButtonAction={handleAddClick}
-      />
-    );
-  }
-
   return (
-    <TablePageLayout
-      title="Lớp Học"
-      description="Quản lý thông tin lớp học"
-      actions={tableActions}
-    >
-      <DataTable
-        columns={columns}
-        data={classes}
-        isLoading={isLoading}
-        onRowClick={handleRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm lớp học..."
-      />
+    <>
+      {classes.length === 0 && !isLoading ? (
+        <PlaceholderPage
+          title="Lớp Học"
+          description="Quản lý thông tin lớp học"
+          addButtonAction={handleAddClick}
+        />
+      ) : (
+        <TablePageLayout
+          title="Lớp Học"
+          description="Quản lý thông tin lớp học"
+          actions={tableActions}
+        >
+          <DataTable
+            columns={columns}
+            data={classes}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm lớp học..."
+          />
+        </TablePageLayout>
+      )}
 
       {selectedClass && (
         <DetailPanel
@@ -160,7 +159,7 @@ const Classes = () => {
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <ClassDetail classInfo={selectedClass} />
+          <ClassDetail classData={selectedClass} />
         </DetailPanel>
       )}
 
@@ -175,7 +174,7 @@ const Classes = () => {
           />
         </DialogContent>
       </Dialog>
-    </TablePageLayout>
+    </>
   );
 };
 

@@ -8,11 +8,14 @@ import { Payroll, Employee } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
+import PayrollForm from "./PayrollForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const PayrollPage = () => {
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,6 +57,33 @@ const PayrollPage = () => {
   const formatCurrency = (amount: number | null | undefined) => {
     if (amount === null || amount === undefined) return 'N/A';
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+
+  const handleAddClick = () => {
+    setShowAddForm(true);
+  };
+
+  const handleAddFormCancel = () => {
+    setShowAddForm(false);
+  };
+
+  const handleAddFormSubmit = async (formData: Partial<Payroll>) => {
+    try {
+      await payrollService.create(formData);
+      toast({
+        title: "Thành công",
+        description: "Thêm bảng lương mới thành công",
+      });
+      setShowAddForm(false);
+      fetchPayrolls();
+    } catch (error) {
+      console.error("Error adding payroll:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thêm bảng lương mới",
+        variant: "destructive"
+      });
+    }
   };
 
   const columns = [
@@ -103,7 +133,7 @@ const PayrollPage = () => {
       <Button variant="outline" size="sm" className="h-8">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
-      <Button size="sm" className="h-8">
+      <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Tạo Bảng Lương
       </Button>
     </div>
@@ -111,28 +141,57 @@ const PayrollPage = () => {
 
   if (payrolls.length === 0 && !isLoading) {
     return (
-      <PlaceholderPage
-        title="Lương"
-        description="Quản lý bảng lương nhân viên"
-        icon={<DollarSign className="h-16 w-16 text-muted-foreground/40" />}
-      />
+      <>
+        <PlaceholderPage
+          title="Lương"
+          description="Quản lý bảng lương nhân viên"
+          icon={<DollarSign className="h-16 w-16 text-muted-foreground/40" />}
+          addButtonAction={handleAddClick}
+        />
+        
+        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Tạo Bảng Lương Mới</DialogTitle>
+            </DialogHeader>
+            <PayrollForm 
+              onSubmit={handleAddFormSubmit}
+              onCancel={handleAddFormCancel}
+            />
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
   return (
-    <TablePageLayout
-      title="Lương"
-      description="Quản lý bảng lương nhân viên"
-      actions={tableActions}
-    >
-      <DataTable
-        columns={columns}
-        data={payrolls}
-        isLoading={isLoading}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm bảng lương..."
-      />
-    </TablePageLayout>
+    <>
+      <TablePageLayout
+        title="Lương"
+        description="Quản lý bảng lương nhân viên"
+        actions={tableActions}
+      >
+        <DataTable
+          columns={columns}
+          data={payrolls}
+          isLoading={isLoading}
+          searchable={true}
+          searchPlaceholder="Tìm kiếm bảng lương..."
+        />
+      </TablePageLayout>
+
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Tạo Bảng Lương Mới</DialogTitle>
+          </DialogHeader>
+          <PayrollForm 
+            onSubmit={handleAddFormSubmit}
+            onCancel={handleAddFormCancel}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
