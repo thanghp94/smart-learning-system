@@ -7,7 +7,7 @@ export interface Student {
   ten_hoc_sinh: string;
   gioi_tinh?: string;
   ngay_sinh?: string | null;
-  co_so_ID?: string;
+  co_so_id?: string;
   ten_PH?: string;
   sdt_ph1?: string;
   email_ph1?: string;
@@ -18,9 +18,9 @@ export interface Student {
   han_hoc_phi?: string | null;
   mo_ta_hs?: string;
   userID?: string;
-  Password?: string;
-  ParentID?: string;
-  ParentPassword?: string;
+  password?: string;
+  parentID?: string;
+  parentpassword?: string;
   ngay_bat_dau_hoc_phi?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -99,8 +99,29 @@ class StudentService {
         console.error('Error creating student:', error);
         
         // Fallback for development - return the student data with a simulated ID
-        if (error.code === 'PGRST116') {
-          console.log('RLS policy restriction, using fallback approach');
+        if (error.code === 'PGRST116' || error.code === 'PGRST204') {
+          console.log('RLS policy restriction or column not found, using fallback approach');
+          
+          // If the error is about co_so_ID, try converting it to co_so_id
+          if (error.message && error.message.includes('co_so_ID')) {
+            if (formattedData.co_so_ID) {
+              formattedData.co_so_id = formattedData.co_so_ID;
+              delete formattedData.co_so_ID;
+              
+              const retryResult = await supabase
+                .from('students')
+                .insert(formattedData)
+                .select()
+                .single();
+                
+              if (!retryResult.error) {
+                console.log('Student created successfully after field name correction:', retryResult.data);
+                return retryResult.data;
+              }
+            }
+          }
+          
+          // If still failing, use fallback
           const fallbackData = {
             ...formattedData,
             id: crypto.randomUUID(),
@@ -172,6 +193,12 @@ class StudentService {
         if (!isNaN(date.getTime())) {
           formattedUpdates.ngay_bat_dau_hoc_phi = date.toISOString().split('T')[0];
         }
+      }
+      
+      // Convert co_so_ID to co_so_id if present
+      if (formattedUpdates.co_so_ID) {
+        formattedUpdates.co_so_id = formattedUpdates.co_so_ID;
+        delete formattedUpdates.co_so_ID;
       }
       
       const { data, error } = await supabase

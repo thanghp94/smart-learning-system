@@ -110,7 +110,7 @@ const PersonalInfoFields: React.FC<PersonalInfoFieldsProps> = ({
 
       <FormField
         control={form.control}
-        name="co_so_ID"
+        name="co_so_id"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Cơ sở</FormLabel>

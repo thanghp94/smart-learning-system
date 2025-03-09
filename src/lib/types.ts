@@ -3,6 +3,7 @@ export interface Student {
   ten_hoc_sinh: string;
   gioi_tinh?: string;
   ngay_sinh?: string | Date;
+  co_so_id?: string;
   co_so_ID?: string;
   ten_PH?: string;
   sdt_ph1?: string;

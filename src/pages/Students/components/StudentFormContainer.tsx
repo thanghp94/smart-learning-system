@@ -34,7 +34,8 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
       const data = await studentService.getById(id);
       
       if (data) {
-        setStudent(data);
+        // Cast the data to Student type to avoid TypeScript errors
+        setStudent(data as unknown as Student);
       } else {
         toast({
           title: "Lỗi",
@@ -60,11 +61,13 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
     try {
       console.log("Submitting student data:", data);
       
-      // Convert field names to match database column names
-      // Column name in database is co_so_ID, not co_so_id
+      // Making sure we use the correct field name for the facility ID
+      // Database expects co_so_id (lowercase)
       if (data.co_so_id) {
-        data.co_so_ID = data.co_so_id;
-        delete data.co_so_id;
+        data.co_so_id = data.co_so_id;
+      } else if (data.co_so_ID) {
+        data.co_so_id = data.co_so_ID;
+        delete data.co_so_ID;
       }
       
       // Ensure all date fields are properly formatted for Supabase
@@ -83,7 +86,7 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
       console.log("Formatted student data for submission:", data);
       
       if (!isAdd && student) {
-        await studentService.update(student.id!, data);
+        await studentService.update(student.id, data);
         toast({
           title: "Thành công",
           description: "Cập nhật thông tin học sinh thành công",

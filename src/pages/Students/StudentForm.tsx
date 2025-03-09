@@ -47,22 +47,28 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
     loadFacilities();
   }, [toast]);
 
+  // Convert co_so_ID to co_so_id for compatibility
+  const processedInitialData = initialData ? {
+    ...initialData,
+    co_so_id: initialData.co_so_ID || initialData.co_so_id
+  } : undefined;
+  
   const defaultValues: Partial<StudentFormValues> = {
-    ten_hoc_sinh: initialData?.ten_hoc_sinh || "",
-    gioi_tinh: initialData?.gioi_tinh || "",
-    ngay_sinh: initialData?.ngay_sinh ? new Date(initialData.ngay_sinh) : undefined,
-    co_so_ID: initialData?.co_so_ID || "",
-    ten_PH: initialData?.ten_PH || "",
-    sdt_ph1: initialData?.sdt_ph1 || "",
-    email_ph1: initialData?.email_ph1 || "",
-    dia_chi: initialData?.dia_chi || "",
-    password: initialData?.password || "",
-    trang_thai: initialData?.trang_thai || "active",
-    ct_hoc: initialData?.ct_hoc || "",
-    han_hoc_phi: initialData?.han_hoc_phi ? new Date(initialData.han_hoc_phi) : undefined,
-    ngay_bat_dau_hoc_phi: initialData?.ngay_bat_dau_hoc_phi ? new Date(initialData.ngay_bat_dau_hoc_phi) : undefined,
-    ghi_chu: initialData?.ghi_chu || "",
-    parentpassword: initialData?.parentpassword || "",
+    ten_hoc_sinh: processedInitialData?.ten_hoc_sinh || "",
+    gioi_tinh: processedInitialData?.gioi_tinh || "",
+    ngay_sinh: processedInitialData?.ngay_sinh ? new Date(processedInitialData.ngay_sinh) : undefined,
+    co_so_id: processedInitialData?.co_so_id || "",
+    ten_PH: processedInitialData?.ten_PH || "",
+    sdt_ph1: processedInitialData?.sdt_ph1 || "",
+    email_ph1: processedInitialData?.email_ph1 || "",
+    dia_chi: processedInitialData?.dia_chi || "",
+    password: processedInitialData?.password || "",
+    trang_thai: processedInitialData?.trang_thai || "active",
+    ct_hoc: processedInitialData?.ct_hoc || "",
+    han_hoc_phi: processedInitialData?.han_hoc_phi ? new Date(processedInitialData.han_hoc_phi) : undefined,
+    ngay_bat_dau_hoc_phi: processedInitialData?.ngay_bat_dau_hoc_phi ? new Date(processedInitialData.ngay_bat_dau_hoc_phi) : undefined,
+    ghi_chu: processedInitialData?.ghi_chu || "",
+    parentpassword: processedInitialData?.parentpassword || "",
   };
 
   const form = useForm<StudentFormValues>({

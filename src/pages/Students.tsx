@@ -32,7 +32,8 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
       setIsLoading(true);
       const data = await studentService.getAll();
       console.log("Students data received:", data);
-      setStudents(data || []);
+      // Cast the data to Student[] type to avoid TypeScript errors
+      setStudents(data as unknown as Student[] || []);
     } catch (error) {
       console.error("Error fetching students:", error);
       toast({
