@@ -2,7 +2,7 @@
 import { initializeSupabase, seedInitialData } from '@/lib/supabase-config';
 import { toast } from '@/hooks/use-toast';
 
-export const setupDatabase = async (initialize = true, seed = true) => {
+export const setupDatabase = async (initialize = true, seed = false) => {
   try {
     let result;
     

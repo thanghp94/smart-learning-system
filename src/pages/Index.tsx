@@ -81,7 +81,7 @@ const Index = () => {
       await initializeDatabase();
       toast({
         title: "Khởi tạo dữ liệu",
-        description: "Đã khởi tạo dữ liệu mẫu thành công",
+        description: "Đã khởi tạo cấu trúc dữ liệu thành công",
       });
       // Recheck connection after initialization
       setTimeout(checkDatabaseConnection, 1000);
@@ -89,7 +89,7 @@ const Index = () => {
       console.error("Error initializing database:", error);
       toast({
         title: "Lỗi khởi tạo",
-        description: "Không thể khởi tạo dữ liệu mẫu",
+        description: "Không thể khởi tạo cấu trúc dữ liệu",
         variant: "destructive"
       });
     }

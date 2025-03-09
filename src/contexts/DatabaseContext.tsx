@@ -23,7 +23,8 @@ export const useDatabase = () => useContext(DatabaseContext);
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false); // Set to false to disable demo mode
+  // Set isDemoMode to false to disable demo mode
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const { toast } = useToast();
 
   const checkDatabaseStatus = async () => {

@@ -13,7 +13,8 @@ import RealSchemaTab from "./components/RealSchemaTab";
 
 const DatabaseSchema = () => {
   const { schemaData, loading } = useSchemaData();
-  const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
+  // Disable demo mode by forcing isDemoMode to false
+  const isDemoMode = false;
 
   return (
     <TablePageLayout
