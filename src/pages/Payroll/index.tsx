@@ -82,18 +82,8 @@ const PayrollPage = () => {
     try {
       console.log("Inserting record into payrolls:", formData);
       
-      // Update required fields to ensure they're not undefined or empty
-      const payrollData = {
-        ...formData,
-        luong: formData.luong || 0,
-        tong_thu_nhap: formData.tong_thu_nhap || 0,
-        cong_chuan: formData.cong_chuan || 22,
-        cong_thuc_lam: formData.cong_thuc_lam || 22,
-        trang_thai: formData.trang_thai || "pending"
-      };
-      
       // The phu_cap field will be removed in the service layer
-      await payrollService.create(payrollData);
+      await payrollService.create(formData);
       
       toast({
         title: "Thành công",
@@ -103,18 +93,9 @@ const PayrollPage = () => {
       fetchPayrolls();
     } catch (error) {
       console.error("Error adding payroll:", error);
-      
-      // Provide more specific error message based on the error type
-      let errorMessage = "Không thể thêm bảng lương mới. Vui lòng kiểm tra lại dữ liệu.";
-      
-      // If it's a row-level security policy error
-      if (error && typeof error === 'object' && 'code' in error && error.code === '42501') {
-        errorMessage = "Bạn không có quyền thêm bảng lương. Vui lòng liên hệ quản trị viên.";
-      }
-      
       toast({
         title: "Lỗi",
-        description: errorMessage,
+        description: "Không thể thêm bảng lương mới. Vui lòng kiểm tra lại dữ liệu.",
         variant: "destructive"
       });
     }
