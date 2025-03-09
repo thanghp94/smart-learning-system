@@ -52,11 +52,11 @@ const FilesPage = () => {
     try {
       console.log("Submitting file data:", formData);
 
-      // Convert dates to ISO strings for the API
+      // Convert dates to ISO strings for the API, ensuring they are Date objects first
       const formattedData = {
         ...formData,
-        ngay_cap: formData.ngay_cap ? formData.ngay_cap.toISOString().split('T')[0] : null,
-        han_tai_lieu: formData.han_tai_lieu ? formData.han_tai_lieu.toISOString().split('T')[0] : null,
+        ngay_cap: formData.ngay_cap instanceof Date ? formData.ngay_cap.toISOString().split('T')[0] : formData.ngay_cap,
+        han_tai_lieu: formData.han_tai_lieu instanceof Date ? formData.han_tai_lieu.toISOString().split('T')[0] : formData.han_tai_lieu,
       };
 
       await fileService.create(formattedData);
