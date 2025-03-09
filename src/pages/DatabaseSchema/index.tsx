@@ -13,12 +13,19 @@ import RealSchemaTab from "./components/RealSchemaTab";
 
 const DatabaseSchema = () => {
   const { schemaData, loading } = useSchemaData();
+  const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   return (
     <TablePageLayout
       title="Cơ Sở Dữ Liệu"
       description="Danh sách các bảng dữ liệu và mục đích sử dụng của chúng trong hệ thống"
     >
+      {isDemoMode && (
+        <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+          Demo mode active - showing sample schema data. Configure Supabase to see actual database schema.
+        </div>
+      )}
+      
       <Tabs defaultValue="all-tables" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="all-tables">Tất Cả Bảng</TabsTrigger>

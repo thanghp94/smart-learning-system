@@ -13,6 +13,31 @@ export const useSchemaData = () => {
   useEffect(() => {
     const fetchSchema = async () => {
       try {
+        // Check if Supabase is properly configured
+        const isSupabaseConfigured = 
+          import.meta.env.VITE_SUPABASE_URL && 
+          import.meta.env.VITE_SUPABASE_ANON_KEY;
+          
+        if (!isSupabaseConfigured) {
+          // Set some dummy data for preview purposes when Supabase isn't configured
+          setSchemaData([
+            { table_name: "students", column_count: 12 },
+            { table_name: "classes", column_count: 8 },
+            { table_name: "employees", column_count: 15 },
+            { table_name: "assets", column_count: 10 },
+            { table_name: "teaching_sessions", column_count: 7 }
+          ]);
+          
+          console.log("Using sample data - Supabase not configured");
+          toast({
+            title: "Demo Mode",
+            description: "Using sample data as Supabase is not configured",
+            variant: "default",
+          });
+          setLoading(false);
+          return;
+        }
+        
         // Setup schema function if not exists
         await setupSchemaFunction();
         
