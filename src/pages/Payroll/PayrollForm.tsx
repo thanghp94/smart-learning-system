@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +21,6 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 
-// Fixing the type error by allowing numbers in the schema but coercing them to string
 const payrollSchema = z.object({
   nhan_su_id: z.string().min(1, { message: "Vui lòng chọn nhân viên" }),
   nam: z.string().min(1, { message: "Vui lòng nhập năm" }),
@@ -79,14 +77,12 @@ const PayrollForm: React.FC<PayrollFormProps> = ({
     },
   });
 
-  // Get all form values to calculate total income when salary, allowances change
   const watchSalary = form.watch("luong");
   const watchPC1 = form.watch("pc_tnhiem") || 0;
   const watchPC2 = form.watch("pc_an_o") || 0;
   const watchPC3 = form.watch("pc_dthoai") || 0;
   const watchPC4 = form.watch("pc_xang_xe") || 0;
 
-  // Calculate total income when any salary component changes
   React.useEffect(() => {
     const totalIncome = watchSalary + watchPC1 + watchPC2 + watchPC3 + watchPC4;
     form.setValue("tong_thu_nhap", totalIncome);
