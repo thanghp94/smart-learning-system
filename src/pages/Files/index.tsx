@@ -11,6 +11,7 @@ import PlaceholderPage from "@/components/common/PlaceholderPage";
 import FileForm from "./FileForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
+import { FileFormValues } from "./schemas/fileSchema";
 
 const FilesPage = () => {
   const [files, setFiles] = useState<FileDocument[]>([]);
@@ -47,14 +48,14 @@ const FilesPage = () => {
     setShowAddForm(false);
   };
 
-  const handleAddFormSubmit = async (formData: Partial<FileDocument>) => {
+  const handleAddFormSubmit = async (formData: FileFormValues) => {
     try {
       console.log("Submitting file data:", formData);
 
       const formattedData = {
         ...formData,
-        ngay_cap: formData.ngay_cap ? new Date(formData.ngay_cap).toISOString().split('T')[0] : null,
-        han_tai_lieu: formData.han_tai_lieu ? new Date(formData.han_tai_lieu).toISOString().split('T')[0] : null,
+        ngay_cap: formData.ngay_cap || null,
+        han_tai_lieu: formData.han_tai_lieu || null,
       };
 
       await fileService.create(formattedData);

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +22,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 
+// Define the contact schema
 const contactSchema = z.object({
   ten_lien_he: z.string().min(2, { message: "Tên liên hệ phải có ít nhất 2 ký tự" }),
   phan_loai: z.string().min(1, { message: "Phân loại là bắt buộc" }),
@@ -46,6 +46,7 @@ interface ContactFormProps {
 }
 
 const ContactForm: React.FC<ContactFormProps> = ({ initialData, onSubmit, onCancel }) => {
+  // Process date values for form initialization
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
@@ -63,9 +64,11 @@ const ContactForm: React.FC<ContactFormProps> = ({ initialData, onSubmit, onCanc
     },
   });
 
+  // ... keep existing code (form JSX)
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* ... keep existing code (form fields) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}

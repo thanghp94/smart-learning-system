@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,12 @@ const Contacts = () => {
 
   const handleAddFormSubmit = async (formData: Partial<Contact>) => {
     try {
-      const newContact = await contactService.create(formData);
+      const formattedData = {
+        ...formData,
+        ngay_sinh: formData.ngay_sinh ? new Date(formData.ngay_sinh).toISOString().split('T')[0] : null,
+      };
+
+      const newContact = await contactService.create(formattedData);
       setContacts([...contacts, newContact]);
       toast({
         title: "Thành công",
