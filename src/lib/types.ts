@@ -106,6 +106,10 @@ export interface Enrollment {
   nhan_xet_tieu_chi_2?: string;
   nhan_xet_tieu_chi_3?: string;
   chon_de_danh_gia?: boolean;
+  ten_hoc_sinh?: string;
+  ten_lop_full?: string;
+  ten_lop?: string;
+  ct_hoc?: string;
 }
 
 export interface ActivityItem {

@@ -73,7 +73,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, enrollments = []
             <dl className="space-y-2">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Tên phụ huynh</dt>
-                <dd>{student.ten_ph || "Chưa có thông tin"}</dd>
+                <dd>{student.ten_PH || "Chưa có thông tin"}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Số điện thoại</dt>
