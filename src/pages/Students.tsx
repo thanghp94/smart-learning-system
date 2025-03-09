@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
 import DataTable from "@/components/ui/DataTable";
 import DetailPanel from "@/components/ui/DetailPanel";
@@ -14,19 +15,30 @@ import { Calendar, Mail, Phone, MapPin, School, Clock, Loader2 } from "lucide-re
 import { cn } from "@/lib/utils";
 import { studentService } from "@/lib/supabase/student-service";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import StudentForm from "./Students/StudentForm";
 
-const Students = () => {
+interface StudentsProps {
+  add?: boolean;
+  edit?: boolean;
+}
+
+const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
+  const { id } = useParams<{ id: string }>();
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    if (!add && !edit) {
+      fetchStudents();
+    } else if (edit && id) {
+      fetchStudentById(id);
+    }
+  }, [add, edit, id]);
 
   const fetchStudents = async () => {
     try {
@@ -46,6 +58,33 @@ const Students = () => {
     }
   };
 
+  const fetchStudentById = async (studentId: string) => {
+    try {
+      setIsLoading(true);
+      const data = await studentService.getById(studentId);
+      if (data) {
+        setSelectedStudent(data);
+      } else {
+        toast({
+          title: "Lỗi",
+          description: "Không tìm thấy thông tin học sinh.",
+          variant: "destructive",
+        });
+        navigate("/students");
+      }
+    } catch (error) {
+      console.error("Error fetching student:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải thông tin học sinh.",
+        variant: "destructive",
+      });
+      navigate("/students");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRowClick = (student: Student) => {
     setSelectedStudent(student);
     setDetailOpen(true);
@@ -59,6 +98,39 @@ const Students = () => {
     if (selectedStudent) {
       navigate(`/students/edit/${selectedStudent.id}`);
     }
+  };
+
+  const handleFormSubmit = async (data: any) => {
+    try {
+      console.log("Submitting student data:", data);
+      
+      if (edit && selectedStudent) {
+        await studentService.update(selectedStudent.id, data);
+        toast({
+          title: "Thành công",
+          description: "Cập nhật thông tin học sinh thành công",
+        });
+      } else {
+        await studentService.create(data);
+        toast({
+          title: "Thành công",
+          description: "Thêm học sinh mới thành công",
+        });
+      }
+      
+      navigate("/students");
+    } catch (error) {
+      console.error("Error saving student:", error);
+      toast({
+        title: "Lỗi",
+        description: "Có lỗi xảy ra khi lưu thông tin học sinh",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFormCancel = () => {
+    navigate("/students");
   };
 
   const columns = [
@@ -137,6 +209,31 @@ const Students = () => {
       sortable: true
     }
   ];
+
+  // Show form for add/edit
+  if (add || (edit && selectedStudent)) {
+    return (
+      <div className="container mx-auto py-6">
+        <PageHeader
+          title={add ? "Thêm Học Sinh" : "Sửa Thông Tin Học Sinh"}
+          description={add ? "Thêm học sinh mới vào hệ thống" : "Cập nhật thông tin học sinh"}
+        />
+        
+        {isLoading && edit ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Đang tải dữ liệu...</span>
+          </div>
+        ) : (
+          <StudentForm
+            initialData={selectedStudent}
+            onSubmit={handleFormSubmit}
+            onCancel={handleFormCancel}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <>

@@ -38,12 +38,15 @@ export const studentService = {
   
   getById: async (id: string) => {
     try {
+      console.log(`Fetching student with ID: ${id}`);
       const student = await fetchById<Student>('students', id);
       if (student) {
+        console.log("Student found using standard approach");
         return student;
       }
       
       // Fallback to direct query
+      console.log("Student not found, trying direct query");
       const { data, error } = await supabase
         .from('students')
         .select('*')
@@ -55,6 +58,7 @@ export const studentService = {
         return null;
       }
       
+      console.log("Student found using direct query");
       return data as Student;
     } catch (error) {
       console.error("Error fetching student by ID:", error);
@@ -71,19 +75,20 @@ export const studentService = {
     };
     
     // Convert Date objects to ISO strings if they exist
-    if (student.ngay_sinh && typeof student.ngay_sinh !== 'string') {
-      formattedData.ngay_sinh = new Date(student.ngay_sinh).toISOString().split('T')[0];
+    if (student.ngay_sinh && student.ngay_sinh instanceof Date) {
+      formattedData.ngay_sinh = student.ngay_sinh.toISOString().split('T')[0];
     }
     
-    if (student.han_hoc_phi && typeof student.han_hoc_phi !== 'string') {
-      formattedData.han_hoc_phi = new Date(student.han_hoc_phi).toISOString().split('T')[0];
+    if (student.han_hoc_phi && student.han_hoc_phi instanceof Date) {
+      formattedData.han_hoc_phi = student.han_hoc_phi.toISOString().split('T')[0];
     }
     
-    if (student.ngay_bat_dau_hoc_phi && typeof student.ngay_bat_dau_hoc_phi !== 'string') {
-      formattedData.ngay_bat_dau_hoc_phi = new Date(student.ngay_bat_dau_hoc_phi).toISOString().split('T')[0];
+    if (student.ngay_bat_dau_hoc_phi && student.ngay_bat_dau_hoc_phi instanceof Date) {
+      formattedData.ngay_bat_dau_hoc_phi = student.ngay_bat_dau_hoc_phi.toISOString().split('T')[0];
     }
     
     try {
+      console.log("Attempting to insert student with data:", formattedData);
       // Try standard insert first
       const result = await insert<Student>('students', formattedData);
       
@@ -115,28 +120,33 @@ export const studentService = {
   
   update: async (id: string, updates: Partial<Student>) => {
     try {
+      console.log(`Updating student with ID ${id}:`, updates);
+      
       // Format date fields for update
       const formattedUpdates: Partial<Student> = { ...updates };
       
-      if (updates.ngay_sinh && typeof updates.ngay_sinh !== 'string') {
-        formattedUpdates.ngay_sinh = new Date(updates.ngay_sinh).toISOString().split('T')[0];
+      if (updates.ngay_sinh && updates.ngay_sinh instanceof Date) {
+        formattedUpdates.ngay_sinh = updates.ngay_sinh.toISOString().split('T')[0];
       }
       
-      if (updates.han_hoc_phi && typeof updates.han_hoc_phi !== 'string') {
-        formattedUpdates.han_hoc_phi = new Date(updates.han_hoc_phi).toISOString().split('T')[0];
+      if (updates.han_hoc_phi && updates.han_hoc_phi instanceof Date) {
+        formattedUpdates.han_hoc_phi = updates.han_hoc_phi.toISOString().split('T')[0];
       }
       
-      if (updates.ngay_bat_dau_hoc_phi && typeof updates.ngay_bat_dau_hoc_phi !== 'string') {
-        formattedUpdates.ngay_bat_dau_hoc_phi = new Date(updates.ngay_bat_dau_hoc_phi).toISOString().split('T')[0];
+      if (updates.ngay_bat_dau_hoc_phi && updates.ngay_bat_dau_hoc_phi instanceof Date) {
+        formattedUpdates.ngay_bat_dau_hoc_phi = updates.ngay_bat_dau_hoc_phi.toISOString().split('T')[0];
       }
       
+      console.log("Formatted updates:", formattedUpdates);
       const result = await update<Student>('students', id, formattedUpdates);
       
       if (result) {
+        console.log("Updated student successfully:", result);
         return result;
       }
       
       // Fallback to direct update
+      console.log("Attempting direct student update...");
       const { data, error } = await supabase
         .from('students')
         .update(formattedUpdates)
@@ -149,6 +159,7 @@ export const studentService = {
         throw error;
       }
       
+      console.log("Updated student with direct update:", data);
       return data as Student;
     } catch (error) {
       console.error("Error updating student:", error);

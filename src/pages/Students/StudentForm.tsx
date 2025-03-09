@@ -23,6 +23,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
   const { toast } = useToast();
   const [facilities, setFacilities] = useState<any[]>([]);
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadFacilities = async () => {
@@ -68,10 +69,20 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
     defaultValues
   });
 
-  const handleSubmit = (values: StudentFormValues) => {
+  const handleSubmit = async (values: StudentFormValues) => {
     try {
+      setIsSubmitting(true);
       console.log("Form data to submit:", values);
-      onSubmit(values);
+      
+      // Format the data for API submission
+      const formattedData = {
+        ...values,
+        ngay_sinh: values.ngay_sinh ? values.ngay_sinh : null,
+        han_hoc_phi: values.han_hoc_phi ? values.han_hoc_phi : null,
+        ngay_bat_dau_hoc_phi: values.ngay_bat_dau_hoc_phi ? values.ngay_bat_dau_hoc_phi : null,
+      };
+      
+      await onSubmit(formattedData);
     } catch (error) {
       console.error("Error submitting student form:", error);
       toast({
@@ -79,6 +90,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
         description: "Có lỗi xảy ra khi lưu thông tin học sinh",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -98,10 +111,19 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
         <AdditionalInfoFields form={form} />
 
         <div className="flex justify-end space-x-2">
-          <Button variant="outline" type="button" onClick={onCancel}>
+          <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
             Hủy
           </Button>
-          <Button type="submit">Lưu</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang lưu...
+              </>
+            ) : (
+              "Lưu"
+            )}
+          </Button>
         </div>
       </form>
     </Form>
