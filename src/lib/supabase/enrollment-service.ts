@@ -9,6 +9,21 @@ export const enrollmentService = {
   create: (enrollment: Partial<Enrollment>) => insert<Enrollment>('enrollments', enrollment),
   update: (id: string, updates: Partial<Enrollment>) => update<Enrollment>('enrollments', id, updates),
   delete: (id: string) => remove('enrollments', id),
+  
+  getByStudent: async (studentId: string): Promise<Enrollment[]> => {
+    const { data, error } = await supabase
+      .from('enrollments')
+      .select('*')
+      .eq('hoc_sinh_id', studentId);
+    
+    if (error) {
+      console.error('Error fetching enrollments by student:', error);
+      throw error;
+    }
+    
+    return data as Enrollment[];
+  },
+  
   getByClass: async (classId: string): Promise<Enrollment[]> => {
     const { data, error } = await supabase
       .from('enrollments')
@@ -22,17 +37,29 @@ export const enrollmentService = {
     
     return data as Enrollment[];
   },
-  getByStudent: async (studentId: string): Promise<Enrollment[]> => {
+  
+  getBySession: async (sessionId: string): Promise<Enrollment[]> => {
     const { data, error } = await supabase
       .from('enrollments')
       .select('*')
-      .eq('hoc_sinh_id', studentId);
+      .eq('buoi_day_id', sessionId);
     
     if (error) {
-      console.error('Error fetching enrollments by student:', error);
+      console.error('Error fetching enrollments by session:', error);
       throw error;
     }
     
     return data as Enrollment[];
+  },
+  
+  markAttendance: async (
+    id: string, 
+    status: string, 
+    notes?: string
+  ): Promise<Enrollment> => {
+    return update<Enrollment>('enrollments', id, {
+      tinh_trang_diem_danh: status,
+      ghi_chu: notes
+    });
   }
 };
