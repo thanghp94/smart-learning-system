@@ -7,25 +7,44 @@ export const teachingSessionService = {
   getAll: () => fetchAll<TeachingSession>('teaching_sessions'),
   getById: (id: string) => fetchById<TeachingSession>('teaching_sessions', id),
   
-  create: (session: Partial<TeachingSession>) => {
-    // Convert numeric values to strings before saving to match the database schema
-    const formattedSession: Partial<TeachingSession> = {
-      ...session,
-      nhan_xet_1: session.nhan_xet_1 !== undefined && session.nhan_xet_1 !== null ? 
-        String(session.nhan_xet_1) : null,
-      nhan_xet_2: session.nhan_xet_2 !== undefined && session.nhan_xet_2 !== null ? 
-        String(session.nhan_xet_2) : null,
-      nhan_xet_3: session.nhan_xet_3 !== undefined && session.nhan_xet_3 !== null ? 
-        String(session.nhan_xet_3) : null,
-      nhan_xet_4: session.nhan_xet_4 !== undefined && session.nhan_xet_4 !== null ? 
-        String(session.nhan_xet_4) : null,
-      nhan_xet_5: session.nhan_xet_5 !== undefined && session.nhan_xet_5 !== null ? 
-        String(session.nhan_xet_5) : null,
-      nhan_xet_6: session.nhan_xet_6 !== undefined && session.nhan_xet_6 !== null ? 
-        String(session.nhan_xet_6) : null,
-    };
-    
-    return insert<TeachingSession>('teaching_sessions', formattedSession);
+  create: async (session: Partial<TeachingSession>) => {
+    try {
+      console.log("Creating teaching session with data:", session);
+      
+      // Convert numeric values to strings before saving to match the database schema
+      const formattedSession: Partial<TeachingSession> = {
+        ...session,
+        nhan_xet_1: session.nhan_xet_1 !== undefined && session.nhan_xet_1 !== null ? 
+          String(session.nhan_xet_1) : null,
+        nhan_xet_2: session.nhan_xet_2 !== undefined && session.nhan_xet_2 !== null ? 
+          String(session.nhan_xet_2) : null,
+        nhan_xet_3: session.nhan_xet_3 !== undefined && session.nhan_xet_3 !== null ? 
+          String(session.nhan_xet_3) : null,
+        nhan_xet_4: session.nhan_xet_4 !== undefined && session.nhan_xet_4 !== null ? 
+          String(session.nhan_xet_4) : null,
+        nhan_xet_5: session.nhan_xet_5 !== undefined && session.nhan_xet_5 !== null ? 
+          String(session.nhan_xet_5) : null,
+        nhan_xet_6: session.nhan_xet_6 !== undefined && session.nhan_xet_6 !== null ? 
+          String(session.nhan_xet_6) : null,
+      };
+      
+      // Make a direct insert to get better error visibility
+      const { data, error } = await supabase
+        .from('teaching_sessions')
+        .insert(formattedSession)
+        .select();
+      
+      if (error) {
+        console.error("Error in teachingSessionService.create:", error);
+        throw error;
+      }
+      
+      console.log("Successfully created teaching session:", data);
+      return data[0] as TeachingSession;
+    } catch (error) {
+      console.error("Exception in teachingSessionService.create:", error);
+      throw error;
+    }
   },
   
   update: (id: string, updates: Partial<TeachingSession>) => {

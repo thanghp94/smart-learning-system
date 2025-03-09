@@ -12,7 +12,7 @@ import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
 import SessionDetail from "./SessionDetail";
 import SessionForm from "./SessionForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const TeachingSessions = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
@@ -101,21 +101,27 @@ const TeachingSessions = () => {
 
   const handleSessionSubmit = async (sessionData: Partial<TeachingSession>) => {
     try {
+      setIsLoading(true);
       console.log("Submitting session data:", sessionData);
+      
       await teachingSessionService.create(sessionData);
+      
       toast({
         title: "Thành công",
         description: "Đã thêm buổi học mới vào hệ thống",
       });
+      
       setShowAddForm(false);
       fetchData(); // Refresh the list after adding a new session
     } catch (error) {
       console.error("Error adding session:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể thêm buổi học mới",
+        description: "Không thể thêm buổi học mới: " + (error as Error).message,
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -217,6 +223,9 @@ const TeachingSessions = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Thêm Buổi Học Mới</DialogTitle>
+            <DialogDescription>
+              Nhập thông tin buổi học mới vào biểu mẫu bên dưới
+            </DialogDescription>
           </DialogHeader>
           <SessionForm 
             onSubmit={handleSessionSubmit} 

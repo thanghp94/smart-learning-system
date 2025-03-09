@@ -12,7 +12,7 @@ BEGIN
   -- If an ID is provided in the data, use it. Otherwise generate a new UUID
   new_session_id := COALESCE(
     (session_data->>'id')::UUID,
-    uuid_generate_v4()
+    gen_random_uuid()  -- Use gen_random_uuid() instead of uuid_generate_v4()
   );
   
   INSERT INTO sessions (

@@ -28,9 +28,26 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
     // Calculate average score if evaluation scores are provided
     const trungBinh = calculateAverageScore(data);
     
-    const sessionData = {
-      ...data,
-      trung_binh: trungBinh
+    // Prepare the session data with all required fields for the database
+    const sessionData: Partial<TeachingSession> = {
+      lop_chi_tiet_id: data.lop_chi_tiet_id,
+      giao_vien: data.giao_vien,
+      ngay_hoc: data.ngay_hoc,
+      thoi_gian_bat_dau: data.thoi_gian_bat_dau,
+      thoi_gian_ket_thuc: data.thoi_gian_ket_thuc,
+      session_id: data.session_id,
+      Loai_bai_hoc: data.Loai_bai_hoc,
+      nhan_xet_1: data.nhan_xet_1,
+      nhan_xet_2: data.nhan_xet_2,
+      nhan_xet_3: data.nhan_xet_3,
+      nhan_xet_4: data.nhan_xet_4,
+      nhan_xet_5: data.nhan_xet_5,
+      nhan_xet_6: data.nhan_xet_6,
+      trung_binh: trungBinh,
+      phong_hoc_id: data.phong_hoc_id,
+      tro_giang: data.tro_giang,
+      nhan_xet_chung: data.nhan_xet_chung,
+      ghi_chu: data.ghi_chu
     };
     
     // Submit session data through the onSubmit prop
