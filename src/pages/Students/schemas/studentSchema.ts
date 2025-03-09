@@ -6,6 +6,7 @@ export const studentSchema = z.object({
   gioi_tinh: z.string().optional(),
   ngay_sinh: z.date().optional().nullable(),
   co_so_id: z.string().optional(),
+  co_so_ID: z.string().optional(), // Add compatibility with both field names
   ten_PH: z.string().optional(),
   sdt_ph1: z.string().optional(),
   email_ph1: z.string().optional(),
@@ -17,6 +18,14 @@ export const studentSchema = z.object({
   ngay_bat_dau_hoc_phi: z.date().optional().nullable(),
   ghi_chu: z.string().optional(),
   parentpassword: z.string().optional(),
+}).transform(data => {
+  // Normalize co_so_id/co_so_ID to ensure both are present
+  if (data.co_so_id && !data.co_so_ID) {
+    data.co_so_ID = data.co_so_id;
+  } else if (data.co_so_ID && !data.co_so_id) {
+    data.co_so_id = data.co_so_ID;
+  }
+  return data;
 });
 
 export type StudentFormValues = z.infer<typeof studentSchema>;

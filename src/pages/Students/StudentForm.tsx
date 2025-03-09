@@ -47,10 +47,11 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
     loadFacilities();
   }, [toast]);
 
-  // Convert co_so_ID to co_so_id for compatibility
+  // Normalize co_so_ID/co_so_id to have consistent data
   const processedInitialData = initialData ? {
     ...initialData,
-    co_so_id: initialData.co_so_ID || initialData.co_so_id
+    co_so_id: initialData.co_so_ID || initialData.co_so_id,
+    co_so_ID: initialData.co_so_ID || initialData.co_so_id
   } : undefined;
   
   const defaultValues: Partial<StudentFormValues> = {
@@ -58,6 +59,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
     gioi_tinh: processedInitialData?.gioi_tinh || "",
     ngay_sinh: processedInitialData?.ngay_sinh ? new Date(processedInitialData.ngay_sinh) : undefined,
     co_so_id: processedInitialData?.co_so_id || "",
+    co_so_ID: processedInitialData?.co_so_ID || "",
     ten_PH: processedInitialData?.ten_PH || "",
     sdt_ph1: processedInitialData?.sdt_ph1 || "",
     email_ph1: processedInitialData?.email_ph1 || "",
@@ -88,6 +90,13 @@ const StudentForm: React.FC<StudentFormProps> = ({ initialData, onSubmit, onCanc
         han_hoc_phi: values.han_hoc_phi ? values.han_hoc_phi : null,
         ngay_bat_dau_hoc_phi: values.ngay_bat_dau_hoc_phi ? values.ngay_bat_dau_hoc_phi : null,
       };
+      
+      // Ensure consistency between co_so_id and co_so_ID
+      if (formattedData.co_so_id && !formattedData.co_so_ID) {
+        formattedData.co_so_ID = formattedData.co_so_id;
+      } else if (formattedData.co_so_ID && !formattedData.co_so_id) {
+        formattedData.co_so_id = formattedData.co_so_ID;
+      }
       
       await onSubmit(formattedData);
     } catch (error) {

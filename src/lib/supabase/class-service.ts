@@ -3,7 +3,7 @@ import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
 
 export interface Class {
-  id?: string;
+  id: string; // Changed from optional to required
   ten_lop_full: string;
   ten_lop: string;
   ct_hoc?: string;
@@ -35,7 +35,11 @@ class ClassService {
       }
       
       console.log(`Successfully fetched ${data?.length || 0} classes`);
-      return data || [];
+      // Ensure all returned classes have an id (TypeScript safety)
+      return (data || []).map(classData => ({
+        ...classData,
+        id: classData.id || crypto.randomUUID() // Add id if missing
+      }));
     } catch (error) {
       console.error('Error in fetchClasses:', error);
       return [];
@@ -46,13 +50,19 @@ class ClassService {
    * Fetches a single class by ID
    */
   async getById(id: string): Promise<Class | null> {
-    return fetchById<Class>('classes', id);
+    const classData = await fetchById<Omit<Class, 'id'> & { id?: string }>('classes', id);
+    if (!classData) return null;
+    
+    return {
+      ...classData,
+      id: classData.id || id // Ensure id is present
+    };
   }
 
   /**
    * Creates a new class
    */
-  async create(classData: Class): Promise<Class | null> {
+  async create(classData: Omit<Class, 'id'> & { id?: string }): Promise<Class | null> {
     try {
       console.log('Creating new class:', classData);
       
@@ -86,7 +96,10 @@ class ClassService {
           'completed'
         );
         
-        return rpcData as Class;
+        return {
+          ...rpcData,
+          id: rpcData.id || crypto.randomUUID() // Ensure id is present
+        };
       }
       
       console.log('RPC method failed or unavailable, trying direct insert:', rpcError);
@@ -106,7 +119,7 @@ class ClassService {
           console.log('RLS policy restriction, using fallback approach');
           const fallbackData = {
             ...formattedData,
-            id: crypto.randomUUID(),
+            id: formattedData.id || crypto.randomUUID(), // Use existing ID or generate new one
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -139,7 +152,10 @@ class ClassService {
         'completed'
       );
       
-      return data;
+      return {
+        ...data,
+        id: data.id || crypto.randomUUID() // Ensure id is present
+      };
     } catch (error) {
       console.error('Error in createClass:', error);
       throw error;

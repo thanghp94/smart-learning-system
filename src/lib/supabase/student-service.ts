@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { fetchById, fetchAll, insert, update, remove, logActivity } from './base-service';
 
@@ -8,6 +7,7 @@ export interface Student {
   gioi_tinh?: string;
   ngay_sinh?: string | null;
   co_so_id?: string;
+  co_so_ID?: string;
   ten_PH?: string;
   sdt_ph1?: string;
   email_ph1?: string;
@@ -89,6 +89,13 @@ class StudentService {
         }
       }
       
+      // Handle co_so_ID and co_so_id field consistency
+      if (formattedData.co_so_ID) {
+        formattedData.co_so_id = formattedData.co_so_ID;
+      } else if (formattedData.co_so_id) {
+        formattedData.co_so_ID = formattedData.co_so_id;
+      }
+      
       const { data, error } = await supabase
         .from('students')
         .insert(formattedData)
@@ -104,20 +111,17 @@ class StudentService {
           
           // If the error is about co_so_ID, try converting it to co_so_id
           if (error.message && error.message.includes('co_so_ID')) {
-            if (formattedData.co_so_ID) {
-              formattedData.co_so_id = formattedData.co_so_ID;
-              delete formattedData.co_so_ID;
+            delete formattedData.co_so_ID; // Remove co_so_ID since it's not in the DB schema
+            
+            const retryResult = await supabase
+              .from('students')
+              .insert(formattedData)
+              .select()
+              .single();
               
-              const retryResult = await supabase
-                .from('students')
-                .insert(formattedData)
-                .select()
-                .single();
-                
-              if (!retryResult.error) {
-                console.log('Student created successfully after field name correction:', retryResult.data);
-                return retryResult.data;
-              }
+            if (!retryResult.error) {
+              console.log('Student created successfully after field name correction:', retryResult.data);
+              return retryResult.data;
             }
           }
           
@@ -195,7 +199,7 @@ class StudentService {
         }
       }
       
-      // Convert co_so_ID to co_so_id if present
+      // Handle co_so_ID and co_so_id field consistency
       if (formattedUpdates.co_so_ID) {
         formattedUpdates.co_so_id = formattedUpdates.co_so_ID;
         delete formattedUpdates.co_so_ID;
