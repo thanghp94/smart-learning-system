@@ -6,13 +6,55 @@ import DataTable from "@/components/ui/DataTable";
 import { Session } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
-import { Badge } from "@/components/ui/badge";
 import DetailPanel from "@/components/ui/DetailPanel";
 import LessonDetail from "./LessonDetail";
 import LessonForm from "./LessonForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import { format } from "date-fns";
+import { supabase } from "@/lib/supabase/client";
+
+// Create a service for sessions
+const sessionService = {
+  getAll: async (): Promise<Session[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching sessions:", error);
+        throw error;
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error("Error in getAll sessions:", error);
+      return [];
+    }
+  },
+  
+  create: async (sessionData: Partial<Session>): Promise<Session | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .insert(sessionData)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error creating session:", error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Error in create session:", error);
+      throw error;
+    }
+  }
+};
 
 const Lessons = () => {
   const [lessons, setLessons] = useState<Session[]>([]);
@@ -22,30 +64,6 @@ const Lessons = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
-  // Sample data for development
-  const sampleLessons: Session[] = [
-    {
-      id: "1",
-      unit_id: "1",
-      buoi_hoc_so: "1",
-      noi_dung_bai_hoc: "Giới thiệu về phương pháp học tập",
-      tsi_lesson_plan: "Làm quen với học sinh và giới thiệu phương pháp học tập",
-      rep_lesson_plan: "Giới thiệu và làm các bài tập nhóm",
-      bai_tap: "Bài tập về nhà: Đọc chương 1",
-      tg_tao: new Date().toISOString()
-    },
-    {
-      id: "2",
-      unit_id: "1",
-      buoi_hoc_so: "2",
-      noi_dung_bai_hoc: "Luyện tập kỹ năng cơ bản",
-      tsi_lesson_plan: "Thực hành các kỹ năng đã học",
-      rep_lesson_plan: "Chia nhóm và làm bài tập thực hành",
-      bai_tap: "Bài tập về nhà: Hoàn thành phần bài tập",
-      tg_tao: new Date().toISOString()
-    }
-  ];
-
   useEffect(() => {
     fetchLessons();
   }, []);
@@ -53,11 +71,9 @@ const Lessons = () => {
   const fetchLessons = async () => {
     try {
       setIsLoading(true);
-      // In a real app, this would be an API call
-      setTimeout(() => {
-        setLessons(sampleLessons);
-        setIsLoading(false);
-      }, 1000);
+      const data = await sessionService.getAll();
+      console.log("Fetched sessions from database:", data);
+      setLessons(data);
     } catch (error) {
       console.error("Error fetching lessons:", error);
       toast({
@@ -65,6 +81,8 @@ const Lessons = () => {
         description: "Không thể tải danh sách bài học",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,23 +105,17 @@ const Lessons = () => {
 
   const handleAddFormSubmit = async (formData: Partial<Session>) => {
     try {
-      // In a real app, this would be an API call
-      const newLesson: Session = {
-        id: String(lessons.length + 1),
-        unit_id: formData.unit_id || "",
-        buoi_hoc_so: formData.buoi_hoc_so || "",
-        noi_dung_bai_hoc: formData.noi_dung_bai_hoc || "",
-        tsi_lesson_plan: formData.tsi_lesson_plan,
-        rep_lesson_plan: formData.rep_lesson_plan,
-        bai_tap: formData.bai_tap,
-        tg_tao: new Date().toISOString()
-      };
+      setIsLoading(true);
+      const newLesson = await sessionService.create(formData);
       
-      setLessons([...lessons, newLesson]);
-      toast({
-        title: "Thành công",
-        description: "Thêm bài học mới thành công",
-      });
+      if (newLesson) {
+        toast({
+          title: "Thành công",
+          description: "Thêm bài học mới thành công",
+        });
+        fetchLessons(); // Refresh the data
+      }
+      
       setShowAddForm(false);
     } catch (error) {
       console.error("Error adding lesson:", error);
@@ -112,6 +124,8 @@ const Lessons = () => {
         description: "Không thể thêm bài học mới",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,6 +207,9 @@ const Lessons = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Thêm Bài Học Mới</DialogTitle>
+            <DialogDescription>
+              Nhập thông tin bài học mới vào biểu mẫu bên dưới
+            </DialogDescription>
           </DialogHeader>
           <LessonForm 
             onSubmit={handleAddFormSubmit}

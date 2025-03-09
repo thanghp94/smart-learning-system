@@ -74,7 +74,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (success) {
         console.log('Database initialized successfully');
         // Ensure RLS is disabled for classes table after initialization
-        await disableRLSForClasses();
+        await disableRLSForTables();
       } else {
         console.log('Database initialization failed');
       }
@@ -93,16 +93,22 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const disableRLSForClasses = async () => {
+  const disableRLSForTables = async () => {
     try {
-      // First completely disable RLS on the classes table to ensure direct access
+      // Disable RLS on core tables for development
       const { error: disableRlsError } = await supabase.rpc('run_sql', { 
         sql: `
-          -- Disable RLS on classes table completely
+          -- Disable RLS on main tables completely
           ALTER TABLE public.classes DISABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.students DISABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.facilities DISABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.sessions DISABLE ROW LEVEL SECURITY;
           
           -- Just in case, drop any existing policies
           DROP POLICY IF EXISTS "Allow public access to classes" ON public.classes;
+          DROP POLICY IF EXISTS "Allow public access to students" ON public.students;
+          DROP POLICY IF EXISTS "Allow public access to facilities" ON public.facilities;
+          DROP POLICY IF EXISTS "Allow public access to sessions" ON public.sessions;
         `
       });
       
@@ -111,10 +117,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false;
       }
       
-      console.log('Successfully disabled RLS for classes table');
+      console.log('Successfully disabled RLS for tables');
       return true;
     } catch (error) {
-      console.error('Error disabling RLS for classes:', error);
+      console.error('Error disabling RLS for tables:', error);
       return false;
     }
   };
@@ -122,7 +128,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const reinitializePolicies = async () => {
     setIsLoading(true);
     try {
-      const success = await disableRLSForClasses();
+      const success = await disableRLSForTables();
       
       if (success) {
         toast({
