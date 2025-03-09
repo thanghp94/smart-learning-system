@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -92,7 +93,7 @@ const TeachingSessions = () => {
         description: "Đã thêm buổi học mới vào hệ thống",
       });
       setShowAddForm(false);
-      fetchData(); // Refresh the list
+      fetchData(); // Refresh the list after adding a new session
     } catch (error) {
       console.error("Error adding session:", error);
       toast({
@@ -127,7 +128,7 @@ const TeachingSessions = () => {
       render: (value: string, record: TeachingSession) => (
         <div className="flex items-center">
           <Calendar className="h-4 w-4 mr-1" />
-          {value.substring(0, 5)} - {record.thoi_gian_ket_thuc.substring(0, 5)}
+          {value?.substring(0, 5) || ""} - {record.thoi_gian_ket_thuc?.substring(0, 5) || ""}
         </div>
       ),
     },

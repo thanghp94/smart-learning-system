@@ -33,13 +33,13 @@ const sessionSchema = z.object({
   session_id: z.string().min(1, "Vui lòng nhập số buổi học"),
   Loai_bai_hoc: z.string().optional(),
   noi_dung: z.string().optional(),
-  nhan_xet_1: z.string().optional(),
-  nhan_xet_2: z.string().optional(),
-  nhan_xet_3: z.string().optional(),
-  nhan_xet_4: z.string().optional(),
-  nhan_xet_5: z.string().optional(),
-  nhan_xet_6: z.string().optional(),
-  trung_binh: z.number().optional(),
+  nhan_xet_1: z.string().optional().nullable(),
+  nhan_xet_2: z.string().optional().nullable(),
+  nhan_xet_3: z.string().optional().nullable(),
+  nhan_xet_4: z.string().optional().nullable(),
+  nhan_xet_5: z.string().optional().nullable(),
+  nhan_xet_6: z.string().optional().nullable(),
+  trung_binh: z.number().optional().nullable(),
 });
 
 interface SessionFormProps {
@@ -63,6 +63,14 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
       thoi_gian_ket_thuc: "09:30",
       session_id: "1",
       Loai_bai_hoc: "Học mới",
+      noi_dung: "",
+      nhan_xet_1: null,
+      nhan_xet_2: null,
+      nhan_xet_3: null,
+      nhan_xet_4: null,
+      nhan_xet_5: null,
+      nhan_xet_6: null,
+      trung_binh: null,
     },
   });
 
@@ -72,7 +80,7 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
         setIsLoading(true);
         const [classesData, teachersData] = await Promise.all([
           classService.getAll(),
-          employeeService.getByRole("Giáo viên") // Assuming this gets teachers
+          employeeService.getByRole("Giáo viên") // This will now work with our added function
         ]);
         
         setClasses(classesData);
@@ -88,6 +96,11 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
   }, []);
 
   const handleSubmit = (data: z.infer<typeof sessionSchema>) => {
+    // Convert session_id to string if it's a number
+    if (typeof data.session_id === 'number') {
+      data.session_id = String(data.session_id);
+    }
+    
     // Calculate average score if evaluation scores are provided
     if (data.nhan_xet_1 || data.nhan_xet_2 || data.nhan_xet_3 || 
         data.nhan_xet_4 || data.nhan_xet_5 || data.nhan_xet_6) {
@@ -107,7 +120,19 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
       }
     }
     
-    onSubmit(data);
+    // Ensure all fields that should be numbers are converted
+    const sessionData = {
+      ...data,
+      // Convert string scores to numbers if they exist
+      nhan_xet_1: data.nhan_xet_1 ? Number(data.nhan_xet_1) : null,
+      nhan_xet_2: data.nhan_xet_2 ? Number(data.nhan_xet_2) : null,
+      nhan_xet_3: data.nhan_xet_3 ? Number(data.nhan_xet_3) : null,
+      nhan_xet_4: data.nhan_xet_4 ? Number(data.nhan_xet_4) : null,
+      nhan_xet_5: data.nhan_xet_5 ? Number(data.nhan_xet_5) : null,
+      nhan_xet_6: data.nhan_xet_6 ? Number(data.nhan_xet_6) : null,
+    };
+    
+    onSubmit(sessionData);
   };
 
   return (
@@ -267,6 +292,7 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
                   placeholder="Mô tả nội dung buổi học" 
                   {...field} 
                   rows={3}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -282,7 +308,15 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
               <FormItem>
                 <FormLabel>Đánh giá 1 (1-10)</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" max="10" step="0.5" {...field} />
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    max="10" 
+                    step="0.5" 
+                    {...field} 
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(e.target.value ? e.target.value : null)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -296,7 +330,15 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
               <FormItem>
                 <FormLabel>Đánh giá 2 (1-10)</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" max="10" step="0.5" {...field} />
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    max="10" 
+                    step="0.5" 
+                    {...field} 
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(e.target.value ? e.target.value : null)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -310,7 +352,15 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
               <FormItem>
                 <FormLabel>Đánh giá 3 (1-10)</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" max="10" step="0.5" {...field} />
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    max="10" 
+                    step="0.5" 
+                    {...field} 
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(e.target.value ? e.target.value : null)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -319,7 +369,7 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false }: SessionFormProps
         </div>
         
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>Hủy</Button>
+          <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>Hủy</Button>
           <Button type="submit">{isEdit ? "Cập nhật" : "Thêm mới"}</Button>
         </div>
       </form>
