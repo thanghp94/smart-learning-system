@@ -2,35 +2,94 @@
 import { supabase } from './client';
 
 export const storageService = {
-  uploadFile: async (bucket: string, path: string, file: Blob | ArrayBuffer | ArrayBufferView): Promise<string> => {
+  /**
+   * Upload a file to a specific bucket
+   */
+  uploadFile: async (bucket: string, path: string, file: File) => {
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(path, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: true
       });
-    
+
     if (error) {
       console.error('Error uploading file:', error);
       throw error;
     }
-    
-    return data.path;
+
+    return data;
   },
-  
-  getPublicUrl: (bucket: string, path: string): string => {
+
+  /**
+   * Get a public URL for a file
+   */
+  getPublicUrl: (bucket: string, path: string) => {
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
   },
-  
-  deleteFile: async (bucket: string, path: string): Promise<void> => {
-    const { error } = await supabase.storage
+
+  /**
+   * Download a file
+   */
+  downloadFile: async (bucket: string, path: string) => {
+    const { data, error } = await supabase.storage
       .from(bucket)
-      .remove([path]);
-    
+      .download(path);
+
+    if (error) {
+      console.error('Error downloading file:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  /**
+   * List files in a bucket/folder
+   */
+  listFiles: async (bucket: string, path?: string) => {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .list(path || '');
+
+    if (error) {
+      console.error('Error listing files:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  /**
+   * Delete a file
+   */
+  deleteFile: async (bucket: string, paths: string[]) => {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .remove(paths);
+
     if (error) {
       console.error('Error deleting file:', error);
       throw error;
     }
+
+    return data;
+  },
+
+  /**
+   * Create a signed URL for temporary access
+   */
+  createSignedUrl: async (bucket: string, path: string, expiresIn = 60) => {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, expiresIn);
+
+    if (error) {
+      console.error('Error creating signed URL:', error);
+      throw error;
+    }
+
+    return data;
   }
 };
