@@ -9,7 +9,8 @@ import { format } from "date-fns";
 import { classService, employeeService } from "@/lib/supabase";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ReloadIcon } from "@radix-ui/react-icons";
+// Replace ReloadIcon with a similar icon from lucide-react
+import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -92,7 +93,7 @@ const SessionDetail = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         <span>Đang tải...</span>
       </div>
     );
@@ -126,7 +127,7 @@ const SessionDetail = () => {
               <AlertDialogFooter>
                 <AlertDialogCancel>Hủy</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-                  {deleting && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
+                  {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Xóa
                 </AlertDialogAction>
               </AlertDialogFooter>
