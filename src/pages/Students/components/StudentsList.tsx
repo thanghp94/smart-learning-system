@@ -1,15 +1,16 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "@/components/ui/DataTable";
 import DetailPanel from "@/components/ui/DetailPanel";
-import { Student } from "@/lib/types";
+import { Student, Enrollment } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { STATUS_COLORS } from "@/lib/constants";
 import StudentDetail from "./StudentDetail";
+import { enrollmentService } from "@/lib/supabase";
 
 interface StudentsListProps {
   students: Student[];
@@ -24,17 +25,36 @@ const StudentsList: React.FC<StudentsListProps> = ({
 }) => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [studentEnrollments, setStudentEnrollments] = useState<Enrollment[]>([]);
+  const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(false);
   const navigate = useNavigate();
 
-  const handleRowClick = (student: Student) => {
+  const handleRowClick = async (student: Student) => {
     setSelectedStudent(student);
     setDetailOpen(true);
+    
+    // Load enrollments for this student
+    try {
+      setIsLoadingEnrollments(true);
+      const enrollments = await enrollmentService.getByStudent(student.id);
+      setStudentEnrollments(enrollments || []);
+    } catch (error) {
+      console.error("Error fetching student enrollments:", error);
+    } finally {
+      setIsLoadingEnrollments(false);
+    }
   };
 
   const handleEditStudent = () => {
     if (selectedStudent) {
       navigate(`/students/edit/${selectedStudent.id}`);
     }
+  };
+  
+  const handleCloseDetail = () => {
+    setDetailOpen(false);
+    setSelectedStudent(null);
+    setStudentEnrollments([]);
   };
 
   const columns = [
@@ -130,15 +150,24 @@ const StudentsList: React.FC<StudentsListProps> = ({
         <DetailPanel
           title="Thông tin học sinh"
           isOpen={detailOpen}
-          onClose={() => setDetailOpen(false)}
+          onClose={handleCloseDetail}
           footerContent={
             <div className="flex items-center justify-end gap-2">
               <Button variant="outline" onClick={handleEditStudent}>Sửa thông tin</Button>
-              <Button>Ghi danh lớp mới</Button>
+              <Button onClick={() => navigate("/enrollments")}>Quản lý ghi danh</Button>
             </div>
           }
         >
-          <StudentDetail student={selectedStudent} />
+          {isLoadingEnrollments ? (
+            <div className="flex justify-center p-4">
+              <span className="animate-spin">Loading...</span>
+            </div>
+          ) : (
+            <StudentDetail 
+              student={selectedStudent} 
+              enrollments={studentEnrollments} 
+            />
+          )}
         </DetailPanel>
       )}
     </>

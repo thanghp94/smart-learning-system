@@ -2,7 +2,14 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -18,10 +25,17 @@ interface EnrollmentFormProps {
   onSubmit: (data: Partial<Enrollment>) => void;
   students: Student[];
   classes: Class[];
+  isLoading?: boolean;
 }
 
-const EnrollmentForm = ({ initialData, onSubmit, students, classes }: EnrollmentFormProps) => {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+const EnrollmentForm = ({ 
+  initialData, 
+  onSubmit, 
+  students, 
+  classes, 
+  isLoading = false 
+}: EnrollmentFormProps) => {
+  const form = useForm<Partial<Enrollment>>({
     defaultValues: {
       hoc_sinh_id: initialData?.hoc_sinh_id || '',
       lop_chi_tiet_id: initialData?.lop_chi_tiet_id || '',
@@ -30,79 +44,120 @@ const EnrollmentForm = ({ initialData, onSubmit, students, classes }: Enrollment
     }
   });
 
-  const processSubmit = (formData: any) => {
-    console.log("Form data:", formData);
-    onSubmit(formData);
+  const handleSubmit = (data: Partial<Enrollment>) => {
+    console.log("Form data:", data);
+    onSubmit(data);
   };
 
   return (
-    <form onSubmit={handleSubmit(processSubmit)} className="space-y-4">
-      <div>
-        <Label htmlFor="hoc_sinh_id">Học sinh*</Label>
-        <Select
-          onValueChange={(value) => setValue('hoc_sinh_id', value)}
-          defaultValue={watch('hoc_sinh_id')}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Chọn học sinh" />
-          </SelectTrigger>
-          <SelectContent>
-            {students.map((student) => (
-              <SelectItem key={student.id} value={student.id}>
-                {student.ten_hoc_sinh}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.hoc_sinh_id && <p className="text-red-500 text-xs mt-1">Vui lòng chọn học sinh</p>}
-      </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="hoc_sinh_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Học sinh*</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={isLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn học sinh" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {students.map((student) => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.ten_hoc_sinh}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div>
-        <Label htmlFor="lop_chi_tiet_id">Lớp học*</Label>
-        <Select
-          onValueChange={(value) => setValue('lop_chi_tiet_id', value)}
-          defaultValue={watch('lop_chi_tiet_id')}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Chọn lớp học" />
-          </SelectTrigger>
-          <SelectContent>
-            {classes.map((classItem) => (
-              <SelectItem key={classItem.id} value={classItem.id}>
-                {classItem.ten_lop_full}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.lop_chi_tiet_id && <p className="text-red-500 text-xs mt-1">Vui lòng chọn lớp học</p>}
-      </div>
+        <FormField
+          control={form.control}
+          name="lop_chi_tiet_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lớp học*</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={isLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn lớp học" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {classes.map((classItem) => (
+                    <SelectItem key={classItem.id} value={classItem.id}>
+                      {classItem.ten_lop_full}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div>
-        <Label htmlFor="tinh_trang_diem_danh">Trạng thái điểm danh</Label>
-        <Select
-          onValueChange={(value) => setValue('tinh_trang_diem_danh', value)}
-          defaultValue={watch('tinh_trang_diem_danh')}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Chọn trạng thái" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="present">Có mặt</SelectItem>
-            <SelectItem value="absent">Vắng mặt</SelectItem>
-            <SelectItem value="late">Đi trễ</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <FormField
+          control={form.control}
+          name="tinh_trang_diem_danh"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Trạng thái điểm danh</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={isLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn trạng thái" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="present">Có mặt</SelectItem>
+                  <SelectItem value="absent">Vắng mặt</SelectItem>
+                  <SelectItem value="late">Đi trễ</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div>
-        <Label htmlFor="ghi_chu">Ghi chú</Label>
-        <Textarea id="ghi_chu" {...register('ghi_chu')} />
-      </div>
+        <FormField
+          control={form.control}
+          name="ghi_chu"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ghi chú</FormLabel>
+              <FormControl>
+                <Textarea {...field} disabled={isLoading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div className="pt-4 flex justify-end space-x-2">
-        <Button type="submit">Lưu thông tin</Button>
-      </div>
-    </form>
+        <div className="pt-4 flex justify-end space-x-2">
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Đang lưu..." : "Lưu thông tin"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 
