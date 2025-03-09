@@ -1,141 +1,67 @@
 
 import React from "react";
-import { DASHBOARD_STATS } from "@/lib/constants";
-import PageHeader from "@/components/common/PageHeader";
-import StatsCard from "@/components/common/StatsCard";
-import RecentActivity from "@/components/dashboard/RecentActivity";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
-// Sample chart data
-const chartData = [
-  { name: "T1", students: 200, revenue: 5000 },
-  { name: "T2", students: 220, revenue: 5200 },
-  { name: "T3", students: 230, revenue: 5400 },
-  { name: "T4", students: 245, revenue: 5800 },
-  { name: "T5", students: 256, revenue: 6000 },
-];
-
-// Sample activities data for RecentActivity component
-const activities = [
-  {
-    id: "1",
-    action: "Thêm mới",
-    type: "Học sinh",
-    name: "Nguyễn Văn A",
-    user: "Trần Thị B",
-    timestamp: "2023-08-15T10:30:00",
-    status: "active"
-  },
-  {
-    id: "2",
-    action: "Cập nhật",
-    type: "Lớp học",
-    name: "Lớp Tiếng Anh Cơ Bản",
-    user: "Lê Văn C",
-    timestamp: "2023-08-15T09:45:00"
-  },
-  {
-    id: "3",
-    action: "Xóa",
-    type: "Buổi dạy",
-    name: "Buổi dạy ngày 15/08",
-    user: "Phạm Thị D",
-    timestamp: "2023-08-14T16:20:00",
-    status: "inactive"
-  }
-];
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, Users, Calendar, School, Database } from "lucide-react";
+import { Grid, PieChart, BarChart } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  const features = [
+    { title: "Lớp học", icon: <BookOpen className="h-8 w-8" />, path: "/classes", description: "Quản lý thông tin và lịch trình của các lớp học" },
+    { title: "Học sinh", icon: <Users className="h-8 w-8" />, path: "/students", description: "Thông tin chi tiết về học sinh trong hệ thống" },
+    { title: "Buổi học", icon: <Calendar className="h-8 w-8" />, path: "/teaching-sessions", description: "Theo dõi và đánh giá các buổi dạy" },
+    { title: "Nhân viên", icon: <School className="h-8 w-8" />, path: "/employees", description: "Quản lý giáo viên và nhân viên" },
+    { title: "Cơ sở vật chất", icon: <Grid className="h-8 w-8" />, path: "/assets", description: "Quản lý tài sản và thiết bị" },
+    { title: "Báo cáo", icon: <PieChart className="h-8 w-8" />, path: "/evaluations", description: "Báo cáo và đánh giá hiệu quả" },
+    { title: "Tài chính", icon: <BarChart className="h-8 w-8" />, path: "/finance", description: "Quản lý thu chi và tài chính" },
+    { title: "Cơ sở dữ liệu", icon: <Database className="h-8 w-8" />, path: "/database-schema", description: "Xem cấu trúc dữ liệu" },
+  ];
+
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Tổng quan"
-        description="Chào mừng đến với Hệ thống quản lý giáo dục thông minh."
-      />
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {DASHBOARD_STATS.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            change={stat.change}
-            changeType={stat.changeType as "increase" | "decrease" | "neutral"}
-            icon={stat.icon}
-          />
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col items-center text-center mb-12">
+        <h1 className="text-4xl font-bold tracking-tight mb-4">Hệ Thống Quản Lý Giáo Dục</h1>
+        <p className="text-xl text-muted-foreground max-w-3xl">
+          Hệ thống toàn diện để quản lý lớp học, học sinh, giáo viên, và các hoạt động giáo dục
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {features.map((feature, index) => (
+          <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(feature.path)}>
+            <CardHeader className="flex items-center justify-center pt-6 pb-2">
+              <div className="mb-2 p-2 rounded-full bg-primary/10 text-primary">
+                {feature.icon}
+              </div>
+              <CardTitle className="text-xl text-center">{feature.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center pb-6">
+              <CardDescription className="mb-4">{feature.description}</CardDescription>
+              <Button variant="outline" size="sm" onClick={() => navigate(feature.path)}>
+                Xem chi tiết
+              </Button>
+            </CardContent>
+          </Card>
         ))}
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="animate-scale-in">
-          <CardHeader>
-            <CardTitle>Thống kê học sinh</CardTitle>
-            <CardDescription>Tổng số học sinh theo tháng</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" stroke="#888888" />
-                  <YAxis stroke="#888888" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.8)",
-                      borderRadius: "8px",
-                      border: "1px solid #e0e0e0",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="students"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="animate-scale-in">
-          <CardHeader>
-            <CardTitle>Doanh thu</CardTitle>
-            <CardDescription>Doanh thu theo tháng (triệu VND)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" stroke="#888888" />
-                  <YAxis stroke="#888888" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.8)",
-                      borderRadius: "8px",
-                      border: "1px solid #e0e0e0",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#22c55e"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+
+      <div className="mt-20 text-center">
+        <h2 className="text-2xl font-semibold mb-6">Bắt đầu sử dụng hệ thống</h2>
+        <div className="flex flex-wrap justify-center gap-4">
+          <Button size="lg" onClick={() => navigate("/classes")}>
+            Quản lý lớp học
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate("/students")}>
+            Quản lý học sinh
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate("/teaching-sessions")}>
+            Buổi dạy
+          </Button>
+        </div>
       </div>
-      
-      <RecentActivity activities={activities} />
     </div>
   );
 };
