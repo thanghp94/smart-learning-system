@@ -17,7 +17,9 @@ import {
   Employee, 
   TeachingSession 
 } from '@/lib/types';
-import { classService, employeeService } from '@/lib/supabase';
+import { classService, employeeService, sessionService } from '@/lib/supabase';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ExclamationTriangleIcon } from 'lucide-react';
 
 interface EvaluationFormProps {
   initialData: TeachingSession;
@@ -30,9 +32,11 @@ interface EvaluationFormProps {
 const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInfo }: EvaluationFormProps) => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Employee[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | undefined>(classInfo);
   const [selectedTeacher, setSelectedTeacher] = useState<Employee | undefined>(teacherInfo);
+  const [error, setError] = useState<string | null>(null);
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<TeachingSession>({
     defaultValues: {
@@ -57,18 +61,22 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setError(null);
       try {
         if (!initialData.id) {
           // Only load classes and teachers for new evaluations
-          const [classesData, teachersData] = await Promise.all([
+          const [classesData, teachersData, sessionsData] = await Promise.all([
             classService.getAll(),
-            employeeService.getByRole("Giáo viên")
+            employeeService.getByRole("Giáo viên"),
+            sessionService.getAll()
           ]);
           setClasses(classesData || []);
           setTeachers(teachersData || []);
+          setSessions(sessionsData || []);
         }
       } catch (error) {
         console.error("Error loading form data:", error);
+        setError("Lỗi khi tải dữ liệu: " + (error as Error).message);
       } finally {
         setLoading(false);
       }
@@ -88,6 +96,10 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
     const selectedTeacher = teachers.find(t => t.id === teacherId);
     setSelectedTeacher(selectedTeacher);
   };
+  
+  const handleSessionChange = (sessionId: string) => {
+    setValue('session_id', sessionId);
+  };
 
   const handleFormSubmit = (data: TeachingSession) => {
     // Convert string ratings to numbers for the database
@@ -96,6 +108,13 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       {initialData.id && classInfo && teacherInfo && (
         <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-md mb-4">
           <div>
@@ -156,13 +175,23 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="session_id">Buổi học số*</Label>
-              <Input
-                id="session_id"
-                {...register('session_id', { required: true })}
-                className={errors.session_id ? 'border-red-500' : ''}
-              />
-              {errors.session_id && <p className="text-red-500 text-xs mt-1">Vui lòng nhập số buổi học</p>}
+              <Label htmlFor="session_id">Buổi học*</Label>
+              <Select
+                value={watch('session_id')}
+                onValueChange={handleSessionChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn buổi học" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sessions.map(session => (
+                    <SelectItem key={session.id} value={session.id}>
+                      {session.buoi_hoc_so} - {session.noi_dung_bai_hoc?.substring(0, 30)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.session_id && <p className="text-red-500 text-xs mt-1">Vui lòng chọn buổi học</p>}
             </div>
             
             <div>
@@ -171,6 +200,40 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
                 id="loai_bai_hoc"
                 {...register('loai_bai_hoc')}
               />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="ngay_hoc">Ngày học*</Label>
+              <Input
+                id="ngay_hoc"
+                type="date"
+                {...register('ngay_hoc', { required: true })}
+                className={errors.ngay_hoc ? 'border-red-500' : ''}
+              />
+              {errors.ngay_hoc && <p className="text-red-500 text-xs mt-1">Vui lòng chọn ngày học</p>}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="thoi_gian_bat_dau">Thời gian bắt đầu*</Label>
+                <Input
+                  id="thoi_gian_bat_dau"
+                  type="time"
+                  {...register('thoi_gian_bat_dau', { required: true })}
+                  className={errors.thoi_gian_bat_dau ? 'border-red-500' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="thoi_gian_ket_thuc">Thời gian kết thúc*</Label>
+                <Input
+                  id="thoi_gian_ket_thuc"
+                  type="time"
+                  {...register('thoi_gian_ket_thuc', { required: true })}
+                  className={errors.thoi_gian_ket_thuc ? 'border-red-500' : ''}
+                />
+              </div>
             </div>
           </div>
         </>

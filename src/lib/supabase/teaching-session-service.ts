@@ -19,6 +19,45 @@ export const teachingSessionService = {
       // Remove trung_binh field as it's a generated column
       const { trung_binh, ...sessionData } = session;
       
+      // Ensure session_id is a valid UUID
+      if (typeof sessionData.session_id === 'string' && 
+          !sessionData.session_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        // If session_id is not a valid UUID, we need to generate one
+        console.log("Converting non-UUID session_id to UUID");
+        try {
+          // Try to fetch the session by buoi_hoc_so from sessions table
+          const { data: sessionData } = await supabase
+            .from('sessions')
+            .select('id')
+            .eq('buoi_hoc_so', session.session_id)
+            .single();
+            
+          if (sessionData && sessionData.id) {
+            sessionData.session_id = sessionData.id;
+          } else {
+            // If not found, generate a new UUID
+            const { data: newSession } = await supabase
+              .from('sessions')
+              .insert({
+                buoi_hoc_so: session.session_id.toString(),
+                noi_dung_bai_hoc: 'Auto-generated session',
+                unit_id: 'AUTO'
+              })
+              .select()
+              .single();
+              
+            if (newSession) {
+              sessionData.session_id = newSession.id;
+            } else {
+              throw new Error("Could not create a new session");
+            }
+          }
+        } catch (error) {
+          console.error("Error handling session_id:", error);
+          throw new Error("Invalid session_id format and could not generate a new one");
+        }
+      }
+      
       // Convert numeric values to strings before saving to match the database schema
       const formattedSession: Partial<TeachingSession> = {
         ...sessionData,

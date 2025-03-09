@@ -1,16 +1,15 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { teachingSessionService, classService, employeeService } from "@/lib/supabase";
-import { TeachingSession, Class, Employee, Evaluation } from "@/lib/types";
+import { teachingSessionService, classService, employeeService, sessionService } from "@/lib/supabase";
+import { TeachingSession, Class, Employee } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
-import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import DetailPanel from "@/components/ui/DetailPanel";
-import EvaluationForm from "./EvaluationForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import EvaluationForm from "./EvaluationForm";
 
 // Default empty session with required fields
 const DEFAULT_EMPTY_SESSION: TeachingSession = {
@@ -22,6 +21,17 @@ const DEFAULT_EMPTY_SESSION: TeachingSession = {
   thoi_gian_bat_dau: "09:00",
   thoi_gian_ket_thuc: "10:30",
   giao_vien: "",
+  nhan_xet_1: null,
+  nhan_xet_2: null,
+  nhan_xet_3: null,
+  nhan_xet_4: null,
+  nhan_xet_5: null,
+  nhan_xet_6: null,
+  nhan_xet_chung: null,
+  phong_hoc_id: null,
+  tro_giang: null,
+  ghi_chu: null,
+  trung_binh: null
 };
 
 const Evaluations = () => {
@@ -102,7 +112,7 @@ const Evaluations = () => {
   const handleSubmitEvaluation = async (evaluationData: Partial<TeachingSession>) => {
     try {
       if (selectedSession) {
-        // Update existing evaluation - we don't need to send trung_binh as it's calculated by the database
+        // Update existing evaluation
         await teachingSessionService.update(selectedSession.id, evaluationData);
         
         toast({
@@ -110,13 +120,12 @@ const Evaluations = () => {
           description: "Đã cập nhật đánh giá buổi học",
         });
       } else {
-        // Create new evaluation - ensure all required fields are present
-        const completeSessionData = {
-          ...DEFAULT_EMPTY_SESSION,
-          ...evaluationData,
-        };
+        // Create new evaluation with all required fields
+        const newEvaluation = await teachingSessionService.create(evaluationData);
         
-        await teachingSessionService.create(completeSessionData);
+        if (!newEvaluation) {
+          throw new Error("Không thể tạo đánh giá mới");
+        }
         
         toast({
           title: "Thành công",
@@ -130,7 +139,7 @@ const Evaluations = () => {
       console.error("Error submitting evaluation:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể cập nhật đánh giá",
+        description: "Không thể cập nhật đánh giá: " + (error as Error).message,
         variant: "destructive"
       });
     }
@@ -141,7 +150,7 @@ const Evaluations = () => {
       title: "Lớp",
       key: "lop_chi_tiet_id",
       sortable: true,
-      render: (value: string) => <span>{classes[value]?.Ten_lop_full || value}</span>,
+      render: (value: string) => <span>{classes[value]?.Ten_lop_full || classes[value]?.ten_lop_full || value}</span>,
     },
     {
       title: "Buổi học số",
