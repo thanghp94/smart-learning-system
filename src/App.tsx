@@ -24,6 +24,7 @@ import Finance from '@/pages/Finance';
 import Files from '@/pages/Files';
 import Requests from '@/pages/Requests';
 import Contacts from '@/pages/Contacts';
+import Lessons from '@/pages/Lessons';
 
 import '@/App.css';
 
@@ -52,6 +53,7 @@ function App() {
             <Route path="/files" element={<Files />} />
             <Route path="/requests" element={<Requests />} />
             <Route path="/contacts" element={<Contacts />} />
+            <Route path="/lessons" element={<Lessons />} />
             <Route path="/database-schema" element={<DatabaseSchema />} />
             <Route path="*" element={<NotFound />} />
           </Route>
