@@ -9,7 +9,8 @@ export const enrollmentService = {
       // Use the view that joins enrollment data with student and class info
       const { data, error } = await supabase
         .from('student_enrollments_with_details')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Error fetching all enrollments:', error);
@@ -29,7 +30,7 @@ export const enrollmentService = {
         .from('student_enrollments_with_details')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching enrollment by ID:', error);
@@ -59,7 +60,8 @@ export const enrollmentService = {
     const { data, error } = await supabase
       .from('student_enrollments_with_details')
       .select('*')
-      .eq('hoc_sinh_id', studentId);
+      .eq('hoc_sinh_id', studentId)
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching enrollments by student:', error);
@@ -73,7 +75,8 @@ export const enrollmentService = {
     const { data, error } = await supabase
       .from('student_enrollments_with_details')
       .select('*')
-      .eq('lop_chi_tiet_id', classId);
+      .eq('lop_chi_tiet_id', classId)
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching enrollments by class:', error);
@@ -87,7 +90,8 @@ export const enrollmentService = {
     const { data, error } = await supabase
       .from('student_enrollments_with_details')
       .select('*')
-      .eq('buoi_day_id', sessionId);
+      .eq('buoi_day_id', sessionId)
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching enrollments by session:', error);

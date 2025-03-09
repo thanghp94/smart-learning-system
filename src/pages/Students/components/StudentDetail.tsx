@@ -1,18 +1,56 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Student, Enrollment } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { STATUS_COLORS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import EnrollStudentButton from "./EnrollStudentButton";
+import { enrollmentService } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface StudentDetailProps {
   student: Student;
   enrollments?: Enrollment[];
+  onRefresh?: () => void;
 }
 
-const StudentDetail: React.FC<StudentDetailProps> = ({ student, enrollments = [] }) => {
+const StudentDetail: React.FC<StudentDetailProps> = ({ 
+  student, 
+  enrollments: initialEnrollments,
+  onRefresh 
+}) => {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>(initialEnrollments || []);
+  const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(false);
+
+  const fetchEnrollments = async () => {
+    if (!student.id) return;
+    
+    try {
+      setIsLoadingEnrollments(true);
+      const data = await enrollmentService.getByStudent(student.id);
+      setEnrollments(data || []);
+    } catch (error) {
+      console.error("Error fetching student enrollments:", error);
+    } finally {
+      setIsLoadingEnrollments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!initialEnrollments || initialEnrollments.length === 0) {
+      fetchEnrollments();
+    }
+  }, [initialEnrollments, student.id]);
+
+  const handleRefresh = () => {
+    fetchEnrollments();
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center">
@@ -113,9 +151,27 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, enrollments = []
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold">Các lớp đã ghi danh</h3>
-            <EnrollStudentButton student={student} />
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={isLoadingEnrollments}
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${isLoadingEnrollments ? 'animate-spin' : ''}`} />
+                Làm mới
+              </Button>
+              <EnrollStudentButton 
+                student={student} 
+                onSuccess={handleRefresh}
+              />
+            </div>
           </div>
-          {enrollments && enrollments.length > 0 ? (
+          {isLoadingEnrollments ? (
+            <div className="flex justify-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : enrollments && enrollments.length > 0 ? (
             <ul className="space-y-2">
               {enrollments.map((enrollment) => (
                 <li key={enrollment.id} className="p-2 border rounded">

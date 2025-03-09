@@ -10,9 +10,10 @@ import EnrollmentForm from '../../Enrollments/EnrollmentForm';
 
 interface EnrollStudentButtonProps {
   student: Student;
+  onSuccess?: () => void;
 }
 
-const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student }) => {
+const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student, onSuccess }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +55,9 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student }) =>
       });
       
       setIsOpen(false);
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error('Error enrolling student:', error);
       toast({

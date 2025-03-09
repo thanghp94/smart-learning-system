@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Plus, FileDown, Filter, RotateCw, Edit, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import EnrollmentForm from "./EnrollmentForm";
-import { supabase } from "@/lib/supabase/client";
 import DetailPanel from "@/components/ui/DetailPanel";
 
 const Enrollments = () => {
@@ -26,23 +25,12 @@ const Enrollments = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       
       // Fetch enrollments with detailed information
-      const { data: enrollmentsData, error: enrollmentsError } = await supabase
-        .from('student_enrollments_with_details')
-        .select('*');
-      
-      if (enrollmentsError) {
-        console.error("Error fetching enrollments:", enrollmentsError);
-        throw enrollmentsError;
-      }
+      const enrollmentsData = await enrollmentService.getAll();
       
       // Fetch students
       const studentsData = await studentService.getAll();
@@ -63,7 +51,11 @@ const Enrollments = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const openAddSheet = () => {
     setIsAddSheetOpen(true);
@@ -243,6 +235,7 @@ const Enrollments = () => {
     </div>
   );
 
+  // Render placeholder if no data and not loading
   if (enrollments.length === 0 && !isLoading) {
     return (
       <PlaceholderPage

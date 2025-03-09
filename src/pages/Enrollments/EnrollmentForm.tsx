@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -19,6 +21,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Enrollment, Student, Class } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+
+const enrollmentSchema = z.object({
+  hoc_sinh_id: z.string().min(1, { message: 'Vui lòng chọn học sinh' }),
+  lop_chi_tiet_id: z.string().min(1, { message: 'Vui lòng chọn lớp học' }),
+  tinh_trang_diem_danh: z.string().default('present'),
+  ghi_chu: z.string().optional(),
+});
+
+type EnrollmentFormValues = z.infer<typeof enrollmentSchema>;
 
 interface EnrollmentFormProps {
   initialData?: Partial<Enrollment>;
@@ -35,7 +47,9 @@ const EnrollmentForm = ({
   classes, 
   isLoading = false 
 }: EnrollmentFormProps) => {
-  const form = useForm<Partial<Enrollment>>({
+  const { toast } = useToast();
+  const form = useForm<EnrollmentFormValues>({
+    resolver: zodResolver(enrollmentSchema),
     defaultValues: {
       hoc_sinh_id: initialData?.hoc_sinh_id || '',
       lop_chi_tiet_id: initialData?.lop_chi_tiet_id || '',
@@ -44,9 +58,18 @@ const EnrollmentForm = ({
     }
   });
 
-  const handleSubmit = (data: Partial<Enrollment>) => {
-    console.log("Form data:", data);
-    onSubmit(data);
+  const handleSubmit = (data: EnrollmentFormValues) => {
+    try {
+      console.log("Form data:", data);
+      onSubmit(data);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể lưu thông tin ghi danh",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -61,7 +84,7 @@ const EnrollmentForm = ({
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                disabled={isLoading}
+                disabled={isLoading || initialData?.hoc_sinh_id !== undefined}
               >
                 <FormControl>
                   <SelectTrigger>
