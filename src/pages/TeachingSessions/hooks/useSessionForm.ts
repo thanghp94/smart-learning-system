@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TeachingSession, Class, Employee } from "@/lib/types";
-import { classService, employeeService, supabase } from "@/lib/supabase";
+import { classService, employeeService } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 import { sessionSchema, SessionFormData } from "../schemas/sessionSchema";
 
 interface UseSessionFormProps {

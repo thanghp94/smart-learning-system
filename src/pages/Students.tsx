@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageHeader from "@/components/common/PageHeader";
 import DataTable from "@/components/ui/DataTable";
 import DetailPanel from "@/components/ui/DetailPanel";
@@ -10,104 +10,55 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Mail, Phone, MapPin, School, Clock } from "lucide-react";
+import { Calendar, Mail, Phone, MapPin, School, Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Mock data for students
-const mockStudents: Student[] = [
-  {
-    id: "1",
-    ten_hoc_sinh: "Nguyễn Văn An",
-    gioi_tinh: "male",
-    ngay_sinh: "2008-05-12",
-    co_so_ID: "CS001",
-    ten_PH: "Nguyễn Văn Bình",
-    sdt_ph1: "0912345678",
-    email_ph1: "binh.nguyen@example.com",
-    dia_chi: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-    ct_hoc: "Toán nâng cao",
-    trang_thai: "active",
-    han_hoc_phi: "2023-12-31"
-  },
-  {
-    id: "2",
-    ten_hoc_sinh: "Trần Thị Bình",
-    gioi_tinh: "female",
-    ngay_sinh: "2009-03-18",
-    co_so_ID: "CS002",
-    ten_PH: "Trần Văn Cường",
-    sdt_ph1: "0923456789",
-    email_ph1: "cuong.tran@example.com",
-    dia_chi: "456 Đường Nguyễn Huệ, Quận 1, TP.HCM",
-    ct_hoc: "Tiếng Anh cơ bản",
-    trang_thai: "active",
-    han_hoc_phi: "2023-11-30"
-  },
-  {
-    id: "3",
-    ten_hoc_sinh: "Lê Minh Châu",
-    gioi_tinh: "female",
-    ngay_sinh: "2007-07-22",
-    co_so_ID: "CS001",
-    ten_PH: "Lê Văn Dũng",
-    sdt_ph1: "0934567890",
-    email_ph1: "dung.le@example.com",
-    dia_chi: "789 Đường Hai Bà Trưng, Quận 3, TP.HCM",
-    ct_hoc: "Khoa học tự nhiên",
-    trang_thai: "inactive",
-    han_hoc_phi: "2023-10-31"
-  },
-  {
-    id: "4",
-    ten_hoc_sinh: "Phạm Minh Dũng",
-    gioi_tinh: "male",
-    ngay_sinh: "2010-01-05",
-    co_so_ID: "CS003",
-    ten_PH: "Phạm Thị Em",
-    sdt_ph1: "0945678901",
-    email_ph1: "em.pham@example.com",
-    dia_chi: "101 Đường Cách Mạng Tháng 8, Quận 3, TP.HCM",
-    ct_hoc: "Toán cơ bản",
-    trang_thai: "pending",
-    han_hoc_phi: "2023-11-15"
-  },
-  {
-    id: "5",
-    ten_hoc_sinh: "Hoàng Thị Gia",
-    gioi_tinh: "female",
-    ngay_sinh: "2008-09-30",
-    co_so_ID: "CS002",
-    ten_PH: "Hoàng Văn Hùng",
-    sdt_ph1: "0956789012",
-    email_ph1: "hung.hoang@example.com",
-    dia_chi: "202 Đường Nam Kỳ Khởi Nghĩa, Quận 3, TP.HCM",
-    ct_hoc: "Tiếng Anh nâng cao",
-    trang_thai: "active",
-    han_hoc_phi: "2023-12-15"
-  },
-  {
-    id: "6",
-    ten_hoc_sinh: "Đinh Văn Huy",
-    gioi_tinh: "male",
-    ngay_sinh: "2009-11-11",
-    co_so_ID: "CS001",
-    ten_PH: "Đinh Thị Hương",
-    sdt_ph1: "0967890123",
-    email_ph1: "huong.dinh@example.com",
-    dia_chi: "303 Đường Điện Biên Phủ, Quận Bình Thạnh, TP.HCM",
-    ct_hoc: "Văn học",
-    trang_thai: "active",
-    han_hoc_phi: "2023-11-30"
-  }
-];
+import { studentService } from "@/lib/supabase/student-service";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Students = () => {
+  const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      setIsLoading(true);
+      const data = await studentService.getAll();
+      console.log("Students data received:", data);
+      setStudents(data || []);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh sách học sinh. Vui lòng thử lại sau.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleRowClick = (student: Student) => {
     setSelectedStudent(student);
     setDetailOpen(true);
+  };
+
+  const handleAddStudent = () => {
+    navigate("/students/add");
+  };
+
+  const handleEditStudent = () => {
+    if (selectedStudent) {
+      navigate(`/students/edit/${selectedStudent.id}`);
+    }
   };
 
   const columns = [
@@ -134,7 +85,7 @@ const Students = () => {
       title: "Chương trình học",
       key: "ct_hoc",
       render: (value: string) => (
-        <span className="font-medium">{value}</span>
+        <span className="font-medium">{value || "-"}</span>
       ),
       sortable: true
     },
@@ -143,8 +94,8 @@ const Students = () => {
       key: "ten_PH",
       render: (value: string, record: Student) => (
         <div>
-          <div>{value}</div>
-          <div className="text-xs text-muted-foreground">{record.sdt_ph1}</div>
+          <div>{value || "-"}</div>
+          <div className="text-xs text-muted-foreground">{record.sdt_ph1 || "-"}</div>
         </div>
       ),
       sortable: true
@@ -157,6 +108,7 @@ const Students = () => {
           {value === "active" && "Đang học"}
           {value === "inactive" && "Nghỉ học"}
           {value === "pending" && "Chờ xác nhận"}
+          {!value && "-"}
         </Badge>
       ),
       width: "120px",
@@ -166,6 +118,8 @@ const Students = () => {
       title: "Hạn học phí",
       key: "han_hoc_phi",
       render: (value: string) => {
+        if (!value) return <span>-</span>;
+        
         const date = new Date(value);
         const now = new Date();
         const isExpired = date < now;
@@ -191,18 +145,24 @@ const Students = () => {
         description="Quản lý danh sách học sinh trong hệ thống."
         action={{
           label: "Thêm học sinh",
-          onClick: () => {
-            // Handle adding new student
-          }
+          onClick: handleAddStudent
         }}
       />
       
-      <DataTable
-        data={mockStudents}
-        columns={columns}
-        onRowClick={handleRowClick}
-        searchPlaceholder="Tìm học sinh theo tên, ID..."
-      />
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Đang tải dữ liệu...</span>
+        </div>
+      ) : (
+        <DataTable
+          data={students}
+          columns={columns}
+          onRowClick={handleRowClick}
+          searchPlaceholder="Tìm học sinh theo tên, ID..."
+          isLoading={isLoading}
+        />
+      )}
       
       {selectedStudent && (
         <DetailPanel
@@ -211,7 +171,7 @@ const Students = () => {
           onClose={() => setDetailOpen(false)}
           footerContent={
             <div className="flex items-center justify-end gap-2">
-              <Button variant="outline">Sửa thông tin</Button>
+              <Button variant="outline" onClick={handleEditStudent}>Sửa thông tin</Button>
               <Button>Ghi danh lớp mới</Button>
             </div>
           }
@@ -232,6 +192,7 @@ const Students = () => {
                   {selectedStudent.trang_thai === "active" && "Đang học"}
                   {selectedStudent.trang_thai === "inactive" && "Nghỉ học"}
                   {selectedStudent.trang_thai === "pending" && "Chờ xác nhận"}
+                  {!selectedStudent.trang_thai && "-"}
                 </Badge>
               </div>
               
@@ -256,7 +217,9 @@ const Students = () => {
                     <div className="space-y-0.5">
                       <p className="text-sm text-muted-foreground">Ngày sinh</p>
                       <p className="font-medium">
-                        {new Date(selectedStudent.ngay_sinh).toLocaleDateString("vi-VN")}
+                        {selectedStudent.ngay_sinh 
+                          ? new Date(selectedStudent.ngay_sinh).toLocaleDateString("vi-VN")
+                          : "-"}
                       </p>
                     </div>
                   </div>
@@ -267,7 +230,7 @@ const Students = () => {
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-sm text-muted-foreground">Chương trình học</p>
-                      <p className="font-medium">{selectedStudent.ct_hoc}</p>
+                      <p className="font-medium">{selectedStudent.ct_hoc || "-"}</p>
                     </div>
                   </div>
                   
@@ -278,7 +241,9 @@ const Students = () => {
                     <div className="space-y-0.5">
                       <p className="text-sm text-muted-foreground">Hạn học phí</p>
                       <p className="font-medium">
-                        {new Date(selectedStudent.han_hoc_phi || "").toLocaleDateString("vi-VN")}
+                        {selectedStudent.han_hoc_phi 
+                          ? new Date(selectedStudent.han_hoc_phi).toLocaleDateString("vi-VN")
+                          : "-"}
                       </p>
                     </div>
                   </div>
@@ -291,22 +256,22 @@ const Students = () => {
                   <div className="grid gap-4">
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Tên phụ huynh</p>
-                      <p>{selectedStudent.ten_PH}</p>
+                      <p>{selectedStudent.ten_PH || "-"}</p>
                     </div>
                     
                     <div className="flex items-center gap-3">
                       <Phone className="h-5 w-5 text-muted-foreground" />
-                      <p>{selectedStudent.sdt_ph1}</p>
+                      <p>{selectedStudent.sdt_ph1 || "-"}</p>
                     </div>
                     
                     <div className="flex items-center gap-3">
                       <Mail className="h-5 w-5 text-muted-foreground" />
-                      <p>{selectedStudent.email_ph1}</p>
+                      <p>{selectedStudent.email_ph1 || "-"}</p>
                     </div>
                     
                     <div className="flex items-start gap-3">
                       <MapPin className="h-5 w-5 text-muted-foreground" />
-                      <p>{selectedStudent.dia_chi}</p>
+                      <p>{selectedStudent.dia_chi || "-"}</p>
                     </div>
                   </div>
                 </div>
@@ -317,37 +282,12 @@ const Students = () => {
                   <div className="p-4">
                     <h4 className="font-medium">Lớp đang học</h4>
                   </div>
-                  <ul className="divide-y">
-                    <li className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">Toán nâng cao 10A</p>
-                        <p className="text-sm text-muted-foreground">Thứ 2, 4, 6 - 18:00-19:30</p>
-                      </div>
-                      <Badge>Đang học</Badge>
-                    </li>
-                    <li className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">Tiếng Anh cơ bản 10B</p>
-                        <p className="text-sm text-muted-foreground">Thứ 3, 5 - 17:30-19:00</p>
-                      </div>
-                      <Badge>Đang học</Badge>
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="mt-4 rounded-lg border">
-                  <div className="p-4">
-                    <h4 className="font-medium">Lịch sử lớp học</h4>
+                  <div className="p-8 text-center text-muted-foreground">
+                    <p>Chưa có thông tin về lớp học</p>
+                    <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate("/enrollments/add")}>
+                      Ghi danh lớp học
+                    </Button>
                   </div>
-                  <ul className="divide-y">
-                    <li className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">Vật lý cơ bản 9A</p>
-                        <p className="text-sm text-muted-foreground">01/09/2022 - 31/05/2023</p>
-                      </div>
-                      <Badge variant="outline">Hoàn thành</Badge>
-                    </li>
-                  </ul>
                 </div>
               </TabsContent>
               
@@ -357,35 +297,9 @@ const Students = () => {
                     <h4 className="font-medium">Điểm danh gần đây</h4>
                     <Button variant="outline" size="sm">Xem tất cả</Button>
                   </div>
-                  <ul className="divide-y">
-                    <li className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">Toán nâng cao 10A</p>
-                        <p className="text-sm text-muted-foreground">15/06/2023 - 18:00-19:30</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        Có mặt
-                      </Badge>
-                    </li>
-                    <li className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">Tiếng Anh cơ bản 10B</p>
-                        <p className="text-sm text-muted-foreground">14/06/2023 - 17:30-19:00</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        Có mặt
-                      </Badge>
-                    </li>
-                    <li className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">Toán nâng cao 10A</p>
-                        <p className="text-sm text-muted-foreground">12/06/2023 - 18:00-19:30</p>
-                      </div>
-                      <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                        Vắng mặt
-                      </Badge>
-                    </li>
-                  </ul>
+                  <div className="p-8 text-center text-muted-foreground">
+                    <p>Chưa có thông tin điểm danh</p>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
