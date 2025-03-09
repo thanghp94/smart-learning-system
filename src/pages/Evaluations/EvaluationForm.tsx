@@ -1,269 +1,203 @@
 
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { TeachingSession, Class, Employee } from "@/lib/types";
-import { Textarea } from "@/components/ui/textarea";
-import { formatDate } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { StarIcon } from "lucide-react";
-
-const evaluationSchema = z.object({
-  nhan_xet_1: z.string().optional(),
-  nhan_xet_2: z.string().optional(),
-  nhan_xet_3: z.string().optional(),
-  nhan_xet_4: z.string().optional(),
-  nhan_xet_5: z.string().optional(),
-  nhan_xet_6: z.string().optional(),
-  ghi_chu_danh_gia: z.string().optional(),
-});
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Evaluation, TeachingSession } from '@/lib/types';
 
 interface EvaluationFormProps {
-  initialData: TeachingSession;
-  onSubmit: (data: Partial<TeachingSession>) => void;
-  classInfo?: Class;
-  teacherInfo?: Employee;
+  teachingSession?: TeachingSession;
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
 }
 
-const EvaluationForm = ({ initialData, onSubmit, classInfo, teacherInfo }: EvaluationFormProps) => {
-  const form = useForm<z.infer<typeof evaluationSchema>>({
-    resolver: zodResolver(evaluationSchema),
+const EvaluationForm = ({ teachingSession, onSubmit, onCancel }: EvaluationFormProps) => {
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
-      nhan_xet_1: initialData.nhan_xet_1?.toString() || "",
-      nhan_xet_2: initialData.nhan_xet_2?.toString() || "",
-      nhan_xet_3: initialData.nhan_xet_3?.toString() || "",
-      nhan_xet_4: initialData.nhan_xet_4?.toString() || "",
-      nhan_xet_5: initialData.nhan_xet_5?.toString() || "",
-      nhan_xet_6: initialData.nhan_xet_6?.toString() || "",
-      ghi_chu_danh_gia: initialData.ghi_chu_danh_gia || "",
-    },
+      ten_danh_gia: teachingSession ? `Đánh giá buổi dạy ${teachingSession.ngay_hoc}` : '',
+      doi_tuong: 'teaching_session',
+      ghi_chu: '',
+      nhan_xet_1: teachingSession?.nhan_xet_1 || '',
+      nhan_xet_2: teachingSession?.nhan_xet_2 || '',
+      nhan_xet_3: teachingSession?.nhan_xet_3 || '',
+      nhan_xet_4: teachingSession?.nhan_xet_4 || '',
+      nhan_xet_5: teachingSession?.nhan_xet_5 || '',
+      nhan_xet_6: teachingSession?.nhan_xet_6 || '',
+      nhan_xet_chung: teachingSession?.nhan_xet_chung || '',
+    }
   });
 
-  const handleSubmit = (data: z.infer<typeof evaluationSchema>) => {
-    onSubmit({
+  const handleFormSubmit = (data: any) => {
+    // Convert string ratings to numbers for the database
+    const processedData = {
       ...data,
-      nhan_xet_1: data.nhan_xet_1 ? Number(data.nhan_xet_1) : null,
-      nhan_xet_2: data.nhan_xet_2 ? Number(data.nhan_xet_2) : null,
-      nhan_xet_3: data.nhan_xet_3 ? Number(data.nhan_xet_3) : null,
-      nhan_xet_4: data.nhan_xet_4 ? Number(data.nhan_xet_4) : null,
-      nhan_xet_5: data.nhan_xet_5 ? Number(data.nhan_xet_5) : null,
-      nhan_xet_6: data.nhan_xet_6 ? Number(data.nhan_xet_6) : null,
-    });
+      nhan_xet_1: data.nhan_xet_1 ? data.nhan_xet_1.toString() : '',
+      nhan_xet_2: data.nhan_xet_2 ? data.nhan_xet_2.toString() : '',
+      nhan_xet_3: data.nhan_xet_3 ? data.nhan_xet_3.toString() : '',
+      nhan_xet_4: data.nhan_xet_4 ? data.nhan_xet_4.toString() : '',
+      nhan_xet_5: data.nhan_xet_5 ? data.nhan_xet_5.toString() : '',
+      nhan_xet_6: data.nhan_xet_6 ? data.nhan_xet_6.toString() : '',
+    };
+
+    onSubmit(processedData);
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Lớp:</p>
-              <p className="font-medium">{classInfo?.Ten_lop_full || initialData.lop_chi_tiet_id}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Giáo viên:</p>
-              <p className="font-medium">{teacherInfo?.ten_nhan_su || initialData.giao_vien}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Buổi học số:</p>
-              <p className="font-medium">{initialData.session_id}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Ngày học:</p>
-              <p className="font-medium">{formatDate(initialData.ngay_hoc)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Thời gian:</p>
-              <p className="font-medium">
-                {initialData.thoi_gian_bat_dau?.substring(0, 5)} - {initialData.thoi_gian_ket_thuc?.substring(0, 5)}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Loại bài học:</p>
-              <p className="font-medium">{initialData.Loai_bai_hoc}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      <div>
+        <Label htmlFor="ten_danh_gia">Tên đánh giá*</Label>
+        <Input
+          id="ten_danh_gia"
+          {...register('ten_danh_gia', { required: true })}
+          className={errors.ten_danh_gia ? 'border-red-500' : ''}
+        />
+        {errors.ten_danh_gia && <p className="text-red-500 text-xs mt-1">Vui lòng nhập tên đánh giá</p>}
+      </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="nhan_xet_1"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <StarIcon className="h-4 w-4" /> Phương pháp giảng dạy (1-10)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      max="10" 
-                      step="0.5" 
-                      placeholder="Điểm số..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="nhan_xet_2"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <StarIcon className="h-4 w-4" /> Kiến thức chuyên môn (1-10)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      max="10" 
-                      step="0.5" 
-                      placeholder="Điểm số..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="nhan_xet_3"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <StarIcon className="h-4 w-4" /> Kỹ năng giao tiếp (1-10)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      max="10" 
-                      step="0.5" 
-                      placeholder="Điểm số..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="nhan_xet_4"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <StarIcon className="h-4 w-4" /> Quản lý lớp học (1-10)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      max="10" 
-                      step="0.5" 
-                      placeholder="Điểm số..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="nhan_xet_5"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <StarIcon className="h-4 w-4" /> Tác phong chuyên nghiệp (1-10)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      max="10" 
-                      step="0.5" 
-                      placeholder="Điểm số..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="nhan_xet_6"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <StarIcon className="h-4 w-4" /> Mức độ hài lòng (1-10)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      max="10" 
-                      step="0.5" 
-                      placeholder="Điểm số..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="ghi_chu_danh_gia"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nhận xét chung</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Nhập nhận xét đánh giá buổi học..." 
-                    {...field} 
-                    rows={4}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => form.reset()}>Reset</Button>
-            <Button type="submit">Lưu Đánh Giá</Button>
-          </div>
-        </form>
-      </Form>
-    </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Tiêu chí 1: Nội dung bài giảng</Label>
+          <Select
+            onValueChange={(value) => setValue('nhan_xet_1', value)}
+            defaultValue={watch('nhan_xet_1')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn đánh giá" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 - Rất kém</SelectItem>
+              <SelectItem value="2">2 - Kém</SelectItem>
+              <SelectItem value="3">3 - Trung bình</SelectItem>
+              <SelectItem value="4">4 - Khá</SelectItem>
+              <SelectItem value="5">5 - Tốt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Tiêu chí 2: Phương pháp giảng dạy</Label>
+          <Select
+            onValueChange={(value) => setValue('nhan_xet_2', value)}
+            defaultValue={watch('nhan_xet_2')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn đánh giá" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 - Rất kém</SelectItem>
+              <SelectItem value="2">2 - Kém</SelectItem>
+              <SelectItem value="3">3 - Trung bình</SelectItem>
+              <SelectItem value="4">4 - Khá</SelectItem>
+              <SelectItem value="5">5 - Tốt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Tiêu chí 3: Quản lý lớp học</Label>
+          <Select
+            onValueChange={(value) => setValue('nhan_xet_3', value)}
+            defaultValue={watch('nhan_xet_3')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn đánh giá" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 - Rất kém</SelectItem>
+              <SelectItem value="2">2 - Kém</SelectItem>
+              <SelectItem value="3">3 - Trung bình</SelectItem>
+              <SelectItem value="4">4 - Khá</SelectItem>
+              <SelectItem value="5">5 - Tốt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Tiêu chí 4: Tương tác với học sinh</Label>
+          <Select
+            onValueChange={(value) => setValue('nhan_xet_4', value)}
+            defaultValue={watch('nhan_xet_4')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn đánh giá" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 - Rất kém</SelectItem>
+              <SelectItem value="2">2 - Kém</SelectItem>
+              <SelectItem value="3">3 - Trung bình</SelectItem>
+              <SelectItem value="4">4 - Khá</SelectItem>
+              <SelectItem value="5">5 - Tốt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Tiêu chí 5: Sử dụng tài liệu/công cụ</Label>
+          <Select
+            onValueChange={(value) => setValue('nhan_xet_5', value)}
+            defaultValue={watch('nhan_xet_5')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn đánh giá" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 - Rất kém</SelectItem>
+              <SelectItem value="2">2 - Kém</SelectItem>
+              <SelectItem value="3">3 - Trung bình</SelectItem>
+              <SelectItem value="4">4 - Khá</SelectItem>
+              <SelectItem value="5">5 - Tốt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Tiêu chí 6: Đánh giá và phản hồi</Label>
+          <Select
+            onValueChange={(value) => setValue('nhan_xet_6', value)}
+            defaultValue={watch('nhan_xet_6')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn đánh giá" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 - Rất kém</SelectItem>
+              <SelectItem value="2">2 - Kém</SelectItem>
+              <SelectItem value="3">3 - Trung bình</SelectItem>
+              <SelectItem value="4">4 - Khá</SelectItem>
+              <SelectItem value="5">5 - Tốt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="nhan_xet_chung">Nhận xét chung</Label>
+        <Textarea id="nhan_xet_chung" {...register('nhan_xet_chung')} rows={3} />
+      </div>
+
+      <div>
+        <Label htmlFor="ghi_chu">Ghi chú</Label>
+        <Textarea id="ghi_chu" {...register('ghi_chu')} rows={2} />
+      </div>
+
+      <div className="pt-4 flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
+        <Button type="submit">Lưu đánh giá</Button>
+      </div>
+    </form>
   );
 };
 

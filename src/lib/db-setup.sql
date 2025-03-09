@@ -10,6 +10,43 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- CREATE BUCKET IF NOT EXISTS "assets";
 
 -- Create tables
+-- Facilities table
+CREATE TABLE IF NOT EXISTS facilities (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  loai_co_so TEXT NOT NULL,
+  ten_co_so TEXT NOT NULL,
+  dia_chi_co_so TEXT,
+  nguoi_chu TEXT,
+  phone TEXT,
+  email TEXT,
+  nguoi_phu_trach UUID REFERENCES employees(id),
+  ghi_chu TEXT,
+  trang_thai TEXT DEFAULT 'active',
+  tg_tao TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Employees table
+CREATE TABLE IF NOT EXISTS employees (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  ten_nhan_su TEXT NOT NULL,
+  ten_tieng_anh TEXT,
+  dien_thoai TEXT,
+  email TEXT,
+  tinh_trang_lao_dong TEXT DEFAULT 'active',
+  dia_chi TEXT,
+  gioi_tinh TEXT,
+  ngay_sinh DATE,
+  bo_phan TEXT,
+  chuc_danh TEXT,
+  co_so_id UUID[] DEFAULT '{}',
+  hinh_anh TEXT,
+  tg_tao TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Students table
 CREATE TABLE IF NOT EXISTS students (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -52,7 +89,7 @@ CREATE TABLE IF NOT EXISTS classes (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Session table
+-- Sessions table
 CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   unit_id TEXT,
@@ -122,43 +159,6 @@ CREATE TABLE IF NOT EXISTS enrollments (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(hoc_sinh_id, lop_chi_tiet_id, buoi_day_id)
-);
-
--- Facilities table
-CREATE TABLE IF NOT EXISTS facilities (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  loai_co_so TEXT NOT NULL,
-  ten_co_so TEXT NOT NULL,
-  dia_chi_co_so TEXT,
-  nguoi_chu TEXT,
-  phone TEXT,
-  email TEXT,
-  nguoi_phu_trach UUID REFERENCES employees(id),
-  ghi_chu TEXT,
-  trang_thai TEXT DEFAULT 'active',
-  tg_tao TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Employees table
-CREATE TABLE IF NOT EXISTS employees (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  ten_nhan_su TEXT NOT NULL,
-  ten_tieng_anh TEXT,
-  dien_thoai TEXT,
-  email TEXT,
-  tinh_trang_lao_dong TEXT DEFAULT 'active',
-  dia_chi TEXT,
-  gioi_tinh TEXT,
-  ngay_sinh DATE,
-  bo_phan TEXT,
-  chuc_danh TEXT,
-  co_so_id UUID[] DEFAULT '{}',
-  hinh_anh TEXT,
-  tg_tao TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Events table
@@ -336,34 +336,6 @@ CREATE TABLE IF NOT EXISTS evaluations (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Files table
-CREATE TABLE IF NOT EXISTS files (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  doi_tuong_lien_quan TEXT NOT NULL,
-  ten_doi_tuong TEXT,
-  nhan_vien_ID UUID REFERENCES employees(id),
-  co_so_id UUID REFERENCES facilities(id),
-  lien_he_id UUID REFERENCES contacts(id),
-  CSVC_ID UUID REFERENCES assets(id),
-  hoc_sinh_id UUID REFERENCES students(id),
-  nhom_tai_lieu TEXT,
-  dien_giai TEXT,
-  ten_tai_lieu TEXT NOT NULL,
-  file1 TEXT,
-  file2 TEXT,
-  anh TEXT,
-  trang_thai TEXT DEFAULT 'active',
-  ngay_cap DATE,
-  tinh_trang_han TEXT,
-  han_tai_lieu DATE,
-  lan_ban_hanh TIMESTAMPTZ,
-  ghi_chu TEXT,
-  id_tai_lieu TEXT,
-  tg_tao TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- Assets table
 CREATE TABLE IF NOT EXISTS assets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -401,6 +373,52 @@ CREATE TABLE IF NOT EXISTS assets (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Contacts table
+CREATE TABLE IF NOT EXISTS contacts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  phan_loai TEXT,
+  doi_tuong_id TEXT,
+  ten_lien_he TEXT NOT NULL,
+  mieu_ta TEXT,
+  ngay_sinh DATE,
+  email TEXT,
+  sdt TEXT,
+  khu_vuc_dang_o TEXT,
+  link_cv TEXT,
+  trang_thai TEXT DEFAULT 'active',
+  ghi_chu TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Files table
+CREATE TABLE IF NOT EXISTS files (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  doi_tuong_lien_quan TEXT NOT NULL,
+  ten_doi_tuong TEXT,
+  nhan_vien_ID UUID REFERENCES employees(id),
+  co_so_id UUID REFERENCES facilities(id),
+  lien_he_id UUID REFERENCES contacts(id),
+  CSVC_ID UUID REFERENCES assets(id),
+  hoc_sinh_id UUID REFERENCES students(id),
+  nhom_tai_lieu TEXT,
+  dien_giai TEXT,
+  ten_tai_lieu TEXT NOT NULL,
+  file1 TEXT,
+  file2 TEXT,
+  anh TEXT,
+  trang_thai TEXT DEFAULT 'active',
+  ngay_cap DATE,
+  tinh_trang_han TEXT,
+  han_tai_lieu DATE,
+  lan_ban_hanh TIMESTAMPTZ,
+  ghi_chu TEXT,
+  id_tai_lieu TEXT,
+  tg_tao TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Requests table
 CREATE TABLE IF NOT EXISTS requests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -421,24 +439,6 @@ CREATE TABLE IF NOT EXISTS requests (
   ghi_chu TEXT,
   nguoi_de_xuat_id UUID REFERENCES employees(id) NOT NULL,
   tg_tao TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Contacts table
-CREATE TABLE IF NOT EXISTS contacts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  phan_loai TEXT,
-  doi_tuong_id TEXT,
-  ten_lien_he TEXT NOT NULL,
-  mieu_ta TEXT,
-  ngay_sinh DATE,
-  email TEXT,
-  sdt TEXT,
-  khu_vuc_dang_o TEXT,
-  link_cv TEXT,
-  trang_thai TEXT DEFAULT 'active',
-  ghi_chu TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -485,75 +485,98 @@ LEFT JOIN
 GROUP BY 
   c.id;
 
--- View for teaching sessions with average evaluation score
-CREATE OR REPLACE VIEW teaching_sessions_with_avg_score AS
+-- View for teaching sessions with evaluation details
+CREATE OR REPLACE VIEW teaching_sessions_with_details AS
 SELECT 
   ts.*,
-  AVG(CAST(
-    CASE WHEN ts.nhan_xet_1 ~ '^[0-9]+(\.[0-9]+)?$' THEN ts.nhan_xet_1 ELSE NULL END
-  AS NUMERIC)) AS avg_score
+  c.Ten_lop_full AS class_name,
+  e_gv.ten_nhan_su AS teacher_name,
+  e_tg.ten_nhan_su AS assistant_name,
+  s.noi_dung_bai_hoc AS lesson_content
 FROM 
   teaching_sessions ts
-GROUP BY 
-  ts.id;
+LEFT JOIN 
+  classes c ON ts.lop_chi_tiet_id = c.id
+LEFT JOIN 
+  employees e_gv ON ts.giao_vien = e_gv.id
+LEFT JOIN 
+  employees e_tg ON ts.tro_giang = e_tg.id
+LEFT JOIN 
+  sessions s ON ts.session_id = s.id;
 
--- View for active students with tuition fee status
-CREATE OR REPLACE VIEW students_tuition_status AS
+-- View for student enrollments with class details
+CREATE OR REPLACE VIEW student_enrollments_with_details AS
 SELECT 
-  s.*,
-  CASE 
-    WHEN s.han_hoc_phi < CURRENT_DATE THEN 'overdue'
-    WHEN s.han_hoc_phi <= CURRENT_DATE + INTERVAL '7 days' THEN 'due_soon'
-    ELSE 'current'
-  END AS tuition_status
+  e.*,
+  s.ten_hoc_sinh,
+  c.Ten_lop_full,
+  c.ten_lop,
+  c.ct_hoc
 FROM 
-  students s
+  enrollments e
+JOIN 
+  students s ON e.hoc_sinh_id = s.id
+JOIN 
+  classes c ON e.lop_chi_tiet_id = c.id;
+
+-- View for employee evaluations
+CREATE OR REPLACE VIEW employee_evaluations AS
+SELECT 
+  e.*,
+  emp.ten_nhan_su,
+  emp.bo_phan,
+  emp.chuc_danh
+FROM 
+  evaluations e
+JOIN 
+  employees emp ON e.nhanvien_id = emp.id
 WHERE 
-  s.trang_thai = 'active';
+  e.doi_tuong = 'employee';
 
--- View for employee payroll summary by month
-CREATE OR REPLACE VIEW employee_payroll_summary AS
+-- View for asset inventory by facility
+CREATE OR REPLACE VIEW asset_inventory_by_facility AS
 SELECT 
-  e.id AS employee_id,
-  e.ten_nhan_su,
-  p.nam,
-  p.thang,
-  SUM(p.tong_luong_thuc_te) AS total_salary,
-  SUM(p.tong_bh_nv) AS total_insurance,
-  SUM(p.tong_luong_thuc_te - p.tong_bh_nv) AS net_salary
+  a.*,
+  f.ten_co_so
 FROM 
-  employees e
+  assets a
 JOIN 
-  payrolls p ON e.id = p.nhan_su_id
-GROUP BY 
-  e.id, e.ten_nhan_su, p.nam, p.thang;
-
--- View for financial summary by facility
-CREATE OR REPLACE VIEW finance_by_facility AS
-SELECT 
-  f.co_so,
-  fa.ten_co_so,
-  f.loai_thu_chi,
-  DATE_TRUNC('month', f.ngay) AS month,
-  SUM(f.tong_tien) AS total_amount
-FROM 
-  finances f
-JOIN 
-  facilities fa ON f.co_so = fa.id
-GROUP BY 
-  f.co_so, fa.ten_co_so, f.loai_thu_chi, DATE_TRUNC('month', f.ngay);
+  facilities f ON a.doi_tuong_id = f.id::TEXT
+WHERE 
+  a.doi_tuong = 'facility';
 
 -- Create triggers
--- Trigger for updating the student count in classes
-CREATE OR REPLACE FUNCTION update_class_student_count()
+-- Trigger for updating the 'updated_at' timestamp
+CREATE OR REPLACE FUNCTION update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF TG_OP = 'INSERT' THEN
-    -- This would be handled by the classes_with_student_count view instead
-  END IF;
+  NEW.updated_at = NOW();
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Apply the trigger to all tables
+DO $$
+DECLARE
+  t text;
+BEGIN
+  FOR t IN 
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public'
+      AND table_type = 'BASE TABLE'
+      AND table_name NOT LIKE 'pg_%'
+      AND table_name NOT LIKE '_prisma_%'
+  LOOP
+    EXECUTE format('
+      CREATE TRIGGER update_timestamp
+      BEFORE UPDATE ON %I
+      FOR EACH ROW
+      EXECUTE FUNCTION update_timestamp();
+    ', t);
+  END LOOP;
+END;
+$$;
 
 -- Trigger for logging activities
 CREATE OR REPLACE FUNCTION log_activity()
@@ -572,6 +595,30 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Apply activity logging triggers to all tables
+DO $$
+DECLARE
+  t text;
+BEGIN
+  FOR t IN 
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public'
+      AND table_type = 'BASE TABLE'
+      AND table_name NOT LIKE 'pg_%'
+      AND table_name NOT LIKE '_prisma_%'
+      AND table_name != 'activities'
+  LOOP
+    EXECUTE format('
+      CREATE TRIGGER log_activity_trigger
+      AFTER INSERT OR UPDATE OR DELETE ON %I
+      FOR EACH STATEMENT
+      EXECUTE FUNCTION log_activity();
+    ', t);
+  END LOOP;
+END;
+$$;
 
 -- Create RLS policies
 -- Create policy to restrict access to students by facility
@@ -649,25 +696,3 @@ CREATE POLICY facilities_access
       AND bo_phan = 'Admin'
     )
   );
-
--- Create policy to restrict access to finances by facility
-ALTER TABLE finances ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY finance_facility_access
-  ON finances
-  FOR ALL
-  TO authenticated
-  USING (
-    co_so IN (
-      SELECT unnest(co_so_id)
-      FROM employees
-      WHERE id = auth.uid()
-    )
-    OR EXISTS (
-      SELECT 1 FROM employees 
-      WHERE id = auth.uid() 
-      AND (bo_phan = 'Admin' OR bo_phan = 'Finance')
-    )
-  );
-
--- Add more policies as needed for other tables

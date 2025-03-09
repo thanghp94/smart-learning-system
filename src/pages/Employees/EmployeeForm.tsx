@@ -1,212 +1,202 @@
 
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Employee } from "@/lib/types";
-import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-
-const employeeSchema = z.object({
-  ten_nhan_su: z.string().min(1, "Vui lòng nhập tên nhân viên"),
-  bo_phan: z.string().min(1, "Vui lòng nhập bộ phận"),
-  chuc_danh: z.string().min(1, "Vui lòng nhập chức danh"),
-  dien_thoai: z.string().min(1, "Vui lòng nhập số điện thoại"),
-  email: z.string().email("Vui lòng nhập email hợp lệ"),
-  co_so_id: z.string().optional(),
-  tinh_trang_lao_dong: z.enum(["active", "inactive"]).default("active"),
-  ngay_sinh: z.string().optional(),
-  dia_chi: z.string().optional(),
-  ma_so_thue: z.string().optional(),
-  ghi_chu: z.string().optional(),
-});
+} from '@/components/ui/select';
+import { Employee } from '@/lib/types';
 
 interface EmployeeFormProps {
   initialData?: Partial<Employee>;
   onSubmit: (data: Partial<Employee>) => void;
-  isEdit?: boolean;
 }
 
-const EmployeeForm = ({ initialData, onSubmit, isEdit = false }: EmployeeFormProps) => {
-  const form = useForm<z.infer<typeof employeeSchema>>({
-    resolver: zodResolver(employeeSchema),
-    defaultValues: initialData || {
-      ten_nhan_su: "",
-      bo_phan: "",
-      chuc_danh: "",
-      dien_thoai: "",
-      email: "",
-      tinh_trang_lao_dong: "active",
-    },
+const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+    defaultValues: {
+      ten_nhan_su: initialData?.ten_nhan_su || '',
+      bo_phan: initialData?.bo_phan || '',
+      chuc_danh: initialData?.chuc_danh || '',
+      dien_thoai: initialData?.dien_thoai || '',
+      email: initialData?.email || '',
+      co_so_id: initialData?.co_so_id ? initialData.co_so_id[0] : '',
+      tinh_trang_lao_dong: initialData?.tinh_trang_lao_dong || 'active',
+      ngay_sinh: initialData?.ngay_sinh || '',
+      dia_chi: initialData?.dia_chi || '',
+      gioi_tinh: initialData?.gioi_tinh || '',
+      ghi_chu: initialData?.ghi_chu || '',
+    }
   });
 
-  const handleSubmit = (data: z.infer<typeof employeeSchema>) => {
-    onSubmit(data);
+  const processSubmit = (formData: any) => {
+    // Convert single co_so_id string to array as required by Employee type
+    const employeeData: Partial<Employee> = {
+      ...formData,
+      co_so_id: formData.co_so_id ? [formData.co_so_id] : []
+    };
+    onSubmit(employeeData);
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="ten_nhan_su"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tên nhân viên</FormLabel>
-                <FormControl>
-                  <Input placeholder="Nguyễn Văn A" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="bo_phan"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Bộ phận</FormLabel>
-                <FormControl>
-                  <Input placeholder="Phòng Giáo vụ" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="chuc_danh"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Chức danh</FormLabel>
-                <FormControl>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn chức danh" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Giáo viên">Giáo viên</SelectItem>
-                      <SelectItem value="Quản lý">Quản lý</SelectItem>
-                      <SelectItem value="Giáo vụ">Giáo vụ</SelectItem>
-                      <SelectItem value="Kế toán">Kế toán</SelectItem>
-                      <SelectItem value="Nhân viên">Nhân viên</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="dien_thoai"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Số điện thoại</FormLabel>
-                <FormControl>
-                  <Input placeholder="0901234567" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="example@email.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="tinh_trang_lao_dong"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Trạng thái</FormLabel>
-                <FormControl>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn trạng thái" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Đang làm việc</SelectItem>
-                      <SelectItem value="inactive">Đã nghỉ việc</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <form onSubmit={handleSubmit(processSubmit)} className="space-y-4">
+      <div>
+        <Label htmlFor="ten_nhan_su">Tên nhân viên*</Label>
+        <Input
+          id="ten_nhan_su"
+          {...register('ten_nhan_su', { required: true })}
+          className={errors.ten_nhan_su ? 'border-red-500' : ''}
+        />
+        {errors.ten_nhan_su && <p className="text-red-500 text-xs mt-1">Vui lòng nhập tên nhân viên</p>}
+      </div>
 
-          <FormField
-            control={form.control}
-            name="ngay_sinh"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ngày sinh</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="bo_phan">Bộ phận</Label>
+          <Select
+            onValueChange={(value) => setValue('bo_phan', value)}
+            defaultValue={watch('bo_phan')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn bộ phận" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Admin">Admin</SelectItem>
+              <SelectItem value="Giáo viên">Giáo viên</SelectItem>
+              <SelectItem value="HR">HR</SelectItem>
+              <SelectItem value="Kế toán">Kế toán</SelectItem>
+              <SelectItem value="Marketing">Marketing</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="chuc_danh">Chức danh</Label>
+          <Select
+            onValueChange={(value) => setValue('chuc_danh', value)}
+            defaultValue={watch('chuc_danh')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn chức danh" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Giám đốc">Giám đốc</SelectItem>
+              <SelectItem value="GV">Giáo viên</SelectItem>
+              <SelectItem value="TG">Trợ giảng</SelectItem>
+              <SelectItem value="Nhân viên">Nhân viên</SelectItem>
+              <SelectItem value="Quản lý">Quản lý</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="dien_thoai">Số điện thoại</Label>
+          <Input id="dien_thoai" {...register('dien_thoai')} />
+        </div>
+
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            {...register('email', {
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: 'Email không hợp lệ'
+              }
+            })}
+            className={errors.email ? 'border-red-500' : ''}
           />
-          
-          <FormField
-            control={form.control}
-            name="dia_chi"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Địa chỉ</FormLabel>
-                <FormControl>
-                  <Input placeholder="123 Đường ABC, Quận XYZ" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="co_so_id">Cơ sở</Label>
+          <Select
+            onValueChange={(value) => setValue('co_so_id', value)}
+            defaultValue={watch('co_so_id')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn cơ sở" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="facility1">Cơ sở Hà Nội</SelectItem>
+              <SelectItem value="facility2">Cơ sở Hồ Chí Minh</SelectItem>
+              <SelectItem value="facility3">Cơ sở Đà Nẵng</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="tinh_trang_lao_dong">Trạng thái</Label>
+          <Select
+            onValueChange={(value) => setValue('tinh_trang_lao_dong', value)}
+            defaultValue={watch('tinh_trang_lao_dong')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Đang làm việc</SelectItem>
+              <SelectItem value="inactive">Đã nghỉ việc</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="ngay_sinh">Ngày sinh</Label>
+          <Input
+            id="ngay_sinh"
+            type="date"
+            {...register('ngay_sinh')}
           />
         </div>
-        
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>Hủy</Button>
-          <Button type="submit">{isEdit ? "Cập nhật" : "Thêm mới"}</Button>
+
+        <div>
+          <Label htmlFor="gioi_tinh">Giới tính</Label>
+          <Select
+            onValueChange={(value) => setValue('gioi_tinh', value)}
+            defaultValue={watch('gioi_tinh')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn giới tính" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Nam">Nam</SelectItem>
+              <SelectItem value="Nữ">Nữ</SelectItem>
+              <SelectItem value="Khác">Khác</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </form>
-    </Form>
+      </div>
+
+      <div>
+        <Label htmlFor="dia_chi">Địa chỉ</Label>
+        <Input id="dia_chi" {...register('dia_chi')} />
+      </div>
+
+      <div>
+        <Label htmlFor="ghi_chu">Ghi chú</Label>
+        <Textarea id="ghi_chu" {...register('ghi_chu')} rows={3} />
+      </div>
+
+      <div className="pt-4 flex justify-end space-x-2">
+        <Button type="submit">Lưu thông tin</Button>
+      </div>
+    </form>
   );
 };
 
