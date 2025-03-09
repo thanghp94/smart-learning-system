@@ -87,7 +87,7 @@ const Employees = () => {
       title: "Ngày Sinh",
       key: "ngay_sinh",
       sortable: true,
-      render: (value: string) => formatDate(value),
+      render: (value: string) => <span>{formatDate(value)}</span>,
     },
   ];
 

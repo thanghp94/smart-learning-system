@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Class, TeachingSession, Enrollment, Employee } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,7 +60,7 @@ const ClassDetail = ({ classItem }: ClassDetailProps) => {
       title: "Ngày học",
       key: "ngay_hoc",
       sortable: true,
-      render: (value: string) => formatDate(value),
+      render: (value: string) => <span>{formatDate(value)}</span>,
     },
     {
       title: "Thời gian",
@@ -82,7 +81,7 @@ const ClassDetail = ({ classItem }: ClassDetailProps) => {
       title: "Đánh giá TB",
       key: "trung_binh",
       sortable: true,
-      render: (value: number) => value?.toFixed(1) || "N/A",
+      render: (value: number) => <span>{value?.toFixed(1) || "N/A"}</span>,
     },
   ];
 
@@ -111,7 +110,7 @@ const ClassDetail = ({ classItem }: ClassDetailProps) => {
     {
       title: "Ghi chú",
       key: "ghi_chu",
-      render: (value: string) => value || "Không có",
+      render: (value: string) => <span>{value || "Không có"}</span>,
     },
   ];
 

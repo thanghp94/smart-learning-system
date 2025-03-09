@@ -398,7 +398,7 @@ export interface StatsCardProps {
 export interface TableColumn {
   title: string;
   key: string;
-  render?: (value: any, record: any) => JSX.Element;
+  render?: (value: any, record?: any) => JSX.Element | React.ReactNode;
   sortable?: boolean;
   width?: string;
 }

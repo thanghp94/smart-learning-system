@@ -83,7 +83,7 @@ const TeachingSessions = () => {
       title: "Lớp",
       key: "lop_chi_tiet_id",
       sortable: true,
-      render: (value: string) => classes[value]?.Ten_lop_full || value,
+      render: (value: string) => <span>{classes[value]?.Ten_lop_full || value}</span>,
     },
     {
       title: "Buổi học số",
@@ -94,7 +94,7 @@ const TeachingSessions = () => {
       title: "Ngày học",
       key: "ngay_hoc",
       sortable: true,
-      render: (value: string) => formatDate(value),
+      render: (value: string) => <span>{formatDate(value)}</span>,
     },
     {
       title: "Thời gian",
@@ -110,13 +110,13 @@ const TeachingSessions = () => {
       title: "Giáo viên",
       key: "giao_vien",
       sortable: true,
-      render: (value: string) => teachers[value]?.ten_nhan_su || value,
+      render: (value: string) => <span>{teachers[value]?.ten_nhan_su || value}</span>,
     },
     {
       title: "Đánh giá TB",
       key: "trung_binh",
       sortable: true,
-      render: (value: number) => value?.toFixed(1) || "N/A",
+      render: (value: number) => <span>{value?.toFixed(1) || "N/A"}</span>,
     },
     {
       title: "Loại bài học",

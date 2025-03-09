@@ -1,38 +1,37 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter } from "lucide-react";
+import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { classService } from "@/lib/supabase";
-import { Class } from "@/lib/types";
+import { assetService } from "@/lib/supabase";
+import { Asset } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
-import ClassDetail from "./ClassDetail";
+import AssetDetail from "./AssetDetail";
 
-const Classes = () => {
-  const [classes, setClasses] = useState<Class[]>([]);
+const Assets = () => {
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchClasses();
+    fetchAssets();
   }, []);
 
-  const fetchClasses = async () => {
+  const fetchAssets = async () => {
     try {
       setIsLoading(true);
-      const data = await classService.getAll();
-      setClasses(data);
+      const data = await assetService.getAll();
+      setAssets(data);
     } catch (error) {
-      console.error("Error fetching classes:", error);
+      console.error("Error fetching assets:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể tải danh sách lớp học",
+        description: "Không thể tải danh sách tài sản",
         variant: "destructive"
       });
     } finally {
@@ -40,8 +39,8 @@ const Classes = () => {
     }
   };
 
-  const handleRowClick = (classItem: Class) => {
-    setSelectedClass(classItem);
+  const handleRowClick = (asset: Asset) => {
+    setSelectedAsset(asset);
     setShowDetail(true);
   };
 
@@ -51,51 +50,57 @@ const Classes = () => {
 
   const columns = [
     {
-      title: "Tên Lớp",
-      key: "Ten_lop_full",
+      title: "Tên CSVC",
+      key: "ten_CSVC",
       sortable: true,
     },
     {
-      title: "Mã Lớp",
-      key: "ten_lop",
+      title: "Loại",
+      key: "loai",
       sortable: true,
     },
     {
-      title: "Chương Trình",
-      key: "ct_hoc",
+      title: "Danh Mục",
+      key: "danh_muc",
       sortable: true,
     },
     {
-      title: "Giáo Viên",
-      key: "GV_chinh",
-      sortable: true,
-    },
-    {
-      title: "Số Học Sinh",
-      key: "so_hs",
+      title: "Số Lượng",
+      key: "so_luong",
       sortable: true,
       render: (value: number) => <span>{value || 0}</span>,
     },
     {
-      title: "Ngày Bắt Đầu",
-      key: "ngay_bat_dau",
-      sortable: true,
-      render: (value: string) => <span>{formatDate(value)}</span>,
+      title: "Đơn Vị",
+      key: "don_vi",
     },
     {
       title: "Tình Trạng",
       key: "tinh_trang",
       sortable: true,
       render: (value: string) => (
-        <Badge variant={value === "active" ? "success" : "secondary"}>
-          {value === "active" ? "Đang hoạt động" : value}
+        <Badge variant={value === "good" ? "success" : 
+                       value === "damaged" ? "destructive" : 
+                       "secondary"}>
+          {value === "good" ? "Tốt" : 
+           value === "damaged" ? "Hư hỏng" : 
+           value === "maintenance" ? "Bảo trì" : value}
         </Badge>
       ),
+    },
+    {
+      title: "Trạng Thái Sở Hữu",
+      key: "trang_thai_so_huu",
+      sortable: true,
+      render: (value: string) => <span>{value}</span>,
     },
   ];
 
   const tableActions = (
     <div className="flex items-center space-x-2">
+      <Button variant="outline" size="sm" className="h-8" onClick={fetchAssets}>
+        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
+      </Button>
       <Button variant="outline" size="sm" className="h-8">
         <Filter className="h-4 w-4 mr-1" /> Lọc
       </Button>
@@ -103,37 +108,37 @@ const Classes = () => {
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
       <Button size="sm" className="h-8">
-        <Plus className="h-4 w-4 mr-1" /> Thêm Lớp Học
+        <Plus className="h-4 w-4 mr-1" /> Thêm Tài Sản
       </Button>
     </div>
   );
 
   return (
     <TablePageLayout
-      title="Lớp Học"
-      description="Quản lý thông tin lớp học trong hệ thống"
+      title="Tài Sản"
+      description="Quản lý thông tin tài sản và cơ sở vật chất"
       actions={tableActions}
     >
       <DataTable
         columns={columns}
-        data={classes}
+        data={assets}
         isLoading={isLoading}
         onRowClick={handleRowClick}
         searchable={true}
-        searchPlaceholder="Tìm kiếm lớp học..."
+        searchPlaceholder="Tìm kiếm tài sản..."
       />
 
-      {selectedClass && (
+      {selectedAsset && (
         <DetailPanel
-          title="Thông Tin Lớp Học"
+          title="Thông Tin Tài Sản"
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <ClassDetail classItem={selectedClass} />
+          <AssetDetail asset={selectedAsset} />
         </DetailPanel>
       )}
     </TablePageLayout>
   );
 };
 
-export default Classes;
+export default Assets;

@@ -17,7 +17,7 @@ const TablePageLayout = ({
 }: TablePageLayoutProps) => {
   return (
     <div className="container mx-auto px-4 py-6">
-      <PageHeader title={title} description={description} action={actions} />
+      <PageHeader title={title} description={description} children={actions} />
       <div className="mt-6">
         {children}
       </div>

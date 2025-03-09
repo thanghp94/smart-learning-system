@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { TeachingSession, Class, Employee, Enrollment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { enrollmentService } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, Users } from "lucide-react";
 import DataTable from "@/components/ui/DataTable";
 import { useToast } from "@/hooks/use-toast";
@@ -76,7 +74,7 @@ const SessionDetail = ({ session, class: classItem, teacher }: SessionDetailProp
     {
       title: "Ghi chú",
       key: "ghi_chu",
-      render: (value: string) => value || "Không có",
+      render: (value: string) => <span>{value || "Không có"}</span>,
     },
   ];
 
