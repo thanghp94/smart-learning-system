@@ -1,4 +1,3 @@
-
 import { classService } from './services/class';
 import { studentService } from './student-service';
 import { facilityService } from './facility-service';
@@ -21,6 +20,7 @@ import { assetTransferService } from './asset-transfer-service';
 import { activityService } from './activity-service';
 import { schemaService } from './schema-service';
 import { attendanceService } from './attendance-service';
+import { employeeClockInService } from './employee-clock-in-service';
 
 export {
   classService,
@@ -44,5 +44,6 @@ export {
   assetTransferService,
   activityService,
   schemaService,
-  attendanceService
+  attendanceService,
+  employeeClockInService
 };

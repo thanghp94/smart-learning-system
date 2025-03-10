@@ -61,7 +61,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
             ['Tiền điện', 'Tiền nước', 'Tiền Internet', 'Phí điện thoại cố định', 
              'Tiền rác', 'Tiền thuê nhà', 'Văn phòng phẩm', 'Mua máy móc thiết bị', 
              'Sửa chữa cơ sở vật chất', 'Làm mới cơ sở vật chất', 'Nạp mực in', 
-             'Mua dụng cụ vệ sinh nhà cửa'].includes(type.name)
+             'Mua dụng cụ vệ sinh nhà cửa', 'Đơn vị'].includes(type.name)
           );
           break;
         case 'employee':
@@ -86,7 +86,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
           typeSpecificItems = filtered.filter(type => 
             ['Văn phòng phẩm', 'Mua máy móc thiết bị', 'Sửa chữa cơ sở vật chất', 
              'Làm mới cơ sở vật chất', 'Nạp mực in', 'Mua dụng cụ vệ sinh nhà cửa',
-             'Phí cơ sở vật chất'].includes(type.name)
+             'Phí cơ sở vật chất', 'Đơn vị'].includes(type.name)
           );
           break;
         default:

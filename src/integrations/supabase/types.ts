@@ -446,6 +446,77 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_clock_in_out: {
+        Row: {
+          buoi_day_id: string | null
+          created_at: string | null
+          ghi_chu: string | null
+          id: string
+          ngay: string
+          nhan_vien_id: string
+          thoi_gian_bat_dau: string | null
+          thoi_gian_ket_thuc: string | null
+          trang_thai: string | null
+          updated_at: string | null
+          xac_nhan: boolean | null
+        }
+        Insert: {
+          buoi_day_id?: string | null
+          created_at?: string | null
+          ghi_chu?: string | null
+          id?: string
+          ngay: string
+          nhan_vien_id: string
+          thoi_gian_bat_dau?: string | null
+          thoi_gian_ket_thuc?: string | null
+          trang_thai?: string | null
+          updated_at?: string | null
+          xac_nhan?: boolean | null
+        }
+        Update: {
+          buoi_day_id?: string | null
+          created_at?: string | null
+          ghi_chu?: string | null
+          id?: string
+          ngay?: string
+          nhan_vien_id?: string
+          thoi_gian_bat_dau?: string | null
+          thoi_gian_ket_thuc?: string | null
+          trang_thai?: string | null
+          updated_at?: string | null
+          xac_nhan?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_clock_in_out_buoi_day_id_fkey"
+            columns: ["buoi_day_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_clock_in_out_buoi_day_id_fkey"
+            columns: ["buoi_day_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions_with_avg_score"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_clock_in_out_buoi_day_id_fkey"
+            columns: ["buoi_day_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions_with_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_clock_in_out_nhan_vien_id_fkey"
+            columns: ["nhan_vien_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           bo_phan: string | null
@@ -1977,6 +2048,181 @@ export type Database = {
           {
             foreignKeyName: "evaluations_nhanvien_id_fkey"
             columns: ["nhanvien_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_files: {
+        Row: {
+          anh: string | null
+          co_so_id: string | null
+          created_at: string | null
+          csvc_id: string | null
+          dien_giai: string | null
+          doi_tuong_lien_quan: string | null
+          file1: string | null
+          file2: string | null
+          ghi_chu: string | null
+          han_tai_lieu: string | null
+          hoc_sinh_id: string | null
+          id: string | null
+          id_tai_lieu: string | null
+          lan_ban_hanh: string | null
+          lien_he_id: string | null
+          ngay_cap: string | null
+          nhan_vien_id: string | null
+          nhom_tai_lieu: string | null
+          ten_doi_tuong: string | null
+          ten_nhan_su: string | null
+          ten_tai_lieu: string | null
+          tg_tao: string | null
+          tinh_trang_han: string | null
+          trang_thai: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_co_so_id_fkey"
+            columns: ["co_so_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_csvc_id_fkey"
+            columns: ["csvc_id"]
+            isOneToOne: false
+            referencedRelation: "asset_inventory_by_facility"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_csvc_id_fkey"
+            columns: ["csvc_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_hoc_sinh_id_fkey"
+            columns: ["hoc_sinh_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_lien_he_id_fkey"
+            columns: ["lien_he_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_nhan_vien_id_fkey"
+            columns: ["nhan_vien_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_finances: {
+        Row: {
+          bang_chu: string | null
+          co_so: string | null
+          created_at: string | null
+          dien_giai: string | null
+          doi_tuong_id: string | null
+          don_vi: number | null
+          file_hoa_don_thu_tien: string | null
+          file_in: string | null
+          ghi_chu: string | null
+          gia_tien: number | null
+          hanh_dong: string | null
+          id: string | null
+          kieu_thanh_toan: string | null
+          loai_doi_tuong: string | null
+          loai_giao_dich: string | null
+          loai_thu_chi: string | null
+          muc: string | null
+          net: number | null
+          ngay: string | null
+          nguoi_tao: string | null
+          so_luong: number | null
+          ten_nhan_su: string | null
+          ten_phi: string | null
+          tg_hoan_thanh: string | null
+          tg_in: string | null
+          tg_tao: string | null
+          thoi_gian_phai_tra: string | null
+          tinh_trang: string | null
+          ton_quy: number | null
+          tong_tien: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finances_co_so_fkey"
+            columns: ["co_so"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finances_nguoi_tao_fkey"
+            columns: ["nguoi_tao"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_payrolls: {
+        Row: {
+          bhtn_nv: number | null
+          bhxh_dn: number | null
+          bhxh_nv: number | null
+          bhyt_dn: number | null
+          bhyt_nv: number | null
+          co_so_id: string | null
+          cong_chuan: number | null
+          cong_thuc_lam: number | null
+          created_at: string | null
+          id: string | null
+          luong: number | null
+          luong_bh: number | null
+          nam: string | null
+          ngay: string | null
+          nhan_su_id: string | null
+          pc_an_o: number | null
+          pc_dthoai: number | null
+          pc_tnhiem: number | null
+          pc_xang_xe: number | null
+          ten_nhan_su: string | null
+          tg_tao: string | null
+          thang: string | null
+          tong_bh_dn_tra: number | null
+          tong_bh_nv: number | null
+          tong_chi_dn: number | null
+          tong_luong_theo_gio: number | null
+          tong_luong_thuc_te: number | null
+          tong_luong_tru_bh: number | null
+          tong_thu_nhap: number | null
+          trang_thai: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payrolls_co_so_id_fkey"
+            columns: ["co_so_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payrolls_nhan_su_id_fkey"
+            columns: ["nhan_su_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
