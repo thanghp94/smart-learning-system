@@ -4,7 +4,7 @@ import { Button } from './button';
 import { 
   FileDown, 
   FileText, 
-  FilePdf, 
+  FileType, 
   FileSpreadsheet, 
   ChevronDown 
 } from 'lucide-react';
@@ -40,7 +40,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({
         toast({
           title: 'Không có dữ liệu',
           description: 'Không có dữ liệu để xuất',
-          variant: 'warning',
+          variant: 'default',
         });
         setIsExporting(false);
         return;
@@ -102,7 +102,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({
         toast({
           title: 'Không có dữ liệu',
           description: 'Không có dữ liệu để xuất',
-          variant: 'warning',
+          variant: 'default',
         });
         setIsExporting(false);
         return;
@@ -218,7 +218,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({
           Excel
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleExport('pdf')}>
-          <FilePdf className="h-4 w-4 mr-2" />
+          <FileType className="h-4 w-4 mr-2" />
           PDF
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleExport('html')}>

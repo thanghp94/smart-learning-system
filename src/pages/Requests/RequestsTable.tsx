@@ -1,11 +1,12 @@
 
 import React from "react";
-import { FileSignature, FileDown, Filter, Plus, RotateCw } from "lucide-react";
+import { FileSignature, Filter, Plus, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import ExportButton from "@/components/ui/ExportButton";
 
 interface Request {
   id: string;
@@ -90,9 +91,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
       <Button variant="outline" size="sm" className="h-8">
         <Filter className="h-4 w-4 mr-1" /> Lọc
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
-      </Button>
+      <ExportButton 
+        data={requests} 
+        filename="Danh_sach_de_xuat" 
+        label="Xuất dữ liệu"
+      />
     </div>
   );
 

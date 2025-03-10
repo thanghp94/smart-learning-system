@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, Image as ImageIcon, RotateCw, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
 import ImageUploadForm from "./ImageUploadForm";
 import ImageDetailView from "./ImageDetailView";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import ExportButton from "@/components/ui/ExportButton";
 
 const Images: React.FC = () => {
   const [images, setImages] = useState<Image[]>([]);
@@ -160,11 +160,26 @@ const Images: React.FC = () => {
     );
   };
 
+  const getExportableImageData = () => {
+    return images.map(image => {
+      const { image: imageUrl, ...rest } = image;
+      return {
+        ...rest,
+        image_url: imageUrl ? 'Yes' : 'No',
+      };
+    });
+  };
+
   const tableActions = (
     <div className="flex items-center space-x-2">
       <Button variant="outline" size="sm" className="h-8" onClick={fetchImages}>
         <RotateCw className="h-4 w-4 mr-1" /> Refresh
       </Button>
+      <ExportButton 
+        data={getExportableImageData()} 
+        filename="Danh_sach_hinh_anh" 
+        label="Xuất dữ liệu"
+      />
       <Button size="sm" className="h-8" onClick={handleAddImage}>
         <Plus className="h-4 w-4 mr-1" /> Add Image
       </Button>

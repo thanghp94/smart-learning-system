@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter } from "lucide-react";
+import { Plus, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
 import { employeeService } from "@/lib/supabase";
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import EmployeeForm from "./EmployeeForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase/client";
+import ExportButton from "@/components/ui/ExportButton";
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -140,9 +141,11 @@ const Employees = () => {
       <Button variant="outline" size="sm" className="h-8">
         <Filter className="h-4 w-4 mr-1" /> Lọc
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
-      </Button>
+      <ExportButton 
+        data={employees} 
+        filename="Danh_sach_nhan_vien" 
+        label="Xuất dữ liệu"
+      />
       <Button size="sm" className="h-8" onClick={handleAddEmployee}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Nhân Viên
       </Button>

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, Filter, FileDown, RotateCw } from 'lucide-react';
+import { Plus, Calendar, Filter, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -15,6 +16,7 @@ import SessionDetail from './components/SessionDetail';
 import SessionForm from './SessionForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import PlaceholderPage from '@/components/common/PlaceholderPage';
+import ExportButton from '@/components/ui/ExportButton';
 
 const TeachingSessions = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
@@ -189,9 +191,11 @@ const TeachingSessions = () => {
       <Button variant="outline" size="sm" className="h-8">
         <Filter className="h-4 w-4 mr-1" /> Lọc
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
-      </Button>
+      <ExportButton 
+        data={sessions} 
+        filename="Danh_sach_buoi_hoc" 
+        label="Xuất dữ liệu"
+      />
       <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Buổi Học
       </Button>
