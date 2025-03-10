@@ -33,7 +33,7 @@ import { Student, Enrollment } from '@/lib/types';
 import { studentService, enrollmentService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import StudentDetail from './StudentDetail';
 import EnrollStudentButton from './EnrollStudentButton';
 
@@ -52,7 +52,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [studentEnrollments, setStudentEnrollments] = useState<Enrollment[]>([]);
   const [showDetail, setShowDetail] = useState(false);

@@ -1,239 +1,275 @@
 
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { 
+  Clock, Calendar, User, Users, Book, Building, 
+  Trash2, Share2, FileEdit, ArrowLeft
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, UserCheck, Calendar } from 'lucide-react';
-import PageHeader from '@/components/common/PageHeader';
-import { Class, Enrollment, TeachingSession } from '@/lib/types';
-import { classService, enrollmentService, teachingSessionService } from '@/lib/supabase';
-import DataTable from '@/components/ui/DataTable';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Class, Student, TeachingSession, Enrollment, Evaluation } from '@/lib/types';
+import { enrollmentService, teachingSessionService, evaluationService } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import AddTeachingSessionButton from './AddTeachingSessionButton';
+import ViewEvaluationsButton from '../Evaluations/ViewEvaluationsButton';
 
-// Define separate components for each section of the detail view
-const ClassInfo: React.FC<{ classData: Class }> = ({ classData }) => {
-  return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle>Thông tin lớp học</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Mã lớp</h3>
-            <p>{classData.id.substring(0, 8).toUpperCase()}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Tên lớp</h3>
-            <p>{classData.ten_lop_full}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Chương trình học</h3>
-            <p>{classData.ct_hoc || 'Chưa xác định'}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Trạng thái</h3>
-            <Badge 
-              variant={classData.tinh_trang === 'active' ? 'success' : 'destructive'}
-            >
-              {classData.tinh_trang === 'active' ? 'Đang hoạt động' : 'Đã đóng'}
-            </Badge>
-          </div>
-          {classData.ngay_bat_dau && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Ngày bắt đầu</h3>
-              <p>{formatDate(classData.ngay_bat_dau)}</p>
-            </div>
-          )}
-          {classData.ghi_chu && (
-            <div className="col-span-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Ghi chú</h3>
-              <p>{classData.ghi_chu}</p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+interface ClassDetailProps {
+  classItem: Class;
+}
 
-const EnrollmentsSection: React.FC<{ 
-  enrollments: Enrollment[],
-  onRefresh: () => void
-}> = ({ enrollments, onRefresh }) => {
-  const columns = [
-    {
-      title: "Học sinh",
-      key: "ten_hoc_sinh",
-      sortable: true,
-    },
-    {
-      title: "Tình trạng điểm danh",
-      key: "tinh_trang_diem_danh",
-      sortable: true,
-      render: (value: string) => (
-        <Badge 
-          variant={
-            value === 'present' ? 'success' : 
-            value === 'absent' ? 'destructive' : 
-            value === 'late' ? 'warning' : 
-            'secondary'
-          }
-        >
-          {value === 'present' ? 'Có mặt' : 
-           value === 'absent' ? 'Vắng mặt' : 
-           value === 'late' ? 'Đi muộn' : 
-           'Chưa điểm danh'}
-        </Badge>
-      ),
-    },
-    {
-      title: "Nhận xét",
-      key: "nhan_xet_tieu_chi_1",
-      sortable: false,
-      render: (value: string) => value ? value.substring(0, 50) + (value.length > 50 ? '...' : '') : '-',
-    },
-  ];
+const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [sessions, setSessions] = useState<TeachingSession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  return (
-    <Card className="mb-4">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Danh sách học sinh đã ghi danh</CardTitle>
-        <Button variant="outline" size="sm">
-          <Plus className="h-4 w-4 mr-1" />
-          Thêm học sinh
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <DataTable
-          columns={columns}
-          data={enrollments}
-          searchable={true}
-          searchPlaceholder="Tìm kiếm học sinh..."
-        />
-      </CardContent>
-    </Card>
-  );
-};
-
-const SessionsSection: React.FC<{ 
-  sessions: TeachingSession[],
-  classData: Class,
-  onRefresh: () => void
-}> = ({ sessions, classData, onRefresh }) => {
-  const columns = [
-    {
-      title: "Ngày học",
-      key: "ngay_hoc",
-      sortable: true,
-      render: (value: string) => formatDate(value),
-    },
-    {
-      title: "Thời gian",
-      key: "thoi_gian_bat_dau",
-      sortable: true,
-      render: (value: string, record: TeachingSession) => 
-        `${value} - ${record.thoi_gian_ket_thuc}`,
-    },
-    {
-      title: "Giáo viên",
-      key: "giao_vien",
-      sortable: true,
-    },
-    {
-      title: "Trợ giảng",
-      key: "tro_giang",
-      sortable: true,
-      render: (value: string) => value || '-',
-    },
-    {
-      title: "Loại bài học",
-      key: "loai_bai_hoc",
-      sortable: true,
-      render: (value: string) => value || '-',
-    },
-  ];
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Danh sách buổi học</CardTitle>
-        <AddTeachingSessionButton classData={classData} onSuccess={onRefresh} />
-      </CardHeader>
-      <CardContent>
-        <DataTable
-          columns={columns}
-          data={sessions}
-          searchable={true}
-          searchPlaceholder="Tìm kiếm buổi học..."
-        />
-      </CardContent>
-    </Card>
-  );
-};
-
-// Main component
-const ClassDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const [classData, setClassData] = React.useState<Class | null>(null);
-  const [enrollments, setEnrollments] = React.useState<Enrollment[]>([]);
-  const [sessions, setSessions] = React.useState<TeachingSession[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  const fetchClassData = async () => {
-    if (!id) return;
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch enrollments for this class
+        const enrollmentsData = await enrollmentService.getByClass(classItem.id);
+        setEnrollments(enrollmentsData);
+        
+        // Fetch teaching sessions for this class
+        const sessionsData = await teachingSessionService.getByClass(classItem.id);
+        setSessions(sessionsData);
+      } catch (error) {
+        console.error('Error fetching class details:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải dữ liệu chi tiết của lớp học',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    try {
-      setLoading(true);
-      const data = await classService.getById(id);
-      setClassData(data);
-      
-      // Fetch enrollments for this class
-      const enrollmentsData = await enrollmentService.getByClass(id);
-      setEnrollments(enrollmentsData);
-      
-      // Fetch sessions for this class
-      const sessionsData = await teachingSessionService.getByClass(id);
-      setSessions(sessionsData);
-    } catch (error) {
-      console.error('Error fetching class data:', error);
-    } finally {
-      setLoading(false);
+    if (classItem?.id) {
+      fetchData();
+    }
+  }, [classItem?.id, toast]);
+
+  const handleRefreshData = async () => {
+    if (classItem?.id) {
+      try {
+        const sessionsData = await teachingSessionService.getByClass(classItem.id);
+        setSessions(sessionsData);
+        
+        const enrollmentsData = await enrollmentService.getByClass(classItem.id);
+        setEnrollments(enrollmentsData);
+        
+        toast({
+          title: 'Thành công',
+          description: 'Đã cập nhật dữ liệu',
+        });
+      } catch (error) {
+        console.error('Error refreshing data:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể cập nhật dữ liệu',
+          variant: 'destructive'
+        });
+      }
     }
   };
 
-  React.useEffect(() => {
-    fetchClassData();
-  }, [id]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!classData) {
-    return <div>Class not found</div>;
+  if (!classItem) {
+    return <div>Không tìm thấy thông tin lớp học</div>;
   }
 
   return (
-    <div className="container mx-auto py-4">
-      <PageHeader
-        title={`Lớp: ${classData.ten_lop_full}`}
-        description="Chi tiết thông tin lớp học và danh sách học sinh"
-        backButton={
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/classes">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Quay lại
-            </Link>
-          </Button>
-        }
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col space-y-1.5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">{classItem.ten_lop_full}</h2>
+          <Badge variant={classItem.tinh_trang === 'active' ? 'success' : 'destructive'}>
+            {classItem.tinh_trang === 'active' ? 'Đang hoạt động' : 'Ngừng hoạt động'}
+          </Badge>
+        </div>
+        <p className="text-muted-foreground">{classItem.ten_lop} - {classItem.ct_hoc}</p>
+      </div>
       
-      <ClassInfo classData={classData} />
-      <EnrollmentsSection enrollments={enrollments} onRefresh={fetchClassData} />
-      <SessionsSection sessions={sessions} classData={classData} onRefresh={fetchClassData} />
+      <Separator />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-muted-foreground" />
+          <span className="font-medium">Ngày bắt đầu:</span>
+          <span>{classItem.ngay_bat_dau ? formatDate(classItem.ngay_bat_dau) : 'Chưa có'}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <User className="h-5 w-5 text-muted-foreground" />
+          <span className="font-medium">Giáo viên chính:</span>
+          <span>{classItem.gv_chinh_name || 'Chưa phân công'}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Building className="h-5 w-5 text-muted-foreground" />
+          <span className="font-medium">Cơ sở:</span>
+          <span>{classItem.co_so_name || 'Chưa xác định'}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-muted-foreground" />
+          <span className="font-medium">Số học sinh:</span>
+          <span>{enrollments.length}</span>
+        </div>
+      </div>
+      
+      {classItem.ghi_chu && (
+        <div className="mt-4">
+          <h3 className="font-medium">Ghi chú:</h3>
+          <p className="text-sm text-muted-foreground mt-1">{classItem.ghi_chu}</p>
+        </div>
+      )}
+      
+      <Tabs defaultValue="sessions" className="w-full mt-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="sessions">Buổi học</TabsTrigger>
+          <TabsTrigger value="students">Học sinh</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="sessions" className="space-y-4">
+          <div className="flex justify-between items-center my-4">
+            <h3 className="text-lg font-medium">Danh sách buổi học</h3>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefreshData}>
+                <Calendar className="h-4 w-4 mr-1" />
+                Làm mới
+              </Button>
+              <AddTeachingSessionButton 
+                classItem={classItem} 
+                onSuccess={handleRefreshData}
+              />
+            </div>
+          </div>
+          
+          {sessions.length === 0 ? (
+            <Card>
+              <CardContent className="py-6 text-center">
+                <p className="text-muted-foreground">Chưa có buổi học nào</p>
+                <AddTeachingSessionButton 
+                  classItem={classItem} 
+                  onSuccess={handleRefreshData}
+                />
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {sessions.map((session) => (
+                <Card key={session.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-base">
+                          Buổi {session.buoi_hoc_so || '?'} - {session.ngay ? formatDate(session.ngay) : 'Chưa xác định ngày'}
+                        </CardTitle>
+                        <CardDescription>
+                          {session.giao_vien_name || session.giao_vien || 'Chưa phân công giáo viên'}
+                        </CardDescription>
+                      </div>
+                      <Badge variant={
+                        session.trang_thai === 'completed' ? 'success' :
+                        session.trang_thai === 'cancelled' ? 'destructive' :
+                        'secondary'
+                      }>
+                        {
+                          session.trang_thai === 'completed' ? 'Đã hoàn thành' :
+                          session.trang_thai === 'cancelled' ? 'Đã hủy' :
+                          session.trang_thai === 'scheduled' ? 'Đã lên lịch' :
+                          'Chưa xác định'
+                        }
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {session.noi_dung ? (
+                      <p className="text-sm">{session.noi_dung}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Chưa có nội dung</p>
+                    )}
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2 pt-0">
+                    <Button variant="outline" size="sm">
+                      <FileEdit className="h-4 w-4 mr-1" />
+                      Chi tiết
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="students" className="space-y-4">
+          <div className="flex justify-between items-center my-4">
+            <h3 className="text-lg font-medium">Danh sách học sinh</h3>
+            <Button variant="outline" size="sm" onClick={handleRefreshData}>
+              <Users className="h-4 w-4 mr-1" />
+              Làm mới
+            </Button>
+          </div>
+          
+          {enrollments.length === 0 ? (
+            <Card>
+              <CardContent className="py-6 text-center">
+                <p className="text-muted-foreground">Chưa có học sinh nào đăng ký lớp này</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {enrollments.map((enrollment) => (
+                <Card key={enrollment.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between">
+                      <CardTitle className="text-base">{enrollment.ten_hoc_sinh || 'Học sinh'}</CardTitle>
+                      <Badge variant={
+                        enrollment.tinh_trang === 'active' ? 'success' :
+                        enrollment.tinh_trang === 'inactive' ? 'destructive' :
+                        'secondary'
+                      }>
+                        {
+                          enrollment.tinh_trang === 'active' ? 'Đang học' :
+                          enrollment.tinh_trang === 'inactive' ? 'Đã nghỉ' :
+                          enrollment.tinh_trang === 'pending' ? 'Chờ xử lý' :
+                          'Khác'
+                        }
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>Ngày ghi danh:</span>
+                        <span>{enrollment.ngay_bat_dau ? formatDate(enrollment.ngay_bat_dau) : 'Chưa xác định'}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Book className="h-4 w-4 text-muted-foreground" />
+                        <span>Học phí:</span>
+                        <span>{enrollment.hoc_phi ? `${enrollment.hoc_phi.toLocaleString('vi-VN')} VND` : 'Chưa xác định'}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2 pt-0">
+                    <ViewEvaluationsButton 
+                      enrollmentId={enrollment.id}
+                      entityType="enrollment"
+                      title={`Đánh giá cho ${enrollment.ten_hoc_sinh || 'học sinh'}`}
+                    />
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

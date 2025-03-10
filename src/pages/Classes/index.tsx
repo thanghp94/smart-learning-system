@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,6 @@ const Classes = () => {
       console.log("Classes data received:", data);
       
       if (data && Array.isArray(data)) {
-        // Cast to ensure interface compatibility
         setClasses(data as unknown as Class[]);
         console.log("Classes set to state:", data.length);
       } else {
@@ -78,7 +76,6 @@ const Classes = () => {
   const handleAddFormSubmit = async (formData: Partial<Class>) => {
     try {
       console.log("Submitting class data:", formData);
-      // Ensure required fields are present
       const classDataToSubmit = {
         ...formData,
         ten_lop_full: formData.ten_lop_full || '',
@@ -89,27 +86,23 @@ const Classes = () => {
       const newClass = await classService.create(classDataToSubmit as any);
       console.log("New class created successfully:", newClass);
       
-      // Refresh the classes list to ensure we have the latest data
       toast({
         title: "Thành công",
         description: "Thêm lớp học mới thành công",
       });
       setShowAddForm(false);
-      await fetchClasses(); // Immediately refresh the data
+      await fetchClasses();
     } catch (error: any) {
       console.error("Error adding class:", error);
       
-      // Try to reinitialize policies and try again
       await reinitializePolicies();
       
-      // Show a more detailed error message
       let errorMsg = "Không thể thêm lớp học mới";
       if (error && error.message) {
         errorMsg += `: ${error.message}`;
       }
       
       if (error && error.code === 'PGRST204') {
-        // This is likely a database schema issue
         setErrorMessage("Có vấn đề với cấu trúc cơ sở dữ liệu. Bạn có muốn khởi tạo lại cấu trúc cơ sở dữ liệu không?");
         setShowErrorDialog(true);
       } else {
@@ -130,7 +123,7 @@ const Classes = () => {
         title: "Thành công",
         description: "Đã khởi tạo lại cơ sở dữ liệu. Vui lòng thử lại.",
       });
-      await fetchClasses(); // Refresh data after initialization
+      await fetchClasses();
     } catch (error) {
       console.error("Error initializing database:", error);
       toast({
@@ -222,7 +215,7 @@ const Classes = () => {
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <ClassDetail classData={selectedClass} />
+          {selectedClass && <ClassDetail classItem={selectedClass} />}
         </DetailPanel>
       )}
 

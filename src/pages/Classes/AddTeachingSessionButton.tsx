@@ -9,11 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import SessionForm from '../TeachingSessions/SessionForm';
 
 interface AddTeachingSessionButtonProps {
-  classData: Class;
+  classItem: Class;
   onSuccess?: () => void;
 }
 
-const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ classData, onSuccess }) => {
+const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ classItem, onSuccess }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -25,12 +25,12 @@ const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ cla
   const handleSubmit = async (sessionData: Partial<TeachingSession>) => {
     try {
       setIsLoading(true);
-      console.log('Creating teaching session for class:', classData.id);
+      console.log('Creating teaching session for class:', classItem.id);
       
       // Make sure to set the class ID
       const data = {
         ...sessionData,
-        lop_chi_tiet_id: classData.id
+        lop_chi_tiet_id: classItem.id
       };
       
       await teachingSessionService.create(data);
@@ -74,7 +74,7 @@ const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ cla
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Thêm Buổi Học cho lớp: {classData.ten_lop_full}</DialogTitle>
+            <DialogTitle>Thêm Buổi Học cho lớp: {classItem.ten_lop_full}</DialogTitle>
             <DialogDescription>
               Nhập thông tin buổi học mới vào biểu mẫu bên dưới
             </DialogDescription>
@@ -83,8 +83,8 @@ const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ cla
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             initialData={{
-              lop_chi_tiet_id: classData.id,
-              giao_vien: classData.gv_chinh
+              lop_chi_tiet_id: classItem.id,
+              giao_vien: classItem.gv_chinh
             }}
           />
         </DialogContent>

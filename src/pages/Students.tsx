@@ -92,9 +92,9 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
         </div>
       ) : (
         <StudentsList 
-          students={students} 
+          data={students} 
           isLoading={isLoading}
-          onAddStudent={handleAddStudent}
+          onRefresh={fetchStudents}
         />
       )}
     </>
