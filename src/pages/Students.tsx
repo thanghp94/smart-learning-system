@@ -95,6 +95,7 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
           data={students} 
           isLoading={isLoading}
           onRefresh={fetchStudents}
+          onAddStudent={handleAddStudent}
         />
       )}
     </>

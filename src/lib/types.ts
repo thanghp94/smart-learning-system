@@ -38,7 +38,12 @@ export interface Class {
   ghi_chu?: string;
   unit_id?: string;
   tg_tao?: string;
-  so_hs?: number;
+  created_at?: string;
+  updated_at?: string;
+  
+  teacher_name?: string;
+  facility_name?: string;
+  student_count?: number;
 }
 
 export interface TeachingSession {
@@ -46,14 +51,12 @@ export interface TeachingSession {
   lop_chi_tiet_id: string;
   session_id: string;
   loai_bai_hoc?: string;
+  phong_hoc_id?: string;
   ngay_hoc: string;
   thoi_gian_bat_dau: string;
   thoi_gian_ket_thuc: string;
   giao_vien: string;
   tro_giang?: string;
-  nhan_xet_chung?: string;
-  ghi_chu?: string;
-  phong_hoc_id?: string;
   nhan_xet_1?: string;
   nhan_xet_2?: string;
   nhan_xet_3?: string;
@@ -61,8 +64,15 @@ export interface TeachingSession {
   nhan_xet_5?: string;
   nhan_xet_6?: string;
   trung_binh?: number;
+  nhan_xet_chung?: string;
+  ghi_chu?: string;
   created_at?: string;
   updated_at?: string;
+  
+  class_name?: string;
+  teacher_name?: string;
+  assistant_name?: string;
+  lesson_content?: string;
 }
 
 export interface Employee {
@@ -103,10 +113,10 @@ export interface Enrollment {
   lop_chi_tiet_id: string;
   buoi_day_id?: string;
   tinh_trang_diem_danh?: string;
-  ghi_chu?: string;
   nhan_xet_tieu_chi_1?: string;
   nhan_xet_tieu_chi_2?: string;
   nhan_xet_tieu_chi_3?: string;
+  ghi_chu?: string;
   chon_de_danh_gia?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -230,13 +240,13 @@ export interface Payroll {
 
 export interface Finance {
   id: string;
-  muc: string;
-  loai_doi_tuong: string;
-  doi_tuong_id: string;
-  co_so: string;
-  ngay: string;
+  muc?: string;
+  loai_doi_tuong?: string;
+  doi_tuong_id?: string;
+  co_so?: string;
+  ngay?: string;
   loai_thu_chi: string;
-  dien_giai: string;
+  dien_giai?: string;
   ten_phi?: string;
   thoi_gian_phai_tra?: string;
   so_luong?: number;
@@ -244,9 +254,9 @@ export interface Finance {
   gia_tien?: number;
   tong_tien: number;
   bang_chu?: string;
-  kieu_thanh_toan: string;
+  kieu_thanh_toan?: string;
   hanh_dong?: string;
-  tinh_trang: string;
+  tinh_trang?: string;
   ghi_chu?: string;
   nguoi_tao?: string;
   tg_tao?: string;
@@ -256,6 +266,8 @@ export interface Finance {
   file_hoa_don_thu_tien?: string;
   net?: number;
   ton_quy?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Evaluation {
@@ -442,3 +454,24 @@ export interface RecentActivityProps {
   activities: ActivityItem[];
 }
 
+export interface Attendance {
+  id: string;
+  enrollment_id: string;
+  teaching_session_id: string;
+  status: 'present' | 'absent' | 'late';
+  thoi_gian_tre: number;
+  danh_gia_1?: number;
+  danh_gia_2?: number;
+  danh_gia_3?: number;
+  danh_gia_4?: number;
+  ghi_chu?: string;
+  created_at: string;
+  updated_at: string;
+  
+  hoc_sinh_id?: string;
+  ten_hoc_sinh?: string;
+  ngay_hoc?: string;
+  thoi_gian_bat_dau?: string;
+  ten_lop_full?: string;
+  lop_id?: string;
+}

@@ -1,141 +1,176 @@
 
-import React, { useEffect, useState } from 'react';
-import { DollarSign } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Finance } from '@/lib/types';
-import { financeService } from '@/lib/supabase';
-import { formatDate } from '@/lib/utils';
-import DataTable from '@/components/ui/DataTable';
+import { Finance, Student, Employee, Contact } from '@/lib/types';
+import { financeService, studentService, employeeService, contactService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import DataTable from '@/components/ui/DataTable';
+import { Loader2 } from 'lucide-react';
+import { formatCurrency } from '@/utils/format';
 
 interface EntityFinancesViewProps {
-  entityId: string;
   entityType: 'student' | 'employee' | 'contact';
-  title?: string;
+  entityId?: string;
 }
 
-const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ 
-  entityId, 
-  entityType,
-  title = "Thông tin tài chính"
-}) => {
+const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, entityId }) => {
   const [finances, setFinances] = useState<Finance[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [entities, setEntities] = useState<(Student | Employee | Contact)[]>([]);
+  const [selectedEntity, setSelectedEntity] = useState<string | null>(entityId || null);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchFinances = async () => {
-      try {
-        setLoading(true);
-        let data: Finance[] = [];
-        
-        switch (entityType) {
-          case 'student':
-            data = await financeService.getByStudent(entityId);
-            break;
-          case 'employee':
-            data = await financeService.getByEmployee(entityId);
-            break;
-          case 'contact':
-            data = await financeService.getByContact(entityId);
-            break;
-        }
-        
-        setFinances(data);
-      } catch (error) {
-        console.error(`Error fetching finances for ${entityType}:`, error);
-        toast({
-          title: 'Lỗi',
-          description: `Không thể tải dữ liệu tài chính`,
-          variant: 'destructive'
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchEntities();
+  }, [entityType]);
 
-    if (entityId) {
-      fetchFinances();
+  useEffect(() => {
+    if (selectedEntity) {
+      fetchFinances(selectedEntity);
     }
-  }, [entityId, entityType, toast]);
+  }, [selectedEntity]);
 
-  const formatCurrency = (amount: number | null | undefined) => {
-    if (amount === null || amount === undefined) return 'N/A';
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const fetchEntities = async () => {
+    try {
+      setIsLoading(true);
+      let data: any[] = [];
+      
+      switch (entityType) {
+        case 'student':
+          data = await studentService.getAll();
+          break;
+        case 'employee':
+          data = await employeeService.getAll();
+          break;
+        case 'contact':
+          data = await contactService.getAll();
+          break;
+      }
+      
+      setEntities(data);
+      
+      // If we have an entity ID and no selected entity, set it
+      if (entityId && !selectedEntity) {
+        setSelectedEntity(entityId);
+      }
+    } catch (error) {
+      console.error(`Error fetching ${entityType}s:`, error);
+      toast({
+        title: 'Lỗi',
+        description: `Không thể tải danh sách ${getEntityLabel()}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchFinances = async (id: string) => {
+    try {
+      setIsLoading(true);
+      
+      const data = await financeService.getByEntityId(entityType, id);
+      setFinances(data);
+    } catch (error) {
+      console.error('Error fetching finances:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải dữ liệu tài chính',
+        variant: 'destructive'
+      });
+      setFinances([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getEntityLabel = () => {
+    switch (entityType) {
+      case 'student':
+        return 'học sinh';
+      case 'employee':
+        return 'nhân viên';
+      case 'contact':
+        return 'liên hệ';
+      default:
+        return 'đối tượng';
+    }
+  };
+
+  const getEntityName = (entity: Student | Employee | Contact) => {
+    if (entityType === 'student') {
+      return (entity as Student).ten_hoc_sinh;
+    } else if (entityType === 'employee') {
+      return (entity as Employee).ten_nhan_su;
+    } else {
+      return (entity as Contact).ten_lien_he;
+    }
   };
 
   const columns = [
     {
-      title: "Loại",
-      key: "loai_thu_chi",
+      title: 'Ngày',
+      key: 'ngay',
+      sortable: true,
+      render: (value: string) => <span>{value || "-"}</span>
+    },
+    {
+      title: 'Loại',
+      key: 'loai_thu_chi',
       sortable: true,
       render: (value: string) => (
-        <Badge variant={value === "income" ? "success" : "destructive"}>
-          {value === "income" ? "Thu" : "Chi"}
-        </Badge>
-      ),
+        <span className={value === 'thu' ? 'text-green-600' : 'text-red-600'}>
+          {value === 'thu' ? 'Thu' : 'Chi'}
+        </span>
+      )
     },
     {
-      title: "Diễn giải",
-      key: "dien_giai",
+      title: 'Số tiền',
+      key: 'tong_tien',
       sortable: true,
+      render: (value: number) => (
+        <span>{formatCurrency(value)}</span>
+      )
     },
     {
-      title: "Ngày",
-      key: "ngay",
-      sortable: true,
-      render: (value: string) => formatDate(value),
+      title: 'Diễn giải',
+      key: 'dien_giai',
+      render: (value: string) => <span>{value || "-"}</span>
     },
     {
-      title: "Số tiền",
-      key: "tong_tien",
+      title: 'Trạng thái',
+      key: 'tinh_trang',
       sortable: true,
-      render: (value: number) => formatCurrency(value),
-    },
-    {
-      title: "Trạng thái",
-      key: "tinh_trang",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={
-          value === "completed" ? "success" : 
-          value === "rejected" ? "destructive" : 
-          value === "pending" ? "warning" : 
-          "secondary"
-        }>
-          {value === "completed" ? "Hoàn thành" : 
-          value === "rejected" ? "Từ chối" : 
-          value === "pending" ? "Chờ duyệt" : value}
-        </Badge>
-      ),
-    },
+      render: (value: string) => <span>{value || "Pending"}</span>
+    }
   ];
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{title}</CardTitle>
-        <Button variant="outline" size="sm">
-          <DollarSign className="h-4 w-4 mr-1" />
-          Thêm giao dịch
-        </Button>
+      <CardHeader>
+        <CardTitle>Tài chính của {getEntityLabel()}</CardTitle>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="text-center py-4">Đang tải dữ liệu...</div>
-        ) : finances.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Chưa có dữ liệu tài chính
+        {isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <DataTable
-            columns={columns}
-            data={finances}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm giao dịch..."
-          />
+          <>
+            {selectedEntity ? (
+              <DataTable
+                columns={columns}
+                data={finances}
+                isLoading={isLoading}
+                searchable={true}
+                searchPlaceholder={`Tìm kiếm giao dịch...`}
+              />
+            ) : (
+              <div className="text-center p-4">
+                <p>Vui lòng chọn {getEntityLabel()} để xem thông tin tài chính</p>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
