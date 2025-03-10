@@ -1,34 +1,27 @@
 
 import React, { useState, useEffect } from 'react';
-import { ReceiptTemplate } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Eye, Trash } from 'lucide-react';
-
-// This is a simple component for creating/editing receipt templates
-// You would typically add this to an admin section
+import { ReceiptTemplate } from '@/lib/types';
+import { financeService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReceiptTemplateEditorProps {
   template?: ReceiptTemplate;
-  onSave: (template: Partial<ReceiptTemplate>) => Promise<void>;
+  onSave: (template: ReceiptTemplate) => void;
   onCancel: () => void;
-  onDelete?: (id: string) => Promise<void>;
 }
 
-const DEFAULT_TEMPLATE_HTML = `
-<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
+const defaultTemplate = {
+  name: '',
+  description: '',
+  template_html: `<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
   <div style="text-align: center; margin-bottom: 20px;">
     <h1 style="margin: 0; color: #333; font-size: 24px;">{{receipt_type}}</h1>
     <p style="margin: 5px 0;">Ngày: {{ngay}}</p>
@@ -90,11 +83,11 @@ const DEFAULT_TEMPLATE_HTML = `
   
   <div style="display: flex; justify-content: space-between; margin-top: 40px;">
     <div style="text-align: center; width: 200px;">
-      <p style="margin-bottom: 60px;">Người nhận tiền</p>
+      <p style="margin-bottom: 60px;">Người thực hiện</p>
       <p>{{nguoi_tao}}</p>
     </div>
     <div style="text-align: center; width: 200px;">
-      <p style="margin-bottom: 60px;">Người nộp tiền</p>
+      <p style="margin-bottom: 60px;">Người nhận/chi tiền</p>
       <p>&nbsp;</p>
     </div>
   </div>
@@ -102,231 +95,234 @@ const DEFAULT_TEMPLATE_HTML = `
   <div style="margin-top: 20px; font-size: 12px; text-align: center; color: #666;">
     <p>In ngày: {{current_date}}</p>
   </div>
-</div>
-`;
+</div>`,
+  type: 'all',
+  is_default: false
+};
 
-const ReceiptTemplateEditor: React.FC<ReceiptTemplateEditorProps> = ({
-  template,
-  onSave,
-  onCancel,
-  onDelete,
+const ReceiptTemplateEditor: React.FC<ReceiptTemplateEditorProps> = ({ 
+  template, 
+  onSave, 
+  onCancel 
 }) => {
-  const [name, setName] = useState(template?.name || '');
-  const [description, setDescription] = useState(template?.description || '');
-  const [html, setHtml] = useState(template?.template_html || DEFAULT_TEMPLATE_HTML);
-  const [type, setType] = useState<'income' | 'expense' | 'all'>(template?.type || 'all');
-  const [isDefault, setIsDefault] = useState(template?.is_default || false);
-  const [preview, setPreview] = useState('');
-  const [activeTab, setActiveTab] = useState('editor');
+  const [formData, setFormData] = useState<Partial<ReceiptTemplate>>(
+    template || defaultTemplate
+  );
+  const [activeTab, setActiveTab] = useState<string>('edit');
+  const [previewHtml, setPreviewHtml] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
+    // Generate preview when template changes or tab switches
     if (activeTab === 'preview') {
-      updatePreview();
+      generatePreview();
     }
-  }, [activeTab]);
+  }, [formData.template_html, activeTab]);
 
-  const updatePreview = () => {
-    // Replace placeholders with sample data
-    let result = html;
-    
-    const replacements: Record<string, string> = {
-      '{{id}}': 'RECEIPT-001',
-      '{{ngay}}': new Date().toLocaleDateString('vi-VN'),
-      '{{ten_phi}}': 'Học phí khóa học',
-      '{{dien_giai}}': 'Thanh toán học phí khoá học Python cơ bản',
-      '{{loai_giao_dich}}': 'Học phí',
-      '{{so_luong}}': '1',
-      '{{don_vi}}': 'Khóa',
-      '{{gia_tien}}': '2.000.000 ₫',
-      '{{tong_tien}}': '2.000.000 ₫',
-      '{{bang_chu}}': 'Hai triệu đồng chẵn',
-      '{{kieu_thanh_toan}}': 'Tiền mặt',
-      '{{ghi_chu}}': 'Đã thanh toán đầy đủ',
-      '{{tg_tao}}': new Date().toISOString(),
-      '{{nguoi_tao}}': 'Nguyễn Văn A',
-      '{{current_date}}': new Date().toLocaleDateString('vi-VN'),
-      '{{receipt_type}}': type === 'income' ? 'PHIẾU THU' : (type === 'expense' ? 'PHIẾU CHI' : 'BIÊN LAI')
+  const generatePreview = () => {
+    // Create a sample finance data for preview
+    const sampleData = {
+      id: 'SAMPLE-ID-12345',
+      ngay: new Date().toLocaleDateString('vi-VN'),
+      loai_thu_chi: formData.type === 'income' ? 'income' : 'expense',
+      loai_giao_dich: 'Học phí',
+      ten_phi: 'Học phí tháng 6/2023',
+      dien_giai: 'Thanh toán học phí khóa học Toán nâng cao',
+      so_luong: 1,
+      don_vi: 1,
+      gia_tien: 2000000,
+      tong_tien: 2000000,
+      bang_chu: 'Hai triệu đồng',
+      kieu_thanh_toan: 'Tiền mặt',
+      ghi_chu: 'Đã thanh toán đầy đủ',
+      nguoi_tao: 'Nguyễn Văn A',
+      tg_tao: new Date().toISOString(),
     };
+
+    // Simple template engine to replace placeholders
+    let html = formData.template_html || '';
     
-    for (const [key, value] of Object.entries(replacements)) {
-      result = result.replace(new RegExp(key, 'g'), value);
-    }
+    // Replace each placeholder with sample data
+    html = html.replace(/{{id}}/g, sampleData.id);
+    html = html.replace(/{{ngay}}/g, sampleData.ngay);
+    html = html.replace(/{{ten_phi}}/g, sampleData.ten_phi);
+    html = html.replace(/{{dien_giai}}/g, sampleData.dien_giai);
+    html = html.replace(/{{loai_giao_dich}}/g, sampleData.loai_giao_dich);
+    html = html.replace(/{{so_luong}}/g, sampleData.so_luong.toString());
+    html = html.replace(/{{don_vi}}/g, sampleData.don_vi.toString());
+    html = html.replace(/{{gia_tien}}/g, new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(sampleData.gia_tien));
+    html = html.replace(/{{tong_tien}}/g, new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(sampleData.tong_tien));
+    html = html.replace(/{{bang_chu}}/g, sampleData.bang_chu);
+    html = html.replace(/{{kieu_thanh_toan}}/g, sampleData.kieu_thanh_toan);
+    html = html.replace(/{{ghi_chu}}/g, sampleData.ghi_chu);
+    html = html.replace(/{{nguoi_tao}}/g, sampleData.nguoi_tao);
+    html = html.replace(/{{current_date}}/g, new Date().toLocaleDateString('vi-VN'));
+    html = html.replace(/{{receipt_type}}/g, sampleData.loai_thu_chi === 'income' ? 'PHIẾU THU' : 'PHIẾU CHI');
     
-    setPreview(result);
+    setPreviewHtml(html);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTypeChange = (value: string) => {
+    setFormData(prev => ({ ...prev, type: value as 'income' | 'expense' | 'all' }));
+  };
+
+  const handleDefaultChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, is_default: checked }));
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      toast({
-        title: "Lỗi",
-        description: "Tên mẫu biên lai không được để trống",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
-      await onSave({
-        id: template?.id,
-        name,
-        description,
-        template_html: html,
-        type,
-        is_default: isDefault,
-      });
+      if (!formData.name || !formData.template_html) {
+        toast({
+          title: "Lỗi",
+          description: "Vui lòng điền đầy đủ thông tin mẫu biên lai",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Call the onSave callback with the current form data
+      onSave(formData as ReceiptTemplate);
       
       toast({
         title: "Thành công",
-        description: template ? "Đã cập nhật mẫu biên lai" : "Đã tạo mẫu biên lai mới",
+        description: "Đã lưu mẫu biên lai thành công",
       });
     } catch (error) {
       console.error("Error saving template:", error);
       toast({
         title: "Lỗi",
         description: "Không thể lưu mẫu biên lai. Vui lòng thử lại sau.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!template?.id || !onDelete) return;
-    
-    if (!confirm("Bạn có chắc chắn muốn xóa mẫu biên lai này không?")) {
-      return;
-    }
-    
-    try {
-      await onDelete(template.id);
-      toast({
-        title: "Thành công",
-        description: "Đã xóa mẫu biên lai",
-      });
-    } catch (error) {
-      console.error("Error deleting template:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể xóa mẫu biên lai. Vui lòng thử lại sau.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{template ? 'Chỉnh sửa mẫu biên lai' : 'Tạo mẫu biên lai mới'}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tên mẫu biên lai:</label>
-            <Input 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              placeholder="Nhập tên mẫu biên lai" 
+    <div className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="edit">Chỉnh sửa mẫu</TabsTrigger>
+          <TabsTrigger value="preview">Xem trước</TabsTrigger>
+          <TabsTrigger value="placeholders">Danh sách biến</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="edit" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="name">Tên mẫu biên lai</Label>
+              <Input 
+                id="name" 
+                name="name" 
+                value={formData.name} 
+                onChange={handleInputChange} 
+                placeholder="Nhập tên mẫu biên lai..."
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="type">Loại biên lai</Label>
+              <RadioGroup 
+                value={formData.type} 
+                onValueChange={handleTypeChange}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="income" id="income" />
+                  <Label htmlFor="income">Thu</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="expense" id="expense" />
+                  <Label htmlFor="expense">Chi</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="all" id="all" />
+                  <Label htmlFor="all">Cả hai</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Mô tả</Label>
+            <Textarea 
+              id="description" 
+              name="description" 
+              value={formData.description || ''} 
+              onChange={handleInputChange}
+              placeholder="Nhập mô tả ngắn về mẫu biên lai này..."
+              rows={2}
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Loại biên lai:</label>
-            <Select 
-              value={type} 
-              onValueChange={(value) => setType(value as 'income' | 'expense' | 'all')}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn loại biên lai" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="income">Phiếu thu</SelectItem>
-                <SelectItem value="expense">Phiếu chi</SelectItem>
-                <SelectItem value="all">Tất cả</SelectItem>
-              </SelectContent>
-            </Select>
+          
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="is_default" 
+              checked={formData.is_default}
+              onCheckedChange={handleDefaultChange}
+            />
+            <Label htmlFor="is_default">Đặt làm mẫu mặc định</Label>
           </div>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Mô tả:</label>
-          <Textarea 
-            value={description} 
-            onChange={(e) => setDescription(e.target.value)} 
-            placeholder="Mô tả về mẫu biên lai này" 
-          />
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Switch 
-            checked={isDefault} 
-            onCheckedChange={setIsDefault} 
-            id="is-default"
-          />
-          <label htmlFor="is-default" className="text-sm font-medium cursor-pointer">
-            Đặt làm mẫu mặc định
-          </label>
-        </div>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
-            <TabsTrigger value="editor" className="flex-1">Mã HTML</TabsTrigger>
-            <TabsTrigger value="preview" className="flex-1">Xem trước</TabsTrigger>
-          </TabsList>
           
-          <TabsContent value="editor" className="space-y-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Mã HTML:</label>
-              <div className="relative">
-                <Textarea 
-                  value={html} 
-                  onChange={(e) => setHtml(e.target.value)} 
-                  placeholder="Nhập mã HTML cho mẫu biên lai" 
-                  className="min-h-[400px] font-mono text-sm"
-                />
-              </div>
-              <p className="text-sm text-gray-500">
-                Sử dụng các placeholder sau để chèn dữ liệu: {{'{{'}}id}}, {{'{{'}}ngay}}, {{'{{'}}dien_giai}}, 
-                {{'{{'}}ten_phi}}, {{'{{'}}loai_giao_dich}}, {{'{{'}}so_luong}}, {{'{{'}}don_vi}}, 
-                {{'{{'}}gia_tien}}, {{'{{'}}tong_tien}}, {{'{{'}}bang_chu}}, {{'{{'}}kieu_thanh_toan}}, 
-                {{'{{'}}ghi_chu}}, {{'{{'}}nguoi_tao}}, {{'{{'}}current_date}}, {{'{{'}}receipt_type}}
-              </p>
+          <div>
+            <Label htmlFor="template_html">Mã HTML</Label>
+            <Textarea 
+              id="template_html" 
+              name="template_html" 
+              value={formData.template_html || ''} 
+              onChange={handleInputChange}
+              placeholder="Nhập mã HTML cho mẫu biên lai..."
+              rows={15}
+              className="font-mono text-sm"
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="preview">
+          <Card className="p-4 border">
+            <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="placeholders">
+          <Card className="p-4">
+            <h3 className="text-lg font-medium mb-2">Các biến có thể sử dụng trong mẫu</h3>
+            <p className="mb-4 text-sm text-gray-500">
+              Sử dụng các biến sau trong mẫu HTML của bạn. Mỗi biến phải được đặt trong cặp dấu
+              ngoặc nhọn kép: <code className="bg-gray-100 px-1 py-0.5 rounded">{'{{biến}}'}</code>
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="text-sm"><code>{'{{id}}'}</code>: ID của giao dịch</div>
+              <div className="text-sm"><code>{'{{ngay}}'}</code>: Ngày giao dịch</div>
+              <div className="text-sm"><code>{'{{ten_phi}}'}</code>: Tên phí</div>
+              <div className="text-sm"><code>{'{{dien_giai}}'}</code>: Diễn giải</div>
+              <div className="text-sm"><code>{'{{loai_giao_dich}}'}</code>: Loại giao dịch</div>
+              <div className="text-sm"><code>{'{{so_luong}}'}</code>: Số lượng</div>
+              <div className="text-sm"><code>{'{{don_vi}}'}</code>: Đơn vị</div>
+              <div className="text-sm"><code>{'{{gia_tien}}'}</code>: Giá tiền</div>
+              <div className="text-sm"><code>{'{{tong_tien}}'}</code>: Tổng tiền</div>
+              <div className="text-sm"><code>{'{{bang_chu}}'}</code>: Bằng chữ</div>
+              <div className="text-sm"><code>{'{{kieu_thanh_toan}}'}</code>: Kiểu thanh toán</div>
+              <div className="text-sm"><code>{'{{nguoi_tao}}'}</code>: Người tạo</div>
+              <div className="text-sm"><code>{'{{ghi_chu}}'}</code>: Ghi chú</div>
+              <div className="text-sm"><code>{'{{current_date}}'}</code>: Ngày hiện tại</div>
+              <div className="text-sm"><code>{'{{receipt_type}}'}</code>: "PHIẾU THU" hoặc "PHIẾU CHI"</div>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="preview">
-            <div className="space-y-2">
-              <div className="border rounded-md p-4 bg-white">
-                <div dangerouslySetInnerHTML={{ __html: preview }} />
-              </div>
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={updatePreview}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Cập nhật xem trước
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <div>
-          {template && onDelete && (
-            <Button variant="destructive" onClick={handleDelete}>
-              <Trash className="h-4 w-4 mr-2" />
-              Xóa
-            </Button>
-          )}
-        </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={onCancel}>
-            Hủy
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Lưu
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="flex justify-end space-x-2 mt-4">
+        <Button variant="outline" onClick={onCancel}>Hủy</Button>
+        <Button onClick={handleSave}>Lưu mẫu</Button>
+      </div>
+    </div>
   );
 };
 

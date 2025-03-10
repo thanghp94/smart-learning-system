@@ -1207,6 +1207,64 @@ export type Database = {
           },
         ]
       }
+      generated_receipts: {
+        Row: {
+          created_at: string | null
+          finance_id: string
+          generated_at: string
+          generated_html: string
+          id: string
+          printed_at: string | null
+          status: string
+          template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          finance_id: string
+          generated_at: string
+          generated_html: string
+          id?: string
+          printed_at?: string | null
+          status?: string
+          template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          finance_id?: string
+          generated_at?: string
+          generated_html?: string
+          id?: string
+          printed_at?: string | null
+          status?: string
+          template_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_receipts_finance_id_fkey"
+            columns: ["finance_id"]
+            isOneToOne: false
+            referencedRelation: "employee_finances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_receipts_finance_id_fkey"
+            columns: ["finance_id"]
+            isOneToOne: false
+            referencedRelation: "finances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_receipts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       images: {
         Row: {
           caption: string | null
@@ -1383,6 +1441,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      receipt_templates: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_default: boolean
+          name: string
+          template_html: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          template_html: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          template_html?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       requests: {
         Row: {
