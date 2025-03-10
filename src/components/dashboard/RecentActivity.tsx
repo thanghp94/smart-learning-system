@@ -1,121 +1,83 @@
 
-import React from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ActivityItem } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { STATUS_COLORS } from "@/lib/constants";
+import React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatDate } from '@/utils/format';
 
-interface RecentActivityProps {
-  activities: ActivityItem[];
+interface Activity {
+  id: string;
+  action: string;
+  type: string;
+  name: string;
+  timestamp: string;
+  username?: string;
 }
 
-// Mock data for recent activities
-const mockActivities: ActivityItem[] = [
-  {
-    id: "1",
-    action: "Thêm mới",
-    type: "Học sinh",
-    name: "Nguyễn Văn A",
-    user: "Admin",
-    timestamp: "2023-06-01T09:30:00",
-    status: "completed"
-  },
-  {
-    id: "2",
-    action: "Cập nhật",
-    type: "Lớp học",
-    name: "Lớp Toán 10A",
-    user: "Giáo viên",
-    timestamp: "2023-06-01T10:15:00",
-    status: "completed"
-  },
-  {
-    id: "3",
-    action: "Đặt lịch",
-    type: "Buổi dạy",
-    name: "Toán học cơ bản",
-    user: "Quản lý",
-    timestamp: "2023-06-01T11:00:00",
-    status: "pending"
-  },
-  {
-    id: "4",
-    action: "Hủy",
-    type: "Buổi dạy",
-    name: "Tiếng Anh nâng cao",
-    user: "Giáo viên",
-    timestamp: "2023-06-01T13:45:00",
-    status: "inactive"
-  },
-  {
-    id: "5",
-    action: "Thanh toán",
-    type: "Học phí",
-    name: "Nguyễn Văn B",
-    user: "Kế toán",
-    timestamp: "2023-06-01T14:30:00",
-    status: "active"
-  }
-];
+export interface RecentActivityProps {
+  activities: Activity[];
+  isLoading?: boolean;
+}
 
-const RecentActivity: React.FC<RecentActivityProps> = ({ 
-  activities = mockActivities 
-}) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).format(date);
-  };
+const getActionColor = (action: string) => {
+  switch (action.toLowerCase()) {
+    case 'thêm mới':
+      return 'text-green-500';
+    case 'cập nhật':
+      return 'text-blue-500';
+    case 'xóa':
+      return 'text-red-500';
+    default:
+      return 'text-gray-500';
+  }
+};
+
+const getAvatarFallback = (type: string) => {
+  return type.substring(0, 2).toUpperCase();
+};
+
+const RecentActivity: React.FC<RecentActivityProps> = ({ activities, isLoading = false }) => {
+  if (isLoading) {
+    return <div className="space-y-8">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex items-center">
+          <div className="w-9 h-9 rounded-full bg-gray-200 animate-pulse mr-3" />
+          <div className="space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-64 animate-pulse" />
+            <div className="h-3 bg-gray-100 rounded w-32 animate-pulse" />
+          </div>
+        </div>
+      ))}
+    </div>;
+  }
+
+  if (!activities || activities.length === 0) {
+    return <div className="text-center text-muted-foreground py-4">
+      No recent activities found
+    </div>;
+  }
 
   return (
-    <Card className="animate-scale-in">
-      <CardHeader>
-        <CardTitle>Hoạt động gần đây</CardTitle>
-        <CardDescription>Các hoạt động mới nhất trong hệ thống</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {activities.map((activity, index) => (
-            <div 
-              key={activity.id}
-              className={cn(
-                "flex justify-between items-start pb-4", 
-                index !== activities.length - 1 && "border-b border-border"
-              )}
-            >
-              <div>
-                <div className="font-medium">
-                  {activity.action} {activity.type}: {activity.name}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Bởi {activity.user} • {formatDate(activity.timestamp)}
-                </div>
-              </div>
-              {activity.status && (
-                <Badge className={cn(STATUS_COLORS[activity.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.default)}>
-                  {activity.status === "active" && "Hoạt động"}
-                  {activity.status === "pending" && "Đang chờ"}
-                  {activity.status === "inactive" && "Đã hủy"}
-                  {activity.status === "completed" && "Hoàn thành"}
-                </Badge>
-              )}
-            </div>
-          ))}
+    <div className="space-y-8">
+      {activities.map((activity) => (
+        <div key={activity.id} className="flex items-center">
+          <Avatar className="h-9 w-9 mr-3">
+            <AvatarImage src="" alt={activity.type} />
+            <AvatarFallback>{getAvatarFallback(activity.type)}</AvatarFallback>
+          </Avatar>
+          <div className="space-y-1">
+            <p className="text-sm">
+              <span className={getActionColor(activity.action)}>
+                {activity.action}
+              </span>{' '}
+              <span className="font-medium">{activity.type}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {activity.timestamp && formatDate(activity.timestamp)}
+              {activity.username && ` by ${activity.username}`}
+            </p>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      ))}
+    </div>
   );
 };
 

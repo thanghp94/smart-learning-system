@@ -1,293 +1,358 @@
 
-import React, { useState, useEffect } from "react";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TeachingSession, Image as ImageType } from "@/lib/types";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Upload, Image, FileText } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { imageService } from "@/lib/supabase";
-import { studentAssignmentService, StudentAssignment } from "@/lib/supabase/student-assignment-service";
-import AssignmentForm from "./AssignmentForm";
-import ImageUploadForm from "./ImageUploadForm";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { PenSquare, Trash2, Calendar, Clock, User, Users, Image as ImageIcon } from 'lucide-react';
+import { formatDate, formatTime } from '@/utils/format';
+import { teachingSessionService } from '@/lib/supabase/teaching-session-service';
+import { TeachingSession } from '@/lib/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import EnrollmentsTable from '@/pages/Enrollments/EnrollmentsTable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ImageUploadForm from './ImageUploadForm';
+import { imageService } from '@/lib/supabase/image-service';
+import { Image } from '@/lib/types';
+import AssignmentList from './AssignmentList';
 
 interface SessionDetailProps {
-  session: TeachingSession;
+  sessionId: string;
+  onUpdate?: () => void;
 }
 
-const SessionDetail: React.FC<SessionDetailProps> = ({ session }) => {
-  const [images, setImages] = useState<ImageType[]>([]);
-  const [assignments, setAssignments] = useState<StudentAssignment[]>([]);
-  const [showImageUpload, setShowImageUpload] = useState(false);
-  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+const SessionDetail: React.FC<SessionDetailProps> = ({ sessionId, onUpdate }) => {
+  const [session, setSession] = useState<TeachingSession | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [images, setImages] = useState<Image[]>([]);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        setLoading(true);
+        const data = await teachingSessionService.getById(sessionId);
+        setSession(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching session:', err);
+        setError('Could not load session details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (sessionId) {
+      fetchSession();
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (session) {
+        try {
+          const images = await imageService.getByEntity('teaching_session', session.id);
+          setImages(images);
+        } catch (err) {
+          console.error('Error fetching images:', err);
+        }
+      }
+    };
+
     fetchImages();
-    fetchAssignments();
-  }, [session.id]);
+  }, [session]);
 
-  const fetchImages = async () => {
+  const handleDelete = async () => {
     try {
-      const data = await imageService.getByEntity("teaching_session", session.id);
-      setImages(data);
-    } catch (error) {
-      console.error("Error fetching images:", error);
-    }
-  };
-
-  const fetchAssignments = async () => {
-    try {
-      const data = await studentAssignmentService.getByTeachingSession(session.id);
-      setAssignments(data);
-    } catch (error) {
-      console.error("Error fetching assignments:", error);
-    }
-  };
-
-  const handleImageUploadComplete = () => {
-    setShowImageUpload(false);
-    fetchImages();
-  };
-
-  const handleAssignmentSubmit = async (data: Partial<StudentAssignment>) => {
-    try {
-      await studentAssignmentService.create(data);
+      await teachingSessionService.delete(sessionId);
       toast({
-        title: "Thành công",
-        description: "Đã tạo bài tập mới thành công",
+        title: 'Thành công',
+        description: 'Buổi dạy đã được xóa'
       });
-      setShowAssignmentForm(false);
-      fetchAssignments();
-    } catch (error) {
-      console.error("Error creating assignment:", error);
+      navigate('/teaching-sessions');
+    } catch (err) {
+      console.error('Error deleting session:', err);
       toast({
-        title: "Lỗi",
-        description: "Không thể tạo bài tập. Vui lòng thử lại.",
-        variant: "destructive"
+        title: 'Lỗi',
+        description: 'Không thể xóa buổi dạy',
+        variant: 'destructive'
       });
     }
   };
 
-  const formatDate = (date: string | Date | undefined) => {
-    if (!date) return "N/A";
-    try {
-      return format(new Date(date), "dd/MM/yyyy", { locale: vi });
-    } catch (e) {
-      return String(date);
+  const handleImageUpload = async () => {
+    setIsImageDialogOpen(false);
+    
+    if (session) {
+      try {
+        const images = await imageService.getByEntity('teaching_session', session.id);
+        setImages(images);
+        toast({
+          title: 'Thành công',
+          description: 'Hình ảnh đã được tải lên'
+        });
+      } catch (err) {
+        console.error('Error refreshing images:', err);
+      }
     }
   };
 
-  const formatTime = (time: string | undefined) => {
-    if (!time) return "N/A";
-    return time.substring(0, 5);
-  };
+  if (loading) {
+    return <div>Đang tải...</div>;
+  }
+
+  if (error || !session) {
+    return <Alert variant="destructive"><AlertDescription>{error || 'Không tìm thấy thông tin buổi dạy'}</AlertDescription></Alert>;
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">{session.class_name || "Buổi học"}</h2>
-        <p className="text-muted-foreground">
-          Ngày học: {formatDate(session.ngay_hoc)} | Thời gian: {formatTime(session.thoi_gian_bat_dau)} - {formatTime(session.thoi_gian_ket_thuc)}
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Chi tiết buổi dạy</h2>
+          <p className="text-muted-foreground">
+            {formatDate(session.ngay_hoc)} | {formatTime(session.thoi_gian_bat_dau)} - {formatTime(session.thoi_gian_ket_thuc)}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-1">
+                <ImageIcon className="h-4 w-4" /> Ảnh buổi dạy
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Tải lên hình ảnh buổi dạy</DialogTitle>
+              </DialogHeader>
+              <ImageUploadForm 
+                entityType="teaching_session"
+                entityId={session.id}
+                onSuccess={handleImageUpload}
+              />
+            </DialogContent>
+          </Dialog>
+          <Button onClick={() => navigate(`/teaching-sessions/edit/${sessionId}`)} className="flex items-center gap-1">
+            <PenSquare className="h-4 w-4" /> Sửa
+          </Button>
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="destructive" className="flex items-center gap-1">
+                <Trash2 className="h-4 w-4" /> Xóa
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Xác nhận xóa</DialogTitle>
+              </DialogHeader>
+              <p>Bạn có chắc chắn muốn xóa buổi dạy này không? Hành động này không thể hoàn tác.</p>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Hủy</Button>
+                <Button variant="destructive" onClick={handleDelete}>Xóa</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      <Separator />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <p className="font-medium">Buổi học số:</p>
-          <p>{session.session_id}</p>
-        </div>
-        <div>
-          <p className="font-medium">Giáo viên:</p>
-          <p>{session.teacher_name || "N/A"}</p>
-        </div>
-        <div>
-          <p className="font-medium">Trợ giảng:</p>
-          <p>{session.assistant_name || "N/A"}</p>
-        </div>
-        <div>
-          <p className="font-medium">Loại bài học:</p>
-          <p>{session.loai_bai_hoc || "Học mới"}</p>
-        </div>
-      </div>
-
-      <Separator />
-
-      <Tabs defaultValue="content" className="w-full">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="content">Nội dung</TabsTrigger>
+      <Tabs defaultValue="details">
+        <TabsList>
+          <TabsTrigger value="details">Thông tin</TabsTrigger>
+          <TabsTrigger value="enrollments">Điểm danh</TabsTrigger>
           <TabsTrigger value="assignments">Bài tập</TabsTrigger>
           <TabsTrigger value="images">Hình ảnh</TabsTrigger>
-          <TabsTrigger value="evaluation">Đánh giá</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="content" className="pt-4">
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-semibold">Nội dung bài học</h3>
-              <p className="mt-1 whitespace-pre-line">{session.lesson_content || "Không có nội dung"}</p>
-            </div>
-
-            {session.ghi_chu && (
-              <div>
-                <h3 className="font-semibold">Ghi chú</h3>
-                <p className="mt-1 whitespace-pre-line">{session.ghi_chu}</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="assignments" className="pt-4">
-          <div className="flex justify-end mb-4">
-            <Button onClick={() => setShowAssignmentForm(true)}>
-              <Plus className="h-4 w-4 mr-1" /> Thêm bài tập
-            </Button>
-          </div>
-
-          {assignments.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">Chưa có bài tập nào cho buổi học này</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {assignments.map((assignment) => (
-                <Card key={assignment.id}>
-                  <CardHeader className="py-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{assignment.tieu_de}</CardTitle>
-                      <Badge variant={assignment.trang_thai === "assigned" ? "outline" : "default"}>
-                        {assignment.trang_thai === "assigned" ? "Đã giao" : 
-                         assignment.trang_thai === "submitted" ? "Đã nộp" : 
-                         assignment.trang_thai === "reviewed" ? "Đã chấm" : 
-                         assignment.trang_thai === "late" ? "Nộp trễ" : "Đã giao"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="py-2">
-                    {assignment.mo_ta && (
-                      <p className="text-sm text-muted-foreground mb-2">{assignment.mo_ta}</p>
-                    )}
-                    <div className="flex flex-wrap gap-4 text-sm">
-                      <div>
-                        <span className="font-medium">Ngày giao:</span> {formatDate(assignment.ngay_giao)}
-                      </div>
-                      {assignment.han_nop && (
-                        <div>
-                          <span className="font-medium">Hạn nộp:</span> {formatDate(assignment.han_nop)}
-                        </div>
-                      )}
-                      {assignment.file && (
-                        <div className="flex items-center">
-                          <FileText className="h-4 w-4 mr-1" />
-                          <span>Có tệp đính kèm</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="images" className="pt-4">
-          <div className="flex justify-end mb-4">
-            <Button onClick={() => setShowImageUpload(true)}>
-              <Upload className="h-4 w-4 mr-1" /> Tải lên ảnh
-            </Button>
-          </div>
-
-          {images.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">Chưa có hình ảnh nào cho buổi học này</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {images.map((image) => (
-                <Card key={image.id} className="overflow-hidden">
-                  <div className="aspect-video relative bg-muted">
-                    <img 
-                      src={imageService.getPublicUrl("images", image.image || "")} 
-                      alt={image.caption || "Hình ảnh buổi học"} 
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <CardContent className="p-2">
-                    <p className="text-sm text-muted-foreground truncate">{image.caption || "Hình ảnh buổi học"}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="evaluation" className="pt-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((index) => {
-              const key = `nhan_xet_${index}` as keyof TeachingSession;
-              const value = session[key];
-              return (
-                <Card key={index}>
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm">Tiêu chí {index}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-2">
-                    <p className="text-2xl font-semibold text-center">{value || "-"}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <Card className="mt-4">
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm">Điểm trung bình</CardTitle>
+        
+        <TabsContent value="details" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Thông tin buổi dạy</CardTitle>
+              <CardDescription>Chi tiết về buổi dạy và đánh giá</CardDescription>
             </CardHeader>
-            <CardContent className="py-2">
-              <p className="text-2xl font-semibold text-center">{session.trung_binh?.toFixed(1) || "-"}</p>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Lớp</Label>
+                  <p className="font-medium">{session.lop_chi_tiet_id}</p>
+                </div>
+                <div>
+                  <Label>Bài học</Label>
+                  <p className="font-medium">{session.session_id}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 opacity-70" />
+                  <div>
+                    <Label>Ngày học</Label>
+                    <p className="font-medium">{formatDate(session.ngay_hoc)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 opacity-70" />
+                  <div>
+                    <Label>Thời gian</Label>
+                    <p className="font-medium">{formatTime(session.thoi_gian_bat_dau)} - {formatTime(session.thoi_gian_ket_thuc)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 opacity-70" />
+                  <div>
+                    <Label>Giáo viên</Label>
+                    <p className="font-medium">{session.giao_vien}</p>
+                  </div>
+                </div>
+                {session.tro_giang && (
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 opacity-70" />
+                    <div>
+                      <Label>Trợ giảng</Label>
+                      <p className="font-medium">{session.tro_giang}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+              
+              <div>
+                <Label>Đánh giá</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                  {session.nhan_xet_1 && (
+                    <div>
+                      <Label>Đánh giá 1</Label>
+                      <p>{session.nhan_xet_1}</p>
+                    </div>
+                  )}
+                  {session.nhan_xet_2 && (
+                    <div>
+                      <Label>Đánh giá 2</Label>
+                      <p>{session.nhan_xet_2}</p>
+                    </div>
+                  )}
+                  {session.nhan_xet_3 && (
+                    <div>
+                      <Label>Đánh giá 3</Label>
+                      <p>{session.nhan_xet_3}</p>
+                    </div>
+                  )}
+                  {session.nhan_xet_4 && (
+                    <div>
+                      <Label>Đánh giá 4</Label>
+                      <p>{session.nhan_xet_4}</p>
+                    </div>
+                  )}
+                  {session.nhan_xet_5 && (
+                    <div>
+                      <Label>Đánh giá 5</Label>
+                      <p>{session.nhan_xet_5}</p>
+                    </div>
+                  )}
+                  {session.nhan_xet_6 && (
+                    <div>
+                      <Label>Đánh giá 6</Label>
+                      <p>{session.nhan_xet_6}</p>
+                    </div>
+                  )}
+                </div>
+                
+                {session.trung_binh && (
+                  <div className="mt-4">
+                    <Label>Điểm trung bình</Label>
+                    <p className="font-bold text-lg">{session.trung_binh}</p>
+                  </div>
+                )}
+                
+                {session.nhan_xet_chung && (
+                  <div className="mt-4">
+                    <Label>Nhận xét chung</Label>
+                    <p>{session.nhan_xet_chung}</p>
+                  </div>
+                )}
+              </div>
+              
+              {session.ghi_chu && (
+                <div>
+                  <Label>Ghi chú</Label>
+                  <p>{session.ghi_chu}</p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="border-t pt-6">
+              <p className="text-xs text-muted-foreground">
+                Last updated: {formatDate(session.updated_at)}
+              </p>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="enrollments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Điểm danh</CardTitle>
+              <CardDescription>Danh sách học sinh và tình trạng điểm danh</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EnrollmentsTable classId={session.lop_chi_tiet_id} sessionId={session.id} />
             </CardContent>
           </Card>
-
-          {session.nhan_xet_chung && (
-            <div className="mt-4">
-              <h3 className="font-semibold">Nhận xét chung</h3>
-              <p className="mt-1 whitespace-pre-line">{session.nhan_xet_chung}</p>
-            </div>
-          )}
         </TabsContent>
-      </Tabs>
 
-      {/* Image Upload Dialog */}
-      <Dialog open={showImageUpload} onOpenChange={setShowImageUpload}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Tải lên hình ảnh</DialogTitle>
-          </DialogHeader>
-          <ImageUploadForm 
-            sessionId={session.id} 
-            onUploadComplete={handleImageUploadComplete}
-            onCancel={() => setShowImageUpload(false)} 
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Assignment Form Dialog */}
-      <Dialog open={showAssignmentForm} onOpenChange={setShowAssignmentForm}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Thêm bài tập mới</DialogTitle>
-          </DialogHeader>
-          <AssignmentForm 
+        <TabsContent value="assignments">
+          <AssignmentList 
             teachingSessionId={session.id}
             classId={session.lop_chi_tiet_id}
-            onSubmit={handleAssignmentSubmit}
-            onCancel={() => setShowAssignmentForm(false)} 
           />
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+        
+        <TabsContent value="images">
+          <Card>
+            <CardHeader>
+              <CardTitle>Hình ảnh buổi dạy</CardTitle>
+              <CardDescription>Hình ảnh được chụp trong buổi dạy</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {images.length === 0 ? (
+                <p className="text-muted-foreground">Chưa có hình ảnh nào. Nhấn "Ảnh buổi dạy" để tải lên.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {images.map(image => {
+                    const imageUrl = image.image ? image.image : '';
+                    return (
+                      <div key={image.id} className="relative aspect-square rounded-md overflow-hidden bg-muted">
+                        <img 
+                          src={imageUrl}
+                          alt={image.caption || 'Teaching session image'}
+                          className="object-cover w-full h-full hover:scale-105 transition-transform"
+                        />
+                        {image.caption && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm">
+                            {image.caption}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-1"
+                onClick={() => setIsImageDialogOpen(true)}
+              >
+                <ImageIcon className="h-4 w-4" /> Tải lên thêm ảnh
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

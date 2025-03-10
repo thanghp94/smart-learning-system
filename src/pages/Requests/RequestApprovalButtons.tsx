@@ -1,121 +1,125 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check, X, AlertCircle } from 'lucide-react';
+import { Check, X, ChevronsUp } from 'lucide-react';
+import { requestService } from '@/lib/supabase/request-service';
 import { useToast } from '@/hooks/use-toast';
-import { Request } from '@/lib/types/request';
-import { requestService } from '@/lib/supabase';
+import { Request } from '@/lib/types';
 
 interface RequestApprovalButtonsProps {
   request: Request;
-  onRequestUpdate: () => void;
+  onStatusChange: () => void;
 }
 
 const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({ 
   request, 
-  onRequestUpdate 
+  onStatusChange 
 }) => {
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const handleApprove = async () => {
     try {
+      setLoading(true);
       await requestService.update(request.id, {
-        trang_thai: 'approved'
+        status: 'approved'
       });
-      
       toast({
-        title: "Thành công",
-        description: "Đã phê duyệt yêu cầu",
+        title: 'Thành công',
+        description: 'Yêu cầu đã được phê duyệt',
       });
-      
-      onRequestUpdate();
+      onStatusChange();
     } catch (error) {
-      console.error("Error approving request:", error);
+      console.error('Error approving request:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể phê duyệt yêu cầu",
-        variant: "destructive"
+        title: 'Lỗi',
+        description: 'Không thể phê duyệt yêu cầu',
+        variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleReject = async () => {
     try {
+      setLoading(true);
       await requestService.update(request.id, {
-        trang_thai: 'rejected'
+        status: 'rejected'
       });
-      
       toast({
-        title: "Thành công",
-        description: "Đã từ chối yêu cầu",
+        title: 'Thành công',
+        description: 'Yêu cầu đã bị từ chối',
       });
-      
-      onRequestUpdate();
+      onStatusChange();
     } catch (error) {
-      console.error("Error rejecting request:", error);
+      console.error('Error rejecting request:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể từ chối yêu cầu",
-        variant: "destructive"
+        title: 'Lỗi',
+        description: 'Không thể từ chối yêu cầu',
+        variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleReviewNeeded = async () => {
+  const handleEscalate = async () => {
     try {
+      setLoading(true);
       await requestService.update(request.id, {
-        trang_thai: 'review_needed'
+        status: 'escalated'
       });
-      
       toast({
-        title: "Thành công",
-        description: "Đã đánh dấu yêu cầu cần xem xét lại",
+        title: 'Thành công',
+        description: 'Yêu cầu đã được chuyển lên cấp trên',
       });
-      
-      onRequestUpdate();
+      onStatusChange();
     } catch (error) {
-      console.error("Error marking request for review:", error);
+      console.error('Error escalating request:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể đánh dấu yêu cầu",
-        variant: "destructive"
+        title: 'Lỗi',
+        description: 'Không thể chuyển yêu cầu lên cấp trên',
+        variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Only show buttons for pending requests
-  if (request.trang_thai !== 'pending') {
+  // Only show buttons if the request is pending
+  if (request.status !== 'pending') {
     return null;
   }
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex gap-2">
       <Button
-        size="sm"
-        variant="default"
-        onClick={handleApprove}
-        className="bg-green-500 hover:bg-green-600"
-      >
-        <Check className="h-4 w-4 mr-1" />
-        Phê duyệt
-      </Button>
-      
-      <Button 
-        size="sm" 
         variant="outline"
-        onClick={handleReviewNeeded}
+        size="sm"
+        className="flex items-center gap-1"
+        onClick={handleApprove}
+        disabled={loading}
       >
-        <AlertCircle className="h-4 w-4 mr-1" />
-        Cần xem xét
+        <Check className="h-4 w-4" /> Phê duyệt
       </Button>
-      
-      <Button 
-        size="sm" 
-        variant="destructive"
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-1"
         onClick={handleReject}
+        disabled={loading}
       >
-        <X className="h-4 w-4 mr-1" />
-        Từ chối
+        <X className="h-4 w-4" /> Từ chối
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-1"
+        onClick={handleEscalate}
+        disabled={loading}
+      >
+        <ChevronsUp className="h-4 w-4" /> Chuyển cấp
       </Button>
     </div>
   );

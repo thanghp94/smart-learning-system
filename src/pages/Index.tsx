@@ -1,140 +1,184 @@
 
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import RecentActivity from "@/components/dashboard/RecentActivity";
-import { activityService } from "@/lib/supabase";
-import { Activity } from "@/lib/types";
-import { ArrowUp, ArrowDown, Users, Layers, School, Briefcase } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import StatsCard from '@/components/common/StatsCard';
+import RecentActivity from '@/components/dashboard/RecentActivity';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { Users, GraduationCap, Home, BookOpen } from 'lucide-react';
+import { studentService } from '@/lib/supabase/student-service';
+import { classService } from '@/lib/supabase/services/class';
+import { facilityService } from '@/lib/supabase/facility-service';
+import { teachingSessionService } from '@/lib/supabase/teaching-session-service';
+import { activityService } from '@/lib/supabase/activity-service';
+import { formatDate } from '@/utils/format';
 
-export default function Index() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+interface ChartData {
+  name: string;
+  total: number;
+}
+
+const Index = () => {
+  const [studentCount, setStudentCount] = useState<number>(0);
+  const [classCount, setClassCount] = useState<number>(0);
+  const [facilityCount, setFacilityCount] = useState<number>(0);
+  const [sessionCount, setSessionCount] = useState<number>(0);
+  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchActivities = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const data = await activityService.getAll();
-        setActivities(data.slice(0, 10)); // Get last 10 activities
+        setLoading(true);
+        
+        // Fetch counts for stats cards
+        const students = await studentService.getAll();
+        const classes = await classService.classBaseService.getAll();
+        const facilities = await facilityService.getAll();
+        const sessions = await teachingSessionService.getAll();
+        
+        setStudentCount(students.length);
+        setClassCount(classes.length);
+        setFacilityCount(facilities.length);
+        setSessionCount(sessions.length);
+        
+        // Generate chart data
+        const now = new Date();
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(now.getMonth() - 6);
+        
+        const monthData: { [key: string]: number } = {};
+        for (let i = 0; i < 6; i++) {
+          const month = new Date();
+          month.setMonth(now.getMonth() - i);
+          const monthName = month.toLocaleString('vi-VN', { month: 'short' });
+          monthData[monthName] = 0;
+        }
+        
+        // Count students by creation month
+        students.forEach(student => {
+          if (!student.created_at) return;
+          
+          const createdAt = new Date(student.created_at);
+          if (createdAt >= sixMonthsAgo) {
+            const monthName = createdAt.toLocaleString('vi-VN', { month: 'short' });
+            if (monthData[monthName] !== undefined) {
+              monthData[monthName] += 1;
+            }
+          }
+        });
+        
+        // Convert to chart data format
+        const chartData = Object.entries(monthData).map(([name, total]) => ({
+          name,
+          total
+        })).reverse();
+        
+        setChartData(chartData);
+        
+        // Fetch recent activities
+        const recentActivities = await activityService.getRecent(10);
+        setActivities(recentActivities);
       } catch (error) {
-        console.error("Error fetching activities:", error);
+        console.error('Error fetching dashboard data:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-
-    fetchActivities();
+    
+    fetchDashboardData();
   }, []);
-
-  const stats = [
-    {
-      title: "Học Sinh",
-      value: "124",
-      description: "Tăng 14% so với tháng trước",
-      trend: "up",
-      icon: Users,
-      onClick: () => navigate("/students"),
-    },
-    {
-      title: "Lớp Học",
-      value: "35",
-      description: "Tăng 5% so với tháng trước",
-      trend: "up", 
-      icon: School,
-      onClick: () => navigate("/classes"),
-    },
-    {
-      title: "Nhân Viên",
-      value: "48",
-      description: "Không thay đổi so với tháng trước",
-      trend: "neutral",
-      icon: Briefcase,
-      onClick: () => navigate("/employees"),
-    },
-    {
-      title: "Cơ Sở",
-      value: "5",
-      description: "Tăng 1 cơ sở mới",
-      trend: "up",
-      icon: Layers,
-      onClick: () => navigate("/facilities"),
-    },
-  ];
-
+  
   return (
-    <div className="container mx-auto py-6 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Tổng quan</h1>
-      </div>
-
+    <div className="space-y-6">
+      <h2 className="text-3xl font-bold tracking-tight">Tổng quan</h2>
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, i) => (
-          <Card 
-            key={i} 
-            className="cursor-pointer hover:bg-accent/10 transition-colors"
-            onClick={stat.onClick}
-          >
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                {stat.trend === "up" && <ArrowUp className="mr-1 h-4 w-4 text-green-500" />}
-                {stat.trend === "down" && <ArrowDown className="mr-1 h-4 w-4 text-red-500" />}
-                {stat.description}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+        <StatsCard
+          title="Tổng số học sinh"
+          value={loading ? '...' : studentCount.toString()}
+          description="Học sinh đang học"
+          icon={<Users className="h-4 w-4 text-muted-foreground" />}
+        />
+        <StatsCard
+          title="Lớp học"
+          value={loading ? '...' : classCount.toString()}
+          description="Tổng số lớp"
+          icon={<GraduationCap className="h-4 w-4 text-muted-foreground" />}
+        />
+        <StatsCard
+          title="Cơ sở"
+          value={loading ? '...' : facilityCount.toString()}
+          description="Cơ sở đang hoạt động"
+          icon={<Home className="h-4 w-4 text-muted-foreground" />}
+        />
+        <StatsCard
+          title="Buổi dạy"
+          value={loading ? '...' : sessionCount.toString()}
+          description="Tổng số buổi dạy"
+          icon={<BookOpen className="h-4 w-4 text-muted-foreground" />}
+        />
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-2">
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-7 lg:col-span-4">
+          <CardHeader>
+            <CardTitle>Học sinh mới (6 tháng gần đây)</CardTitle>
+            <CardDescription>
+              Số lượng học sinh đăng ký mới theo tháng
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="h-80 flex items-center justify-center">
+                <p>Đang tải dữ liệu...</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={chartData}>
+                  <XAxis
+                    dataKey="name"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `${value}`}
+                  />
+                  <Tooltip />
+                  <Bar
+                    dataKey="total"
+                    fill="currentColor"
+                    radius={[4, 4, 0, 0]}
+                    className="fill-primary"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="col-span-7 lg:col-span-3">
           <CardHeader>
             <CardTitle>Hoạt động gần đây</CardTitle>
             <CardDescription>
-              Các hoạt động trong hệ thống 
+              Các hoạt động mới nhất trên hệ thống
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <RecentActivity activities={activities} isLoading={isLoading} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Thông báo</CardTitle>
-            <CardDescription>
-              Các thông báo mới nhất
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-3 border rounded-md bg-accent/10">
-                <p className="font-medium">Sự kiện sắp tới</p>
-                <p className="text-sm text-muted-foreground">
-                  Buổi hội thảo phụ huynh ngày 25/10/2023
-                </p>
-              </div>
-              <div className="p-3 border rounded-md bg-accent/10">
-                <p className="font-medium">Deadline báo cáo</p>
-                <p className="text-sm text-muted-foreground">
-                  Nộp báo cáo tài chính quý 3 trước ngày 15/10/2023
-                </p>
-              </div>
-              <div className="p-3 border rounded-md bg-accent/10">
-                <p className="font-medium">Cập nhật hệ thống</p>
-                <p className="text-sm text-muted-foreground">
-                  Hệ thống sẽ bảo trì từ 22:00 - 23:00 ngày 18/10/2023
-                </p>
-              </div>
-            </div>
+            <RecentActivity 
+              activities={activities} 
+              isLoading={loading} 
+            />
           </CardContent>
         </Card>
       </div>
     </div>
   );
-}
+};
+
+export default Index;

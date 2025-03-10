@@ -1,238 +1,328 @@
 
-import React, { useState, useEffect } from "react";
-import { Facility, Asset, Finance, Event, File } from "@/lib/types";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { FileText, DollarSign, Calendar, Package } from "lucide-react";
-import { formatDate, formatCurrency, formatStatus } from "@/utils/format";
-import { assetService, financeService, eventService, fileService } from "@/lib/supabase";
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Facility, Asset, Event, Finance, File } from '@/lib/types';
+import { facilityService } from '@/lib/supabase/facility-service';
+import { assetService } from '@/lib/supabase/asset-service';
+import { eventService } from '@/lib/supabase/event-service';
+import { financeService } from '@/lib/supabase/finance-service';
+import { fileService } from '@/lib/supabase/file-service';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatDate, formatStatus } from '@/utils/format';
+import { Button } from '@/components/ui/button';
+import { PenSquare } from 'lucide-react';
+import { DataTable } from '@/components/ui/DataTable';
+import { ColumnDef } from '@tanstack/react-table';
+import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface FacilityDetailProps {
-  facility: Facility;
+  facilityId: string;
 }
 
-const FacilityDetail: React.FC<FacilityDetailProps> = ({ facility }) => {
+const FacilityDetail: React.FC<FacilityDetailProps> = ({ facilityId }) => {
+  const [facility, setFacility] = useState<Facility | null>(null);
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [finances, setFinances] = useState<Finance[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [finances, setFinances] = useState<Finance[]>([]);
   const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchFacilityData = async () => {
       try {
-        const [assetsData, financesData, eventsData, filesData] = await Promise.all([
-          assetService.getByEntity("facility", facility.id),
-          financeService.getByEntity("facility", facility.id),
-          eventService.getByEntity("facility", facility.id),
-          fileService.getByEntity("facility", facility.id)
-        ]);
+        setLoading(true);
         
+        // Fetch facility details
+        const facilityData = await facilityService.getById(facilityId);
+        setFacility(facilityData);
+        
+        // Fetch related assets
+        const assetsData = await assetService.getByOwner('facility', facilityId);
         setAssets(assetsData);
-        setFinances(financesData);
+        
+        // Fetch related events
+        const eventsData = await eventService.getByEntityId('facility', facilityId);
         setEvents(eventsData);
+        
+        // Fetch related finances
+        const financesData = await financeService.getByEntityId('facility', facilityId);
+        setFinances(financesData);
+        
+        // Fetch related files
+        const filesData = await fileService.getByEntityId('facility', facilityId);
         setFiles(filesData);
+        
       } catch (error) {
-        console.error("Error fetching facility data:", error);
+        console.error('Error fetching facility data:', error);
+        toast({
+          title: 'Error',
+          description: 'Unable to load facility data',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
       }
     };
     
-    fetchData();
-  }, [facility.id]);
+    if (facilityId) {
+      fetchFacilityData();
+    }
+  }, [facilityId]);
+
+  // Column definitions for Assets table
+  const assetColumns: ColumnDef<Asset>[] = [
+    {
+      accessorKey: 'ten_CSVC',
+      header: 'Tên tài sản',
+    },
+    {
+      accessorKey: 'so_luong',
+      header: 'Số lượng',
+    },
+    {
+      accessorKey: 'loai',
+      header: 'Loại',
+    },
+    {
+      accessorKey: 'tinh_trang',
+      header: 'Tình trạng',
+      cell: ({ row }) => (
+        <Badge variant={row.original.tinh_trang === 'active' ? 'success' : 'secondary'}>
+          {formatStatus(row.original.tinh_trang)}
+        </Badge>
+      ),
+    },
+  ];
+
+  // Column definitions for Events table
+  const eventColumns: ColumnDef<Event>[] = [
+    {
+      accessorKey: 'ten_su_kien',
+      header: 'Tên sự kiện',
+    },
+    {
+      accessorKey: 'loai_su_kien',
+      header: 'Loại sự kiện',
+    },
+    {
+      accessorKey: 'ngay_bat_dau',
+      header: 'Ngày',
+      cell: ({ row }) => formatDate(row.original.ngay_bat_dau),
+    },
+    {
+      accessorKey: 'trang_thai',
+      header: 'Trạng thái',
+      cell: ({ row }) => (
+        <Badge variant={row.original.trang_thai === 'completed' ? 'success' : 'secondary'}>
+          {formatStatus(row.original.trang_thai)}
+        </Badge>
+      ),
+    },
+  ];
+
+  // Column definitions for Finances table
+  const financeColumns: ColumnDef<Finance>[] = [
+    {
+      accessorKey: 'ngay',
+      header: 'Ngày',
+      cell: ({ row }) => formatDate(row.original.ngay),
+    },
+    {
+      accessorKey: 'loai_thu_chi',
+      header: 'Loại thu chi',
+    },
+    {
+      accessorKey: 'dien_giai',
+      header: 'Diễn giải',
+    },
+    {
+      accessorKey: 'tong_tien',
+      header: 'Số tiền',
+      cell: ({ row }) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(row.original.tong_tien),
+    },
+    {
+      accessorKey: 'tinh_trang',
+      header: 'Trạng thái',
+      cell: ({ row }) => (
+        <Badge variant={row.original.tinh_trang === 'completed' ? 'success' : 'secondary'}>
+          {formatStatus(row.original.tinh_trang)}
+        </Badge>
+      ),
+    },
+  ];
+
+  // Column definitions for Files table
+  const fileColumns: ColumnDef<File>[] = [
+    {
+      accessorKey: 'ten_tai_lieu',
+      header: 'Tên tài liệu',
+    },
+    {
+      accessorKey: 'nhom_tai_lieu',
+      header: 'Nhóm tài liệu',
+    },
+    {
+      accessorKey: 'ngay_cap',
+      header: 'Ngày cấp',
+      cell: ({ row }) => formatDate(row.original.ngay_cap),
+    },
+    {
+      accessorKey: 'trang_thai',
+      header: 'Trạng thái',
+      cell: ({ row }) => (
+        <Badge variant={row.original.trang_thai === 'active' ? 'success' : 'secondary'}>
+          {formatStatus(row.original.trang_thai)}
+        </Badge>
+      ),
+    },
+  ];
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!facility) {
+    return <div>Facility not found</div>;
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">{facility.ten_co_so}</h2>
-        <p className="text-muted-foreground">{facility.loai_co_so}</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">{facility.ten_co_so}</h2>
+          <p className="text-muted-foreground">{facility.loai_co_so}</p>
+        </div>
+        <Button onClick={() => navigate(`/facilities/edit/${facilityId}`)} className="flex items-center gap-1">
+          <PenSquare className="h-4 w-4" /> Edit
+        </Button>
       </div>
-      
-      <Separator />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <p className="font-medium">Địa chỉ:</p>
-          <p>{facility.dia_chi_co_so || "N/A"}</p>
-        </div>
-        <div>
-          <p className="font-medium">Người chủ:</p>
-          <p>{facility.nguoi_chu || "N/A"}</p>
-        </div>
-        <div>
-          <p className="font-medium">Điện thoại:</p>
-          <p>{facility.phone || "N/A"}</p>
-        </div>
-        <div>
-          <p className="font-medium">Email:</p>
-          <p>{facility.email || "N/A"}</p>
-        </div>
-        <div>
-          <p className="font-medium">Trạng thái:</p>
-          <Badge variant={facility.trang_thai === "active" ? "default" : "secondary"}>
-            {formatStatus(facility.trang_thai)}
-          </Badge>
-        </div>
-        {facility.ghi_chu && (
-          <div className="col-span-2">
-            <p className="font-medium">Ghi chú:</p>
-            <p>{facility.ghi_chu}</p>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Thông tin cơ sở</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm font-medium">Tên cơ sở</p>
+            <p>{facility.ten_co_so}</p>
           </div>
-        )}
-      </div>
+          <div>
+            <p className="text-sm font-medium">Loại cơ sở</p>
+            <p>{facility.loai_co_so}</p>
+          </div>
+          {facility.dia_chi_co_so && (
+            <div>
+              <p className="text-sm font-medium">Địa chỉ</p>
+              <p>{facility.dia_chi_co_so}</p>
+            </div>
+          )}
+          {facility.phone && (
+            <div>
+              <p className="text-sm font-medium">Điện thoại</p>
+              <p>{facility.phone}</p>
+            </div>
+          )}
+          {facility.email && (
+            <div>
+              <p className="text-sm font-medium">Email</p>
+              <p>{facility.email}</p>
+            </div>
+          )}
+          {facility.nguoi_chu && (
+            <div>
+              <p className="text-sm font-medium">Người chủ</p>
+              <p>{facility.nguoi_chu}</p>
+            </div>
+          )}
+          {facility.nguoi_phu_trach && (
+            <div>
+              <p className="text-sm font-medium">Người phụ trách</p>
+              <p>{facility.nguoi_phu_trach}</p>
+            </div>
+          )}
+          <div>
+            <p className="text-sm font-medium">Trạng thái</p>
+            <Badge variant={facility.trang_thai === 'active' ? 'success' : 'destructive'}>
+              {formatStatus(facility.trang_thai)}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
 
-      <Separator />
-
-      <Tabs defaultValue="assets" className="w-full">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="assets">
-            <Package className="h-4 w-4 mr-2" />
-            Cơ sở vật chất
-          </TabsTrigger>
-          <TabsTrigger value="finances">
-            <DollarSign className="h-4 w-4 mr-2" />
-            Tài chính
-          </TabsTrigger>
-          <TabsTrigger value="files">
-            <FileText className="h-4 w-4 mr-2" />
-            Tài liệu
-          </TabsTrigger>
-          <TabsTrigger value="events">
-            <Calendar className="h-4 w-4 mr-2" />
-            Sự kiện
-          </TabsTrigger>
+      <Tabs defaultValue="assets">
+        <TabsList>
+          <TabsTrigger value="assets">Cơ sở vật chất</TabsTrigger>
+          <TabsTrigger value="events">Sự kiện</TabsTrigger>
+          <TabsTrigger value="finances">Thu chi</TabsTrigger>
+          <TabsTrigger value="files">Tài liệu</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="assets" className="py-4">
-          {assets.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên CSVC</TableHead>
-                  <TableHead>Loại</TableHead>
-                  <TableHead>Số lượng</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Ghi chú</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assets.map((asset) => (
-                  <TableRow key={asset.id}>
-                    <TableCell>{asset.ten_csvc}</TableCell>
-                    <TableCell>{asset.loai || "N/A"}</TableCell>
-                    <TableCell>{asset.so_luong || 0}</TableCell>
-                    <TableCell>
-                      <Badge variant={asset.tinh_trang === "active" ? "default" : "secondary"}>
-                        {formatStatus(asset.tinh_trang)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{asset.ghi_chu || "N/A"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-center py-4 text-muted-foreground">Không có dữ liệu cơ sở vật chất</p>
-          )}
+        
+        <TabsContent value="assets">
+          <Card>
+            <CardHeader>
+              <CardTitle>Cơ sở vật chất</CardTitle>
+              <CardDescription>Danh sách tài sản thuộc cơ sở</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {assets.length === 0 ? (
+                <p className="text-muted-foreground">Không có tài sản nào</p>
+              ) : (
+                <DataTable columns={assetColumns} data={assets} />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
-
-        <TabsContent value="finances" className="py-4">
-          {finances.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ngày</TableHead>
-                  <TableHead>Loại</TableHead>
-                  <TableHead>Tên phí</TableHead>
-                  <TableHead>Số tiền</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {finances.map((finance) => (
-                  <TableRow key={finance.id}>
-                    <TableCell>{formatDate(finance.ngay)}</TableCell>
-                    <TableCell>{finance.loai_thu_chi || "N/A"}</TableCell>
-                    <TableCell>{finance.ten_phi || finance.dien_giai || "N/A"}</TableCell>
-                    <TableCell>{formatCurrency(finance.tong_tien)}</TableCell>
-                    <TableCell>
-                      <Badge variant={finance.tinh_trang === "completed" ? "default" : "outline"}>
-                        {formatStatus(finance.tinh_trang)}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-center py-4 text-muted-foreground">Không có dữ liệu tài chính</p>
-          )}
+        
+        <TabsContent value="events">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sự kiện</CardTitle>
+              <CardDescription>Danh sách sự kiện tại cơ sở</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {events.length === 0 ? (
+                <p className="text-muted-foreground">Không có sự kiện nào</p>
+              ) : (
+                <DataTable columns={eventColumns} data={events} />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
-
-        <TabsContent value="files" className="py-4">
-          {files.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên tài liệu</TableHead>
-                  <TableHead>Nhóm tài liệu</TableHead>
-                  <TableHead>Ngày cấp</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Ghi chú</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {files.map((file) => (
-                  <TableRow key={file.id}>
-                    <TableCell>{file.ten_tai_lieu}</TableCell>
-                    <TableCell>{file.nhom_tai_lieu || "N/A"}</TableCell>
-                    <TableCell>{formatDate(file.ngay_cap)}</TableCell>
-                    <TableCell>
-                      <Badge variant={file.trang_thai === "active" ? "default" : "secondary"}>
-                        {formatStatus(file.trang_thai)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{file.ghi_chu || "N/A"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-center py-4 text-muted-foreground">Không có tài liệu</p>
-          )}
+        
+        <TabsContent value="finances">
+          <Card>
+            <CardHeader>
+              <CardTitle>Thu chi</CardTitle>
+              <CardDescription>Danh sách các khoản thu chi của cơ sở</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {finances.length === 0 ? (
+                <p className="text-muted-foreground">Không có khoản thu chi nào</p>
+              ) : (
+                <DataTable columns={financeColumns} data={finances} />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
-
-        <TabsContent value="events" className="py-4">
-          {events.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên sự kiện</TableHead>
-                  <TableHead>Loại sự kiện</TableHead>
-                  <TableHead>Ngày bắt đầu</TableHead>
-                  <TableHead>Địa điểm</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell>{event.ten_su_kien}</TableCell>
-                    <TableCell>{event.loai_su_kien || "N/A"}</TableCell>
-                    <TableCell>{formatDate(event.ngay_bat_dau)}</TableCell>
-                    <TableCell>{event.dia_diem || "N/A"}</TableCell>
-                    <TableCell>
-                      <Badge variant={event.trang_thai === "completed" ? "default" : "outline"}>
-                        {formatStatus(event.trang_thai)}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-center py-4 text-muted-foreground">Không có sự kiện</p>
-          )}
+        
+        <TabsContent value="files">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tài liệu</CardTitle>
+              <CardDescription>Danh sách tài liệu liên quan đến cơ sở</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {files.length === 0 ? (
+                <p className="text-muted-foreground">Không có tài liệu nào</p>
+              ) : (
+                <DataTable columns={fileColumns} data={files} />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

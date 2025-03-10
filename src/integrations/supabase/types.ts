@@ -1548,6 +1548,110 @@ export type Database = {
         }
         Relationships: []
       }
+      student_assignments: {
+        Row: {
+          buoi_day_id: string | null
+          created_at: string | null
+          diem: number | null
+          file: string | null
+          han_nop: string | null
+          hinh_anh: string | null
+          hoc_sinh_id: string
+          id: string
+          lop_chi_tiet_id: string | null
+          mo_ta: string | null
+          ngay_giao: string
+          nhan_xet: string | null
+          tieu_de: string
+          trang_thai: string
+          updated_at: string | null
+        }
+        Insert: {
+          buoi_day_id?: string | null
+          created_at?: string | null
+          diem?: number | null
+          file?: string | null
+          han_nop?: string | null
+          hinh_anh?: string | null
+          hoc_sinh_id: string
+          id?: string
+          lop_chi_tiet_id?: string | null
+          mo_ta?: string | null
+          ngay_giao: string
+          nhan_xet?: string | null
+          tieu_de: string
+          trang_thai?: string
+          updated_at?: string | null
+        }
+        Update: {
+          buoi_day_id?: string | null
+          created_at?: string | null
+          diem?: number | null
+          file?: string | null
+          han_nop?: string | null
+          hinh_anh?: string | null
+          hoc_sinh_id?: string
+          id?: string
+          lop_chi_tiet_id?: string | null
+          mo_ta?: string | null
+          ngay_giao?: string
+          nhan_xet?: string | null
+          tieu_de?: string
+          trang_thai?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_assignments_buoi_day_id_fkey"
+            columns: ["buoi_day_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_buoi_day_id_fkey"
+            columns: ["buoi_day_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions_with_avg_score"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_buoi_day_id_fkey"
+            columns: ["buoi_day_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions_with_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_hoc_sinh_id_fkey"
+            columns: ["hoc_sinh_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
+            referencedRelation: "attendances_with_details"
+            referencedColumns: ["lop_id"]
+          },
+          {
+            foreignKeyName: "student_assignments_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
+            referencedRelation: "classes_with_student_count"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           co_so_id: string | null
