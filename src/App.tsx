@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -188,7 +187,7 @@ function App() {
               {/* Enum Manager Route */}
               <Route path="settings/enum-manager" element={<EnumManager />} />
               
-              {/* Admissions Route */}
+              {/* Make sure Admissions route is included */}
               <Route path="admissions" element={<Admissions />} />
               
               <Route path="*" element={<NotFound />} />
