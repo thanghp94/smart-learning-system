@@ -8,13 +8,26 @@ import {
   ChevronRight, 
   Calendar, 
   Download,
-  Users
+  Users,
+  Plus,
+  Clock
 } from 'lucide-react';
 import { format, addMonths, subMonths, getDaysInMonth, setDate, getMonth, getYear } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { employeeService } from '@/lib/supabase/employee-service';
 
 interface MonthlyAttendanceViewProps {
   // Add props if needed
@@ -24,6 +37,17 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [newAttendance, setNewAttendance] = useState({
+    nhan_vien_id: '',
+    ngay: format(new Date(), 'yyyy-MM-dd'),
+    thoi_gian_bat_dau: '',
+    thoi_gian_ket_thuc: '',
+    trang_thai: 'present',
+    ghi_chu: ''
+  });
+  
   const { toast } = useToast();
 
   // Get days in month for the current date
@@ -32,7 +56,22 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = () => {
   
   useEffect(() => {
     fetchMonthlyAttendance();
+    fetchEmployees();
   }, [currentDate]);
+
+  const fetchEmployees = async () => {
+    try {
+      const data = await employeeService.getActive();
+      setEmployees(data);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải danh sách nhân viên',
+        variant: 'destructive'
+      });
+    }
+  };
 
   const fetchMonthlyAttendance = async () => {
     setIsLoading(true);
@@ -154,6 +193,51 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = () => {
     });
   };
 
+  const handleAddAttendance = async () => {
+    try {
+      if (!newAttendance.nhan_vien_id || !newAttendance.ngay) {
+        toast({
+          title: 'Lỗi',
+          description: 'Vui lòng điền đầy đủ thông tin',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      await employeeClockInService.create(newAttendance);
+      
+      toast({
+        title: 'Thành công',
+        description: 'Đã thêm dữ liệu chấm công mới',
+      });
+      
+      setShowAddDialog(false);
+      fetchMonthlyAttendance();
+    } catch (error) {
+      console.error('Error adding attendance:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể thêm dữ liệu chấm công',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setNewAttendance(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setNewAttendance(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -174,6 +258,10 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = () => {
           <Button variant="outline" size="sm" onClick={exportToExcel}>
             <Download className="h-4 w-4 mr-1" />
             Xuất Excel
+          </Button>
+          <Button variant="default" size="sm" onClick={() => setShowAddDialog(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Thêm chấm công
           </Button>
         </div>
       </div>
@@ -244,6 +332,113 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Attendance Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Clock className="h-5 w-5 mr-2" />
+              Thêm dữ liệu chấm công
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="nhan_vien_id">Nhân viên</Label>
+              <Select
+                name="nhan_vien_id" 
+                onValueChange={(value) => handleSelectChange('nhan_vien_id', value)}
+                value={newAttendance.nhan_vien_id}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn nhân viên" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.ten_nhan_su}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="ngay">Ngày</Label>
+              <Input 
+                id="ngay" 
+                name="ngay" 
+                type="date" 
+                value={newAttendance.ngay}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="thoi_gian_bat_dau">Giờ vào</Label>
+                <Input 
+                  id="thoi_gian_bat_dau" 
+                  name="thoi_gian_bat_dau" 
+                  type="time" 
+                  value={newAttendance.thoi_gian_bat_dau}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="thoi_gian_ket_thuc">Giờ ra</Label>
+                <Input 
+                  id="thoi_gian_ket_thuc" 
+                  name="thoi_gian_ket_thuc" 
+                  type="time" 
+                  value={newAttendance.thoi_gian_ket_thuc}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="trang_thai">Trạng thái</Label>
+              <Select
+                name="trang_thai" 
+                onValueChange={(value) => handleSelectChange('trang_thai', value)}
+                value={newAttendance.trang_thai}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="present">Có mặt</SelectItem>
+                  <SelectItem value="absent">Vắng mặt</SelectItem>
+                  <SelectItem value="late">Đi trễ</SelectItem>
+                  <SelectItem value="leave">Xin nghỉ</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="ghi_chu">Ghi chú</Label>
+              <Input 
+                id="ghi_chu" 
+                name="ghi_chu" 
+                value={newAttendance.ghi_chu}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+                Hủy
+              </Button>
+              <Button onClick={handleAddAttendance}>
+                Lưu
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

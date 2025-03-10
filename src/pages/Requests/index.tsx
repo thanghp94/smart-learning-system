@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { FileSignature, Plus, RotateCw } from "lucide-react";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import RequestForm from "./RequestForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import RequestsTable from "./RequestsTable";
@@ -22,6 +22,7 @@ interface RequestData {
   nguoi_de_xuat_id?: string;
   trang_thai?: string;
   ngay_de_xuat?: string;
+  request_type?: string;
 }
 
 const Requests = () => {
@@ -62,7 +63,8 @@ const Requests = () => {
           title: req.noi_dung || 'No title', // Map noi_dung to title for table display
           description: req.ly_do,
           status: req.trang_thai || 'pending',
-          priority: req.priority || 'Medium'
+          priority: req.priority || 'Medium',
+          request_type: req.request_type || 'other'
         };
       });
       
@@ -90,6 +92,8 @@ const Requests = () => {
         nguoi_de_xuat_id: data.requester,
         trang_thai: 'pending',
         ngay_de_xuat: new Date().toISOString().split('T')[0],
+        request_type: data.request_type,
+        priority: data.priority
       };
 
       const { error } = await supabase
@@ -123,6 +127,10 @@ const Requests = () => {
     setShowDialog(true);
   };
 
+  const handleCancel = () => {
+    setShowDialog(false);
+  };
+
   return (
     <>
       {requests.length === 0 && !isLoading ? (
@@ -145,8 +153,9 @@ const Requests = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Thêm mới đề xuất</DialogTitle>
+            <DialogDescription>Điền thông tin đề xuất của bạn vào mẫu dưới đây</DialogDescription>
           </DialogHeader>
-          <RequestForm onSubmit={handleAddRequest} employees={employees} />
+          <RequestForm onSubmit={handleAddRequest} employees={employees} onCancel={handleCancel} />
         </DialogContent>
       </Dialog>
     </>

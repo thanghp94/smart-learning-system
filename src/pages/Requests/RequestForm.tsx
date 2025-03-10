@@ -31,6 +31,7 @@ import {
 import { cn, formatDate } from "@/lib/utils";
 
 const requestSchema = z.object({
+  request_type: z.string().min(1, "Vui lòng chọn loại đề xuất"),
   title: z.string().min(1, "Vui lòng nhập tiêu đề"),
   description: z.string().optional(),
   requester: z.string().min(1, "Vui lòng chọn người yêu cầu"),
@@ -42,13 +43,15 @@ type RequestFormValues = z.infer<typeof requestSchema>;
 
 interface RequestFormProps {
   onSubmit: (data: RequestFormValues) => void;
+  onCancel?: () => void;
   employees: { id: string; ten_nhan_su: string }[];
 }
 
-const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, employees }) => {
+const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onCancel, employees }) => {
   const form = useForm<RequestFormValues>({
     resolver: zodResolver(requestSchema),
     defaultValues: {
+      request_type: "",
       title: "",
       description: "",
       requester: "",
@@ -64,6 +67,34 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, employees }) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="request_type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Loại đề xuất</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn loại đề xuất" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="leave">Xin nghỉ phép</SelectItem>
+                  <SelectItem value="equipment">Yêu cầu trang thiết bị</SelectItem>
+                  <SelectItem value="payment">Yêu cầu thanh toán</SelectItem>
+                  <SelectItem value="reimbursement">Hoàn trả chi phí</SelectItem>
+                  <SelectItem value="other">Khác</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="title"
@@ -191,9 +222,11 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, employees }) => {
         />
 
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline">
-            Hủy
-          </Button>
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Hủy
+            </Button>
+          )}
           <Button type="submit">Lưu</Button>
         </div>
       </form>

@@ -31,7 +31,17 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
       tinh_trang: initialData?.tinh_trang || 'good',
       trang_thai_so_huu: initialData?.trang_thai_so_huu || '',
       mo_ta_1: initialData?.mo_ta_1 || '',
-      ghi_chu: initialData?.ghi_chu || ''
+      ghi_chu: initialData?.ghi_chu || '',
+      // Additional fields
+      thuong_hieu: initialData?.thuong_hieu || '',
+      mau: initialData?.mau || '',
+      size: initialData?.size || '',
+      khu_vuc: initialData?.khu_vuc || '',
+      chat_lieu: initialData?.chat_lieu || '',
+      cau_hinh: initialData?.cau_hinh || '',
+      so_seri: initialData?.so_seri || '',
+      ngay_mua: initialData?.ngay_mua || '',
+      noi_mua: initialData?.noi_mua || ''
     }
   });
 
@@ -65,6 +75,46 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
         </div>
 
         <div>
+          <Label htmlFor="thuong_hieu">Thương hiệu</Label>
+          <Input
+            id="thuong_hieu"
+            {...register('thuong_hieu')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="mau">Màu sắc</Label>
+          <Input
+            id="mau"
+            {...register('mau')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="size">Kích thước</Label>
+          <Input
+            id="size"
+            {...register('size')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="chat_lieu">Chất liệu</Label>
+          <Input
+            id="chat_lieu"
+            {...register('chat_lieu')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="cau_hinh">Cấu hình</Label>
+          <Input
+            id="cau_hinh"
+            {...register('cau_hinh')}
+          />
+        </div>
+
+        <div>
           <Label htmlFor="so_luong">Số lượng</Label>
           <Input
             id="so_luong"
@@ -86,6 +136,39 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
           <Input
             id="so_tien_mua"
             {...register('so_tien_mua')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="noi_mua">Nơi mua</Label>
+          <Input
+            id="noi_mua"
+            {...register('noi_mua')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="ngay_mua">Ngày mua</Label>
+          <Input
+            id="ngay_mua"
+            type="date"
+            {...register('ngay_mua')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="so_seri">Số Seri</Label>
+          <Input
+            id="so_seri"
+            {...register('so_seri')}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="khu_vuc">Khu vực</Label>
+          <Input
+            id="khu_vuc"
+            {...register('khu_vuc')}
           />
         </div>
 
