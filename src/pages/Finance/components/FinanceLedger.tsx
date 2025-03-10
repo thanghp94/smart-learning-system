@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Finance } from '@/lib/types';
 import { financeService } from '@/lib/supabase';
@@ -6,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Check, X, Edit, Calendar } from 'lucide-react';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -35,13 +34,11 @@ const FinanceLedger: React.FC = () => {
       setIsLoading(true);
       const data = await financeService.getAll();
       
-      // Sort by date (newest first)
       const sortedData = data.sort((a, b) => {
         if (!a.ngay || !b.ngay) return 0;
         return new Date(b.ngay).getTime() - new Date(a.ngay).getTime();
       });
 
-      // Add isEditing property
       const enhancedData = sortedData.map(entry => ({ 
         ...entry, 
         isEditing: false 
@@ -49,7 +46,6 @@ const FinanceLedger: React.FC = () => {
 
       setEntries(enhancedData);
       
-      // Calculate running balance
       const balance = sortedData.reduce((acc, entry) => {
         if (entry.loai_thu_chi === 'income') {
           return acc + (entry.tong_tien || 0);
@@ -108,7 +104,7 @@ const FinanceLedger: React.FC = () => {
       });
       
       toggleEdit(id);
-      await loadFinances(); // Refresh data
+      await loadFinances();
     } catch (error) {
       console.error('Error saving finance:', error);
       toast({
@@ -180,19 +176,17 @@ const FinanceLedger: React.FC = () => {
             <TableBody>
               {entries.map(entry => (
                 <TableRow key={entry.id}>
-                  {/* Date column */}
                   <TableCell>
                     {entry.isEditing ? (
                       <DatePicker
                         date={entry.ngay ? new Date(entry.ngay) : undefined}
-                        onSelect={(date) => handleDateChange(entry.id, date)}
+                        setDate={(date) => handleDateChange(entry.id, date)}
                       />
                     ) : (
                       entry.ngay ? format(new Date(entry.ngay), 'dd/MM/yyyy') : ''
                     )}
                   </TableCell>
                   
-                  {/* Transaction type column */}
                   <TableCell>
                     {entry.isEditing ? (
                       <select
@@ -210,7 +204,6 @@ const FinanceLedger: React.FC = () => {
                     )}
                   </TableCell>
                   
-                  {/* Transaction category column */}
                   <TableCell>
                     {entry.isEditing ? (
                       <Input
@@ -222,7 +215,6 @@ const FinanceLedger: React.FC = () => {
                     )}
                   </TableCell>
                   
-                  {/* Description column */}
                   <TableCell>
                     <div className={cn(
                       entry.loai_thu_chi === 'income' ? 'text-blue-600' : 'text-red-600',
@@ -239,7 +231,6 @@ const FinanceLedger: React.FC = () => {
                     </div>
                   </TableCell>
                   
-                  {/* Income amount column */}
                   <TableCell className="text-right">
                     {entry.isEditing ? (
                       entry.loai_thu_chi === 'income' && (
@@ -259,7 +250,6 @@ const FinanceLedger: React.FC = () => {
                     )}
                   </TableCell>
                   
-                  {/* Expense amount column */}
                   <TableCell className="text-right">
                     {entry.isEditing ? (
                       entry.loai_thu_chi === 'expense' && (
@@ -279,7 +269,6 @@ const FinanceLedger: React.FC = () => {
                     )}
                   </TableCell>
                   
-                  {/* Status column */}
                   <TableCell>
                     {entry.isEditing ? (
                       <select
@@ -304,7 +293,6 @@ const FinanceLedger: React.FC = () => {
                     )}
                   </TableCell>
                   
-                  {/* Actions column */}
                   <TableCell className="text-center">
                     {entry.isEditing ? (
                       <div className="flex space-x-1 justify-center">

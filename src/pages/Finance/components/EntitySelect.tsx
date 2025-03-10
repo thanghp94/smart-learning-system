@@ -1,0 +1,177 @@
+
+import React, { useEffect, useState } from 'react';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { studentService, employeeService, contactService, facilityService, assetService, eventService } from '@/lib/supabase';
+import { Student, Employee, Contact, Facility } from '@/lib/types';
+import { UseFormReturn } from 'react-hook-form';
+
+interface EntitySelectProps {
+  form: UseFormReturn<any>;
+  selectedEntityType: string | null;
+  onEntityTypeChange: (value: string) => void;
+}
+
+const EntitySelect: React.FC<EntitySelectProps> = ({
+  form,
+  selectedEntityType,
+  onEntityTypeChange,
+}) => {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [assets, setAssets] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+
+  // Load related entities when the form loads or entity type changes
+  useEffect(() => {
+    const loadEntities = async () => {
+      if (selectedEntityType === 'student' || !selectedEntityType) {
+        try {
+          const data = await studentService.getAll();
+          setStudents(data);
+        } catch (error) {
+          console.error('Error loading students:', error);
+        }
+      }
+      
+      if (selectedEntityType === 'employee' || !selectedEntityType) {
+        try {
+          const data = await employeeService.getAll();
+          setEmployees(data);
+        } catch (error) {
+          console.error('Error loading employees:', error);
+        }
+      }
+      
+      if (selectedEntityType === 'contact' || !selectedEntityType) {
+        try {
+          const data = await contactService.getAll();
+          setContacts(data);
+        } catch (error) {
+          console.error('Error loading contacts:', error);
+        }
+      }
+      
+      if (selectedEntityType === 'asset' || !selectedEntityType) {
+        try {
+          const data = await assetService.getAll();
+          setAssets(data);
+        } catch (error) {
+          console.error('Error loading assets:', error);
+        }
+      }
+      
+      if (selectedEntityType === 'event' || !selectedEntityType) {
+        try {
+          const data = await eventService.getAll();
+          setEvents(data);
+        } catch (error) {
+          console.error('Error loading events:', error);
+        }
+      }
+    };
+
+    loadEntities();
+  }, [selectedEntityType]);
+
+  return (
+    <>
+      <FormField
+        control={form.control}
+        name="loai_doi_tuong"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Loại đối tượng</FormLabel>
+            <Select onValueChange={(value) => onEntityTypeChange(value)} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn loại đối tượng" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="student">Học sinh</SelectItem>
+                <SelectItem value="employee">Nhân viên</SelectItem>
+                <SelectItem value="contact">Liên hệ</SelectItem>
+                <SelectItem value="facility">Cơ sở</SelectItem>
+                <SelectItem value="asset">Cơ sở vật chất</SelectItem>
+                <SelectItem value="event">Sự kiện</SelectItem>
+                <SelectItem value="government">Cơ quan nhà nước</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {selectedEntityType && (
+        <FormField
+          control={form.control}
+          name="doi_tuong_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Đối tượng</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn đối tượng" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {selectedEntityType === 'student' &&
+                    students.map((student) => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.ten_hoc_sinh}
+                      </SelectItem>
+                    ))}
+                  
+                  {selectedEntityType === 'employee' &&
+                    employees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.ten_nhan_su}
+                      </SelectItem>
+                    ))}
+                  
+                  {selectedEntityType === 'contact' &&
+                    contacts.map((contact) => (
+                      <SelectItem key={contact.id} value={contact.id}>
+                        {contact.ten_lien_he}
+                      </SelectItem>
+                    ))}
+                    
+                  {selectedEntityType === 'facility' &&
+                    form.getValues().facilities?.map((facility: Facility) => (
+                      <SelectItem key={facility.id} value={facility.id}>
+                        {facility.ten_co_so}
+                      </SelectItem>
+                    ))}
+                    
+                  {selectedEntityType === 'asset' &&
+                    assets.map((asset) => (
+                      <SelectItem key={asset.id} value={asset.id}>
+                        {asset.ten_csvc}
+                      </SelectItem>
+                    ))}
+                    
+                  {selectedEntityType === 'event' &&
+                    events.map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.ten_su_kien}
+                      </SelectItem>
+                    ))}
+                    
+                  {selectedEntityType === 'government' &&
+                    <SelectItem value="government">Cơ quan nhà nước</SelectItem>
+                  }
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+    </>
+  );
+};
+
+export default EntitySelect;

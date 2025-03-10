@@ -13,9 +13,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-interface DatePickerProps extends React.HTMLAttributes<HTMLDivElement> {
+interface DatePickerProps {
   date?: Date
   setDate: (date?: Date) => void
+  className?: string
 }
 
 export function DatePicker({ date, setDate, className }: DatePickerProps) {
@@ -41,6 +42,7 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
             onSelect={setDate}
             initialFocus
             locale={vi}
+            className="pointer-events-auto"
           />
         </PopoverContent>
       </Popover>
