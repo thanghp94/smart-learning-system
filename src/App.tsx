@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -186,4 +187,18 @@ function App() {
             
             <Route path="database-schema" element={<DatabaseSchema />} />
             
-            {/* Enum
+            <Route path="enum-manager" element={<EnumManager />} />
+            <Route path="ai-tools" element={<AITools />} />
+            <Route path="ai-tools/image-generator" element={<ImageGenerator />} />
+            <Route path="admissions" element={<Admissions />} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </Router>
+      <Toaster />
+    </QueryClientProvider>
+  );
+}
+
+export default App;
