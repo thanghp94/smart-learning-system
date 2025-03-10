@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { PlusCircle, Briefcase, Users, Calendar, Activity } from 'lucide-react';
 import { classService, studentService, eventService, facilityService } from '@/lib/supabase';
@@ -114,6 +115,7 @@ const Index = () => {
             direction: "up",
             text: "từ tháng trước" 
           }}
+          iconComponent={<Users className="h-5 w-5" />}
         />
         
         <StatsCard 
@@ -126,6 +128,7 @@ const Index = () => {
             direction: "up",
             text: "lớp mới trong tháng" 
           }}
+          iconComponent={<Briefcase className="h-5 w-5" />}
         />
         
         <StatsCard 
@@ -138,6 +141,7 @@ const Index = () => {
             direction: "none",
             text: "mới tạo hôm nay" 
           }}
+          iconComponent={<Calendar className="h-5 w-5" />}
         />
         
         <StatsCard 
@@ -150,6 +154,7 @@ const Index = () => {
             direction: "none",
             text: "không thay đổi" 
           }}
+          iconComponent={<Activity className="h-5 w-5" />}
         />
       </div>
       

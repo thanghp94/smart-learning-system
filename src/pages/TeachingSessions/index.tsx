@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Calendar, Filter, FileDown, RotateCw } from 'lucide-react';
@@ -85,6 +84,26 @@ const TeachingSessions = () => {
       toast({
         title: "Lỗi",
         description: "Không thể thêm buổi học mới",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSessionUpdate = async (updatedData: Partial<TeachingSession>) => {
+    if (!selectedSession) return;
+    
+    try {
+      await teachingSessionService.update(selectedSession.id, updatedData);
+      toast({
+        title: "Thành công",
+        description: "Cập nhật buổi học thành công",
+      });
+      fetchSessions();
+    } catch (error) {
+      console.error("Error updating session:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật buổi học",
         variant: "destructive"
       });
     }
@@ -210,7 +229,10 @@ const TeachingSessions = () => {
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <SessionDetail sessionId={selectedSession.id} />
+          <SessionDetail 
+            sessionId={selectedSession.id} 
+            onSave={handleSessionUpdate}
+          />
         </DetailPanel>
       )}
 
