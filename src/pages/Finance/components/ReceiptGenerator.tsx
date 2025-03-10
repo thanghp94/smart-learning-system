@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Finance } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,6 @@ const ReceiptGenerator: React.FC<ReceiptGeneratorProps> = ({ finance, onClose })
         const templateList = await financeService.getReceiptTemplates(type);
         setTemplates(templateList || []);
         
-        // Set default template if available
         if (templateList && templateList.length > 0) {
           const defaultTemplate = templateList.find(t => t.is_default) || templateList[0];
           setSelectedTemplateId(defaultTemplate.id);
@@ -35,9 +33,9 @@ const ReceiptGenerator: React.FC<ReceiptGeneratorProps> = ({ finance, onClose })
       } catch (error) {
         console.error('Error fetching receipt templates:', error);
         toast({
-          title: 'Lỗi',
-          description: 'Không thể tải mẫu biên lai',
-          variant: 'destructive',
+          title: "Thất bại",
+          description: "Không thể tải mẫu biên lai. Vui lòng thử lại.",
+          variant: "destructive",
         });
       }
     };
@@ -60,16 +58,15 @@ const ReceiptGenerator: React.FC<ReceiptGeneratorProps> = ({ finance, onClose })
     } catch (error) {
       console.error('Error generating receipt:', error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể tạo biên lai',
-        variant: 'destructive',
+        title: "Thất bại",
+        description: "Không thể tạo biên lai. Vui lòng thử lại.",
+        variant: "destructive",
       });
       setIsLoading(false);
     }
   };
 
   const handlePrint = () => {
-    // Mark receipt as printed
     if (generatedReceipt?.id) {
       financeService.markReceiptAsPrinted(generatedReceipt.id)
         .then(() => {
@@ -146,7 +143,7 @@ const ReceiptGenerator: React.FC<ReceiptGeneratorProps> = ({ finance, onClose })
     toast({
       title: 'Thông báo',
       description: 'Tính năng xuất Excel sẽ được cập nhật trong phiên bản tiếp theo.',
-      variant: 'default',  // Fixed the variant type here from 'warning' to 'default'
+      variant: 'default',
     });
   };
 
@@ -154,7 +151,6 @@ const ReceiptGenerator: React.FC<ReceiptGeneratorProps> = ({ finance, onClose })
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
-  // Custom receipt template with proper invoice format
   const renderCustomReceipt = () => {
     const today = new Date();
     const formattedDate = today.toLocaleDateString('vi-VN', { 
@@ -210,7 +206,6 @@ const ReceiptGenerator: React.FC<ReceiptGeneratorProps> = ({ finance, onClose })
                 <td className="border p-2">{finance.gia_tien ? formatCurrency(finance.gia_tien) : formatCurrency(finance.tong_tien)}</td>
                 <td className="border p-2">{formatCurrency(finance.tong_tien)}</td>
               </tr>
-              {/* Spacing row */}
               <tr className="h-10">
                 <td className="border p-2" colSpan={5} style={{textAlign: 'right'}}><strong>Tổng cộng:</strong></td>
                 <td className="border p-2 font-bold">{formatCurrency(finance.tong_tien)}</td>

@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Student } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import DataTable from '@/components/ui/DataTable';
-import { CalendarDays, Flag, User, UserPlus } from 'lucide-react';
+import { CalendarDays, Flag, User, UserPlus, Download } from 'lucide-react';
+import ExportButton from '@/components/ui/ExportButton';
+import DetailPanel from '@/components/ui/DetailPanel';
+import StudentDetail from './StudentDetail';
 
 interface StudentsListProps {
   data: Student[];
@@ -20,6 +23,25 @@ const StudentsList: React.FC<StudentsListProps> = ({
   onRowClick, 
   onRefresh 
 }) => {
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const handleRowClick = (student: Student) => {
+    setSelectedStudent(student);
+    setDetailOpen(true);
+  };
+
+  const handleDetailClose = () => {
+    setDetailOpen(false);
+    setSelectedStudent(null);
+  };
+
+  const handleEdit = () => {
+    if (selectedStudent) {
+      onRowClick(selectedStudent);
+    }
+  };
+
   const columns = [
     {
       title: 'Name',
@@ -63,7 +85,12 @@ const StudentsList: React.FC<StudentsListProps> = ({
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between mb-4">
+        <ExportButton 
+          data={data}
+          filename="students_list"
+          label="Xuất dữ liệu"
+        />
         <Button onClick={onAddStudent}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add Student
@@ -73,8 +100,27 @@ const StudentsList: React.FC<StudentsListProps> = ({
         columns={columns}
         data={data}
         isLoading={loading}
-        onRowClick={onRowClick}
+        onRowClick={handleRowClick}
+        searchable={true}
+        searchPlaceholder="Tìm kiếm học sinh..."
       />
+
+      {selectedStudent && (
+        <DetailPanel
+          title={`Chi tiết học sinh: ${selectedStudent.ten_hoc_sinh || selectedStudent.ho_va_ten}`}
+          isOpen={detailOpen}
+          onClose={handleDetailClose}
+          footerContent={
+            <div className="flex justify-end space-x-2">
+              <Button variant="default" onClick={handleEdit}>
+                Sửa thông tin
+              </Button>
+            </div>
+          }
+        >
+          <StudentDetail student={selectedStudent} />
+        </DetailPanel>
+      )}
     </div>
   );
 };

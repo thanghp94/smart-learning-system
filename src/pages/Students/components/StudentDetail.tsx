@@ -1,162 +1,194 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import React from 'react';
+import { Student } from '@/lib/types';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Student, Finance } from '@/lib/types';
-import { format, parseISO } from 'date-fns';
-import { Calendar, User, Mail, Phone, Book, Edit, PlusCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { financeService } from '@/lib/supabase';
-import FinanceTable from '@/pages/Finance/components/FinanceTable';
-import EnrollStudentButton from './EnrollStudentButton';
+import { CalendarDays, Mail, Phone, User, Home, School, FileText } from 'lucide-react';
 
 interface StudentDetailProps {
   student: Student;
 }
 
 const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
-  const [finances, setFinances] = useState<Finance[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchFinances = async () => {
-      setIsLoading(true);
-      try {
-        const data = await financeService.getByEntity('student', student.id);
-        setFinances(data);
-      } catch (error) {
-        console.error("Error fetching finances:", error);
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải danh sách tài chính",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (student?.id) {
-      fetchFinances();
+  // Format fields or provide defaults
+  const formatField = (value: any) => {
+    if (value === null || value === undefined || value === '') {
+      return 'Chưa cập nhật';
     }
-  }, [student?.id, toast]);
-
-  const handleEnrollmentCreated = async () => {
-    // Refresh finances after enrollment
-    setIsLoading(true);
-    try {
-      const data = await financeService.getByEntity('student', student.id);
-      setFinances(data);
-    } catch (error) {
-      console.error("Error refreshing finances:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải danh sách tài chính",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    return value;
   };
-
-  if (!student) {
-    return <div>Không tìm thấy thông tin học sinh</div>;
-  }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-1.5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{student.ho_va_ten}</h2>
-        </div>
-        <p className="text-muted-foreground">Mã học sinh: {student.ma_hoc_sinh}</p>
-      </div>
-
-      <Separator />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-muted-foreground" />
-          <span className="font-medium">Ngày sinh:</span>
-          <span>{student.ngay_sinh ? format(parseISO(student.ngay_sinh), 'dd/MM/yyyy') : 'Chưa có'}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <User className="h-5 w-5 text-muted-foreground" />
-          <span className="font-medium">Giới tính:</span>
-          <span>{student.gioi_tinh || 'Chưa có'}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Mail className="h-5 w-5 text-muted-foreground" />
-          <span className="font-medium">Email:</span>
-          <span>{student.email_ph1 || 'Chưa có'}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Phone className="h-5 w-5 text-muted-foreground" />
-          <span className="font-medium">Điện thoại:</span>
-          <span>{student.so_dien_thoai || 'Chưa có'}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Book className="h-5 w-5 text-muted-foreground" />
-          <span className="font-medium">Lớp:</span>
-          <span>{student.lop || 'Chưa có'}</span>
-        </div>
-      </div>
-
-      {student.ghi_chu && (
-        <div className="mt-4">
-          <h3 className="font-medium">Ghi chú:</h3>
-          <p className="text-sm text-muted-foreground mt-1">{student.ghi_chu}</p>
-        </div>
-      )}
-
-      <Tabs defaultValue="finances" className="w-full mt-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="finances">Tài chính</TabsTrigger>
-          <TabsTrigger value="enrollments">Ghi danh</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="finances" className="space-y-4">
-          <div className="flex justify-between items-center my-4">
-            <h3 className="text-lg font-medium">Lịch sử giao dịch</h3>
-            <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-1" />
-              Sửa
-            </Button>
+      {/* Personal Information */}
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold flex items-center mb-4">
+            <User className="mr-2 h-5 w-5 text-primary" />
+            Thông tin cá nhân
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Tên học sinh</p>
+              <p className="font-medium">{formatField(student.ten_hoc_sinh || student.ho_va_ten)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Giới tính</p>
+              <p className="font-medium">{formatField(student.gioi_tinh)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Ngày sinh</p>
+              <p className="font-medium flex items-center">
+                <CalendarDays className="mr-1 h-4 w-4 text-muted-foreground" />
+                {formatField(student.ngay_sinh)}
+              </p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Trạng thái</p>
+              <p className="font-medium">{formatField(student.trang_thai)}</p>
+            </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {finances.length === 0 ? (
-            <Card>
-              <CardContent className="py-6 text-center">
-                <p className="text-muted-foreground">Chưa có giao dịch nào</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <FinanceTable finances={finances} isLoading={isLoading} />
-          )}
-        </TabsContent>
-
-        <TabsContent value="enrollments" className="space-y-4">
-          <div className="flex justify-between items-center my-4">
-            <h3 className="text-lg font-medium">Thông tin ghi danh</h3>
+      {/* Contact Information */}
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold flex items-center mb-4">
+            <Home className="mr-2 h-5 w-5 text-primary" />
+            Thông tin liên hệ
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Địa chỉ</p>
+              <p className="font-medium">{formatField(student.dia_chi)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Trường học</p>
+              <p className="font-medium">{formatField(student.truong)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Lớp</p>
+              <p className="font-medium">{formatField(student.lop)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Nguồn đến</p>
+              <p className="font-medium">{formatField(student.nguon_den)}</p>
+            </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardContent className="py-6 text-center">
-              <p className="text-muted-foreground">Chưa có thông tin ghi danh</p>
-              <EnrollStudentButton 
-                student={student}
-                onEnrollmentCreated={handleEnrollmentCreated}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {/* Parent Information */}
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold flex items-center mb-4">
+            <User className="mr-2 h-5 w-5 text-primary" />
+            Thông tin phụ huynh
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Tên phụ huynh</p>
+              <p className="font-medium">{formatField(student.ten_PH || student.ten_ph)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Số điện thoại</p>
+              <p className="font-medium flex items-center">
+                <Phone className="mr-1 h-4 w-4 text-muted-foreground" />
+                {formatField(student.sdt_ph1 || student.so_dien_thoai)}
+              </p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p className="font-medium flex items-center">
+                <Mail className="mr-1 h-4 w-4 text-muted-foreground" />
+                {formatField(student.email_ph1)}
+              </p>
+            </div>
+            
+            {student.email_ph2 && (
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Email 2</p>
+                <p className="font-medium flex items-center">
+                  <Mail className="mr-1 h-4 w-4 text-muted-foreground" />
+                  {formatField(student.email_ph2)}
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Academic Information */}
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold flex items-center mb-4">
+            <School className="mr-2 h-5 w-5 text-primary" />
+            Thông tin học tập
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Chương trình học</p>
+              <p className="font-medium">{formatField(student.ct_hoc)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Hạn học phí</p>
+              <p className="font-medium flex items-center">
+                <CalendarDays className="mr-1 h-4 w-4 text-muted-foreground" />
+                {formatField(student.han_hoc_phi)}
+              </p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Ngày bắt đầu học phí</p>
+              <p className="font-medium flex items-center">
+                <CalendarDays className="mr-1 h-4 w-4 text-muted-foreground" />
+                {formatField(student.ngay_bat_dau_hoc_phi)}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Additional Notes */}
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold flex items-center mb-4">
+            <FileText className="mr-2 h-5 w-5 text-primary" />
+            Thông tin bổ sung
+          </h3>
+          
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Mô tả tính cách</p>
+              <p className="font-medium">{formatField(student.mo_ta_tinh_cach)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Điểm mạnh</p>
+              <p className="font-medium">{formatField(student.diem_manh)}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Ghi chú</p>
+              <p className="font-medium">{formatField(student.ghi_chu)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
