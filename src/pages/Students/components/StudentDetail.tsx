@@ -1,14 +1,32 @@
 
 import React, { useState, useEffect } from 'react';
-import { Student, Finance, Evaluation, Event } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { financeService, evaluationService, eventService } from '@/lib/supabase';
-import { formatDate, formatCurrency } from '@/utils/format';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Student, Finance, Event, Evaluation } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import { financeService, eventService, evaluationService } from '@/lib/supabase';
 import DataTable from '@/components/ui/DataTable';
-import EnrollStudentButton from './EnrollStudentButton';
+import { format } from 'date-fns';
+
+// Helper functions for formatting
+const formatGender = (gender: string | undefined) => {
+  if (!gender) return 'N/A';
+  return gender === 'male' ? 'Nam' : gender === 'female' ? 'Nữ' : gender;
+};
+
+const formatStudentStatus = (status: string | undefined) => {
+  if (!status) return 'N/A';
+  switch (status) {
+    case 'active': return 'Đang học';
+    case 'graduated': return 'Đã tốt nghiệp';
+    case 'on_hold': return 'Tạm dừng';
+    case 'withdrawn': return 'Đã rút';
+    default: return status;
+  }
+};
 
 interface StudentDetailProps {
   student: Student;
@@ -16,158 +34,212 @@ interface StudentDetailProps {
 
 const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
   const [finances, setFinances] = useState<Finance[]>([]);
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
-  const [activeTab, setActiveTab] = useState('basic');
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [loading, setLoading] = useState({
+    finances: true,
+    events: true,
+    evaluations: true
+  });
 
   useEffect(() => {
-    const fetchStudentDetails = async () => {
-      if (!student?.id) return;
-      
-      setIsLoading(true);
+    const fetchRelatedData = async () => {
       try {
-        // Fetch related finances
+        // Get student finances
         const financeData = await financeService.getByEntity('student', student.id);
         setFinances(financeData);
         
-        // Fetch related events
+        // Get student events
         const eventData = await eventService.getByEntity('student', student.id);
         setEvents(eventData);
         
-        // Fetch evaluations
-        const evalData = await evaluationService.getByStudent(student.id);
-        setEvaluations(evalData);
+        // Get student evaluations
+        const evaluationData = await evaluationService.getByEntity('student', student.id);
+        setEvaluations(evaluationData);
       } catch (error) {
-        console.error('Error loading student details:', error);
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải thông tin chi tiết. Vui lòng thử lại sau.',
-          variant: 'destructive',
-        });
+        console.error('Error fetching student related data:', error);
       } finally {
-        setIsLoading(false);
+        setLoading({
+          finances: false,
+          events: false,
+          evaluations: false
+        });
       }
     };
     
-    fetchStudentDetails();
-  }, [student?.id, toast]);
-
-  const renderBasicInfo = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <p><strong>Tên học sinh:</strong> {student.ten_hoc_sinh}</p>
-        <p><strong>Ngày sinh:</strong> {formatDate(student.ngay_sinh)}</p>
-        <p><strong>Giới tính:</strong> {student.gioi_tinh}</p>
-        <p><strong>Địa chỉ:</strong> {student.dia_chi || 'N/A'}</p>
-      </div>
-      <div>
-        <p><strong>Phụ huynh:</strong> {student.ten_ph || 'N/A'}</p>
-        <p><strong>SĐT phụ huynh:</strong> {student.sdt_ph1 || 'N/A'}</p>
-        <p><strong>Email:</strong> {student.email_ph1 || 'N/A'}</p>
-        <p><strong>Trạng thái:</strong> {student.trang_thai}</p>
-      </div>
-    </div>
-  );
-
-  const renderFinances = () => (
-    <div>
-      {finances.length > 0 ? (
-        <DataTable
-          data={finances}
-          columns={[
-            { header: 'Ngày', accessor: (row) => formatDate(row.ngay) },
-            { header: 'Tên phí', accessor: 'ten_phi' },
-            { header: 'Loại', accessor: 'loai_thu_chi' },
-            { header: 'Tổng tiền', accessor: (row) => formatCurrency(row.tong_tien) },
-            { header: 'Trạng thái', accessor: 'tinh_trang' },
-          ]}
-        />
-      ) : (
-        <p className="text-gray-500">Không có dữ liệu tài chính</p>
-      )}
-    </div>
-  );
-
-  const renderEvaluations = () => (
-    <div>
-      {evaluations.length > 0 ? (
-        <DataTable
-          data={evaluations}
-          columns={[
-            { header: 'Đánh giá', accessor: 'ten_danh_gia' },
-            { header: 'Ngày', accessor: (row) => formatDate(row.ngay_dau_dot_danh_gia) },
-            { header: 'Trạng thái', accessor: 'trang_thai' },
-          ]}
-        />
-      ) : (
-        <p className="text-gray-500">Không có đánh giá</p>
-      )}
-    </div>
-  );
-
-  const renderEvents = () => (
-    <div>
-      {events.length > 0 ? (
-        <DataTable
-          data={events}
-          columns={[
-            { header: 'Tên sự kiện', accessor: 'ten_su_kien' },
-            { header: 'Ngày', accessor: (row) => formatDate(row.ngay_bat_dau) },
-            { header: 'Loại', accessor: 'loai_su_kien' },
-            { header: 'Trạng thái', accessor: 'trang_thai' },
-          ]}
-        />
-      ) : (
-        <p className="text-gray-500">Không có sự kiện</p>
-      )}
-    </div>
-  );
-
-  const handleEnrollmentComplete = () => {
-    toast({
-      title: "Thành công",
-      description: "Học sinh đã được đăng ký vào lớp học thành công",
-    });
-  };
+    fetchRelatedData();
+  }, [student.id]);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Thông tin học sinh</CardTitle>
-        <EnrollStudentButton 
-          student={student} 
-          onEnrollmentComplete={handleEnrollmentComplete}
-        />
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="basic">Thông tin chung</TabsTrigger>
-            <TabsTrigger value="finances">Tài chính</TabsTrigger>
-            <TabsTrigger value="evaluations">Đánh giá</TabsTrigger>
-            <TabsTrigger value="events">Sự kiện</TabsTrigger>
-          </TabsList>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Thông tin cá nhân</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-muted-foreground">Mã học sinh</Label>
+              <div className="text-xl font-semibold">{student.ma_hs || 'N/A'}</div>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Trạng thái</Label>
+              <div>
+                <Badge variant={student.trang_thai === 'active' ? 'success' : 'secondary'}>
+                  {formatStudentStatus(student.trang_thai)}
+                </Badge>
+              </div>
+            </div>
+          </div>
           
-          <TabsContent value="basic">
-            {renderBasicInfo()}
-          </TabsContent>
+          <Separator />
           
-          <TabsContent value="finances">
-            {renderFinances()}
-          </TabsContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-muted-foreground">Họ tên</Label>
+              <div className="font-medium">{student.ho_ten || 'N/A'}</div>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Giới tính</Label>
+              <div className="font-medium">{formatGender(student.gioi_tinh)}</div>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Ngày sinh</Label>
+              <div className="font-medium">
+                {student.ngay_sinh ? format(new Date(student.ngay_sinh), 'dd/MM/yyyy') : 'N/A'}
+              </div>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Tên phụ huynh</Label>
+              <div className="font-medium">{student.ten_PH || 'N/A'}</div>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Số điện thoại phụ huynh</Label>
+              <div className="font-medium">{student.so_dien_thoai || 'N/A'}</div>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Email phụ huynh</Label>
+              <div className="font-medium">{student.email_PH || 'N/A'}</div>
+            </div>
+          </div>
           
-          <TabsContent value="evaluations">
-            {renderEvaluations()}
-          </TabsContent>
+          <Separator />
           
-          <TabsContent value="events">
-            {renderEvents()}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-muted-foreground">Trường học</Label>
+              <div className="font-medium">{student.truong_hoc || 'N/A'}</div>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Lớp học</Label>
+              <div className="font-medium">{student.lop_hoc || 'N/A'}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Tabs defaultValue="finances">
+        <TabsList>
+          <TabsTrigger value="finances">Tài chính</TabsTrigger>
+          <TabsTrigger value="events">Sự kiện</TabsTrigger>
+          <TabsTrigger value="evaluations">Đánh giá</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="finances">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Lịch sử tài chính</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {/* Add functionality to add finance record */}}
+              >
+                Thêm giao dịch
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={[
+                  { title: "Ngày", key: "ngay", sortable: true },
+                  { title: "Loại", key: "loai_thu_chi", sortable: true },
+                  { title: "Diễn giải", key: "dien_giai" },
+                  { title: "Số tiền", key: "tong_tien", sortable: true },
+                  { title: "Tình trạng", key: "tinh_trang", sortable: true }
+                ]}
+                data={finances}
+                isLoading={loading.finances}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm giao dịch..."
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="events">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Sự kiện</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {/* Add functionality to add event */}}
+              >
+                Thêm sự kiện
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={[
+                  { title: "Ngày", key: "ngay_bat_dau", sortable: true },
+                  { title: "Tên sự kiện", key: "tieu_de", sortable: true },
+                  { title: "Loại", key: "loai" }
+                ]}
+                data={events}
+                isLoading={loading.events}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm sự kiện..."
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="evaluations">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Đánh giá</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {/* Add functionality to add evaluation */}}
+              >
+                Thêm đánh giá
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={[
+                  { title: "Ngày", key: "ngay", sortable: true },
+                  { title: "Lớp", key: "lop_chi_tiet_id" },
+                  { title: "Giáo viên", key: "giao_vien" },
+                  { title: "Điểm", key: "diem", sortable: true }
+                ]}
+                data={evaluations}
+                isLoading={loading.evaluations}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm đánh giá..."
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <Button 
+        onClick={() => {/* Functionality to enroll student */}} 
+        className="w-full"
+      >
+        Ghi danh vào lớp
+      </Button>
+    </div>
   );
 };
 

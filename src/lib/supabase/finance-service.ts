@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
 import { Finance, FinanceTransactionType, ReceiptTemplate, GeneratedReceipt } from '@/lib/types';
@@ -150,7 +151,7 @@ class FinanceService {
         template_id: template.id,
         generated_html: generatedHtml,
         generated_at: new Date().toISOString(),
-        status: 'draft' as 'draft' | 'final'
+        status: 'draft'
       };
 
       const result = await insert<GeneratedReceipt>('generated_receipts', receipt);
@@ -187,7 +188,7 @@ class FinanceService {
   async finalizeReceipt(receiptId: string) {
     try {
       const result = await update<GeneratedReceipt>('generated_receipts', receiptId, {
-        status: 'final' as 'draft' | 'final',
+        status: 'final',
         updated_at: new Date().toISOString()
       });
       

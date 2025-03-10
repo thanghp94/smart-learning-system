@@ -10,11 +10,17 @@ import { useToast } from '@/hooks/use-toast';
 interface ImageUploadFormProps {
   sessionId: string;
   onUploadComplete: (imageUrl: string) => void;
+  entityType?: string;
+  entityId?: string;
+  onSuccess?: () => Promise<void>;
 }
 
 const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
   sessionId,
-  onUploadComplete
+  onUploadComplete,
+  entityType = 'teaching_session',
+  entityId,
+  onSuccess
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
@@ -45,28 +51,33 @@ const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
     
     setIsUploading(true);
     try {
-      const uploadResult = await imageService.upload(file, {
-        entity_type: 'teaching_session',
-        entity_id: sessionId,
-        caption: caption || file.name
-      });
+      // Create a new image record
+      const uploadData = {
+        entity_type: entityType || 'teaching_session',
+        entity_id: entityId || sessionId,
+        caption: caption || file.name,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size
+      };
       
-      if (uploadResult && typeof uploadResult === 'object') {
-        if (uploadResult.error) {
-          throw new Error(uploadResult.error);
-        }
+      const newImage = await imageService.create(uploadData);
+      
+      if (newImage && newImage.id) {
+        // Get upload URL
+        const imageUrl = '/uploads/images/' + newImage.id + '/' + file.name;
         
-        let imageUrl = '';
-        if (uploadResult && uploadResult.path) {
-          imageUrl = uploadResult.path;
-        }
-        
+        // Signal success
         toast({
           title: "Thành công",
           description: "Đã tải lên hình ảnh buổi học",
         });
         
+        // Call the completion handlers
         onUploadComplete(imageUrl);
+        if (onSuccess) {
+          await onSuccess();
+        }
         
         // Reset form
         setFile(null);
