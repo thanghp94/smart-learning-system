@@ -110,6 +110,7 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           .eq('lop_chi_tiet_id', currentSession.lop_chi_tiet_id);
         
         if (!enrollmentsError && enrollmentsData) {
+          // Fix type issues by correctly mapping the data
           const students = enrollmentsData.map(e => ({
             id: e.hoc_sinh_id,
             name: e.students?.ten_hoc_sinh || 'Unknown',

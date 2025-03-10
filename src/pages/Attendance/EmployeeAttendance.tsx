@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,6 @@ const EmployeeAttendance = () => {
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
   const { toast } = useToast();
 
-  // Fetch all active employees
   useEffect(() => {
     const fetchEmployees = async () => {
       setIsLoadingEmployees(true);
@@ -55,7 +53,6 @@ const EmployeeAttendance = () => {
     fetchEmployees();
   }, []);
 
-  // Fetch attendance data when employee or month changes
   useEffect(() => {
     if (selectedEmployeeId) {
       fetchEmployeeAttendance();
@@ -259,7 +256,6 @@ const EmployeeAttendance = () => {
             isLoading={isLoading || isLoadingEmployees}
             searchable
             searchPlaceholder="Tìm kiếm chấm công..."
-            pagination
           />
           
           {!isLoading && !isLoadingEmployees && attendanceData.length === 0 && (

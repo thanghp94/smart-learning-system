@@ -30,7 +30,7 @@ export interface DataTableProps<T> {
   columns: TableColumn[];
   onRowClick?: (record: T) => void;
   isLoading?: boolean;
-  pagination?: {
+  pagination?: boolean | {
     pageSize: number;
     current: number;
     total: number;
