@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -106,6 +107,7 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           .eq('lop_chi_tiet_id', currentSession.lop_chi_tiet_id);
         
         if (!enrollmentsError && enrollmentsData) {
+          // Fix: Access each enrollment item individually
           const students = enrollmentsData.map(enrollment => ({
             id: enrollment.students?.id || enrollment.hoc_sinh_id,
             name: enrollment.students?.ten_hoc_sinh || 'Unknown',
