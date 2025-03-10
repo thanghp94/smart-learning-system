@@ -1,460 +1,348 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/lib/supabase/client';
-import { Wand2, Upload, Image as ImageIcon, Sparkles, Download } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { ImageIcon, Upload, Wand2, Download, RotateCw, ImagePlus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
-import { imageService } from '@/lib/supabase/image-service';
 import PageHeader from '@/components/common/PageHeader';
 
-const ImageGenerator = () => {
-  const [prompt, setPrompt] = useState('');
-  const [style, setStyle] = useState('cute');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const { toast } = useToast();
+// Sample style options
+const styleOptions = [
+  { value: 'realistic', label: 'Chân thực' },
+  { value: 'cartoon', label: 'Hoạt hình' },
+  { value: 'anime', label: 'Anime' },
+  { value: 'pixar', label: 'Pixar' },
+  { value: 'watercolor', label: 'Màu nước' },
+  { value: 'oil_painting', label: 'Sơn dầu' },
+  { value: 'digital_art', label: 'Digital Art' },
+  { value: '3d_render', label: '3D Render' },
+  { value: 'pixel_art', label: 'Pixel Art' },
+  { value: 'comic_book', label: 'Truyện tranh' },
+];
 
-  const styles = [
-    { id: 'cute', name: 'Cute', description: 'Cute cartoon style with vibrant colors' },
-    { id: 'pixar', name: 'Pixar', description: '3D animation style similar to Pixar movies' },
-    { id: 'anime', name: 'Anime', description: 'Japanese anime style with detailed characters' },
-    { id: 'realistic', name: 'Realistic', description: 'Photorealistic rendering with details' },
-    { id: 'watercolor', name: 'Watercolor', description: 'Soft watercolor painting effect' },
-    { id: 'sketch', name: 'Sketch', description: 'Hand-drawn pencil sketch look' },
-    { id: 'cyberpunk', name: 'Cyberpunk', description: 'Futuristic cyberpunk aesthetic with neon colors' },
-  ];
+// Placeholder images
+const placeholderResults = [
+  'https://images.unsplash.com/photo-1639691375901-1f5ed3e380a3?q=80&w=500&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1665991947192-a63451f34c90?q=80&w=500&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1682685797743-3a7b6b8d93e5?q=80&w=500&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1673208979491-d7bc10e58da7?q=80&w=500&auto=format&fit=crop',
+];
+
+const ImageGenerator = () => {
+  const [activeTab, setActiveTab] = useState('text-to-image');
+  const [prompt, setPrompt] = useState('');
+  const [negativePrompt, setNegativePrompt] = useState('');
+  const [style, setStyle] = useState('realistic');
+  const [guidance, setGuidance] = useState([7]);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setUploadedImage(file);
       
-      // Create a preview URL
+      // Create preview
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const generateImage = async () => {
-    if (!prompt) {
+  const handleGenerate = async () => {
+    if (activeTab === 'text-to-image' && !prompt) {
       toast({
-        title: "Vui lòng nhập mô tả",
-        description: "Hãy nhập mô tả hình ảnh bạn muốn tạo.",
+        title: "Lỗi",
+        description: "Vui lòng nhập mô tả để tạo hình ảnh",
         variant: "destructive"
       });
       return;
     }
-    
+
+    if (activeTab === 'image-to-image' && !uploadedImage) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng tải lên một hình ảnh",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGenerating(true);
-    setGeneratedImage(null);
     
     try {
-      // This would be replaced with actual call to Supabase Edge Function
-      // that will call an AI image generation API
+      // In a real implementation, this would call an API endpoint
+      // For this demo, we'll simulate the API call with a timeout
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Use placeholder images instead of real generation
+      setGeneratedImages(placeholderResults);
+      
       toast({
-        title: "Đang tạo hình ảnh",
-        description: "Vui lòng đợi trong giây lát...",
+        title: "Thành công",
+        description: "Đã tạo hình ảnh thành công",
       });
-      
-      const enhancedPrompt = `${prompt}, in ${getStyleDescription(style)} style`;
-      console.log("Generating with prompt:", enhancedPrompt);
-      
-      // Simulate API call
-      setTimeout(() => {
-        // For demo purposes we're using a placeholder image
-        // In production, this would be the URL returned from the AI service
-        const placeholderImage = `/placeholder.svg`;
-        setGeneratedImage(placeholderImage);
-        
-        toast({
-          title: "Tạo hình ảnh thành công",
-          description: "Hình ảnh của bạn đã được tạo.",
-        });
-        setIsGenerating(false);
-      }, 3000);
-      
-      // Actual API call would look something like this:
-      /*
-      const { data, error } = await supabase.functions.invoke('generate-image', {
-        body: { prompt: enhancedPrompt, style }
-      });
-      
-      if (error) throw error;
-      setGeneratedImage(data.imageUrl);
-      */
-      
     } catch (error) {
-      console.error("Error generating image:", error);
       toast({
         title: "Lỗi",
         description: "Không thể tạo hình ảnh. Vui lòng thử lại sau.",
         variant: "destructive"
       });
+    } finally {
       setIsGenerating(false);
     }
   };
 
-  const transformImage = async () => {
-    if (!uploadedImage) {
-      toast({
-        title: "Vui lòng tải lên một hình ảnh",
-        description: "Hãy chọn một hình ảnh để biến đổi.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsUploading(true);
-    setGeneratedImage(null);
-    
-    try {
-      toast({
-        title: "Đang xử lý hình ảnh",
-        description: "Vui lòng đợi trong giây lát...",
-      });
-      
-      // In a real implementation, we would:
-      // 1. Upload the image to Supabase Storage
-      // 2. Call an Edge Function to process the image
-      // 3. Return the processed image URL
-      
-      // Simulate API call
-      setTimeout(() => {
-        // For demo purposes we're using a placeholder image
-        const placeholderImage = `/placeholder.svg`;
-        setGeneratedImage(placeholderImage);
-        
-        toast({
-          title: "Biến đổi hình ảnh thành công",
-          description: `Hình ảnh đã được chuyển đổi sang phong cách ${getStyleName(style)}.`,
-        });
-        setIsUploading(false);
-      }, 3000);
-      
-    } catch (error) {
-      console.error("Error transforming image:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể biến đổi hình ảnh. Vui lòng thử lại sau.",
-        variant: "destructive"
-      });
-      setIsUploading(false);
-    }
-  };
-
-  const saveGeneratedImage = async () => {
-    if (!generatedImage) return;
+  const handleDownload = (imageUrl: string) => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `ai-image-${new Date().getTime()}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     
     toast({
-      title: "Lưu hình ảnh",
-      description: "Đang lưu hình ảnh vào thư viện...",
+      title: "Tải xuống thành công",
+      description: "Hình ảnh đã được tải xuống"
     });
-    
-    // In a real implementation, we would save the image to Supabase Storage
-    // and create a record in the images table
-    
-    toast({
-      title: "Lưu thành công",
-      description: "Hình ảnh đã được lưu vào thư viện.",
-    });
-  };
-
-  const getStyleName = (styleId: string) => {
-    return styles.find(s => s.id === styleId)?.name || styleId;
-  };
-  
-  const getStyleDescription = (styleId: string) => {
-    const style = styles.find(s => s.id === styleId);
-    if (!style) return styleId;
-    return style.id;
   };
 
   return (
     <div className="container py-6 space-y-6">
       <PageHeader
-        heading="Tạo Hình Ảnh AI"
-        subheading="Tạo hình ảnh từ mô tả văn bản hoặc biến đổi hình ảnh hiện có"
+        title="Tạo Hình Ảnh AI"
+        description="Sử dụng AI để tạo hình ảnh từ mô tả hoặc biến đổi hình ảnh có sẵn"
       />
       
-      <Tabs defaultValue="text-to-image" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="text-to-image">Tạo từ văn bản</TabsTrigger>
-          <TabsTrigger value="image-to-image">Biến đổi hình ảnh</TabsTrigger>
-          <TabsTrigger value="chat">Trò chuyện AI</TabsTrigger>
+      <Tabs defaultValue="text-to-image" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="text-to-image">Văn bản sang Hình ảnh</TabsTrigger>
+          <TabsTrigger value="image-to-image">Biến đổi Hình ảnh</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="text-to-image">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mô tả hình ảnh</CardTitle>
-                <CardDescription>Nhập mô tả chi tiết về hình ảnh bạn muốn tạo</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="prompt">Mô tả</Label>
-                  <Textarea
-                    id="prompt"
-                    placeholder="Ví dụ: Một chú mèo đang chơi đàn guitar trên bãi biển..."
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    rows={5}
-                  />
-                </div>
-                
+        <TabsContent value="text-to-image" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Nhập mô tả</CardTitle>
+              <CardDescription>
+                Mô tả chi tiết hình ảnh bạn muốn tạo. Càng chi tiết càng tốt.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="prompt">Mô tả hình ảnh</Label>
+                <Textarea
+                  id="prompt"
+                  placeholder="Ví dụ: Một con mèo đang ngồi trên ghế, phong cách hoạt hình Pixar, màu sắc tươi sáng, độ phân giải cao"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="negative-prompt">Mô tả loại trừ (tùy chọn)</Label>
+                <Textarea
+                  id="negative-prompt"
+                  placeholder="Các yếu tố bạn không muốn xuất hiện trong hình ảnh"
+                  value={negativePrompt}
+                  onChange={(e) => setNegativePrompt(e.target.value)}
+                  rows={2}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="style">Phong cách</Label>
                   <Select value={style} onValueChange={setStyle}>
-                    <SelectTrigger>
+                    <SelectTrigger id="style">
                       <SelectValue placeholder="Chọn phong cách" />
                     </SelectTrigger>
                     <SelectContent>
-                      {styles.map((style) => (
-                        <SelectItem key={style.id} value={style.id}>
-                          {style.name} - {style.description}
+                      {styleOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                
-                <Button 
-                  onClick={generateImage} 
-                  disabled={isGenerating || !prompt} 
-                  className="w-full"
-                >
-                  {isGenerating ? 'Đang tạo...' : (
-                    <>
-                      <Wand2 className="mr-2 h-4 w-4" />
-                      Tạo hình ảnh
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Kết quả</CardTitle>
-                <CardDescription>Hình ảnh được tạo ra sẽ hiển thị ở đây</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center">
-                {isGenerating ? (
-                  <div className="h-[300px] w-full flex flex-col items-center justify-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
-                    <p className="text-muted-foreground">Đang tạo hình ảnh...</p>
-                  </div>
-                ) : generatedImage ? (
-                  <div className="space-y-4 w-full">
-                    <div className="border rounded-lg overflow-hidden">
-                      <img 
-                        src={generatedImage} 
-                        alt="Generated" 
-                        className="w-full h-auto object-contain"
-                      />
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={() => window.open(generatedImage, '_blank')}
-                      >
-                        <ImageIcon className="mr-2 h-4 w-4" />
-                        Xem đầy đủ
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={saveGeneratedImage}
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Lưu vào thư viện
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-[300px] w-full flex flex-col items-center justify-center border border-dashed rounded-lg">
-                    <ImageIcon className="h-16 w-16 text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">Hình ảnh sẽ hiển thị ở đây</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="image-to-image">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tải lên hình ảnh</CardTitle>
-                <CardDescription>Tải lên hình ảnh bạn muốn biến đổi</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <Label htmlFor="image-upload">Hình ảnh</Label>
-                  
-                  <div className="grid w-full items-center gap-4">
-                    <div className="flex flex-col items-center justify-center border border-dashed rounded-lg p-4 h-[200px]">
-                      {previewUrl ? (
-                        <img 
-                          src={previewUrl} 
-                          alt="Preview" 
-                          className="max-h-full max-w-full object-contain" 
-                        />
-                      ) : (
-                        <>
-                          <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">Kéo và thả hình ảnh hoặc click để tải lên</p>
-                        </>
-                      )}
-                      <Input
-                        id="image-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => document.getElementById('image-upload')?.click()}
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      Chọn hình ảnh
-                    </Button>
-                  </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="transform-style">Phong cách biến đổi</Label>
-                  <Select value={style} onValueChange={setStyle}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn phong cách" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {styles.map((style) => (
-                        <SelectItem key={style.id} value={style.id}>
-                          {style.name} - {style.description}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex justify-between">
+                    <Label htmlFor="guidance">Độ sáng tạo: {guidance[0]}</Label>
+                  </div>
+                  <Slider
+                    id="guidance"
+                    min={1}
+                    max={15}
+                    step={0.1}
+                    value={guidance}
+                    onValueChange={setGuidance}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Chính xác</span>
+                    <span>Sáng tạo</span>
+                  </div>
                 </div>
-                
-                <Button 
-                  onClick={transformImage} 
-                  disabled={isUploading || !uploadedImage} 
-                  className="w-full"
-                >
-                  {isUploading ? 'Đang xử lý...' : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Biến đổi hình ảnh
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Kết quả</CardTitle>
-                <CardDescription>Hình ảnh sau khi biến đổi sẽ hiển thị ở đây</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center">
-                {isUploading ? (
-                  <div className="h-[300px] w-full flex flex-col items-center justify-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
-                    <p className="text-muted-foreground">Đang biến đổi hình ảnh...</p>
-                  </div>
-                ) : generatedImage ? (
-                  <div className="space-y-4 w-full">
-                    <div className="border rounded-lg overflow-hidden">
-                      <img 
-                        src={generatedImage} 
-                        alt="Transformed" 
-                        className="w-full h-auto object-contain"
-                      />
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={() => window.open(generatedImage, '_blank')}
-                      >
-                        <ImageIcon className="mr-2 h-4 w-4" />
-                        Xem đầy đủ
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={saveGeneratedImage}
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Lưu vào thư viện
-                      </Button>
-                    </div>
-                  </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                onClick={handleGenerate} 
+                disabled={isGenerating || !prompt} 
+                className="w-full"
+              >
+                {isGenerating ? (
+                  <>
+                    <RotateCw className="mr-2 h-4 w-4 animate-spin" />
+                    Đang tạo...
+                  </>
                 ) : (
-                  <div className="h-[300px] w-full flex flex-col items-center justify-center border border-dashed rounded-lg">
-                    <ImageIcon className="h-16 w-16 text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">Hình ảnh sẽ hiển thị ở đây</p>
-                  </div>
+                  <>
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Tạo hình ảnh
+                  </>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </Button>
+            </CardFooter>
+          </Card>
         </TabsContent>
         
-        <TabsContent value="chat">
+        <TabsContent value="image-to-image" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Trò chuyện với AI</CardTitle>
-              <CardDescription>Sử dụng AI để trò chuyện và tạo nội dung</CardDescription>
+              <CardTitle>Biến đổi hình ảnh</CardTitle>
+              <CardDescription>
+                Tải lên hình ảnh và điều chỉnh phong cách để tạo biến thể mới
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="border rounded-lg p-4 h-[400px] mb-4 overflow-y-auto flex flex-col">
-                <div className="bg-secondary p-3 rounded-lg self-start max-w-[80%] mb-4">
-                  <p className="text-sm">Xin chào! Tôi là trợ lý AI. Bạn cần tôi giúp gì hôm nay?</p>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <Label htmlFor="image-upload">Tải lên hình ảnh</Label>
+                  <div 
+                    className="border-2 border-dashed rounded-md p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                  >
+                    {imagePreview ? (
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-auto max-h-[200px] object-contain rounded-md"
+                      />
+                    ) : (
+                      <>
+                        <ImagePlus className="h-10 w-10 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">Nhấp để chọn hoặc kéo thả hình ảnh</p>
+                        <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF (tối đa 5MB)</p>
+                      </>
+                    )}
+                  </div>
+                  <Input 
+                    id="image-upload" 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
                 </div>
-                <div className="bg-primary text-primary-foreground p-3 rounded-lg self-end max-w-[80%]">
-                  <p className="text-sm">Tính năng chatGPT đang được phát triển. Vui lòng quay lại sau!</p>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="image-prompt">Hướng dẫn thêm (tùy chọn)</Label>
+                    <Textarea
+                      id="image-prompt"
+                      placeholder="Thêm mô tả để định hướng biến đổi hình ảnh"
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="image-style">Phong cách chuyển đổi</Label>
+                    <Select defaultValue="cartoon">
+                      <SelectTrigger id="image-style">
+                        <SelectValue placeholder="Chọn phong cách" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {styleOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-              
-              <div className="flex space-x-2">
-                <Input placeholder="Nhập tin nhắn..." disabled />
-                <Button disabled>Gửi</Button>
-              </div>
-              
-              <p className="text-sm text-muted-foreground mt-4 text-center">
-                Tính năng này đang được phát triển và sẽ sớm được cập nhật.
-              </p>
             </CardContent>
+            <CardFooter>
+              <Button 
+                onClick={handleGenerate} 
+                disabled={isGenerating || !uploadedImage} 
+                className="w-full"
+              >
+                {isGenerating ? (
+                  <>
+                    <RotateCw className="mr-2 h-4 w-4 animate-spin" />
+                    Đang biến đổi...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Biến đổi hình ảnh
+                  </>
+                )}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
       
-      <Separator />
-      
-      <div className="text-center text-sm text-muted-foreground">
-        <p>Hình ảnh được tạo bởi AI có thể được sử dụng cho mục đích giáo dục và cá nhân.</p>
-        <p>Vui lòng sử dụng có trách nhiệm và tuân thủ các quy định về bản quyền.</p>
-      </div>
+      {generatedImages.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kết quả tạo hình ảnh</CardTitle>
+            <CardDescription>
+              Chọn hình ảnh để xem chi tiết hoặc tải xuống
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {generatedImages.map((image, index) => (
+                <div key={index} className="relative group">
+                  <img 
+                    src={image} 
+                    alt={`Generated image ${index + 1}`} 
+                    className="w-full h-auto rounded-md object-cover aspect-square"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={() => handleDownload(image)}
+                      className="mr-2"
+                    >
+                      <Download className="h-4 w-4 mr-1" /> Tải xuống
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

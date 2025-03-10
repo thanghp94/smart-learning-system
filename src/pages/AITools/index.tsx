@@ -43,8 +43,8 @@ const AITools = () => {
   return (
     <div className="container py-6 space-y-6">
       <PageHeader
-        heading="Công Cụ AI"
-        subheading="Sử dụng công nghệ AI tiên tiến để tạo nội dung và cải thiện quy trình làm việc"
+        title="Công Cụ AI"
+        description="Sử dụng công nghệ AI tiên tiến để tạo nội dung và cải thiện quy trình làm việc"
       />
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
