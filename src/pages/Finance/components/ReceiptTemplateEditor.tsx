@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +26,7 @@ const ReceiptTemplateEditor: React.FC<ReceiptTemplateEditorProps> = ({
     name: '',
     description: '',
     template_html: '',
-    type: 'all',
+    type: 'all' as 'income' | 'expense' | 'all',
     is_default: false
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +76,7 @@ const ReceiptTemplateEditor: React.FC<ReceiptTemplateEditorProps> = ({
   const handleTypeChange = (value: string) => {
     // Ensure type is one of the allowed values
     const validType = value === 'income' || value === 'expense' || value === 'all' 
-      ? value 
+      ? value as 'income' | 'expense' | 'all'
       : 'all';
     
     setFormData(prev => ({ ...prev, type: validType }));
@@ -89,7 +90,7 @@ const ReceiptTemplateEditor: React.FC<ReceiptTemplateEditorProps> = ({
       name: formData.name,
       description: formData.description,
       template_html: formData.template_html,
-      type: formData.type as 'income' | 'expense' | 'all',
+      type: formData.type,
       is_default: formData.is_default
     };
     
@@ -120,22 +121,22 @@ const ReceiptTemplateEditor: React.FC<ReceiptTemplateEditorProps> = ({
       <div className="space-y-2">
         <h4 className="text-sm font-medium">Các biến có sẵn:</h4>
         <ul className="list-disc pl-5 text-sm">
-          <li><code>{{id}}</code> - ID giao dịch</li>
-          <li><code>{{ngay}}</code> - Ngày giao dịch</li>
-          <li><code>{{ten_phi}}</code> - Tên phí</li>
-          <li><code>{{dien_giai}}</code> - Diễn giải</li>
-          <li><code>{{loai_giao_dich}}</code> - Loại giao dịch</li>
-          <li><code>{{so_luong}}</code> - Số lượng</li>
-          <li><code>{{don_vi}}</code> - Đơn vị</li>
-          <li><code>{{gia_tien}}</code> - Giá tiền</li>
-          <li><code>{{tong_tien}}</code> - Tổng tiền</li>
-          <li><code>{{bang_chu}}</code> - Bằng chữ</li>
-          <li><code>{{kieu_thanh_toan}}</code> - Kiểu thanh toán</li>
-          <li><code>{{ghi_chu}}</code> - Ghi chú</li>
-          <li><code>{{tg_tao}}</code> - Thời gian tạo</li>
-          <li><code>{{nguoi_tao}}</code> - Người tạo</li>
-          <li><code>{{current_date}}</code> - Ngày hiện tại</li>
-          <li><code>{{receipt_type}}</code> - Loại biên lai (PHIẾU THU/PHIẾU CHI)</li>
+          <li><code>{'{{id}}'}</code> - ID giao dịch</li>
+          <li><code>{'{{ngay}}'}</code> - Ngày giao dịch</li>
+          <li><code>{'{{ten_phi}}'}</code> - Tên phí</li>
+          <li><code>{'{{dien_giai}}'}</code> - Diễn giải</li>
+          <li><code>{'{{loai_giao_dich}}'}</code> - Loại giao dịch</li>
+          <li><code>{'{{so_luong}}'}</code> - Số lượng</li>
+          <li><code>{'{{don_vi}}'}</code> - Đơn vị</li>
+          <li><code>{'{{gia_tien}}'}</code> - Giá tiền</li>
+          <li><code>{'{{tong_tien}}'}</code> - Tổng tiền</li>
+          <li><code>{'{{bang_chu}}'}</code> - Bằng chữ</li>
+          <li><code>{'{{kieu_thanh_toan}}'}</code> - Kiểu thanh toán</li>
+          <li><code>{'{{ghi_chu}}'}</code> - Ghi chú</li>
+          <li><code>{'{{tg_tao}}'}</code> - Thời gian tạo</li>
+          <li><code>{'{{nguoi_tao}}'}</code> - Người tạo</li>
+          <li><code>{'{{current_date}}'}</code> - Ngày hiện tại</li>
+          <li><code>{'{{receipt_type}}'}</code> - Loại biên lai (PHIẾU THU/PHIẾU CHI)</li>
         </ul>
       </div>
     );

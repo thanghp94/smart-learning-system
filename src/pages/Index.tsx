@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,12 +7,11 @@ import StatsCard from '@/components/common/StatsCard';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { format, subDays } from 'date-fns';
-import { Bell, BookOpen, Calendar, CheckCircle, ClipboardList, Clock, CreditCard, Users } from 'lucide-react';
+import { Bell, BookOpen, Calendar, CheckCircle, ClipboardList, Clock, CreditCard, Users, User, UserPlus, Briefcase, Building } from 'lucide-react';
 import { activityService, classService, enrollmentService, studentService, teachingSessionService } from '@/lib/supabase';
 import { Class, Student, TeachingSession } from '@/lib/types';
-import { Activity } from '@/lib/types/activity';
+import { Activity } from '@/lib/types';
 
-// Example chart data
 const chartData = [
   { name: 'T2', students: 10 },
   { name: 'T3', students: 15 },
@@ -24,7 +22,7 @@ const chartData = [
   { name: 'CN', students: 5 },
 ];
 
-const Index = () => {
+const IndexPage = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
@@ -55,10 +53,13 @@ const Index = () => {
     fetchData();
   }, []);
 
-  // Calculate active classes
+  const studentCount = students.length;
+  const classCount = classes.length;
+  const employeeCount = 0; // Assuming this is a constant value
+  const facilityCount = 0; // Assuming this is a constant value
+
   const activeClasses = classes.filter(c => c.tinh_trang === 'active').length;
 
-  // Calculate sessions for today
   const todaySessions = sessions.filter(s => {
     try {
       const sessionDate = new Date(s.ngay_hoc);
@@ -69,7 +70,6 @@ const Index = () => {
     }
   }).length;
 
-  // Calculate sessions for this week
   const thisWeekSessions = sessions.filter(s => {
     try {
       const sessionDate = new Date(s.ngay_hoc);
@@ -81,7 +81,6 @@ const Index = () => {
     }
   }).length;
 
-  // Convert values to strings for StatsCard
   const studentsCount = students.length.toString();
   const activeClassesCount = activeClasses.toString();
   const todaySessionsCount = todaySessions.toString();
@@ -89,33 +88,52 @@ const Index = () => {
   const activeClassesPercentage = `${((activeClasses / (classes.length || 1)) * 100).toFixed(0)}% tổng số lớp`;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Tổng quan</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard 
-          title="Tổng Học Sinh" 
-          value={studentsCount} 
-          description="Học sinh đã đăng ký"
-          icon={<Users className="h-8 w-8 text-blue-600" />}
+          title="Sinh viên" 
+          value={studentCount.toString()} 
+          icon={<User className="h-5 w-5" />} 
+          description="Học sinh đang hoạt động" 
+          trend="up"
+          trendValue="5%"
         />
         <StatsCard 
-          title="Lớp Đang Hoạt Động" 
-          value={activeClassesCount} 
-          description={activeClassesPercentage}
-          icon={<BookOpen className="h-8 w-8 text-green-600" />}
+          title="Lớp học" 
+          value={classCount.toString()} 
+          icon={<UserPlus className="h-5 w-5" />} 
+          description="Lớp đang hoạt động" 
+          trend="up"
+          trendValue="2%"
         />
         <StatsCard 
-          title="Buổi Học Hôm Nay" 
-          value={todaySessionsCount} 
-          description="Lịch trình hôm nay"
-          icon={<Calendar className="h-8 w-8 text-yellow-600" />}
+          title="Nhân viên" 
+          value={employeeCount.toString()} 
+          icon={<Briefcase className="h-5 w-5" />} 
+          description="Nhân viên đang làm việc" 
+          trend="neutral"
+          trendValue="0%"
         />
         <StatsCard 
-          title="Buổi Học Tuần Này" 
-          value={thisWeekSessionsCount} 
-          description="7 ngày qua"
-          icon={<ClipboardList className="h-8 w-8 text-purple-600" />}
+          title="Cơ sở" 
+          value={facilityCount.toString()} 
+          icon={<Building className="h-5 w-5" />} 
+          description="Cơ sở đang hoạt động" 
+          trend="up"
+          trendValue="10%"
         />
       </div>
+      
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Hoạt động gần đây</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RecentActivity activities={activities} isLoading={loading} />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="col-span-2">
@@ -253,4 +271,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default IndexPage;

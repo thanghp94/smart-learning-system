@@ -1,13 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
-import { Student, Enrollment, Finance, Event, Evaluation } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Student, Finance, Evaluation, Event } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { PenSquare, UserPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { financeService, eventService, evaluationService, enrollmentService } from '@/lib/supabase';
-import { formatDate, formatStatus, formatGender, formatStudentStatus } from '@/utils/format';
+import { useToast } from '@/hooks/use-toast';
+import { financeService, evaluationService, eventService } from '@/lib/supabase';
+import { formatDate, formatCurrency } from '@/utils/format';
 import DataTable from '@/components/ui/DataTable';
 import EnrollStudentButton from './EnrollStudentButton';
 
@@ -17,205 +16,158 @@ interface StudentDetailProps {
 
 const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
   const [finances, setFinances] = useState<Finance[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRelatedData = async () => {
-      setLoading(true);
+    const fetchStudentDetails = async () => {
+      if (!student?.id) return;
+      
+      setIsLoading(true);
       try {
-        const [financeData, eventData, enrollmentData, evaluationData] = await Promise.all([
-          financeService.getByEntity('student', student.id),
-          eventService.getByEntity('student', student.id),
-          enrollmentService.getById(student.id),
-          evaluationService.getById(student.id) // Assuming this works for students or we could update this service
-        ]);
-
+        // Fetch related finances
+        const financeData = await financeService.getByEntity('student', student.id);
         setFinances(financeData);
+        
+        // Fetch related events
+        const eventData = await eventService.getByEntity('student', student.id);
         setEvents(eventData);
-        setEnrollments(Array.isArray(enrollmentData) ? enrollmentData : []);
-        setEvaluations(Array.isArray(evaluationData) ? evaluationData : []);
+        
+        // Fetch evaluations
+        const evalData = await evaluationService.getByStudent(student.id);
+        setEvaluations(evalData);
       } catch (error) {
-        console.error('Error fetching student related data:', error);
+        console.error('Error loading student details:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải thông tin chi tiết. Vui lòng thử lại sau.',
+          variant: 'destructive',
+        });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
+    
+    fetchStudentDetails();
+  }, [student?.id, toast]);
 
-    if (student.id) {
-      fetchRelatedData();
-    }
-  }, [student.id]);
+  const renderBasicInfo = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <p><strong>Tên học sinh:</strong> {student.ten_hoc_sinh}</p>
+        <p><strong>Ngày sinh:</strong> {formatDate(student.ngay_sinh)}</p>
+        <p><strong>Giới tính:</strong> {student.gioi_tinh}</p>
+        <p><strong>Địa chỉ:</strong> {student.dia_chi || 'N/A'}</p>
+      </div>
+      <div>
+        <p><strong>Phụ huynh:</strong> {student.ten_ph || 'N/A'}</p>
+        <p><strong>SĐT phụ huynh:</strong> {student.sdt_ph1 || 'N/A'}</p>
+        <p><strong>Email:</strong> {student.email_ph1 || 'N/A'}</p>
+        <p><strong>Trạng thái:</strong> {student.trang_thai}</p>
+      </div>
+    </div>
+  );
 
-  const financeColumns = [
-    {
-      title: 'Ngày',
-      key: 'ngay',
-      render: (value: string) => formatDate(value),
-    },
-    {
-      title: 'Loại',
-      key: 'loai_giao_dich',
-    },
-    {
-      title: 'Số tiền',
-      key: 'tong_tien',
-      render: (value: number) => value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }),
-    },
-    {
-      title: 'Ghi chú',
-      key: 'ghi_chu',
-    },
-  ];
+  const renderFinances = () => (
+    <div>
+      {finances.length > 0 ? (
+        <DataTable
+          data={finances}
+          columns={[
+            { header: 'Ngày', accessor: (row) => formatDate(row.ngay) },
+            { header: 'Tên phí', accessor: 'ten_phi' },
+            { header: 'Loại', accessor: 'loai_thu_chi' },
+            { header: 'Tổng tiền', accessor: (row) => formatCurrency(row.tong_tien) },
+            { header: 'Trạng thái', accessor: 'tinh_trang' },
+          ]}
+        />
+      ) : (
+        <p className="text-gray-500">Không có dữ liệu tài chính</p>
+      )}
+    </div>
+  );
 
-  const eventColumns = [
-    {
-      title: 'Tên sự kiện',
-      key: 'ten_su_kien',
-    },
-    {
-      title: 'Ngày',
-      key: 'ngay',
-      render: (value: string) => formatDate(value),
-    },
-    {
-      title: 'Địa điểm',
-      key: 'dia_diem',
-    },
-  ];
+  const renderEvaluations = () => (
+    <div>
+      {evaluations.length > 0 ? (
+        <DataTable
+          data={evaluations}
+          columns={[
+            { header: 'Đánh giá', accessor: 'ten_danh_gia' },
+            { header: 'Ngày', accessor: (row) => formatDate(row.ngay_dau_dot_danh_gia) },
+            { header: 'Trạng thái', accessor: 'trang_thai' },
+          ]}
+        />
+      ) : (
+        <p className="text-gray-500">Không có đánh giá</p>
+      )}
+    </div>
+  );
 
-  const evaluationColumns = [
-    {
-      title: 'Giáo viên',
-      key: 'giao_vien_id',
-    },
-    {
-      title: 'Lớp',
-      key: 'lop_id',
-    },
-    {
-      title: 'Nhận xét',
-      key: 'nhan_xet',
-    },
-  ];
+  const renderEvents = () => (
+    <div>
+      {events.length > 0 ? (
+        <DataTable
+          data={events}
+          columns={[
+            { header: 'Tên sự kiện', accessor: 'ten_su_kien' },
+            { header: 'Ngày', accessor: (row) => formatDate(row.ngay_bat_dau) },
+            { header: 'Loại', accessor: 'loai_su_kien' },
+            { header: 'Trạng thái', accessor: 'trang_thai' },
+          ]}
+        />
+      ) : (
+        <p className="text-gray-500">Không có sự kiện</p>
+      )}
+    </div>
+  );
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!student) {
-    return <div>Student not found</div>;
-  }
+  const handleEnrollmentComplete = () => {
+    toast({
+      title: "Thành công",
+      description: "Học sinh đã được đăng ký vào lớp học thành công",
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">{student.ten_hoc_sinh}</h2>
-          <p className="text-muted-foreground">
-            {student.dia_chi || 'No address'}
-          </p>
-        </div>
-        <div className="space-x-2">
-          <EnrollStudentButton student={student} />
-          <Button asChild>
-            <Link to={`/students/edit/${student.id}`} className="flex items-center gap-1">
-              <PenSquare className="h-4 w-4" /> Edit
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Thông tin cá nhân</CardTitle>
-          <CardDescription>Thông tin chi tiết về học sinh</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium">Họ và tên</p>
-            <p>{student.ten_hoc_sinh}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Giới tính</p>
-            <p>{formatGender(student.gioi_tinh)}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Ngày sinh</p>
-            <p>{formatDate(student.ngay_sinh)}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Cơ sở</p>
-            <p>{student.co_so_id}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Địa chỉ</p>
-            <p>{student.dia_chi}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Trạng thái</p>
-            <Badge variant={student.trang_thai === 'active' ? 'success' : 'destructive'}>
-              {formatStudentStatus(student.trang_thai)}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="finances" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="finances">Tài chính</TabsTrigger>
-          <TabsTrigger value="events">Sự kiện</TabsTrigger>
-          <TabsTrigger value="evaluations">Đánh giá</TabsTrigger>
-        </TabsList>
-        <TabsContent value="finances" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tài chính</CardTitle>
-              <CardDescription>Lịch sử giao dịch tài chính của học sinh</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {finances.length === 0 ? (
-                <p className="text-muted-foreground">Không có giao dịch tài chính</p>
-              ) : (
-                <DataTable columns={financeColumns} data={finances} />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="events" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sự kiện</CardTitle>
-              <CardDescription>Các sự kiện mà học sinh tham gia</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {events.length === 0 ? (
-                <p className="text-muted-foreground">Không có sự kiện</p>
-              ) : (
-                <DataTable columns={eventColumns} data={events} />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="evaluations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Đánh giá</CardTitle>
-              <CardDescription>Các đánh giá của giáo viên về học sinh</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {evaluations.length === 0 ? (
-                <p className="text-muted-foreground">Không có đánh giá</p>
-              ) : (
-                <DataTable columns={evaluationColumns} data={evaluations} />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Thông tin học sinh</CardTitle>
+        <EnrollStudentButton 
+          student={student} 
+          onEnrollmentComplete={handleEnrollmentComplete}
+        />
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="basic">Thông tin chung</TabsTrigger>
+            <TabsTrigger value="finances">Tài chính</TabsTrigger>
+            <TabsTrigger value="evaluations">Đánh giá</TabsTrigger>
+            <TabsTrigger value="events">Sự kiện</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="basic">
+            {renderBasicInfo()}
+          </TabsContent>
+          
+          <TabsContent value="finances">
+            {renderFinances()}
+          </TabsContent>
+          
+          <TabsContent value="evaluations">
+            {renderEvaluations()}
+          </TabsContent>
+          
+          <TabsContent value="events">
+            {renderEvents()}
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };
 

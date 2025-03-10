@@ -1,23 +1,23 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { Request } from '@/lib/types';
-import { requestService } from '@/lib/supabase';
-import { Check, X } from 'lucide-react';
+import { requestService, eventService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { eventService } from '@/lib/supabase';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-// Use default import instead
 import ConfirmActionDialog from '@/components/ui/confirm-action-dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 interface RequestApprovalButtonsProps {
   request: Request;
-  onStatusChange: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
 }
 
-const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({ 
+const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({
   request,
-  onStatusChange
+  onApprove,
+  onReject
 }) => {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -30,27 +30,28 @@ const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({
     try {
       await requestService.updateStatus(request.id, 'approved', comments);
       
-      // Log as an event
+      // Create activity event for approval
       await eventService.create({
-        ten_su_kien: `Approved Request: ${request.noi_dung}`,
-        loai_su_kien: 'request_approval',
+        ten_su_kien: `Approved: ${request.noi_dung}`,
         ngay_bat_dau: new Date().toISOString().split('T')[0],
-        entity_type: 'request',
-        entity_id: request.id,
+        loai_su_kien: 'request_approval',
+        doi_tuong_id: request.id,
+        ghi_chu: comments || 'Approved without comments',
         trang_thai: 'completed'
       });
       
       toast({
-        title: 'Request Approved',
-        description: 'The request has been successfully approved.',
+        title: "Thành công",
+        description: "Đã phê duyệt yêu cầu",
       });
-      onStatusChange();
+      
+      if (onApprove) onApprove();
     } catch (error) {
-      console.error('Error approving request:', error);
+      console.error("Error approving request:", error);
       toast({
-        title: 'Error',
-        description: 'There was an error approving the request. Please try again.',
-        variant: 'destructive'
+        title: "Lỗi",
+        description: "Không thể phê duyệt yêu cầu. Vui lòng thử lại sau.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -64,27 +65,28 @@ const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({
     try {
       await requestService.updateStatus(request.id, 'rejected', comments);
       
-      // Log as an event
+      // Create activity event for rejection
       await eventService.create({
-        ten_su_kien: `Rejected Request: ${request.noi_dung}`,
-        loai_su_kien: 'request_rejection',
+        ten_su_kien: `Rejected: ${request.noi_dung}`,
         ngay_bat_dau: new Date().toISOString().split('T')[0],
-        entity_type: 'request',
-        entity_id: request.id,
+        loai_su_kien: 'request_rejection',
+        doi_tuong_id: request.id,
+        ghi_chu: comments || 'Rejected without comments',
         trang_thai: 'completed'
       });
       
       toast({
-        title: 'Request Rejected',
-        description: 'The request has been rejected.',
+        title: "Thành công",
+        description: "Đã từ chối yêu cầu",
       });
-      onStatusChange();
+      
+      if (onReject) onReject();
     } catch (error) {
-      console.error('Error rejecting request:', error);
+      console.error("Error rejecting request:", error);
       toast({
-        title: 'Error',
-        description: 'There was an error rejecting the request. Please try again.',
-        variant: 'destructive'
+        title: "Lỗi",
+        description: "Không thể từ chối yêu cầu. Vui lòng thử lại sau.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -93,75 +95,82 @@ const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({
     }
   };
 
-  // Disable buttons if request is not pending
-  const isPending = request.trang_thai === 'pending';
+  // Skip rendering if already approved or rejected
+  if (request.trang_thai === 'approved' || request.trang_thai === 'rejected') {
+    return null;
+  }
 
   return (
-    <>
-      <div className="flex space-x-2">
-        <Button
-          variant="ghost"
-          disabled={!isPending || isLoading}
-          onClick={() => setIsApproveDialogOpen(true)}
-        >
-          <Check className="h-4 w-4 mr-2" />
-          Approve
-        </Button>
-        <Button
-          variant="destructive"
-          disabled={!isPending || isLoading}
-          onClick={() => setIsRejectDialogOpen(true)}
-        >
-          <X className="h-4 w-4 mr-2" />
-          Reject
-        </Button>
-      </div>
-
-      <ConfirmActionDialog
-        isOpen={isApproveDialogOpen}
-        onClose={() => setIsApproveDialogOpen(false)}
-        onConfirm={handleApprove}
-        title="Approve Request"
-        description={
-          <>
-            Are you sure you want to approve this request?
-            <div className="grid gap-2 mt-4">
-              <Label htmlFor="comments">Comments</Label>
-              <Textarea
-                id="comments"
-                placeholder="Add any relevant comments here..."
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-              />
-            </div>
-          </>
-        }
-        confirmText="Approve"
-      />
-
-      <ConfirmActionDialog
-        isOpen={isRejectDialogOpen}
-        onClose={() => setIsRejectDialogOpen(false)}
-        onConfirm={handleReject}
-        title="Reject Request"
-        description={
-          <>
-            Are you sure you want to reject this request?
-            <div className="grid gap-2 mt-4">
-              <Label htmlFor="comments">Comments</Label>
-              <Textarea
-                id="comments"
-                placeholder="Add any relevant comments here..."
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-              />
-            </div>
-          </>
-        }
-        confirmText="Reject"
+    <div className="flex space-x-2">
+      <Button
+        size="sm"
+        onClick={() => setIsApproveDialogOpen(true)}
+        className="flex items-center bg-green-600 hover:bg-green-700"
+      >
+        <CheckCircle2 className="h-4 w-4 mr-1" />
+        Phê duyệt
+      </Button>
+      
+      <Button
+        size="sm"
         variant="destructive"
-      />
-    </>
+        onClick={() => setIsRejectDialogOpen(true)}
+        className="flex items-center"
+      >
+        <XCircle className="h-4 w-4 mr-1" />
+        Từ chối
+      </Button>
+      
+      <ConfirmActionDialog 
+        open={isApproveDialogOpen}
+        onOpenChange={setIsApproveDialogOpen}
+        title="Phê duyệt yêu cầu"
+        description="Bạn có chắc chắn muốn phê duyệt yêu cầu này không?"
+        onConfirm={handleApprove}
+        confirmText="Phê duyệt"
+        cancelText="Hủy"
+        isLoading={isLoading}
+      >
+        <div className="mb-4">
+          <label htmlFor="approve-comments" className="block text-sm font-medium mb-1">
+            Ghi chú (tùy chọn)
+          </label>
+          <Textarea
+            id="approve-comments"
+            placeholder="Nhập ghi chú cho việc phê duyệt..."
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+            className="w-full"
+          />
+        </div>
+      </ConfirmActionDialog>
+      
+      <ConfirmActionDialog 
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+        title="Từ chối yêu cầu"
+        description="Bạn có chắc chắn muốn từ chối yêu cầu này không?"
+        onConfirm={handleReject}
+        confirmText="Từ chối"
+        cancelText="Hủy"
+        isLoading={isLoading}
+        destructive
+      >
+        <div className="mb-4">
+          <label htmlFor="reject-comments" className="block text-sm font-medium mb-1">
+            Lý do từ chối
+          </label>
+          <Textarea
+            id="reject-comments"
+            placeholder="Nhập lý do từ chối..."
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+            className="w-full"
+            required
+          />
+        </div>
+      </ConfirmActionDialog>
+    </div>
   );
 };
 

@@ -45,7 +45,7 @@ class EnrollmentService {
         .from('enrollments')
         .select('*')
         .eq('lop_chi_tiet_id', classId)
-        .eq('buoi_hoc_id', sessionId);
+        .eq('buoi_day_id', sessionId);
       
       if (error) throw error;
       return data;

@@ -16,8 +16,8 @@ class EventService {
     return insert<Event>('events', event);
   }
   
-  async update(id: string, updates: Partial<Event>) {
-    return update<Event>('events', id, updates);
+  async update(id: string, event: Partial<Event>) {
+    return update<Event>('events', id, event);
   }
   
   async delete(id: string) {
@@ -28,19 +28,20 @@ class EventService {
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('trang_thai', status);
+      .eq('trang_thai', status)
+      .order('ngay_bat_dau', { ascending: false });
     
     if (error) throw error;
     return data as Event[];
   }
   
-  // Add the getByEntity method
   async getByEntity(entityType: string, entityId: string) {
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .eq('entity_type', entityType)
-      .eq('entity_id', entityId);
+      .eq('doi_tuong', entityType)
+      .eq('doi_tuong_id', entityId)
+      .order('ngay_bat_dau', { ascending: false });
     
     if (error) throw error;
     return data as Event[];

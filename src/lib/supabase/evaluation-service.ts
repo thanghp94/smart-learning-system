@@ -24,48 +24,36 @@ class EvaluationService {
     return remove('evaluations', id);
   }
   
-  async getByTeacher(teacherId: string) {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('*')
-      .eq('giao_vien_id', teacherId);
-    
-    if (error) throw error;
-    return data as Evaluation[];
-  }
-  
   async getByClass(classId: string) {
     const { data, error } = await supabase
       .from('evaluations')
       .select('*')
-      .eq('lop_id', classId);
+      .eq('lop_chi_tiet_id', classId);
     
     if (error) throw error;
     return data as Evaluation[];
   }
   
-  // Add the missing getByStudentId method
-  async getByStudentId(studentId: string) {
+  async getByStudent(studentId: string) {
     const { data, error } = await supabase
       .from('evaluations')
       .select('*')
-      .eq('hoc_sinh_id', studentId);
+      .eq('doi_tuong', 'student')
+      .eq('ghi_danh_id', studentId);
     
     if (error) throw error;
     return data as Evaluation[];
   }
   
-  // Add the method to get evaluations by entity
   async getByEntity(entityType: string, entityId: string) {
-    if (entityType === 'student') {
-      return this.getByStudentId(entityId);
-    } else if (entityType === 'class') {
-      return this.getByClass(entityId);
-    } else if (entityType === 'teacher') {
-      return this.getByTeacher(entityId);
-    }
+    const { data, error } = await supabase
+      .from('evaluations')
+      .select('*')
+      .eq('doi_tuong', entityType)
+      .eq('ghi_danh_id', entityId);
     
-    throw new Error(`Unsupported entity type: ${entityType}`);
+    if (error) throw error;
+    return data as Evaluation[];
   }
 }
 

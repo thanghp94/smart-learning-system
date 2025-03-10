@@ -1,3 +1,4 @@
+
 import { classService } from './services/class';
 import { studentService } from './student-service';
 import { facilityService } from './facility-service';
@@ -10,7 +11,7 @@ import { fileService } from './file-service';
 import { taskService } from './task-service';
 import { imageService } from './image-service';
 import { requestService } from './request-service';
-import { financeService } from './finance-service';
+import { financeService } from './finance-service/index';  // Updated import
 import { payrollService } from './payroll-service';
 import { evaluationService } from './evaluation-service';
 import { settingService } from './setting-service';
