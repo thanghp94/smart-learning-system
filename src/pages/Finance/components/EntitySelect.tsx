@@ -10,12 +10,14 @@ interface EntitySelectProps {
   form: UseFormReturn<any>;
   selectedEntityType: string | null;
   onEntityTypeChange: (value: string) => void;
+  facilities?: Facility[];
 }
 
 const EntitySelect: React.FC<EntitySelectProps> = ({
   form,
   selectedEntityType,
   onEntityTypeChange,
+  facilities = [],
 }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -140,7 +142,7 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                     ))}
                     
                   {selectedEntityType === 'facility' &&
-                    form.getValues().facilities?.map((facility: Facility) => (
+                    facilities.map((facility) => (
                       <SelectItem key={facility.id} value={facility.id}>
                         {facility.ten_co_so}
                       </SelectItem>

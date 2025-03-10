@@ -85,7 +85,11 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
       // Ensure co_so is null if empty string to prevent UUID error
       co_so: values.co_so && values.co_so.trim() !== '' ? values.co_so : null,
       // Ensure doi_tuong_id is null if empty string to prevent UUID error
-      doi_tuong_id: values.doi_tuong_id && values.doi_tuong_id.trim() !== '' ? values.doi_tuong_id : null
+      doi_tuong_id: values.doi_tuong_id && values.doi_tuong_id.trim() !== '' ? values.doi_tuong_id : null,
+      // Set empty date string to null to prevent date format error
+      thoi_gian_phai_tra: values.thoi_gian_phai_tra && values.thoi_gian_phai_tra.trim() !== '' 
+        ? values.thoi_gian_phai_tra 
+        : null
     };
     
     onSubmit(formattedData);
@@ -105,30 +109,48 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     form.setValue('loai_giao_dich', ''); // Reset transaction type when category changes
   };
 
-  // Make facilities available to the EntitySelect component
-  useEffect(() => {
-    if (facilities && facilities.length > 0) {
-      form.setValue('facilities', facilities);
-    }
-  }, [facilities, form]);
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* SECTION 1: Transaction Type and Entity Selection */}
           
-          <TransactionTypeSelect 
-            form={form} 
-            selectedTransactionCategory={selectedTransactionCategory} 
-            selectedEntityType={selectedEntityType}
-            onTransactionCategoryChange={handleTransactionCategoryChange}
+          {/* Transaction Type selection */}
+          <FormField
+            control={form.control}
+            name="loai_thu_chi"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Loại giao dịch <span className="text-red-500">*</span></FormLabel>
+                <Select onValueChange={(value) => handleTransactionCategoryChange(value)} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn loại" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="income">Thu</SelectItem>
+                    <SelectItem value="expense">Chi</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
           />
           
+          {/* Entity Type selection moved above Transaction Type */}
           <EntitySelect 
             form={form} 
             selectedEntityType={selectedEntityType}
             onEntityTypeChange={handleEntityTypeChange}
+            facilities={facilities}
+          />
+          
+          {/* Transaction Category (Hạng mục) moved below Entity Type */}
+          <TransactionTypeSelect 
+            form={form} 
+            selectedTransactionCategory={selectedTransactionCategory} 
+            selectedEntityType={selectedEntityType}
           />
 
           {/* SECTION 2: Transaction Details */}

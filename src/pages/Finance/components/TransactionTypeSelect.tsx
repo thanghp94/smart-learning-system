@@ -10,14 +10,12 @@ interface TransactionTypeSelectProps {
   form: UseFormReturn<any>;
   selectedTransactionCategory: string;
   selectedEntityType: string | null;
-  onTransactionCategoryChange: (value: string) => void;
 }
 
 const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
   form,
   selectedTransactionCategory,
   selectedEntityType,
-  onTransactionCategoryChange,
 }) => {
   const [transactionTypes, setTransactionTypes] = useState<FinanceTransactionType[]>([]);
   const [filteredTransactionTypes, setFilteredTransactionTypes] = useState<FinanceTransactionType[]>([]);
@@ -108,54 +106,30 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
   }, [selectedTransactionCategory, selectedEntityType, transactionTypes, form]);
 
   return (
-    <>
-      <FormField
-        control={form.control}
-        name="loai_thu_chi"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Loại giao dịch <span className="text-red-500">*</span></FormLabel>
-            <Select onValueChange={(value) => onTransactionCategoryChange(value)} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn loại" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="income">Thu</SelectItem>
-                <SelectItem value="expense">Chi</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="loai_giao_dich"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Hạng mục</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn hạng mục" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {filteredTransactionTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.name}>
-                    {type.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </>
+    <FormField
+      control={form.control}
+      name="loai_giao_dich"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Hạng mục</FormLabel>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn hạng mục" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {filteredTransactionTypes.map((type) => (
+                <SelectItem key={type.id} value={type.name}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 };
 
