@@ -8,9 +8,18 @@ import { Badge } from '@/components/ui/badge';
 interface FinanceTableProps {
   finances: Finance[];
   onRowClick?: (finance: Finance) => void;
+  isLoading?: boolean;
 }
 
-const FinanceTable: React.FC<FinanceTableProps> = ({ finances, onRowClick }) => {
+const FinanceTable: React.FC<FinanceTableProps> = ({ finances, onRowClick, isLoading = false }) => {
+  if (isLoading) {
+    return (
+      <div className="py-4 text-center text-muted-foreground">
+        Loading financial data...
+      </div>
+    );
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -37,20 +46,20 @@ const FinanceTable: React.FC<FinanceTableProps> = ({ finances, onRowClick }) => 
               onClick={() => onRowClick && onRowClick(finance)}
             >
               <TableCell>
-                {finance.ngay_tao ? format(new Date(finance.ngay_tao), 'dd/MM/yyyy') : '—'}
+                {finance.ngay ? format(new Date(finance.ngay), 'dd/MM/yyyy') : '—'}
               </TableCell>
-              <TableCell>{finance.mo_ta || '—'}</TableCell>
-              <TableCell className={finance.loai === 'thu' ? 'text-green-600' : 'text-red-600'}>
-                {finance.so_tien ? finance.so_tien.toLocaleString('vi-VN') + ' ₫' : '—'}
+              <TableCell>{finance.dien_giai || finance.ten_phi || '—'}</TableCell>
+              <TableCell className={finance.loai_thu_chi === 'income' ? 'text-green-600' : 'text-red-600'}>
+                {finance.tong_tien ? finance.tong_tien.toLocaleString('vi-VN') + ' ₫' : '—'}
               </TableCell>
               <TableCell>
-                <Badge variant={finance.loai === 'thu' ? 'default' : 'destructive'}>
-                  {finance.loai === 'thu' ? 'Thu' : 'Chi'}
+                <Badge variant={finance.loai_thu_chi === 'income' ? 'default' : 'destructive'}>
+                  {finance.loai_thu_chi === 'income' ? 'Thu' : 'Chi'}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge variant="outline">
-                  {finance.trang_thai || 'Pending'}
+                  {finance.tinh_trang || 'Pending'}
                 </Badge>
               </TableCell>
             </TableRow>

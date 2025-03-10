@@ -24,4 +24,5 @@ export interface Event {
   // Additional compatibility fields
   start_date?: string;
   location?: string; // Added for compatibility with RequestApprovalButtons
+  created_by?: string; // Added for compatibility with RequestApprovalButtons
 }
