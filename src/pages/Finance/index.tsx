@@ -14,6 +14,8 @@ import FinanceForm from "./FinanceForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import { format } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FinanceLedger from "./components/FinanceLedger";
 
 const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
@@ -22,6 +24,7 @@ const FinancePage = () => {
   const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("table");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -179,28 +182,41 @@ const FinancePage = () => {
 
   return (
     <>
-      {finances.length === 0 && !isLoading ? (
-        <PlaceholderPage
-          title="Tài Chính"
-          description="Quản lý thu chi và giao dịch tài chính"
-          addButtonAction={handleAddClick}
-        />
-      ) : (
-        <TablePageLayout
-          title="Tài Chính"
-          description="Quản lý thu chi và giao dịch tài chính"
-          actions={tableActions}
-        >
-          <DataTable
-            columns={columns}
-            data={finances}
-            isLoading={isLoading}
-            onRowClick={handleRowClick}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm giao dịch..."
-          />
-        </TablePageLayout>
-      )}
+      <TablePageLayout
+        title="Tài Chính"
+        description="Quản lý thu chi và giao dịch tài chính"
+        actions={tableActions}
+      >
+        <Tabs defaultValue="table" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="table">Bảng Dữ Liệu</TabsTrigger>
+            <TabsTrigger value="ledger">Sổ Kế Toán</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="table">
+            {finances.length === 0 && !isLoading ? (
+              <PlaceholderPage
+                title="Tài Chính"
+                description="Quản lý thu chi và giao dịch tài chính"
+                addButtonAction={handleAddClick}
+              />
+            ) : (
+              <DataTable
+                columns={columns}
+                data={finances}
+                isLoading={isLoading}
+                onRowClick={handleRowClick}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm giao dịch..."
+              />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="ledger">
+            <FinanceLedger />
+          </TabsContent>
+        </Tabs>
+      </TablePageLayout>
 
       {selectedFinance && (
         <DetailPanel

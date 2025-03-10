@@ -41,3 +41,8 @@ export interface FinanceTransactionType {
   created_at?: string;
   updated_at?: string;
 }
+
+// Interface for ledger entry with editing capabilities
+export interface FinanceLedgerEntry extends Finance {
+  isEditing?: boolean;
+}
