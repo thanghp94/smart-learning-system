@@ -63,6 +63,32 @@ import EnumManager from '@/pages/Settings/EnumManager';
 import AssetTransfer from '@/pages/Assets/AssetTransfer';
 import TransferManagement from '@/pages/Assets/TransferManagement';
 
+// Wrapper components to fix prop passing for routes
+const EmployeeDetailWrapper = () => <EmployeeDetail employeeId={0} />;
+const EmployeeFormWrapper = () => <EmployeeForm onSubmit={() => {}} />;
+const ClassDetailWrapper = () => <ClassDetail classItem={{} as any} />;
+const ClassFormWrapper = () => <ClassForm onSubmit={() => {}} onCancel={() => {}} />;
+const FacilityDetailWrapper = () => <FacilityDetail facilityId={0} />;
+const FacilityFormWrapper = () => <FacilityForm onSubmit={() => {}} />;
+const SessionDetailWrapper = () => <SessionDetail session={{} as any} />;
+const TeachingSessionFormWrapper = () => <TeachingSessionForm onSubmit={() => {}} onCancel={() => {}} />;
+const SessionFormWrapper = () => <SessionForm onSubmit={() => {}} onCancel={() => {}} />;
+const EventFormWrapper = () => <EventForm onSubmit={() => {}} onCancel={() => {}} />;
+const TaskDetailWrapper = () => <TaskDetail task={{} as any} />;
+const TaskFormWrapper = () => <TaskForm onSubmit={() => {}} onCancel={() => {}} />;
+const LessonDetailWrapper = () => <LessonDetail lesson={{} as any} />;
+const LessonFormWrapper = () => <LessonForm onSubmit={() => {}} onCancel={() => {}} />;
+const EvaluationFormWrapper = () => <EvaluationForm initialData={{} as any} onSubmit={() => {}} />;
+const FinanceDetailWrapper = () => <FinanceDetail finance={{} as any} />;
+const FinanceFormWrapper = () => <FinanceForm onSubmit={() => {}} onCancel={() => {}} facilities={[]} />;
+const FileFormWrapper = () => <FileForm onSubmit={() => {}} onCancel={() => {}} />;
+const ContactDetailWrapper = () => <ContactDetail contact={{} as any} />;
+const ContactFormWrapper = () => <ContactForm onSubmit={() => {}} onCancel={() => {}} />;
+const AssetDetailWrapper = () => <AssetDetail asset={{} as any} />;
+const AssetFormWrapper = () => <AssetForm onSubmit={() => {}} onCancel={() => {}} />;
+const AssetTransferWrapper = () => <AssetTransfer asset={{} as any} onTransferComplete={() => {}} />;
+const PayrollFormWrapper = () => <PayrollForm onSubmit={() => {}} onCancel={() => {}} />;
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -79,78 +105,78 @@ function App() {
               <Route path="students/edit/:id" element={<StudentFormContainer />} />
               
               <Route path="employees" element={<Employees />} />
-              <Route path="employees/:id" element={<EmployeeDetail />} />
-              <Route path="employees/add" element={<EmployeeForm />} />
-              <Route path="employees/edit/:id" element={<EmployeeForm />} />
+              <Route path="employees/:id" element={<EmployeeDetailWrapper />} />
+              <Route path="employees/add" element={<EmployeeFormWrapper />} />
+              <Route path="employees/edit/:id" element={<EmployeeFormWrapper />} />
               <Route path="employees/contracts" element={<ContractTemplateManagerPage />} />
               
               <Route path="classes" element={<Classes />} />
-              <Route path="classes/:id" element={<ClassDetail />} />
-              <Route path="classes/add" element={<ClassForm />} />
-              <Route path="classes/edit/:id" element={<ClassForm />} />
+              <Route path="classes/:id" element={<ClassDetailWrapper />} />
+              <Route path="classes/add" element={<ClassFormWrapper />} />
+              <Route path="classes/edit/:id" element={<ClassFormWrapper />} />
               
               <Route path="facilities" element={<Facilities />} />
-              <Route path="facilities/:id" element={<FacilityDetail />} />
-              <Route path="facilities/add" element={<FacilityForm />} />
-              <Route path="facilities/edit/:id" element={<FacilityForm />} />
+              <Route path="facilities/:id" element={<FacilityDetailWrapper />} />
+              <Route path="facilities/add" element={<FacilityFormWrapper />} />
+              <Route path="facilities/edit/:id" element={<FacilityFormWrapper />} />
               
               <Route path="teaching-sessions" element={<TeachingSessions />} />
-              <Route path="teaching-sessions/:id" element={<SessionDetail />} />
-              <Route path="teaching-sessions/add" element={<TeachingSessionForm />} />
-              <Route path="teaching-sessions/edit/:id" element={<TeachingSessionForm />} />
+              <Route path="teaching-sessions/:id" element={<SessionDetailWrapper />} />
+              <Route path="teaching-sessions/add" element={<TeachingSessionFormWrapper />} />
+              <Route path="teaching-sessions/edit/:id" element={<TeachingSessionFormWrapper />} />
               
               <Route path="sessions" element={<Sessions />} />
-              <Route path="sessions/add" element={<SessionForm />} />
-              <Route path="sessions/edit/:id" element={<SessionForm />} />
+              <Route path="sessions/add" element={<SessionFormWrapper />} />
+              <Route path="sessions/edit/:id" element={<SessionFormWrapper />} />
               
               <Route path="events" element={<Events />} />
-              <Route path="events/add" element={<EventForm />} />
-              <Route path="events/edit/:id" element={<EventForm />} />
+              <Route path="events/add" element={<EventFormWrapper />} />
+              <Route path="events/edit/:id" element={<EventFormWrapper />} />
               
               <Route path="enrollments" element={<Enrollments />} />
               
               <Route path="tasks" element={<Tasks />} />
-              <Route path="tasks/:id" element={<TaskDetail />} />
-              <Route path="tasks/add" element={<TaskForm />} />
-              <Route path="tasks/edit/:id" element={<TaskForm />} />
+              <Route path="tasks/:id" element={<TaskDetailWrapper />} />
+              <Route path="tasks/add" element={<TaskFormWrapper />} />
+              <Route path="tasks/edit/:id" element={<TaskFormWrapper />} />
               
               <Route path="lessons" element={<Lessons />} />
-              <Route path="lessons/:id" element={<LessonDetail />} />
-              <Route path="lessons/add" element={<LessonForm />} />
-              <Route path="lessons/edit/:id" element={<LessonForm />} />
+              <Route path="lessons/:id" element={<LessonDetailWrapper />} />
+              <Route path="lessons/add" element={<LessonFormWrapper />} />
+              <Route path="lessons/edit/:id" element={<LessonFormWrapper />} />
               
               <Route path="evaluations" element={<Evaluations />} />
-              <Route path="evaluations/add" element={<EvaluationForm />} />
-              <Route path="evaluations/edit/:id" element={<EvaluationForm />} />
+              <Route path="evaluations/add" element={<EvaluationFormWrapper />} />
+              <Route path="evaluations/edit/:id" element={<EvaluationFormWrapper />} />
               
               <Route path="finance" element={<Finance />} />
-              <Route path="finance/:id" element={<FinanceDetail />} />
-              <Route path="finance/add" element={<FinanceForm />} />
-              <Route path="finance/edit/:id" element={<FinanceForm />} />
+              <Route path="finance/:id" element={<FinanceDetailWrapper />} />
+              <Route path="finance/add" element={<FinanceFormWrapper />} />
+              <Route path="finance/edit/:id" element={<FinanceFormWrapper />} />
               
               <Route path="images" element={<Images />} />
               
               <Route path="files" element={<Files />} />
-              <Route path="files/add" element={<FileForm />} />
-              <Route path="files/edit/:id" element={<FileForm />} />
+              <Route path="files/add" element={<FileFormWrapper />} />
+              <Route path="files/edit/:id" element={<FileFormWrapper />} />
               
               <Route path="contacts" element={<Contacts />} />
-              <Route path="contacts/:id" element={<ContactDetail />} />
-              <Route path="contacts/add" element={<ContactForm />} />
-              <Route path="contacts/edit/:id" element={<ContactForm />} />
+              <Route path="contacts/:id" element={<ContactDetailWrapper />} />
+              <Route path="contacts/add" element={<ContactFormWrapper />} />
+              <Route path="contacts/edit/:id" element={<ContactFormWrapper />} />
               
               <Route path="assets" element={<Assets />} />
-              <Route path="assets/:id" element={<AssetDetail />} />
-              <Route path="assets/add" element={<AssetForm />} />
-              <Route path="assets/edit/:id" element={<AssetForm />} />
-              <Route path="assets/transfer" element={<AssetTransfer />} />
+              <Route path="assets/:id" element={<AssetDetailWrapper />} />
+              <Route path="assets/add" element={<AssetFormWrapper />} />
+              <Route path="assets/edit/:id" element={<AssetFormWrapper />} />
+              <Route path="assets/transfer" element={<AssetTransferWrapper />} />
               <Route path="assets/transfer-management" element={<TransferManagement />} />
               
               <Route path="requests" element={<Requests />} />
               
               <Route path="payroll" element={<Payroll />} />
-              <Route path="payroll/add" element={<PayrollForm />} />
-              <Route path="payroll/edit/:id" element={<PayrollForm />} />
+              <Route path="payroll/add" element={<PayrollFormWrapper />} />
+              <Route path="payroll/edit/:id" element={<PayrollFormWrapper />} />
               
               <Route path="attendance" element={<Attendance />} />
               <Route path="teacher-schedule" element={<TeacherSchedule />} />
