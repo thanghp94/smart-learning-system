@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, Info, User, Calendar, AlertCircle } from 'lucide-react';
+import { Clock, Info, User, Calendar, AlertCircle, UserPlus } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,8 @@ import { attendanceService } from '@/lib/supabase/attendance-service';
 import { Attendance, AttendanceWithDetails } from '@/lib/types';
 import { format } from 'date-fns';
 import AttendanceDialog from '../AttendanceDialog';
+import EnrollStudentButton from '@/pages/Students/components/EnrollStudentButton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface AttendanceData {
   id: string;
@@ -34,6 +36,7 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({ sessionId, classId }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [attendanceData, setAttendanceData] = useState<AttendanceData[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -124,6 +127,16 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({ sessionId, classId }) => 
     fetchAttendanceData(); // Refresh data after dialog closes
   };
 
+  const handleEnrollmentComplete = async () => {
+    setIsEnrollDialogOpen(false);
+    toast({
+      title: 'Thành công',
+      description: 'Đã thêm học sinh vào lớp',
+    });
+    // Refresh attendance data after new enrollment
+    await fetchAttendanceData();
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -141,9 +154,14 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({ sessionId, classId }) => 
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Điểm danh</CardTitle>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          Điểm danh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsEnrollDialogOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" /> Thêm học sinh
+          </Button>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            Điểm danh
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {attendanceData.length > 0 ? (
@@ -225,6 +243,27 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({ sessionId, classId }) => 
           classId={classId}
         />
       )}
+
+      <Dialog open={isEnrollDialogOpen} onOpenChange={setIsEnrollDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Thêm học sinh vào lớp</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {classId ? (
+              <EnrollStudentButton
+                studentId=""
+                onEnrollmentCreated={handleEnrollmentComplete}
+                classId={classId}
+              />
+            ) : (
+              <p className="text-center text-muted-foreground">
+                Không thể thêm học sinh vì không có thông tin lớp học
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

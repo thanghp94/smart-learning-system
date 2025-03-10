@@ -1,17 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Employee, Task } from '@/lib/types';
+import { Employee, Task, Asset, Finance } from '@/lib/types';
 import { employeeService } from '@/lib/supabase/employee-service';
 import { taskService } from '@/lib/supabase/task-service';
 import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
+import { assetService } from '@/lib/supabase/asset-service';
+import { financeService } from '@/lib/supabase/finance-service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatStatus } from '@/utils/format';
 import { Button } from '@/components/ui/button';
 import { PenSquare } from 'lucide-react';
 import DataTable from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
 
@@ -23,6 +25,8 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [attendance, setAttendance] = useState<EmployeeClockInOut[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [finances, setFinances] = useState<Finance[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -50,11 +54,31 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         })) as EmployeeClockInOut[];
         
         setAttendance(formattedAttendance);
+
+        // Fetch assets
+        try {
+          // Assume asset service has a method to get assets by employee
+          const assetsData = await assetService.getByEmployeeId(employeeId);
+          setAssets(assetsData || []);
+        } catch (error) {
+          console.error('Error fetching employee assets:', error);
+          setAssets([]);
+        }
+
+        // Fetch finances
+        try {
+          // Assume finance service has a method to get finances by employee
+          const financesData = await financeService.getByEmployeeId(employeeId);
+          setFinances(financesData || []);
+        } catch (error) {
+          console.error('Error fetching employee finances:', error);
+          setFinances([]);
+        }
       } catch (error) {
         console.error('Error fetching employee data:', error);
         toast({
-          title: 'Error',
-          description: 'Unable to load employee data',
+          title: 'Lỗi',
+          description: 'Không thể tải dữ liệu nhân viên',
           variant: 'destructive',
         });
       } finally {
@@ -65,7 +89,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
     if (employeeId) {
       fetchEmployeeData();
     }
-  }, [employeeId]);
+  }, [employeeId, toast]);
 
   // Column definitions for Tasks table
   const taskColumns = [
@@ -89,6 +113,17 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         <Badge variant={value === 'completed' ? 'success' : 'secondary'}>
           {formatStatus(value)}
         </Badge>
+      ),
+    },
+    {
+      title: 'Chi tiết',
+      key: 'actions',
+      render: (_: string, task: Task) => (
+        <Button variant="outline" size="sm" asChild>
+          <Link to={`/tasks/${task.id}`}>
+            Xem chi tiết
+          </Link>
+        </Button>
       ),
     },
   ];
@@ -117,14 +152,94 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         </Badge>
       ),
     },
+    {
+      title: 'Chi tiết',
+      key: 'actions',
+      render: (_: string, record: EmployeeClockInOut) => (
+        <Button variant="outline" size="sm" asChild>
+          <Link to={`/attendance?employeeId=${employeeId}&date=${record.ngay}`}>
+            Xem chấm công
+          </Link>
+        </Button>
+      ),
+    },
+  ];
+
+  // Column definitions for Assets table
+  const assetColumns = [
+    {
+      title: 'Tên tài sản',
+      key: 'ten_csvc',
+    },
+    {
+      title: 'Loại',
+      key: 'loai',
+    },
+    {
+      title: 'Số lượng',
+      key: 'so_luong',
+    },
+    {
+      title: 'Trạng thái',
+      key: 'tinh_trang',
+      render: (value: string) => (
+        <Badge variant={value === 'active' ? 'success' : 'secondary'}>
+          {formatStatus(value)}
+        </Badge>
+      ),
+    },
+    {
+      title: 'Chi tiết',
+      key: 'actions',
+      render: (_: string, asset: Asset) => (
+        <Button variant="outline" size="sm" asChild>
+          <Link to={`/assets/${asset.id}`}>
+            Xem chi tiết
+          </Link>
+        </Button>
+      ),
+    },
+  ];
+
+  // Column definitions for Finances table
+  const financeColumns = [
+    {
+      title: 'Ngày',
+      key: 'ngay',
+      render: (value: string) => formatDate(value),
+    },
+    {
+      title: 'Loại',
+      key: 'loai_thu_chi',
+    },
+    {
+      title: 'Diễn giải',
+      key: 'dien_giai',
+    },
+    {
+      title: 'Số tiền',
+      key: 'tong_tien',
+      render: (value: number) => value?.toLocaleString('vi-VN') + ' đ',
+    },
+    {
+      title: 'Chi tiết',
+      key: 'actions',
+      render: (_: string, finance: Finance) => (
+        <Button variant="outline" size="sm" asChild>
+          <Link to={`/finance/${finance.id}`}>
+            Xem chi tiết
+          </Link>
+        </Button>
+      ),
+    },
   ];
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Đang tải...</div>;
   }
 
   if (!employee) {
-    return <div>Employee not found</div>;
+    return <div>Không tìm thấy thông tin nhân viên</div>;
   }
 
   return (
@@ -132,31 +247,31 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">{employee.ten_nhan_su}</h2>
-          <p className="text-muted-foreground">{employee.chuc_danh || 'No position'}</p>
+          <p className="text-muted-foreground">{employee.chuc_danh || 'Chưa có chức danh'}</p>
         </div>
         <Button onClick={() => navigate(`/employees/edit/${employeeId}`)} className="flex items-center gap-1">
-          <PenSquare className="h-4 w-4" /> Edit
+          <PenSquare className="h-4 w-4" /> Chỉnh sửa
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle>Thông tin cá nhân</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p className="text-sm font-medium">Full Name</p>
+            <p className="text-sm font-medium">Họ và tên</p>
             <p>{employee.ten_nhan_su}</p>
           </div>
           {employee.ten_tieng_anh && (
             <div>
-              <p className="text-sm font-medium">English Name</p>
+              <p className="text-sm font-medium">Tên tiếng Anh</p>
               <p>{employee.ten_tieng_anh}</p>
             </div>
           )}
           {employee.dien_thoai && (
             <div>
-              <p className="text-sm font-medium">Phone</p>
+              <p className="text-sm font-medium">Điện thoại</p>
               <p>{employee.dien_thoai}</p>
             </div>
           )}
@@ -168,36 +283,36 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
           )}
           {employee.dia_chi && (
             <div>
-              <p className="text-sm font-medium">Address</p>
+              <p className="text-sm font-medium">Địa chỉ</p>
               <p>{employee.dia_chi}</p>
             </div>
           )}
           {employee.gioi_tinh && (
             <div>
-              <p className="text-sm font-medium">Gender</p>
+              <p className="text-sm font-medium">Giới tính</p>
               <p>{employee.gioi_tinh}</p>
             </div>
           )}
           {employee.ngay_sinh && (
             <div>
-              <p className="text-sm font-medium">Date of Birth</p>
+              <p className="text-sm font-medium">Ngày sinh</p>
               <p>{formatDate(employee.ngay_sinh)}</p>
             </div>
           )}
           {employee.bo_phan && (
             <div>
-              <p className="text-sm font-medium">Department</p>
+              <p className="text-sm font-medium">Bộ phận</p>
               <p>{employee.bo_phan}</p>
             </div>
           )}
           {employee.chuc_danh && (
             <div>
-              <p className="text-sm font-medium">Position</p>
+              <p className="text-sm font-medium">Chức danh</p>
               <p>{employee.chuc_danh}</p>
             </div>
           )}
           <div>
-            <p className="text-sm font-medium">Status</p>
+            <p className="text-sm font-medium">Trạng thái</p>
             <Badge variant={employee.tinh_trang_lao_dong === 'active' ? 'success' : 'destructive'}>
               {formatStatus(employee.tinh_trang_lao_dong)}
             </Badge>
@@ -207,19 +322,21 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
 
       <Tabs defaultValue="tasks">
         <TabsList>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="tasks">Công việc</TabsTrigger>
+          <TabsTrigger value="attendance">Điểm danh</TabsTrigger>
+          <TabsTrigger value="assets">Cơ sở vật chất</TabsTrigger>
+          <TabsTrigger value="finances">Tài chính</TabsTrigger>
         </TabsList>
         
         <TabsContent value="tasks">
           <Card>
             <CardHeader>
-              <CardTitle>Tasks</CardTitle>
-              <CardDescription>Tasks assigned to this employee</CardDescription>
+              <CardTitle>Công việc</CardTitle>
+              <CardDescription>Danh sách công việc được giao cho nhân viên này</CardDescription>
             </CardHeader>
             <CardContent>
               {tasks.length === 0 ? (
-                <p className="text-muted-foreground">No tasks assigned</p>
+                <p className="text-muted-foreground">Chưa có công việc nào được giao</p>
               ) : (
                 <DataTable columns={taskColumns} data={tasks} />
               )}
@@ -230,14 +347,46 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         <TabsContent value="attendance">
           <Card>
             <CardHeader>
-              <CardTitle>Attendance Records</CardTitle>
-              <CardDescription>Clock in/out history</CardDescription>
+              <CardTitle>Điểm danh</CardTitle>
+              <CardDescription>Lịch sử chấm công</CardDescription>
             </CardHeader>
             <CardContent>
               {attendance.length === 0 ? (
-                <p className="text-muted-foreground">No attendance records</p>
+                <p className="text-muted-foreground">Chưa có dữ liệu chấm công</p>
               ) : (
                 <DataTable columns={attendanceColumns} data={attendance} />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="assets">
+          <Card>
+            <CardHeader>
+              <CardTitle>Cơ sở vật chất</CardTitle>
+              <CardDescription>Tài sản được giao cho nhân viên</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {assets.length === 0 ? (
+                <p className="text-muted-foreground">Chưa có tài sản nào được giao</p>
+              ) : (
+                <DataTable columns={assetColumns} data={assets} />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="finances">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tài chính</CardTitle>
+              <CardDescription>Các giao dịch tài chính liên quan</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {finances.length === 0 ? (
+                <p className="text-muted-foreground">Chưa có giao dịch tài chính nào</p>
+              ) : (
+                <DataTable columns={financeColumns} data={finances} />
               )}
             </CardContent>
           </Card>
