@@ -30,7 +30,8 @@ export const imageService = {
       // Add timestamps if not provided
       const imageWithTimestamps = {
         ...image,
-        created_at: image.created_at || new Date().toISOString(),
+        // Make sure we're not trying to access non-existent properties
+        created_at: new Date().toISOString()
       };
       
       const result = await insert<Image>('images', imageWithTimestamps);

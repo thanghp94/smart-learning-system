@@ -1,178 +1,211 @@
+import React, { useState, useEffect } from "react";
+import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import DataTable from "@/components/ui/DataTable";
+import { financeService } from "@/lib/supabase";
+import { Finance } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import TablePageLayout from "@/components/common/TablePageLayout";
+import { Badge } from "@/components/ui/badge";
+import DetailPanel from "@/components/ui/DetailPanel";
+import FinanceDetail from "./FinanceDetail";
+import FinanceForm from "./FinanceForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import PlaceholderPage from "@/components/common/PlaceholderPage";
+import { format } from "date-fns";
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { Finance } from '@/lib/types';
-import { financeService } from '@/lib/supabase/finance-service';
-import { facilityService } from '@/lib/supabase/facility-service';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import DataTable from '@/components/ui/DataTable';
-import PageHeader from '@/components/common/PageHeader';
-import TablePageLayout from '@/components/common/TablePageLayout';
-import { Plus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-
-// Create a minimal FinanceForm component
-const FinanceForm = ({ onSubmit, onCancel, facilities, isLoading }) => {
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Add Finance Record</h2>
-        <p>Finance form placeholder - implement full form later</p>
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
-          <Button onClick={() => onSubmit({
-            loai_thu_chi: 'income',
-            tong_tien: 0,
-            ngay: new Date().toISOString()
-          })} disabled={isLoading}>
-            {isLoading ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const FinancesPage: React.FC = () => {
+const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
-  const [facilities, setFacilities] = useState([]);
-  const [isAdding, setIsAdding] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+  const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchFinances();
-    fetchFacilities();
   }, []);
 
   const fetchFinances = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const data = await financeService.getAll();
-      setFinances(data);
+      console.log("Finances data received:", data);
+      
+      if (Array.isArray(data)) {
+        setFinances(data as Finance[]);
+      } else {
+        console.error("Invalid finances data format:", data);
+        setFinances([]);
+      }
     } catch (error) {
-      console.error('Error fetching finances:', error);
+      console.error("Error fetching finances:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to load financial records',
-        variant: 'destructive'
+        title: "Lỗi",
+        description: "Không thể tải danh sách tài chính. Vui lòng thử lại sau.",
+        variant: "destructive",
       });
+      setFinances([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchFacilities = async () => {
-    try {
-      const data = await facilityService.getAll();
-      setFacilities(data);
-    } catch (error) {
-      console.error('Error fetching facilities:', error);
-    }
-  };
-
-  const handleAddFinance = () => {
-    setIsAdding(true);
-  };
-
-  const handleCancelAdd = () => {
-    setIsAdding(false);
-  };
-
-  const handleSubmit = async (values: Finance) => {
-    setIsSubmitting(true);
-    try {
-      await financeService.create(values);
-      fetchFinances(); // Refresh data
-      setIsAdding(false);
-      toast({
-        title: 'Success',
-        description: 'Finance record created successfully',
-      });
-    } catch (error) {
-      console.error('Error creating finance:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create finance record',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleRowClick = (finance: Finance) => {
-    navigate(`/finances/${finance.id}`);
+    setSelectedFinance(finance);
+    setShowDetail(true);
+  };
+
+  const closeDetail = () => {
+    setShowDetail(false);
+  };
+
+  const handleAddClick = () => {
+    setShowAddForm(true);
+  };
+
+  const handleAddFormCancel = () => {
+    setShowAddForm(false);
+  };
+
+  const handleAddFormSubmit = async (formData: Partial<Finance>) => {
+    try {
+      console.log("Submitting finance data:", formData);
+      const newFinance = await financeService.create(formData);
+      
+      toast({
+        title: "Thành công",
+        description: "Thêm giao dịch tài chính mới thành công",
+      });
+      setShowAddForm(false);
+      await fetchFinances();
+    } catch (error) {
+      console.error("Error adding finance:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thêm giao dịch tài chính mới",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
   const columns = [
     {
-      title: 'Date',
-      key: 'ngay',
+      title: "Ngày",
+      key: "ngay",
       sortable: true,
-      render: (value: string) => (value ? format(new Date(value), 'dd/MM/yyyy') : 'N/A'),
+      render: (value: string) => value ? format(new Date(value), 'dd/MM/yyyy') : '',
     },
     {
-      title: 'Description',
-      key: 'dien_giai',
+      title: "Loại Thu Chi",
+      key: "loai_thu_chi",
       sortable: true,
+      render: (value: string) => (
+        <Badge variant={value === "thu" ? "success" : "destructive"}>
+          {value === "thu" ? "Thu" : "Chi"}
+        </Badge>
+      ),
     },
     {
-      title: 'Amount',
-      key: 'tong_tien',
-      sortable: true,
-      render: (value: number) => value?.toLocaleString() || '0',
+      title: "Diễn Giải",
+      key: "dien_giai",
     },
     {
-      title: 'Type',
-      key: 'loai_thu_chi',
+      title: "Tổng Tiền",
+      key: "tong_tien",
       sortable: true,
+      render: (value: number) => formatCurrency(value),
     },
     {
-      title: 'Status',
-      key: 'tinh_trang',
+      title: "Tình Trạng",
+      key: "tinh_trang",
       sortable: true,
+      render: (value: string) => (
+        <Badge variant={
+          value === "completed" ? "success" : 
+          value === "pending" ? "secondary" : 
+          "outline"
+        }>
+          {value === "completed" ? "Hoàn thành" : 
+           value === "pending" ? "Chờ xử lý" : 
+           value || "N/A"}
+        </Badge>
+      ),
     },
   ];
 
+  const tableActions = (
+    <div className="flex items-center space-x-2">
+      <Button variant="outline" size="sm" className="h-8" onClick={fetchFinances}>
+        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
+      </Button>
+      <Button variant="outline" size="sm" className="h-8">
+        <Filter className="h-4 w-4 mr-1" /> Lọc
+      </Button>
+      <Button variant="outline" size="sm" className="h-8">
+        <FileDown className="h-4 w-4 mr-1" /> Xuất
+      </Button>
+      <Button size="sm" className="h-8" onClick={handleAddClick}>
+        <Plus className="h-4 w-4 mr-1" /> Thêm Giao Dịch
+      </Button>
+    </div>
+  );
+
   return (
-    <TablePageLayout>
-      <PageHeader
-        title="Finances"
-        description="Manage financial records"
-        action={{
-          label: "Add Finance",
-          onClick: handleAddFinance,
-          icon: <Plus className="h-4 w-4" />
-        }}
-      />
-      <Card>
-        <CardHeader>
-          <CardTitle>Financial Records</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <>
+      {finances.length === 0 && !isLoading ? (
+        <PlaceholderPage
+          title="Tài Chính"
+          description="Quản lý thu chi và giao dịch tài chính"
+          addButtonAction={handleAddClick}
+        />
+      ) : (
+        <TablePageLayout
+          title="Tài Chính"
+          description="Quản lý thu chi và giao dịch tài chính"
+          actions={tableActions}
+        >
           <DataTable
             columns={columns}
             data={finances}
             isLoading={isLoading}
             onRowClick={handleRowClick}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm giao dịch..."
           />
-        </CardContent>
-      </Card>
-      {isAdding && (
-        <FinanceForm
-          onSubmit={handleSubmit}
-          onCancel={handleCancelAdd}
-          facilities={facilities}
-          isLoading={isSubmitting}
-        />
+        </TablePageLayout>
       )}
-    </TablePageLayout>
+
+      {selectedFinance && (
+        <DetailPanel
+          title="Chi Tiết Giao Dịch"
+          isOpen={showDetail}
+          onClose={closeDetail}
+        >
+          <FinanceDetail finance={selectedFinance} />
+        </DetailPanel>
+      )}
+
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Thêm Giao Dịch Mới</DialogTitle>
+            <DialogDescription>
+              Nhập thông tin giao dịch tài chính mới vào biểu mẫu bên dưới
+            </DialogDescription>
+          </DialogHeader>
+          <FinanceForm 
+            onSubmit={handleAddFormSubmit}
+            onCancel={handleAddFormCancel}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
-export default FinancesPage;
+export default FinancePage;

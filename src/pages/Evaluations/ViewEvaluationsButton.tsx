@@ -10,6 +10,7 @@ export interface ViewEvaluationsButtonProps {
   title?: string;
   studentId?: string;
   showAsSheet?: boolean;
+  buttonText?: string; // Added to fix error
 }
 
 const ViewEvaluationsButton: React.FC<ViewEvaluationsButtonProps> = ({ 
@@ -18,7 +19,8 @@ const ViewEvaluationsButton: React.FC<ViewEvaluationsButtonProps> = ({
   entityType = 'enrollment', 
   title = 'View Evaluations',
   studentId,
-  showAsSheet = false
+  showAsSheet = false,
+  buttonText // Added to fix error
 }) => {
   const navigate = useNavigate();
 
@@ -34,7 +36,7 @@ const ViewEvaluationsButton: React.FC<ViewEvaluationsButtonProps> = ({
 
   return (
     <Button variant="outline" size="sm" onClick={handleViewEvaluations}>
-      {title}
+      {buttonText || title}
     </Button>
   );
 };
