@@ -5,10 +5,14 @@ import { formatDate } from '@/utils/format';
 
 interface Activity {
   id: string;
-  action: string;
-  type: string;
-  name: string;
-  timestamp: string;
+  title?: string;
+  description?: string;
+  date?: string;
+  action?: string;
+  entity?: string;
+  timestamp?: string;
+  type?: string;
+  name?: string;
   username?: string;
 }
 
@@ -18,10 +22,13 @@ export interface RecentActivityProps {
 }
 
 const getActionColor = (action: string) => {
-  switch (action.toLowerCase()) {
+  switch (action?.toLowerCase()) {
     case 'thêm mới':
+    case 'enrolled':
+    case 'created':
       return 'text-green-500';
     case 'cập nhật':
+    case 'started':
       return 'text-blue-500';
     case 'xóa':
       return 'text-red-500';
@@ -31,7 +38,7 @@ const getActionColor = (action: string) => {
 };
 
 const getAvatarFallback = (type: string) => {
-  return type.substring(0, 2).toUpperCase();
+  return (type || 'UN').substring(0, 2).toUpperCase();
 };
 
 const RecentActivity: React.FC<RecentActivityProps> = ({ activities, isLoading = false }) => {
@@ -60,20 +67,24 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ activities, isLoading =
       {activities.map((activity) => (
         <div key={activity.id} className="flex items-center">
           <Avatar className="h-9 w-9 mr-3">
-            <AvatarImage src="" alt={activity.type} />
-            <AvatarFallback>{getAvatarFallback(activity.type)}</AvatarFallback>
+            <AvatarImage src="" alt={activity.type || activity.entity || ''} />
+            <AvatarFallback>{getAvatarFallback(activity.type || activity.entity || '')}</AvatarFallback>
           </Avatar>
           <div className="space-y-1">
             <p className="text-sm">
-              <span className={getActionColor(activity.action)}>
+              <span className={getActionColor(activity.action || '')}>
                 {activity.action}
               </span>{' '}
-              <span className="font-medium">{activity.type}</span>
+              <span className="font-medium">{activity.title || activity.type || activity.entity}</span>
             </p>
             <p className="text-xs text-muted-foreground">
+              {activity.date && formatDate(activity.date)}
               {activity.timestamp && formatDate(activity.timestamp)}
               {activity.username && ` by ${activity.username}`}
             </p>
+            {activity.description && (
+              <p className="text-sm">{activity.description}</p>
+            )}
           </div>
         </div>
       ))}
