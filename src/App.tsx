@@ -2,7 +2,6 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { DatabaseProvider } from '@/contexts/DatabaseContext';
 
 // Layouts
 import MainLayout from '@/components/layout/MainLayout';
@@ -97,115 +96,94 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Router>
-      <QueryClientProvider client={queryClient}>
-        <DatabaseProvider>
-          <Routes>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Index />} />
-              <Route path="students" element={<Students />} />
-              <Route path="students/:id" element={<StudentDetail />} />
-              <Route path="students/add" element={<StudentFormContainer isAdd={true} />} />
-              <Route path="students/edit/:id" element={<StudentFormContainer />} />
-              
-              <Route path="employees" element={<Employees />} />
-              <Route path="employees/:id" element={<EmployeeDetailWrapper />} />
-              <Route path="employees/add" element={<EmployeeFormWrapper />} />
-              <Route path="employees/edit/:id" element={<EmployeeFormWrapper />} />
-              <Route path="employees/contracts" element={<ContractTemplateManagerPage />} />
-              
-              <Route path="classes" element={<Classes />} />
-              <Route path="classes/:id" element={<ClassDetailWrapper />} />
-              <Route path="classes/add" element={<ClassFormWrapper />} />
-              <Route path="classes/edit/:id" element={<ClassFormWrapper />} />
-              
-              <Route path="facilities" element={<Facilities />} />
-              <Route path="facilities/:id" element={<FacilityDetailWrapper />} />
-              <Route path="facilities/add" element={<FacilityFormWrapper />} />
-              <Route path="facilities/edit/:id" element={<FacilityFormWrapper />} />
-              
-              <Route path="teaching-sessions" element={<TeachingSessions />} />
-              <Route path="teaching-sessions/:id" element={<SessionDetailWrapper />} />
-              <Route path="teaching-sessions/add" element={<TeachingSessionFormWrapper />} />
-              <Route path="teaching-sessions/edit/:id" element={<TeachingSessionFormWrapper />} />
-              
-              <Route path="sessions" element={<Sessions />} />
-              <Route path="sessions/add" element={<SessionFormWrapper />} />
-              <Route path="sessions/edit/:id" element={<SessionFormWrapper />} />
-              
-              <Route path="events" element={<Events />} />
-              <Route path="events/add" element={<EventFormWrapper />} />
-              <Route path="events/edit/:id" element={<EventFormWrapper />} />
-              
-              <Route path="enrollments" element={<Enrollments />} />
-              
-              <Route path="tasks" element={<Tasks />} />
-              <Route path="tasks/:id" element={<TaskDetailWrapper />} />
-              <Route path="tasks/add" element={<TaskFormWrapper />} />
-              <Route path="tasks/edit/:id" element={<TaskFormWrapper />} />
-              
-              <Route path="lessons" element={<Lessons />} />
-              <Route path="lessons/:id" element={<LessonDetailWrapper />} />
-              <Route path="lessons/add" element={<LessonFormWrapper />} />
-              <Route path="lessons/edit/:id" element={<LessonFormWrapper />} />
-              
-              <Route path="evaluations" element={<Evaluations />} />
-              <Route path="evaluations/add" element={<EvaluationFormWrapper />} />
-              <Route path="evaluations/edit/:id" element={<EvaluationFormWrapper />} />
-              
-              <Route path="finance" element={<Finance />} />
-              <Route path="finance/:id" element={<FinanceDetailWrapper />} />
-              <Route path="finance/add" element={<FinanceFormWrapper />} />
-              <Route path="finance/edit/:id" element={<FinanceFormWrapper />} />
-              
-              <Route path="images" element={<Images />} />
-              
-              <Route path="files" element={<Files />} />
-              <Route path="files/add" element={<FileFormWrapper />} />
-              <Route path="files/edit/:id" element={<FileFormWrapper />} />
-              
-              <Route path="contacts" element={<Contacts />} />
-              <Route path="contacts/:id" element={<ContactDetailWrapper />} />
-              <Route path="contacts/add" element={<ContactFormWrapper />} />
-              <Route path="contacts/edit/:id" element={<ContactFormWrapper />} />
-              
-              <Route path="assets" element={<Assets />} />
-              <Route path="assets/:id" element={<AssetDetailWrapper />} />
-              <Route path="assets/add" element={<AssetFormWrapper />} />
-              <Route path="assets/edit/:id" element={<AssetFormWrapper />} />
-              <Route path="assets/transfer" element={<AssetTransferWrapper />} />
-              <Route path="assets/transfer-management" element={<TransferManagement />} />
-              
-              <Route path="requests" element={<Requests />} />
-              
-              <Route path="payroll" element={<Payroll />} />
-              <Route path="payroll/add" element={<PayrollFormWrapper />} />
-              <Route path="payroll/edit/:id" element={<PayrollFormWrapper />} />
-              
-              <Route path="attendance" element={<Attendance />} />
-              <Route path="teacher-schedule" element={<TeacherSchedule />} />
-              <Route path="settings" element={<Settings />} />
-              
-              <Route path="database-schema" element={<DatabaseSchema />} />
-              
-              {/* Enum Manager Route */}
-              <Route path="settings/enum-manager" element={<EnumManager />} />
-              
-              {/* Make sure Admissions route is included */}
-              <Route path="admissions" element={<Admissions />} />
-              
-              {/* AI Tools Routes */}
-              <Route path="ai-tools" element={<AITools />} />
-              <Route path="ai-tools/image-generator" element={<ImageGenerator />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-          <Toaster />
-        </DatabaseProvider>
-      </QueryClientProvider>
-    </Router>
-  );
-}
-
-export default App;
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Index />} />
+            <Route path="students" element={<Students />} />
+            <Route path="students/:id" element={<StudentDetail />} />
+            <Route path="students/add" element={<StudentFormContainer isAdd={true} />} />
+            <Route path="students/edit/:id" element={<StudentFormContainer />} />
+            
+            <Route path="employees" element={<Employees />} />
+            <Route path="employees/:id" element={<EmployeeDetailWrapper />} />
+            <Route path="employees/add" element={<EmployeeFormWrapper />} />
+            <Route path="employees/edit/:id" element={<EmployeeFormWrapper />} />
+            <Route path="employees/contracts" element={<ContractTemplateManagerPage />} />
+            
+            <Route path="classes" element={<Classes />} />
+            <Route path="classes/:id" element={<ClassDetailWrapper />} />
+            <Route path="classes/add" element={<ClassFormWrapper />} />
+            <Route path="classes/edit/:id" element={<ClassFormWrapper />} />
+            
+            <Route path="facilities" element={<Facilities />} />
+            <Route path="facilities/:id" element={<FacilityDetailWrapper />} />
+            <Route path="facilities/add" element={<FacilityFormWrapper />} />
+            <Route path="facilities/edit/:id" element={<FacilityFormWrapper />} />
+            
+            <Route path="teaching-sessions" element={<TeachingSessions />} />
+            <Route path="teaching-sessions/:id" element={<SessionDetailWrapper />} />
+            <Route path="teaching-sessions/add" element={<TeachingSessionFormWrapper />} />
+            <Route path="teaching-sessions/edit/:id" element={<TeachingSessionFormWrapper />} />
+            
+            <Route path="sessions" element={<Sessions />} />
+            <Route path="sessions/add" element={<SessionFormWrapper />} />
+            <Route path="sessions/edit/:id" element={<SessionFormWrapper />} />
+            
+            <Route path="events" element={<Events />} />
+            <Route path="events/add" element={<EventFormWrapper />} />
+            <Route path="events/edit/:id" element={<EventFormWrapper />} />
+            
+            <Route path="enrollments" element={<Enrollments />} />
+            
+            <Route path="tasks" element={<Tasks />} />
+            <Route path="tasks/:id" element={<TaskDetailWrapper />} />
+            <Route path="tasks/add" element={<TaskFormWrapper />} />
+            <Route path="tasks/edit/:id" element={<TaskFormWrapper />} />
+            
+            <Route path="lessons" element={<Lessons />} />
+            <Route path="lessons/:id" element={<LessonDetailWrapper />} />
+            <Route path="lessons/add" element={<LessonFormWrapper />} />
+            <Route path="lessons/edit/:id" element={<LessonFormWrapper />} />
+            
+            <Route path="evaluations" element={<Evaluations />} />
+            <Route path="evaluations/add" element={<EvaluationFormWrapper />} />
+            <Route path="evaluations/edit/:id" element={<EvaluationFormWrapper />} />
+            
+            <Route path="finance" element={<Finance />} />
+            <Route path="finance/:id" element={<FinanceDetailWrapper />} />
+            <Route path="finance/add" element={<FinanceFormWrapper />} />
+            <Route path="finance/edit/:id" element={<FinanceFormWrapper />} />
+            
+            <Route path="images" element={<Images />} />
+            
+            <Route path="files" element={<Files />} />
+            <Route path="files/add" element={<FileFormWrapper />} />
+            <Route path="files/edit/:id" element={<FileFormWrapper />} />
+            
+            <Route path="contacts" element={<Contacts />} />
+            <Route path="contacts/:id" element={<ContactDetailWrapper />} />
+            <Route path="contacts/add" element={<ContactFormWrapper />} />
+            <Route path="contacts/edit/:id" element={<ContactFormWrapper />} />
+            
+            <Route path="assets" element={<Assets />} />
+            <Route path="assets/:id" element={<AssetDetailWrapper />} />
+            <Route path="assets/add" element={<AssetFormWrapper />} />
+            <Route path="assets/edit/:id" element={<AssetFormWrapper />} />
+            <Route path="assets/transfer" element={<AssetTransferWrapper />} />
+            <Route path="assets/transfer-management" element={<TransferManagement />} />
+            
+            <Route path="requests" element={<Requests />} />
+            
+            <Route path="payroll" element={<Payroll />} />
+            <Route path="payroll/add" element={<PayrollFormWrapper />} />
+            <Route path="payroll/edit/:id" element={<PayrollFormWrapper />} />
+            
+            <Route path="attendance" element={<Attendance />} />
+            <Route path="teacher-schedule" element={<TeacherSchedule />} />
+            <Route path="settings" element={<Settings />} />
+            
+            <Route path="database-schema" element={<DatabaseSchema />} />
+            
+            {/* Enum
