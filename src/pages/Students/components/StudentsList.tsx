@@ -1,17 +1,26 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Student } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, BookOpen, Plus } from 'lucide-react';
-import DataTable from '@/components/ui/DataTable';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Student } from "@/lib/types";
+import { formatDate } from "@/utils/format";
+import DataTable from "@/components/ui/DataTable";
+import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Plus, RefreshCw } from "lucide-react";
+import { studentService } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-interface StudentsListProps {
+export interface StudentsListProps {
   data: Student[];
   isLoading: boolean;
   onRefresh: () => void;
-  onAddStudent?: () => void;
+  onAddStudent: () => void;
 }
 
 const StudentsList: React.FC<StudentsListProps> = ({ 
@@ -21,28 +30,35 @@ const StudentsList: React.FC<StudentsListProps> = ({
   onAddStudent 
 }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
   const handleView = (id: string) => {
     navigate(`/students/${id}`);
   };
 
-  const handleEdit = (event: React.MouseEvent, id: string) => {
-    event.stopPropagation();
-    navigate(`/students/edit/${id}`);
+  const handleEdit = (id: string) => {
+    navigate(`/students/${id}/edit`);
   };
 
-  const getStatusBadge = (status?: string) => {
-    if (!status) return <Badge variant="outline">Unknown</Badge>;
-
-    switch (status.toLowerCase()) {
-      case 'active':
-        return <Badge variant="success">Active</Badge>;
-      case 'inactive':
-        return <Badge variant="destructive">Inactive</Badge>;
-      case 'pending':
-        return <Badge variant="warning">Pending</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const handleDelete = async (id: string) => {
+    try {
+      setDeleteLoading(id);
+      await studentService.delete(id);
+      toast({
+        title: "Xóa thành công",
+        description: "Học sinh đã được xóa khỏi hệ thống",
+      });
+      onRefresh();
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      toast({
+        title: "Lỗi xóa học sinh",
+        description: "Không thể xóa học sinh. Vui lòng thử lại sau.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(null);
     }
   };
 
@@ -56,75 +72,105 @@ const StudentsList: React.FC<StudentsListProps> = ({
       title: "Giới tính",
       key: "gioi_tinh",
       sortable: true,
-      render: (value: string) => <span>{value || "-"}</span>,
     },
     {
-      title: "Parent",
-      key: "ten_PH",
+      title: "Ngày sinh",
+      key: "ngay_sinh",
       sortable: true,
-      render: (value: string) => <span>{value || "-"}</span>,
+      render: (value: string) => <span>{formatDate(value)}</span>,
     },
     {
-      title: "SDT",
+      title: "Phụ huynh",
+      key: "ten_ph",
+      sortable: true,
+    },
+    {
+      title: "Liên hệ",
       key: "sdt_ph1",
       sortable: true,
-      render: (value: string) => <span>{value || "-"}</span>,
     },
     {
       title: "Trạng thái",
       key: "trang_thai",
       sortable: true,
-      render: (value: string) => getStatusBadge(value),
+      width: "120px",
+      render: (value: string) => (
+        <span
+          className={`inline-block px-2 py-1 text-xs rounded-full ${
+            value === "active"
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {value === "active" ? "Hoạt động" : value}
+        </span>
+      ),
     },
     {
       title: "",
       key: "actions",
-      width: "100px",
-      render: (_: any, record: Student) => (
-        <div className="flex space-x-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={(e) => handleEdit(e, record.id)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/enrollments?student=${record.id}`);
-            }}
-          >
-            <BookOpen className="h-4 w-4" />
-          </Button>
-        </div>
+      width: "50px",
+      render: (_, record: Student) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              disabled={deleteLoading === record.id}
+            >
+              {deleteLoading === record.id ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <MoreHorizontal className="h-4 w-4" />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleView(record.id)}>
+              Xem chi tiết
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleEdit(record.id)}>
+              Chỉnh sửa
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-red-600"
+              onClick={() => handleDelete(record.id)}
+            >
+              Xóa
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Danh sách học sinh</h2>
-        {onAddStudent && (
-          <Button size="sm" onClick={onAddStudent}>
-            <Plus className="h-4 w-4 mr-1" /> Thêm học sinh
+    <Card className="overflow-hidden">
+      <div className="flex justify-between p-4 border-b">
+        <h3 className="text-lg font-medium">Danh sách học sinh</h3>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isLoading}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Làm mới
           </Button>
-        )}
+          <Button size="sm" onClick={onAddStudent}>
+            <Plus className="h-4 w-4 mr-2" />
+            Thêm học sinh
+          </Button>
+        </div>
       </div>
-      
       <DataTable
         columns={columns}
         data={data}
-        isLoading={isLoading}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm học sinh..."
+        loading={isLoading}
         onRowClick={(record) => handleView(record.id)}
-        onRefresh={onRefresh}
       />
-    </div>
+    </Card>
   );
 };
 

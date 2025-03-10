@@ -1,119 +1,184 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { RecentActivity } from '@/components/dashboard/RecentActivity';
-import { Users, BookOpen, Bookmark, CalendarClock, School } from 'lucide-react';
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import RecentActivity from "@/components/dashboard/RecentActivity";
+import { useToast } from "@/hooks/use-toast";
+import { useDatabase } from "@/contexts/DatabaseContext";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { isInitialized, isLoading, initializeDatabase } = useDatabase();
+
+  const handleInitializeClick = async () => {
+    try {
+      await initializeDatabase();
+      toast({
+        title: "Database initialized",
+        description: "The database has been successfully initialized.",
+      });
+    } catch (error) {
+      console.error("Error initializing database:", error);
+      toast({
+        title: "Initialization failed",
+        description: "There was an error initializing the database. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex flex-col space-y-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" 
-                onClick={() => navigate("/students")}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Users className="h-5 w-5 mr-2" />
-                Học sinh
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm">Quản lý thông tin học sinh</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => navigate("/classes")}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BookOpen className="h-5 w-5 mr-2" />
-                Lớp học
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm">Quản lý thông tin lớp học</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => navigate("/enrollments")}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Bookmark className="h-5 w-5 mr-2" />
-                Ghi danh
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm">Quản lý thông tin ghi danh</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => navigate("/teaching-sessions")}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <CalendarClock className="h-5 w-5 mr-2" />
-                Buổi học
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm">Quản lý thông tin buổi học</p>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="col-span-1">
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Tổng Học Sinh
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">15</div>
+            <p className="text-xs text-muted-foreground">
+              +2 từ tháng trước
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Lớp Hoạt Động
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">8</div>
+            <p className="text-xs text-muted-foreground">
+              +1 từ tháng trước
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Buổi Dạy / Tháng
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">124</div>
+            <p className="text-xs text-muted-foreground">
+              +6% từ tháng trước
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Doanh Thu
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">12,000,000đ</div>
+            <p className="text-xs text-muted-foreground">
+              +12% từ tháng trước
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {!isInitialized && (
+        <Card className="mt-4 bg-yellow-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-yellow-800">
+              Cơ sở dữ liệu chưa được khởi tạo
+            </CardTitle>
+            <CardDescription className="text-yellow-700">
+              Để sử dụng đầy đủ chức năng của hệ thống, hãy khởi tạo cơ sở dữ liệu.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={handleInitializeClick} 
+              disabled={isLoading}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white"
+            >
+              {isLoading ? "Đang khởi tạo..." : "Khởi tạo CSDL"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      
+      <Tabs defaultValue="analytics" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="analytics">Thống Kê</TabsTrigger>
+          <TabsTrigger value="reports">Báo Cáo</TabsTrigger>
+          <TabsTrigger value="activity">Hoạt Động</TabsTrigger>
+        </TabsList>
+        <TabsContent value="analytics" className="space-y-4">
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <School className="h-5 w-5 mr-2" />
-                Hoạt động gần đây
-              </CardTitle>
+              <CardTitle>Biểu Đồ Học Sinh Theo Lớp</CardTitle>
+              <CardDescription>
+                Số lượng học sinh trong mỗi lớp học
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[300px] flex items-center justify-center border border-dashed rounded-md">
+              <p className="text-muted-foreground">Biểu đồ học sinh sẽ hiển thị ở đây</p>
+            </CardContent>
+          </Card>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="md:col-span-4">
+              <CardHeader>
+                <CardTitle>Doanh Thu Theo Thời Gian</CardTitle>
+                <CardDescription>
+                  Biểu đồ doanh thu theo tháng
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[200px] flex items-center justify-center border border-dashed rounded-md">
+                <p className="text-muted-foreground">Biểu đồ doanh thu sẽ hiển thị ở đây</p>
+              </CardContent>
+            </Card>
+            <Card className="md:col-span-3">
+              <CardHeader>
+                <CardTitle>Phân Bố Học Sinh</CardTitle>
+                <CardDescription>
+                  Phân bố học sinh theo độ tuổi
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[200px] flex items-center justify-center border border-dashed rounded-md">
+                <p className="text-muted-foreground">Biểu đồ phân bố sẽ hiển thị ở đây</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="reports" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Báo Cáo Tháng</CardTitle>
+              <CardDescription>
+                Tổng hợp các báo cáo theo tháng
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] flex items-center justify-center border border-dashed rounded-md">
+                <p className="text-muted-foreground">Báo cáo sẽ hiển thị ở đây</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Hoạt Động Gần Đây</CardTitle>
+              <CardDescription>
+                Hoạt động trong hệ thống trong 30 ngày qua
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <RecentActivity />
             </CardContent>
           </Card>
-          
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle>Tác vụ nhanh</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => navigate("/students/add")}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Thêm học sinh mới
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => navigate("/classes/add")}
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                Thêm lớp học mới
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => navigate("/teaching-sessions")}
-              >
-                <CalendarClock className="h-4 w-4 mr-2" />
-                Quản lý buổi học
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

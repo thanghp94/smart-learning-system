@@ -213,6 +213,87 @@ export type Database = {
         }
         Relationships: []
       }
+      attendances: {
+        Row: {
+          created_at: string | null
+          danh_gia_1: number | null
+          danh_gia_2: number | null
+          danh_gia_3: number | null
+          danh_gia_4: number | null
+          enrollment_id: string
+          ghi_chu: string | null
+          id: string
+          status: string
+          teaching_session_id: string
+          thoi_gian_tre: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          danh_gia_1?: number | null
+          danh_gia_2?: number | null
+          danh_gia_3?: number | null
+          danh_gia_4?: number | null
+          enrollment_id: string
+          ghi_chu?: string | null
+          id?: string
+          status?: string
+          teaching_session_id: string
+          thoi_gian_tre?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          danh_gia_1?: number | null
+          danh_gia_2?: number | null
+          danh_gia_3?: number | null
+          danh_gia_4?: number | null
+          enrollment_id?: string
+          ghi_chu?: string | null
+          id?: string
+          status?: string
+          teaching_session_id?: string
+          thoi_gian_tre?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendances_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "student_enrollments_with_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_teaching_session_id_fkey"
+            columns: ["teaching_session_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_teaching_session_id_fkey"
+            columns: ["teaching_session_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions_with_avg_score"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_teaching_session_id_fkey"
+            columns: ["teaching_session_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions_with_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
           co_so: string | null
@@ -458,6 +539,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
+            referencedRelation: "attendances_with_details"
+            referencedColumns: ["lop_id"]
           },
           {
             foreignKeyName: "enrollments_lop_chi_tiet_id_fkey"
@@ -1497,6 +1585,13 @@ export type Database = {
             foreignKeyName: "teaching_sessions_lop_chi_tiet_id_fkey"
             columns: ["lop_chi_tiet_id"]
             isOneToOne: false
+            referencedRelation: "attendances_with_details"
+            referencedColumns: ["lop_id"]
+          },
+          {
+            foreignKeyName: "teaching_sessions_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
             referencedRelation: "classes"
             referencedColumns: ["id"]
           },
@@ -1563,6 +1658,72 @@ export type Database = {
           updated_at: string | null
         }
         Relationships: []
+      }
+      attendances_with_details: {
+        Row: {
+          created_at: string | null
+          danh_gia_1: number | null
+          danh_gia_2: number | null
+          danh_gia_3: number | null
+          danh_gia_4: number | null
+          enrollment_id: string | null
+          ghi_chu: string | null
+          hoc_sinh_id: string | null
+          id: string | null
+          lop_id: string | null
+          ngay_hoc: string | null
+          status: string | null
+          teaching_session_id: string | null
+          ten_hoc_sinh: string | null
+          ten_lop_full: string | null
+          thoi_gian_bat_dau: string | null
+          thoi_gian_tre: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendances_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "student_enrollments_with_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_teaching_session_id_fkey"
+            columns: ["teaching_session_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_teaching_session_id_fkey"
+            columns: ["teaching_session_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions_with_avg_score"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_teaching_session_id_fkey"
+            columns: ["teaching_session_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_sessions_with_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_hoc_sinh_id_fkey"
+            columns: ["hoc_sinh_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       classes_with_student_count: {
         Row: {
@@ -1713,6 +1874,13 @@ export type Database = {
             foreignKeyName: "enrollments_lop_chi_tiet_id_fkey"
             columns: ["lop_chi_tiet_id"]
             isOneToOne: false
+            referencedRelation: "attendances_with_details"
+            referencedColumns: ["lop_id"]
+          },
+          {
+            foreignKeyName: "enrollments_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
             referencedRelation: "classes"
             referencedColumns: ["id"]
           },
@@ -1757,6 +1925,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teaching_sessions_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
+            referencedRelation: "attendances_with_details"
+            referencedColumns: ["lop_id"]
           },
           {
             foreignKeyName: "teaching_sessions_lop_chi_tiet_id_fkey"
@@ -1823,6 +1998,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teaching_sessions_lop_chi_tiet_id_fkey"
+            columns: ["lop_chi_tiet_id"]
+            isOneToOne: false
+            referencedRelation: "attendances_with_details"
+            referencedColumns: ["lop_id"]
           },
           {
             foreignKeyName: "teaching_sessions_lop_chi_tiet_id_fkey"
