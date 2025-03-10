@@ -122,10 +122,15 @@ const FinancePage = () => {
       key: "loai_thu_chi",
       sortable: true,
       render: (value: string) => (
-        <Badge variant={value === "thu" ? "success" : "destructive"}>
-          {value === "thu" ? "Thu" : "Chi"}
+        <Badge variant={value === "income" ? "success" : "destructive"}>
+          {value === "income" ? "Thu" : "Chi"}
         </Badge>
       ),
+    },
+    {
+      title: "Hạng mục",
+      key: "loai_giao_dich",
+      sortable: true,
     },
     {
       title: "Diễn Giải",

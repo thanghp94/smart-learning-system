@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Finance, Facility, Student, Employee, Contact } from '@/lib/types';
+import { Finance, Facility, Student, Employee, Contact, FinanceTransactionType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -22,11 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { studentService, employeeService, contactService } from '@/lib/supabase';
+import { studentService, employeeService, contactService, facilityService, assetService, eventService } from '@/lib/supabase';
+import { financeService } from '@/lib/supabase/finance-service';
 
 // Define the schema for the finance form
 const financeSchema = z.object({
   loai_thu_chi: z.string().min(1, { message: 'Vui lòng chọn loại giao dịch' }),
+  loai_giao_dich: z.string().optional(),
   dien_giai: z.string().min(2, { message: 'Diễn giải quá ngắn' }),
   ngay: z.string().min(1, { message: 'Vui lòng chọn ngày' }),
   tong_tien: z.string().min(1, { message: 'Vui lòng nhập số tiền' }),
@@ -56,8 +58,14 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   const [students, setStudents] = useState<Student[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [assets, setAssets] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [transactionTypes, setTransactionTypes] = useState<FinanceTransactionType[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<string | null>(
     initialData?.loai_doi_tuong || null
+  );
+  const [selectedTransactionCategory, setSelectedTransactionCategory] = useState<string>(
+    initialData?.loai_thu_chi || 'expense'
   );
 
   // Initialize the form with default values
@@ -65,6 +73,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     resolver: zodResolver(financeSchema),
     defaultValues: {
       loai_thu_chi: initialData?.loai_thu_chi || 'expense',
+      loai_giao_dich: initialData?.loai_giao_dich || '',
       dien_giai: initialData?.dien_giai || '',
       ngay: initialData?.ngay || new Date().toISOString().split('T')[0],
       tong_tien: initialData?.tong_tien?.toString() || '',
@@ -78,6 +87,20 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
       ghi_chu: initialData?.ghi_chu || '',
     },
   });
+
+  // Update transaction types when transaction category changes
+  useEffect(() => {
+    const loadTransactionTypes = async () => {
+      try {
+        const types = await financeService.getTransactionTypes(selectedTransactionCategory);
+        setTransactionTypes(types);
+      } catch (error) {
+        console.error('Error loading transaction types:', error);
+      }
+    };
+    
+    loadTransactionTypes();
+  }, [selectedTransactionCategory]);
 
   // Load related entities when the form loads or entity type changes
   useEffect(() => {
@@ -108,6 +131,24 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
           console.error('Error loading contacts:', error);
         }
       }
+      
+      if (selectedEntityType === 'asset' || !selectedEntityType) {
+        try {
+          const data = await assetService.getAll();
+          setAssets(data);
+        } catch (error) {
+          console.error('Error loading assets:', error);
+        }
+      }
+      
+      if (selectedEntityType === 'event' || !selectedEntityType) {
+        try {
+          const data = await eventService.getAll();
+          setEvents(data);
+        } catch (error) {
+          console.error('Error loading events:', error);
+        }
+      }
     };
 
     loadEntities();
@@ -131,6 +172,13 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     form.setValue('doi_tuong_id', ''); // Reset entity ID when type changes
   };
 
+  // Handle transaction category change
+  const handleTransactionCategoryChange = (value: string) => {
+    setSelectedTransactionCategory(value);
+    form.setValue('loai_thu_chi', value);
+    form.setValue('loai_giao_dich', ''); // Reset transaction type when category changes
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -141,7 +189,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Loại giao dịch <span className="text-red-500">*</span></FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={(value) => handleTransactionCategoryChange(value)} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn loại" />
@@ -150,6 +198,31 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
                   <SelectContent>
                     <SelectItem value="income">Thu</SelectItem>
                     <SelectItem value="expense">Chi</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="loai_giao_dich"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hạng mục</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn hạng mục" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {transactionTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -265,6 +338,10 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
                     <SelectItem value="student">Học sinh</SelectItem>
                     <SelectItem value="employee">Nhân viên</SelectItem>
                     <SelectItem value="contact">Liên hệ</SelectItem>
+                    <SelectItem value="facility">Cơ sở</SelectItem>
+                    <SelectItem value="asset">Cơ sở vật chất</SelectItem>
+                    <SelectItem value="event">Sự kiện</SelectItem>
+                    <SelectItem value="government">Cơ quan nhà nước</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -306,6 +383,31 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
                             {contact.ten_lien_he}
                           </SelectItem>
                         ))}
+                        
+                      {selectedEntityType === 'facility' &&
+                        facilities.map((facility) => (
+                          <SelectItem key={facility.id} value={facility.id}>
+                            {facility.ten_co_so}
+                          </SelectItem>
+                        ))}
+                        
+                      {selectedEntityType === 'asset' &&
+                        assets.map((asset) => (
+                          <SelectItem key={asset.id} value={asset.id}>
+                            {asset.ten_csvc}
+                          </SelectItem>
+                        ))}
+                        
+                      {selectedEntityType === 'event' &&
+                        events.map((event) => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {event.ten_su_kien}
+                          </SelectItem>
+                        ))}
+                        
+                      {selectedEntityType === 'government' &&
+                        <SelectItem value="government">Cơ quan nhà nước</SelectItem>
+                      }
                     </SelectContent>
                   </Select>
                   <FormMessage />

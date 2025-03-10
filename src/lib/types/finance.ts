@@ -7,6 +7,7 @@ export interface Finance {
   co_so?: string;
   ngay?: string;
   loai_thu_chi: string;
+  loai_giao_dich?: string; // New field for transaction type
   dien_giai?: string;
   ten_phi?: string;
   thoi_gian_phai_tra?: string;
@@ -27,6 +28,16 @@ export interface Finance {
   file_hoa_don_thu_tien?: string;
   net?: number;
   ton_quy?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// New interface for transaction types
+export interface FinanceTransactionType {
+  id: string;
+  category: string; // 'income' or 'expense'
+  name: string;
+  description?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -43,10 +43,13 @@ export const financeService = {
     try {
       // Map entity types to database field names
       const mapping: Record<string, string> = {
-        'student': 'hoc_sinh',
-        'employee': 'nhan_vien',
-        'contact': 'lien_he',
-        'facility': 'co_so'
+        'student': 'student',
+        'employee': 'employee',
+        'contact': 'contact',
+        'facility': 'facility',
+        'asset': 'asset',
+        'event': 'event',
+        'government': 'government'
       };
       
       // Get the correct field name
@@ -109,6 +112,32 @@ export const financeService = {
       return data as Finance[];
     } catch (error) {
       console.error(`Error in getByDateRange:`, error);
+      return [];
+    }
+  },
+  
+  // New method to get transaction types
+  getTransactionTypes: async (category?: string): Promise<any[]> => {
+    try {
+      let query = supabase
+        .from('finance_transaction_types')
+        .select('*')
+        .order('name');
+      
+      if (category) {
+        query = query.eq('category', category);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching transaction types:', error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error in getTransactionTypes:', error);
       return [];
     }
   }

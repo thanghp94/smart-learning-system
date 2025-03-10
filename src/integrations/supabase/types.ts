@@ -115,6 +115,7 @@ export type Database = {
           doi_tuong_chuyen: string | null
           doi_tuong_id: string | null
           don_vi: string
+          facility_id: string | null
           ghi_chu: string | null
           hinh_anh: string | null
           hinh_anh_2: string | null
@@ -150,6 +151,7 @@ export type Database = {
           doi_tuong_chuyen?: string | null
           doi_tuong_id?: string | null
           don_vi: string
+          facility_id?: string | null
           ghi_chu?: string | null
           hinh_anh?: string | null
           hinh_anh_2?: string | null
@@ -185,6 +187,7 @@ export type Database = {
           doi_tuong_chuyen?: string | null
           doi_tuong_id?: string | null
           don_vi?: string
+          facility_id?: string | null
           ghi_chu?: string | null
           hinh_anh?: string | null
           hinh_anh_2?: string | null
@@ -211,7 +214,15 @@ export type Database = {
           trang_thai_so_huu_moi?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "assets_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       attendances: {
         Row: {
@@ -307,6 +318,7 @@ export type Database = {
           ten_lop_full: string
           tg_tao: string | null
           tinh_trang: string | null
+          unit: string | null
           unit_id: string | null
           updated_at: string | null
         }
@@ -322,6 +334,7 @@ export type Database = {
           ten_lop_full: string
           tg_tao?: string | null
           tinh_trang?: string | null
+          unit?: string | null
           unit_id?: string | null
           updated_at?: string | null
         }
@@ -337,6 +350,7 @@ export type Database = {
           ten_lop_full?: string
           tg_tao?: string | null
           tinh_trang?: string | null
+          unit?: string | null
           unit_id?: string | null
           updated_at?: string | null
         }
@@ -404,6 +418,30 @@ export type Database = {
           sdt?: string | null
           ten_lien_he?: string
           trang_thai?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      curricula: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -693,6 +731,30 @@ export type Database = {
           },
         ]
       }
+      event_types: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string | null
@@ -933,6 +995,33 @@ export type Database = {
           },
         ]
       }
+      finance_transaction_types: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       finances: {
         Row: {
           bang_chu: string | null
@@ -949,6 +1038,7 @@ export type Database = {
           id: string
           kieu_thanh_toan: string | null
           loai_doi_tuong: string | null
+          loai_giao_dich: string | null
           loai_thu_chi: string
           muc: string | null
           net: number | null
@@ -980,6 +1070,7 @@ export type Database = {
           id?: string
           kieu_thanh_toan?: string | null
           loai_doi_tuong?: string | null
+          loai_giao_dich?: string | null
           loai_thu_chi: string
           muc?: string | null
           net?: number | null
@@ -1011,6 +1102,7 @@ export type Database = {
           id?: string
           kieu_thanh_toan?: string | null
           loai_doi_tuong?: string | null
+          loai_giao_dich?: string | null
           loai_thu_chi?: string
           muc?: string | null
           net?: number | null
@@ -1080,6 +1172,30 @@ export type Database = {
           tg_tao?: string | null
           updated_at?: string | null
           video?: string | null
+        }
+        Relationships: []
+      }
+      lesson_types: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1614,6 +1730,41 @@ export type Database = {
             columns: ["tro_giang"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          created_at: string | null
+          curriculum_id: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          curriculum_id?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          curriculum_id?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "curricula"
             referencedColumns: ["id"]
           },
         ]

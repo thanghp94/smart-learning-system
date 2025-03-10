@@ -23,6 +23,20 @@ const FinanceDetail: React.FC<FinanceDetailProps> = ({ finance }) => {
     }
   };
 
+  const getEntityTypeName = (type?: string) => {
+    const typeMap: Record<string, string> = {
+      'student': 'Học sinh',
+      'employee': 'Nhân viên',
+      'contact': 'Liên hệ',
+      'facility': 'Cơ sở',
+      'asset': 'Cơ sở vật chất',
+      'event': 'Sự kiện',
+      'government': 'Cơ quan nhà nước'
+    };
+    
+    return typeMap[type || ''] || type || 'N/A';
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -45,6 +59,13 @@ const FinanceDetail: React.FC<FinanceDetailProps> = ({ finance }) => {
             </Badge>
           </p>
         </div>
+        
+        {finance.loai_giao_dich && (
+          <div>
+            <span className="text-sm font-medium text-muted-foreground">Hạng mục:</span>
+            <p>{finance.loai_giao_dich}</p>
+          </div>
+        )}
         
         <div>
           <span className="text-sm font-medium text-muted-foreground">Số tiền:</span>
@@ -82,6 +103,28 @@ const FinanceDetail: React.FC<FinanceDetailProps> = ({ finance }) => {
       </div>
       
       <Separator />
+      
+      {(finance.loai_doi_tuong || finance.doi_tuong_id) && (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            {finance.loai_doi_tuong && (
+              <div>
+                <span className="text-sm font-medium text-muted-foreground">Đối tượng:</span>
+                <p>{getEntityTypeName(finance.loai_doi_tuong)}</p>
+              </div>
+            )}
+            
+            {finance.doi_tuong_id && (
+              <div>
+                <span className="text-sm font-medium text-muted-foreground">ID đối tượng:</span>
+                <p>{finance.doi_tuong_id}</p>
+              </div>
+            )}
+          </div>
+          
+          <Separator />
+        </>
+      )}
       
       {finance.ghi_chu && (
         <div>
