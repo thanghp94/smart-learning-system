@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,7 +88,7 @@ const Index = () => {
         <Card className="mt-4 bg-yellow-50 border-yellow-200">
           <CardHeader>
             <CardTitle className="text-lg font-medium text-yellow-800">
-              Cơ sở dữ liệu chưa được khởi tạo
+              Cơ sở dữ liệu chưa đ��ợc khởi tạo
             </CardTitle>
             <CardDescription className="text-yellow-700">
               Để sử dụng đầy đủ chức năng của hệ thống, hãy khởi tạo cơ sở dữ liệu.
@@ -174,7 +173,7 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RecentActivity />
+              <RecentActivity activities={[]} />
             </CardContent>
           </Card>
         </TabsContent>

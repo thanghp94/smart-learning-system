@@ -2038,6 +2038,12 @@ export type Database = {
       }
     }
     Functions: {
+      create_attendance_records_for_date: {
+        Args: {
+          check_date?: string
+        }
+        Returns: Json
+      }
       create_class: {
         Args: {
           class_data: Json
@@ -2052,6 +2058,10 @@ export type Database = {
         Args: {
           session_data: Json
         }
+        Returns: Json
+      }
+      create_today_attendance_records: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       get_schema_info: {

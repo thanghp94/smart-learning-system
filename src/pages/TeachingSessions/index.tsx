@@ -1,294 +1,196 @@
 
-import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter, Calendar, CheckCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
-import { teachingSessionService, classService, employeeService, attendanceService } from "@/lib/supabase";
-import { TeachingSession, Class, Employee } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
-import TablePageLayout from "@/components/common/TablePageLayout";
-import { formatDate } from "@/lib/utils";
-import DetailPanel from "@/components/ui/DetailPanel";
-import SessionDetail from "./SessionDetail";
-import SessionForm from "./SessionForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { supabase } from "@/lib/supabase/client";
-import { DatePicker } from "@/components/ui/DatePicker";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { format, parseISO } from 'date-fns';
+import { TeachingSession } from '@/lib/types';
+import { teachingSessionService } from '@/lib/supabase/teaching-session-service';
+import { attendanceService } from '@/lib/supabase/attendance-service';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/DataTable';
+import { PageHeader } from '@/components/common/PageHeader';
+import { TablePageLayout } from '@/components/common/TablePageLayout';
+import { DatePicker } from '@/components/ui/DatePicker';
+import { useToast } from '@/hooks/use-toast';
+import { CalendarDays, Flag, Plus, RefreshCw, UserCheck } from 'lucide-react';
 
-const TeachingSessions = () => {
+const TeachingSessionsPage: React.FC = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
-  const [classes, setClasses] = useState<Record<string, Class>>({});
-  const [teachers, setTeachers] = useState<Record<string, Employee>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedSession, setSelectedSession] = useState<TeachingSession | null>(null);
-  const [showDetail, setShowDetail] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isCreatingAttendance, setIsCreatingAttendance] = useState(false);
+  const [isGeneratingAttendance, setIsGeneratingAttendance] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchData();
+    fetchSessionsByDate(selectedDate);
   }, [selectedDate]);
 
-  const fetchData = async () => {
+  const fetchSessionsByDate = async (date: Date) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      
-      // Format date for database query
-      const formattedDate = selectedDate.toISOString().split('T')[0];
-      
-      const [sessionsData, classesArray, teachersData] = await Promise.all([
-        teachingSessionService.getByDateRange(formattedDate, formattedDate),
-        classService.getAll(),
-        employeeService.getByRole("Giáo viên")
-      ]);
-      
-      console.log("Fetched classes:", classesArray);
-      console.log("Fetched sessions:", sessionsData);
-      
-      const classesDict = (classesArray || []).reduce((acc, cls) => {
-        if (cls) {
-          const completeClass = {
-            ...cls,
-            id: cls.id || crypto.randomUUID(),
-            ten_lop_full: cls.ten_lop_full || cls.Ten_lop_full || '',
-            Ten_lop_full: cls.Ten_lop_full || cls.ten_lop_full || '',
-            ten_lop: cls.ten_lop || '',
-            ct_hoc: cls.ct_hoc || '',
-            co_so: cls.co_so || '',
-            gv_chinh: cls.gv_chinh || cls.GV_chinh || '',
-            GV_chinh: cls.GV_chinh || cls.gv_chinh || '',
-            tinh_trang: cls.tinh_trang || 'pending'
-          } as Class;
-          
-          acc[cls.id] = completeClass;
-        }
-        return acc;
-      }, {} as Record<string, Class>);
-      
-      const teachersDict = teachersData.reduce((acc, teacher) => {
-        if (teacher) acc[teacher.id] = teacher;
-        return acc;
-      }, {} as Record<string, Employee>);
-      
-      setSessions(sessionsData);
-      setClasses(classesDict);
-      setTeachers(teachersDict);
-      
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      const data = await teachingSessionService.getByDateRange(formattedDate, formattedDate);
+      setSessions(data);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching teaching sessions:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể tải dữ liệu buổi học",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to fetch teaching sessions. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddSession = () => {
+    navigate('/teaching-sessions/new');
+  };
+  
+  const handleGenerateAttendance = async () => {
+    setIsGeneratingAttendance(true);
+    try {
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+      const result = await attendanceService.generateForDate(formattedDate);
+      
+      toast({
+        title: 'Attendance Records Generated',
+        description: `Created ${result.created} new records. ${result.skipped} records already existed.`,
+        variant: result.created > 0 ? 'default' : 'secondary',
+      });
+    } catch (error) {
+      console.error('Error generating attendance records:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate attendance records. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingAttendance(false);
     }
   };
 
   const handleRowClick = (session: TeachingSession) => {
-    setSelectedSession(session);
-    setShowDetail(true);
+    navigate(`/teaching-sessions/${session.id}`);
   };
 
-  const closeDetail = () => {
-    setShowDetail(false);
-  };
-
-  const handleAddSession = () => {
-    setShowAddForm(true);
-  };
-
-  const handleCreateAttendanceRecords = async () => {
-    try {
-      setIsCreatingAttendance(true);
-      
-      // Call the database function to create attendance records
-      const { data, error } = await supabase.rpc('create_attendance_records_for_date', {
-        check_date: selectedDate.toISOString().split('T')[0]
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log("Created attendance records:", data);
-      
-      // Show success message with counts
-      toast({
-        title: "Điểm danh đã được tạo",
-        description: `Đã tạo ${data.created} bản ghi mới, bỏ qua ${data.skipped} bản ghi đã tồn tại.`,
-        variant: data.created > 0 ? "default" : "secondary"
-      });
-      
-    } catch (error) {
-      console.error("Error creating attendance records:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tạo bản ghi điểm danh mới",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreatingAttendance(false);
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    
+    // Ensure time is in the format HH:MM:SS
+    if (time.includes('T')) {
+      // This is a full datetime string, extract just the time part
+      const date = new Date(time);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-  };
-
-  const handleSessionSubmit = async (sessionData: Partial<TeachingSession>) => {
-    try {
-      setIsLoading(true);
-      console.log("Submitting session data:", sessionData);
-      
-      await teachingSessionService.create(sessionData);
-      
-      toast({
-        title: "Thành công",
-        description: "Đã thêm buổi học mới vào hệ thống",
-      });
-      
-      setShowAddForm(false);
-      fetchData();
-    } catch (error) {
-      console.error("Error adding session:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể thêm buổi học mới: " + (error as Error).message,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancelForm = () => {
-    setShowAddForm(false);
+    
+    // Simple time string processing
+    const [hours, minutes] = time.split(':');
+    return `${hours}:${minutes}`;
   };
 
   const columns = [
     {
-      title: "Lớp",
-      key: "lop_chi_tiet_id",
+      title: 'Date',
+      key: 'ngay_hoc',
       sortable: true,
-      render: (value: string) => <span>{classes[value]?.Ten_lop_full || classes[value]?.ten_lop_full || value}</span>,
-    },
-    {
-      title: "Buổi học số",
-      key: "session_id",
-      sortable: true,
-    },
-    {
-      title: "Ngày học",
-      key: "ngay_hoc",
-      sortable: true,
-      render: (value: string) => <span>{formatDate(value)}</span>,
-    },
-    {
-      title: "Thời gian",
-      key: "thoi_gian_bat_dau",
-      render: (value: string, record: TeachingSession) => (
-        <div className="flex items-center">
-          <Calendar className="h-4 w-4 mr-1" />
-          {value?.substring(0, 5) || ""} - {record.thoi_gian_ket_thuc?.substring(0, 5) || ""}
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          {value ? format(new Date(value), 'dd/MM/yyyy') : ''}
         </div>
       ),
     },
     {
-      title: "Giáo viên",
-      key: "giao_vien",
+      title: 'Class',
+      key: 'lop_chi_tiet_id',
       sortable: true,
-      render: (value: string) => <span>{teachers[value]?.ten_nhan_su || value}</span>,
     },
     {
-      title: "Đánh giá TB",
-      key: "trung_binh",
+      title: 'Start Time',
+      key: 'thoi_gian_bat_dau',
       sortable: true,
-      render: (value: number) => <span>{value?.toFixed(1) || "N/A"}</span>,
+      render: (value: string) => formatTime(value),
     },
     {
-      title: "Loại bài học",
-      key: "loai_bai_hoc",
+      title: 'End Time',
+      key: 'thoi_gian_ket_thuc',
       sortable: true,
+      render: (value: string) => formatTime(value),
+    },
+    {
+      title: 'Teacher',
+      key: 'giao_vien',
+      sortable: true,
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      sortable: true,
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <Flag className="h-4 w-4 text-muted-foreground" />
+          {value || 'Scheduled'}
+        </div>
+      ),
     },
   ];
 
-  const tableActions = (
-    <div className="flex items-center gap-3 flex-wrap">
-      <DatePicker 
-        date={selectedDate} 
-        setDate={(date) => date && setSelectedDate(date)} 
-        className="w-40"
-      />
-      
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="h-9"
-        onClick={handleCreateAttendanceRecords}
-        disabled={isCreatingAttendance}
-      >
-        <CheckCircle className="h-4 w-4 mr-1" /> {isCreatingAttendance ? 'Đang tạo...' : 'Tạo điểm danh'}
-      </Button>
-      
-      <Button variant="outline" size="sm" className="h-9">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
-      
-      <Button variant="outline" size="sm" className="h-9">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
-      </Button>
-      
-      <Button size="sm" className="h-9" onClick={handleAddSession}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Buổi Học
-      </Button>
-    </div>
-  );
-
   return (
-    <TablePageLayout
-      title="Buổi Học"
-      description="Quản lý thông tin buổi dạy trong hệ thống"
-      actions={tableActions}
-    >
-      <DataTable
-        columns={columns}
-        data={sessions}
-        isLoading={isLoading}
-        onRowClick={handleRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm buổi học..."
+    <TablePageLayout>
+      <PageHeader 
+        title="Teaching Sessions" 
+        description="Manage teaching sessions and attendance"
+        buttons={[
+          <DatePicker 
+            key="date-picker"
+            date={selectedDate} 
+            onSelect={setSelectedDate}
+            className="mr-2"
+          />,
+          <Button 
+            key="generate-attendance"
+            variant="outline"
+            onClick={handleGenerateAttendance}
+            disabled={isGeneratingAttendance || sessions.length === 0}
+            className="mr-2"
+          >
+            {isGeneratingAttendance ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <UserCheck className="mr-2 h-4 w-4" />
+                Generate Attendance
+              </>
+            )}
+          </Button>,
+          <Button key="add-session" onClick={handleAddSession}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Session
+          </Button>,
+        ]}
       />
-
-      {selectedSession && (
-        <DetailPanel
-          title="Thông Tin Buổi Học"
-          isOpen={showDetail}
-          onClose={closeDetail}
-        >
-          <SessionDetail 
-            session={selectedSession} 
-            class={classes[selectedSession.lop_chi_tiet_id]} 
-            teacher={teachers[selectedSession.giao_vien]}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {format(selectedDate, 'PPP')} Teaching Sessions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={columns}
+            data={sessions}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
           />
-        </DetailPanel>
-      )}
-
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Thêm Buổi Học Mới</DialogTitle>
-            <DialogDescription>
-              Nhập thông tin buổi học mới vào biểu mẫu bên dưới
-            </DialogDescription>
-          </DialogHeader>
-          <SessionForm 
-            onSubmit={handleSessionSubmit} 
-            onCancel={handleCancelForm}
-          />
-        </DialogContent>
-      </Dialog>
+        </CardContent>
+      </Card>
     </TablePageLayout>
   );
 };
 
-export default TeachingSessions;
+export default TeachingSessionsPage;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, Calendar, User, Users, Book, Building, 
@@ -30,11 +29,9 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch enrollments for this class
         const enrollmentsData = await enrollmentService.getByClass(classItem.id);
         setEnrollments(enrollmentsData);
         
-        // Fetch teaching sessions for this class
         const sessionsData = await teachingSessionService.getByClass(classItem.id);
         setSessions(sessionsData);
       } catch (error) {
@@ -106,13 +103,13 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
         <div className="flex items-center gap-2">
           <User className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium">Giáo viên chính:</span>
-          <span>{classItem.gv_chinh_name || 'Chưa phân công'}</span>
+          <span>{classItem.gv_chinh_name || 'Not assigned'}</span>
         </div>
         
         <div className="flex items-center gap-2">
           <Building className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium">Cơ sở:</span>
-          <span>{classItem.co_so_name || 'Chưa xác định'}</span>
+          <span>{classItem.co_so_name || 'Not assigned'}</span>
         </div>
         
         <div className="flex items-center gap-2">
@@ -168,29 +165,29 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="text-base">
-                          Buổi {session.buoi_hoc_so || '?'} - {session.ngay ? formatDate(session.ngay) : 'Chưa xác định ngày'}
+                          {session.buoi_hoc_so || 'Session'} - {session.ngay_hoc ? format(parseISO(session.ngay_hoc), 'dd/MM/yyyy') : 'No date'}
                         </CardTitle>
                         <CardDescription>
-                          {session.giao_vien_name || session.giao_vien || 'Chưa phân công giáo viên'}
+                          {session.giao_vien || 'Not assigned'}
                         </CardDescription>
                       </div>
                       <Badge variant={
-                        session.trang_thai === 'completed' ? 'success' :
-                        session.trang_thai === 'cancelled' ? 'destructive' :
+                        session.status === 'completed' ? 'success' :
+                        session.status === 'cancelled' ? 'destructive' :
                         'secondary'
                       }>
                         {
-                          session.trang_thai === 'completed' ? 'Đã hoàn thành' :
-                          session.trang_thai === 'cancelled' ? 'Đã hủy' :
-                          session.trang_thai === 'scheduled' ? 'Đã lên lịch' :
+                          session.status === 'completed' ? 'Đã hoàn thành' :
+                          session.status === 'cancelled' ? 'Đã hủy' :
+                          session.status === 'scheduled' ? 'Đã lên lịch' :
                           'Chưa xác định'
                         }
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {session.noi_dung ? (
-                      <p className="text-sm">{session.noi_dung}</p>
+                    {session.noi_dung_bai_hoc ? (
+                      <p className="text-sm">{session.noi_dung_bai_hoc}</p>
                     ) : (
                       <p className="text-sm text-muted-foreground italic">Chưa có nội dung</p>
                     )}
@@ -230,14 +227,14 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
                     <div className="flex justify-between">
                       <CardTitle className="text-base">{enrollment.ten_hoc_sinh || 'Học sinh'}</CardTitle>
                       <Badge variant={
-                        enrollment.tinh_trang === 'active' ? 'success' :
-                        enrollment.tinh_trang === 'inactive' ? 'destructive' :
+                        enrollment.tinh_trang_diem_danh === 'active' ? 'success' :
+                        enrollment.tinh_trang_diem_danh === 'inactive' ? 'destructive' :
                         'secondary'
                       }>
                         {
-                          enrollment.tinh_trang === 'active' ? 'Đang học' :
-                          enrollment.tinh_trang === 'inactive' ? 'Đã nghỉ' :
-                          enrollment.tinh_trang === 'pending' ? 'Chờ xử lý' :
+                          enrollment.tinh_trang_diem_danh === 'active' ? 'Đang học' :
+                          enrollment.tinh_trang_diem_danh === 'inactive' ? 'Đã nghỉ' :
+                          enrollment.tinh_trang_diem_danh === 'pending' ? 'Chờ xử lý' :
                           'Khác'
                         }
                       </Badge>
@@ -248,12 +245,12 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>Ngày ghi danh:</span>
-                        <span>{enrollment.ngay_bat_dau ? formatDate(enrollment.ngay_bat_dau) : 'Chưa xác định'}</span>
+                        <span>{enrollment.created_at ? format(parseISO(enrollment.created_at), 'dd/MM/yyyy') : 'N/A'}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Book className="h-4 w-4 text-muted-foreground" />
                         <span>Học phí:</span>
-                        <span>{enrollment.hoc_phi ? `${enrollment.hoc_phi.toLocaleString('vi-VN')} VND` : 'Chưa xác định'}</span>
+                        <span>{enrollment.hoc_phi || 'Not set'}</span>
                       </div>
                     </div>
                   </CardContent>

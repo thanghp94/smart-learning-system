@@ -1,101 +1,84 @@
 
-import { Attendance } from '../types';
+import { Attendance } from '@/lib/types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
 
 export const attendanceService = {
-  getAll: async (): Promise<Attendance[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('attendances_with_details')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching all attendances:', error);
-        throw error;
-      }
-      
-      return data as Attendance[];
-    } catch (error) {
-      console.error('Error in getAll attendances:', error);
-      return [];
-    }
-  },
-  
-  getById: async (id: string): Promise<Attendance | null> => {
-    return fetchById<Attendance>('attendances', id);
-  },
-  
-  create: async (attendance: Partial<Attendance>): Promise<Attendance> => {
-    console.log('Creating attendance with data:', attendance);
-    return insert<Attendance>('attendances', attendance);
-  },
-  
-  update: async (id: string, updates: Partial<Attendance>): Promise<Attendance> => {
-    console.log(`Updating attendance ${id} with data:`, updates);
-    return update<Attendance>('attendances', id, updates);
-  },
-  
+  getAll: () => fetchAll<Attendance>('attendances'),
+  getById: (id: string) => fetchById<Attendance>('attendances', id),
+  create: (attendance: Partial<Attendance>) => insert<Attendance>('attendances', attendance),
+  update: (id: string, attendance: Partial<Attendance>) => update<Attendance>('attendances', id, attendance),
   delete: (id: string) => remove('attendances', id),
   
-  getByEnrollment: async (enrollmentId: string): Promise<Attendance[]> => {
+  // Get attendance records for a specific teaching session
+  getByTeachingSession: async (teachingSessionId: string): Promise<Attendance[]> => {
     const { data, error } = await supabase
       .from('attendances')
       .select('*')
-      .eq('enrollment_id', enrollmentId)
-      .order('created_at', { ascending: false });
+      .eq('teaching_session_id', teachingSessionId);
     
     if (error) {
-      console.error('Error fetching attendances by enrollment:', error);
+      console.error('Error fetching attendance records by teaching session:', error);
       throw error;
     }
     
     return data as Attendance[];
   },
   
-  getByTeachingSession: async (sessionId: string): Promise<Attendance[]> => {
+  // Get attendance records with student details for a specific teaching session
+  getDetailsByTeachingSession: async (teachingSessionId: string) => {
     const { data, error } = await supabase
       .from('attendances_with_details')
       .select('*')
-      .eq('teaching_session_id', sessionId)
-      .order('created_at', { ascending: false });
+      .eq('teaching_session_id', teachingSessionId);
     
     if (error) {
-      console.error('Error fetching attendances by teaching session:', error);
+      console.error('Error fetching detailed attendance records:', error);
       throw error;
     }
     
-    return data as Attendance[];
+    return data;
   },
   
-  getByStudent: async (studentId: string): Promise<Attendance[]> => {
-    const { data, error } = await supabase
-      .from('attendances_with_details')
-      .select('*')
-      .eq('hoc_sinh_id', studentId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching attendances by student:', error);
+  // Generate attendance records for today
+  generateForToday: async (): Promise<{ created: number; skipped: number }> => {
+    try {
+      const { data, error } = await supabase.rpc('create_today_attendance_records');
+      
+      if (error) {
+        console.error('Error generating attendance records for today:', error);
+        throw error;
+      }
+      
+      return {
+        created: data?.created || 0,
+        skipped: data?.skipped || 0
+      };
+    } catch (error) {
+      console.error('Exception generating attendance records:', error);
       throw error;
     }
-    
-    return data as Attendance[];
   },
   
-  getByClass: async (classId: string): Promise<Attendance[]> => {
-    const { data, error } = await supabase
-      .from('attendances_with_details')
-      .select('*')
-      .eq('lop_id', classId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching attendances by class:', error);
+  // Generate attendance records for a specific date
+  generateForDate: async (date: string): Promise<{ created: number; skipped: number }> => {
+    try {
+      const { data, error } = await supabase.rpc('create_attendance_records_for_date', {
+        check_date: date
+      });
+      
+      if (error) {
+        console.error(`Error generating attendance records for ${date}:`, error);
+        throw error;
+      }
+      
+      return {
+        created: data?.created || 0,
+        skipped: data?.skipped || 0
+      };
+    } catch (error) {
+      console.error('Exception generating attendance records:', error);
       throw error;
     }
-    
-    return data as Attendance[];
   }
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "@/components/common/PageHeader";
@@ -32,7 +31,6 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
       setIsLoading(true);
       const data = await studentService.getAll();
       console.log("Students data received:", data);
-      // Cast the data to Student[] type to avoid TypeScript errors
       setStudents(data as unknown as Student[]);
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -77,9 +75,10 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
         </div>
       ) : (
         <StudentsList 
-          students={students} 
+          data={students}
           isLoading={isLoading}
           onAddStudent={handleAddStudent}
+          onRowClick={handleStudentClick}
         />
       )}
     </>
