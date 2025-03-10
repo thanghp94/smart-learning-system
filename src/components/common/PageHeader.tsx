@@ -6,13 +6,20 @@ export interface PageHeaderProps {
   description?: string;
   icon?: React.ReactNode;
   rightContent?: React.ReactNode;
+  children?: React.ReactNode;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({ 
   title, 
   description, 
   icon,
-  rightContent 
+  rightContent,
+  children,
+  action
 }) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -25,8 +32,19 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           )}
         </div>
       </div>
-      {rightContent && (
-        <div className="flex-shrink-0">{rightContent}</div>
+      {(rightContent || children || action) && (
+        <div className="flex-shrink-0 flex items-center gap-2">
+          {rightContent}
+          {children}
+          {action && (
+            <button 
+              onClick={action.onClick}
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            >
+              {action.label}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

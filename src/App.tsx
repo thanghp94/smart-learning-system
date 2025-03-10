@@ -12,7 +12,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import Index from '@/pages/Index';
 import Students from '@/pages/Students';
 import StudentDetail from '@/pages/Students/StudentDetail';
-import StudentForm from '@/pages/Students/StudentForm';
+import StudentFormContainer from '@/pages/Students/components/StudentFormContainer';
 import Employees from '@/pages/Employees';
 import EmployeeDetail from '@/pages/Employees/EmployeeDetail';
 import EmployeeForm from '@/pages/Employees/EmployeeForm';
@@ -75,8 +75,8 @@ function App() {
               <Route index element={<Index />} />
               <Route path="students" element={<Students />} />
               <Route path="students/:id" element={<StudentDetail />} />
-              <Route path="students/add" element={<StudentForm />} />
-              <Route path="students/edit/:id" element={<StudentForm />} />
+              <Route path="students/add" element={<StudentFormContainer isAdd={true} />} />
+              <Route path="students/edit/:id" element={<StudentFormContainer />} />
               
               <Route path="employees" element={<Employees />} />
               <Route path="employees/:id" element={<EmployeeDetail />} />
