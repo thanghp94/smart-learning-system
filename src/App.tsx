@@ -63,6 +63,10 @@ import AssetTransfer from '@/pages/Assets/AssetTransfer';
 import TransferManagement from '@/pages/Assets/TransferManagement';
 import Admissions from '@/pages/Admissions';
 
+// AI Tools import
+import AITools from '@/pages/AITools';
+import ImageGenerator from '@/pages/AITools/ImageGenerator';
+
 // Wrapper components to fix prop passing for routes
 const EmployeeDetailWrapper = () => <EmployeeDetail employeeId="0" />;
 const EmployeeFormWrapper = () => <EmployeeForm onSubmit={async () => {}} />;
@@ -189,6 +193,10 @@ function App() {
               
               {/* Make sure Admissions route is included */}
               <Route path="admissions" element={<Admissions />} />
+              
+              {/* AI Tools Routes */}
+              <Route path="ai-tools" element={<AITools />} />
+              <Route path="ai-tools/image-generator" element={<ImageGenerator />} />
               
               <Route path="*" element={<NotFound />} />
             </Route>

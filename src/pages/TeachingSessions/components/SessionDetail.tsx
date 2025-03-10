@@ -45,7 +45,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
   const fetchSessionData = async () => {
     setIsLoading(true);
     try {
-      // If we already have session data, use it, otherwise fetch it
       let currentSession = sessionData;
       if (!currentSession.id) {
         const { data, error } = await supabase
@@ -68,7 +67,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
         setSessionData(data);
       }
 
-      // Fetch teacher info if we have giao_vien
       if (currentSession.giao_vien) {
         const { data: teacherData, error: teacherError } = await supabase
           .from('employees')
@@ -81,7 +79,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
         }
       }
 
-      // Fetch class info if we have lop_chi_tiet_id
       if (currentSession.lop_chi_tiet_id) {
         const { data: classInfo, error: classError } = await supabase
           .from('classes')
@@ -93,7 +90,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           setClassData(classInfo);
         }
 
-        // Fetch students enrolled in this class
         const { data: enrollmentsData, error: enrollmentsError } = await supabase
           .from('enrollments')
           .select(`
@@ -109,7 +105,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           .eq('lop_chi_tiet_id', currentSession.lop_chi_tiet_id);
         
         if (!enrollmentsError && enrollmentsData) {
-          // Fix type issues by correctly mapping the data
           const students = enrollmentsData.map(e => ({
             id: e.hoc_sinh_id,
             name: e.students ? e.students.ten_hoc_sinh : 'Unknown',
@@ -142,7 +137,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
         title: 'Thành công',
         description: 'Đã lưu ghi chú buổi học',
       });
-      // Update local session data
       setSessionData(prev => ({ ...prev, ghi_chu: notes }));
     } catch (error) {
       console.error('Error saving notes:', error);
@@ -177,7 +171,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
       title: 'Tải ảnh thành công',
       description: 'Hình ảnh đã được thêm vào buổi học',
     });
-    // Refresh the session data
     fetchSessionData();
   };
 
@@ -187,7 +180,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
       title: 'Thành công',
       description: 'Đã thêm bài tập mới',
     });
-    // Refresh the session data
     fetchSessionData();
   };
 
@@ -304,7 +296,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {/* Images would be displayed here */}
                 <div className="flex items-center justify-center h-40 border rounded bg-gray-50 text-gray-400">
                   Chưa có hình ảnh
                 </div>
@@ -475,7 +466,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
         </TabsContent>
       </Tabs>
 
-      {/* Image Upload Dialog */}
       <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -488,7 +478,6 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
         </DialogContent>
       </Dialog>
 
-      {/* Assignment Dialog */}
       <Dialog open={isAssignmentDialogOpen} onOpenChange={setIsAssignmentDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>

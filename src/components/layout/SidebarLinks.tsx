@@ -14,11 +14,14 @@ import {
   PanelLeftOpen as PanelLeftIcon,
   Tag as TagIcon,
   DollarSign as CircleDollarSignIcon,
-  ImageIcon,
+  Image as ImageIcon,
   FolderOpen as FolderOpenIcon,
   Package as PackageIcon,
   FileQuestion as FileQuestionIcon,
-  FileSymlink as FileSymlinkIcon
+  FileSymlink as FileSymlinkIcon,
+  Sparkles,
+  MessageSquare,
+  Video
 } from 'lucide-react';
 
 export interface NavLink {
@@ -138,6 +141,12 @@ export const adminLinks: NavLink[] = [
     section: 'admin'
   },
   {
+    title: 'Công cụ AI',
+    href: '/ai-tools',
+    icon: <Sparkles className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
     title: 'Cơ sở dữ liệu',
     href: '/database-schema',
     icon: <Database className="h-4 w-4" />,
@@ -161,6 +170,7 @@ export const primaryLinks = [
   { name: 'Sự kiện', href: '/events', icon: <Calendar className="w-5 h-5" /> },
   { name: 'Công việc', href: '/tasks', icon: <ClipboardIcon className="w-5 h-5" /> },
   { name: 'Chấm công', href: '/attendance', icon: <UserCheckIcon className="w-5 h-5" /> },
+  { name: 'Công cụ AI', href: '/ai-tools', icon: <Sparkles className="w-5 h-5" /> },
 ];
 
 export const secondaryLinks = [
