@@ -195,7 +195,7 @@ const Employees = () => {
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <EmployeeDetail employee={selectedEmployee} />
+          <EmployeeDetail employeeId={selectedEmployee.id} />
         </DetailPanel>
       )}
 

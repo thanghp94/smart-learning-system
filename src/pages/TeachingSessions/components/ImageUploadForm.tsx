@@ -41,13 +41,15 @@ const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
       const file = data.image[0];
       
       // Upload image to storage
-      const { path, error: uploadError } = await storageService.uploadFile(
+      const uploadResult = await storageService.uploadFile(
         'images',
         `${entityType}/${entityId}/${Date.now()}_${file.name}`,
         file
       );
       
-      if (uploadError) throw uploadError;
+      if (uploadResult.error) throw uploadResult.error;
+      
+      const path = uploadResult.path;
       
       // Create image record in database
       const imageData = await imageService.create({

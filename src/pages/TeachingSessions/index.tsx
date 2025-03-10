@@ -1,8 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Calendar, Filter, FileDown, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -210,7 +210,7 @@ const TeachingSessions = () => {
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <SessionDetail session={selectedSession} />
+          <SessionDetail sessionId={selectedSession.id} />
         </DetailPanel>
       )}
 

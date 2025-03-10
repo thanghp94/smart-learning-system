@@ -211,7 +211,7 @@ const Facilities = () => {
           isOpen={showDetail}
           onClose={closeDetail}
         >
-          <FacilityDetail facility={selectedFacility} />
+          <FacilityDetail facilityId={selectedFacility.id} />
         </DetailPanel>
       )}
 

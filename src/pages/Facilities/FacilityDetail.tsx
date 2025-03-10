@@ -11,8 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { formatDate, formatStatus } from '@/utils/format';
 import { Button } from '@/components/ui/button';
 import { PenSquare } from 'lucide-react';
-import { DataTable } from '@/components/ui/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import DataTable from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -45,15 +44,15 @@ const FacilityDetail: React.FC<FacilityDetailProps> = ({ facilityId }) => {
         setAssets(assetsData);
         
         // Fetch related events
-        const eventsData = await eventService.getByEntityId('facility', facilityId);
+        const eventsData = await eventService.getByEntity('facility', facilityId);
         setEvents(eventsData);
         
         // Fetch related finances
-        const financesData = await financeService.getByEntityId('facility', facilityId);
+        const financesData = await financeService.getByEntity('facility', facilityId);
         setFinances(financesData);
         
         // Fetch related files
-        const filesData = await fileService.getByEntityId('facility', facilityId);
+        const filesData = await fileService.getByEntity('facility', facilityId);
         setFiles(filesData);
         
       } catch (error) {
@@ -74,108 +73,108 @@ const FacilityDetail: React.FC<FacilityDetailProps> = ({ facilityId }) => {
   }, [facilityId]);
 
   // Column definitions for Assets table
-  const assetColumns: ColumnDef<Asset>[] = [
+  const assetColumns = [
     {
-      accessorKey: 'ten_CSVC',
-      header: 'Tên tài sản',
+      title: 'Tên tài sản',
+      key: 'ten_CSVC',
     },
     {
-      accessorKey: 'so_luong',
-      header: 'Số lượng',
+      title: 'Số lượng',
+      key: 'so_luong',
     },
     {
-      accessorKey: 'loai',
-      header: 'Loại',
+      title: 'Loại',
+      key: 'loai',
     },
     {
-      accessorKey: 'tinh_trang',
-      header: 'Tình trạng',
-      cell: ({ row }) => (
-        <Badge variant={row.original.tinh_trang === 'active' ? 'success' : 'secondary'}>
-          {formatStatus(row.original.tinh_trang)}
+      title: 'Tình trạng',
+      key: 'tinh_trang',
+      render: (value: string) => (
+        <Badge variant={value === 'active' ? 'success' : 'secondary'}>
+          {formatStatus(value)}
         </Badge>
       ),
     },
   ];
 
   // Column definitions for Events table
-  const eventColumns: ColumnDef<Event>[] = [
+  const eventColumns = [
     {
-      accessorKey: 'ten_su_kien',
-      header: 'Tên sự kiện',
+      title: 'Tên sự kiện',
+      key: 'ten_su_kien',
     },
     {
-      accessorKey: 'loai_su_kien',
-      header: 'Loại sự kiện',
+      title: 'Loại sự kiện',
+      key: 'loai_su_kien',
     },
     {
-      accessorKey: 'ngay_bat_dau',
-      header: 'Ngày',
-      cell: ({ row }) => formatDate(row.original.ngay_bat_dau),
+      title: 'Ngày',
+      key: 'ngay_bat_dau',
+      render: (value: string) => formatDate(value),
     },
     {
-      accessorKey: 'trang_thai',
-      header: 'Trạng thái',
-      cell: ({ row }) => (
-        <Badge variant={row.original.trang_thai === 'completed' ? 'success' : 'secondary'}>
-          {formatStatus(row.original.trang_thai)}
+      title: 'Trạng thái',
+      key: 'trang_thai',
+      render: (value: string) => (
+        <Badge variant={value === 'completed' ? 'success' : 'secondary'}>
+          {formatStatus(value)}
         </Badge>
       ),
     },
   ];
 
   // Column definitions for Finances table
-  const financeColumns: ColumnDef<Finance>[] = [
+  const financeColumns = [
     {
-      accessorKey: 'ngay',
-      header: 'Ngày',
-      cell: ({ row }) => formatDate(row.original.ngay),
+      title: 'Ngày',
+      key: 'ngay',
+      render: (value: string) => formatDate(value),
     },
     {
-      accessorKey: 'loai_thu_chi',
-      header: 'Loại thu chi',
+      title: 'Loại thu chi',
+      key: 'loai_thu_chi',
     },
     {
-      accessorKey: 'dien_giai',
-      header: 'Diễn giải',
+      title: 'Diễn giải',
+      key: 'dien_giai',
     },
     {
-      accessorKey: 'tong_tien',
-      header: 'Số tiền',
-      cell: ({ row }) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(row.original.tong_tien),
+      title: 'Số tiền',
+      key: 'tong_tien',
+      render: (value: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value),
     },
     {
-      accessorKey: 'tinh_trang',
-      header: 'Trạng thái',
-      cell: ({ row }) => (
-        <Badge variant={row.original.tinh_trang === 'completed' ? 'success' : 'secondary'}>
-          {formatStatus(row.original.tinh_trang)}
+      title: 'Trạng thái',
+      key: 'tinh_trang',
+      render: (value: string) => (
+        <Badge variant={value === 'completed' ? 'success' : 'secondary'}>
+          {formatStatus(value)}
         </Badge>
       ),
     },
   ];
 
   // Column definitions for Files table
-  const fileColumns: ColumnDef<File>[] = [
+  const fileColumns = [
     {
-      accessorKey: 'ten_tai_lieu',
-      header: 'Tên tài liệu',
+      title: 'Tên tài liệu',
+      key: 'ten_tai_lieu',
     },
     {
-      accessorKey: 'nhom_tai_lieu',
-      header: 'Nhóm tài liệu',
+      title: 'Nhóm tài liệu',
+      key: 'nhom_tai_lieu',
     },
     {
-      accessorKey: 'ngay_cap',
-      header: 'Ngày cấp',
-      cell: ({ row }) => formatDate(row.original.ngay_cap),
+      title: 'Ngày cấp',
+      key: 'ngay_cap',
+      render: (value: string) => formatDate(value),
     },
     {
-      accessorKey: 'trang_thai',
-      header: 'Trạng thái',
-      cell: ({ row }) => (
-        <Badge variant={row.original.trang_thai === 'active' ? 'success' : 'secondary'}>
-          {formatStatus(row.original.trang_thai)}
+      title: 'Trạng thái',
+      key: 'trang_thai',
+      render: (value: string) => (
+        <Badge variant={value === 'active' ? 'success' : 'secondary'}>
+          {formatStatus(value)}
         </Badge>
       ),
     },

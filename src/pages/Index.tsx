@@ -33,7 +33,7 @@ const Index = () => {
         
         // Fetch counts for stats cards
         const students = await studentService.getAll();
-        const classes = await classService.classBaseService.getAll();
+        const classes = await classService.getAll();
         const facilities = await facilityService.getAll();
         const sessions = await teachingSessionService.getAll();
         

@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EmployeeClockInOut } from '@/lib/types';
-import { Employee, Task } from '@/lib/types';
+import { EmployeeClockInOut, Employee, Task } from '@/lib/types';
 import { employeeService } from '@/lib/supabase/employee-service';
 import { taskService } from '@/lib/supabase/task-service';
 import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
@@ -10,8 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { formatDate, formatStatus } from '@/utils/format';
 import { Button } from '@/components/ui/button';
 import { PenSquare } from 'lucide-react';
-import { DataTable } from '@/components/ui/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import DataTable from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -38,11 +36,11 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         setEmployee(empData);
         
         // Fetch related tasks
-        const tasksData = await taskService.getByEntityId('employee', employeeId);
+        const tasksData = await taskService.getByEntity('employee', employeeId);
         setTasks(tasksData);
         
         // Fetch attendance records
-        const attendanceData = await employeeClockInService.getByEmployeeId(employeeId);
+        const attendanceData = await employeeClockInService.getByEmployee(employeeId);
         setAttendance(attendanceData);
       } catch (error) {
         console.error('Error fetching employee data:', error);
@@ -62,52 +60,52 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
   }, [employeeId]);
 
   // Column definitions for Tasks table
-  const taskColumns: ColumnDef<Task>[] = [
+  const taskColumns = [
     {
-      accessorKey: 'ten_viec',
-      header: 'Tên công việc',
+      title: 'Tên công việc',
+      key: 'ten_viec',
     },
     {
-      accessorKey: 'ngay_den_han',
-      header: 'Deadline',
-      cell: ({ row }) => formatDate(row.original.ngay_den_han),
+      title: 'Deadline',
+      key: 'ngay_den_han',
+      render: (value: string) => formatDate(value),
     },
     {
-      accessorKey: 'cap_do',
-      header: 'Cấp độ',
+      title: 'Cấp độ',
+      key: 'cap_do',
     },
     {
-      accessorKey: 'trang_thai',
-      header: 'Trạng thái',
-      cell: ({ row }) => (
-        <Badge variant={row.original.trang_thai === 'completed' ? 'success' : 'secondary'}>
-          {formatStatus(row.original.trang_thai)}
+      title: 'Trạng thái',
+      key: 'trang_thai',
+      render: (value: string) => (
+        <Badge variant={value === 'completed' ? 'success' : 'secondary'}>
+          {formatStatus(value)}
         </Badge>
       ),
     },
   ];
 
   // Column definitions for Attendance table
-  const attendanceColumns: ColumnDef<EmployeeClockInOut>[] = [
+  const attendanceColumns = [
     {
-      accessorKey: 'ngay',
-      header: 'Ngày',
-      cell: ({ row }) => formatDate(row.original.ngay),
+      title: 'Ngày',
+      key: 'ngay',
+      render: (value: string) => formatDate(value),
     },
     {
-      accessorKey: 'thoi_gian_bat_dau',
-      header: 'Giờ vào',
+      title: 'Giờ vào',
+      key: 'thoi_gian_bat_dau',
     },
     {
-      accessorKey: 'thoi_gian_ket_thuc',
-      header: 'Giờ ra',
+      title: 'Giờ ra',
+      key: 'thoi_gian_ket_thuc',
     },
     {
-      accessorKey: 'trang_thai',
-      header: 'Trạng thái',
-      cell: ({ row }) => (
-        <Badge variant={row.original.trang_thai === 'approved' ? 'success' : 'secondary'}>
-          {formatStatus(row.original.trang_thai)}
+      title: 'Trạng thái',
+      key: 'trang_thai',
+      render: (value: string) => (
+        <Badge variant={value === 'approved' ? 'success' : 'secondary'}>
+          {formatStatus(value)}
         </Badge>
       ),
     },

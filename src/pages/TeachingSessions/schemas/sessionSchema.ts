@@ -8,7 +8,7 @@ export const sessionSchema = z.object({
   thoi_gian_bat_dau: z.string().min(1, "Vui lòng nhập thời gian bắt đầu"),
   thoi_gian_ket_thuc: z.string().min(1, "Vui lòng nhập thời gian kết thúc"),
   session_id: z.string().min(1, "Vui lòng nhập số buổi học"),
-  loai_bai_hoc: z.string().optional(), // Changed from Loai_bai_hoc to loai_bai_hoc
+  loai_bai_hoc: z.string().optional(),
   noi_dung: z.string().optional(),
   nhan_xet_1: z.string().nullable().optional(),
   nhan_xet_2: z.string().nullable().optional(),
@@ -24,3 +24,7 @@ export const sessionSchema = z.object({
 });
 
 export type SessionFormData = z.infer<typeof sessionSchema>;
+
+// Alias for backward compatibility
+export type TeachingSessionSchema = SessionFormData;
+export const teachingSessionSchema = sessionSchema;
