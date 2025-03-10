@@ -8,3 +8,6 @@ export interface ActivityItem {
   timestamp: string;
   status?: string;
 }
+
+// Alias the ActivityItem to Activity for backward compatibility
+export type Activity = ActivityItem;

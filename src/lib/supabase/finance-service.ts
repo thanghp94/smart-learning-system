@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
 import { Finance, FinanceTransactionType, ReceiptTemplate, GeneratedReceipt } from '@/lib/types';
@@ -89,7 +88,6 @@ class FinanceService {
     }
   }
 
-  // New methods for receipt handling
   async getReceiptTemplates(type?: 'income' | 'expense' | 'all') {
     try {
       let query = supabase
@@ -129,13 +127,11 @@ class FinanceService {
 
   async generateReceipt(financeId: string, templateId?: string) {
     try {
-      // Get finance transaction
       const finance = await this.getById(financeId);
       if (!finance) {
         throw new Error('Finance transaction not found');
       }
 
-      // Get template (either specified or default)
       let template: ReceiptTemplate | null = null;
       if (templateId) {
         template = await fetchById<ReceiptTemplate>('receipt_templates', templateId);
@@ -147,21 +143,18 @@ class FinanceService {
         throw new Error('Receipt template not found');
       }
 
-      // Generate HTML by replacing placeholders in template
       const generatedHtml = this.mergeTemplateWithData(template.template_html, finance);
 
-      // Save generated receipt
-      const receipt = {
+      const receipt: Partial<GeneratedReceipt> = {
         finance_id: financeId,
         template_id: template.id,
         generated_html: generatedHtml,
         generated_at: new Date().toISOString(),
-        status: 'draft'
+        status: 'draft' as 'draft' | 'final'
       };
 
       const result = await insert<GeneratedReceipt>('generated_receipts', receipt);
 
-      // Log activity
       await logActivity('create', 'receipt', `Tạo biên lai cho giao dịch ${finance.ten_phi || finance.id}`, 'system', 'completed');
 
       return result;
@@ -194,7 +187,7 @@ class FinanceService {
   async finalizeReceipt(receiptId: string) {
     try {
       const result = await update<GeneratedReceipt>('generated_receipts', receiptId, {
-        status: 'final',
+        status: 'final' as 'draft' | 'final',
         updated_at: new Date().toISOString()
       });
       
@@ -223,12 +216,9 @@ class FinanceService {
     }
   }
 
-  // Helper method to merge template with data
   private mergeTemplateWithData(template: string, finance: Finance): string {
-    // Create a copy of template to work with
     let result = template;
 
-    // Create formatted date
     const formattedDate = finance.ngay 
       ? new Date(finance.ngay).toLocaleDateString('vi-VN', {
           day: '2-digit', 
@@ -237,13 +227,11 @@ class FinanceService {
         })
       : '';
 
-    // Create formatted money
     const formattedMoney = new Intl.NumberFormat('vi-VN', { 
       style: 'currency', 
       currency: 'VND' 
     }).format(finance.tong_tien);
 
-    // Basic replacements
     const replacements: Record<string, string> = {
       '{{id}}': finance.id || '',
       '{{ngay}}': formattedDate,
@@ -263,7 +251,6 @@ class FinanceService {
       '{{receipt_type}}': finance.loai_thu_chi === 'income' ? 'PHIẾU THU' : 'PHIẾU CHI'
     };
 
-    // Apply replacements
     for (const [key, value] of Object.entries(replacements)) {
       result = result.replace(new RegExp(key, 'g'), value);
     }
@@ -271,17 +258,13 @@ class FinanceService {
     return result;
   }
 
-  // Export receipt to PDF
   async exportReceiptToPdf(receiptId: string) {
     try {
-      // In a real implementation, this would call a server-side function
-      // to convert HTML to PDF. For now, we'll just return the receipt.
       const receipt = await this.getGeneratedReceipt(receiptId);
       if (!receipt) {
         throw new Error('Receipt not found');
       }
       
-      // Mark receipt as printed
       await this.markReceiptAsPrinted(receiptId);
       
       return receipt;

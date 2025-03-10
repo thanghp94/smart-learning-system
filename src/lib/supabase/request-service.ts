@@ -1,99 +1,62 @@
 
 import { supabase } from './client';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
+import { Request } from '@/lib/types';
 
-interface Request {
-  id: string;
-  title: string;
-  description?: string;
-  requester: string;
-  status: string;
-  priority: string;
-  created_at: string;
-  updated_at: string;
+class RequestService {
+  async getAll() {
+    return fetchAll<Request>('requests');
+  }
+  
+  async getById(id: string) {
+    return fetchById<Request>('requests', id);
+  }
+  
+  async create(request: Partial<Request>) {
+    return insert<Request>('requests', request);
+  }
+  
+  async update(id: string, updates: Partial<Request>) {
+    return update<Request>('requests', id, updates);
+  }
+  
+  async delete(id: string) {
+    return remove('requests', id);
+  }
+  
+  async getByStatus(status: string) {
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('trang_thai', status);
+    
+    if (error) throw error;
+    return data as Request[];
+  }
+  
+  async getByRequester(requester: string) {
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('nguoi_yeu_cau', requester);
+    
+    if (error) throw error;
+    return data as Request[];
+  }
+  
+  // Add updateStatus method
+  async updateStatus(id: string, status: string, comments?: string) {
+    const updates: Partial<Request> = {
+      trang_thai: status,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (comments) {
+      updates.ghi_chu = comments;
+    }
+    
+    return this.update(id, updates);
+  }
 }
 
-export const requestService = {
-  getAll: async (): Promise<Request[]> => {
-    try {
-      return await fetchAll<Request>('requests');
-    } catch (error) {
-      console.error('Error fetching all requests:', error);
-      return [];
-    }
-  },
-  
-  getById: async (id: string): Promise<Request | null> => {
-    try {
-      return await fetchById<Request>('requests', id);
-    } catch (error) {
-      console.error('Error fetching request by ID:', error);
-      return null;
-    }
-  },
-  
-  create: async (request: Partial<Request>): Promise<Request | null> => {
-    try {
-      return await insert<Request>('requests', request);
-    } catch (error) {
-      console.error('Error creating request:', error);
-      throw error;
-    }
-  },
-  
-  update: async (id: string, updates: Partial<Request>): Promise<Request | null> => {
-    try {
-      return await update<Request>('requests', id, updates);
-    } catch (error) {
-      console.error('Error updating request:', error);
-      throw error;
-    }
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    try {
-      await remove('requests', id);
-    } catch (error) {
-      console.error('Error deleting request:', error);
-      throw error;
-    }
-  },
-  
-  getByStatus: async (status: string): Promise<Request[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('requests')
-        .select('*')
-        .eq('status', status);
-      
-      if (error) {
-        console.error('Error fetching requests by status:', error);
-        throw error;
-      }
-      
-      return data as Request[];
-    } catch (error) {
-      console.error('Error in getByStatus:', error);
-      return [];
-    }
-  },
-  
-  getByRequester: async (requester: string): Promise<Request[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('requests')
-        .select('*')
-        .eq('requester', requester);
-      
-      if (error) {
-        console.error('Error fetching requests by requester:', error);
-        throw error;
-      }
-      
-      return data as Request[];
-    } catch (error) {
-      console.error('Error in getByRequester:', error);
-      return [];
-    }
-  }
-};
+export const requestService = new RequestService();

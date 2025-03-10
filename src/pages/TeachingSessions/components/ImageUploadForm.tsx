@@ -47,9 +47,15 @@ const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
         file
       );
       
-      if (uploadResult.error) throw uploadResult.error;
+      // Check if uploadResult is a string or object with error property
+      if (typeof uploadResult === 'object' && 'error' in uploadResult && uploadResult.error) {
+        throw uploadResult.error;
+      }
       
-      const path = uploadResult.path;
+      // Get path from the result safely
+      const path = typeof uploadResult === 'object' && 'path' in uploadResult 
+        ? uploadResult.path 
+        : uploadResult.toString();
       
       // Create image record in database
       const imageData = await imageService.create({

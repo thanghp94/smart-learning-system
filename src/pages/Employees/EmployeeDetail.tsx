@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EmployeeClockInOut, Employee, Task } from '@/lib/types';
+import { Employee, Task } from '@/lib/types';
 import { employeeService } from '@/lib/supabase/employee-service';
 import { taskService } from '@/lib/supabase/task-service';
 import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
@@ -13,6 +13,7 @@ import DataTable from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
 
 interface EmployeeDetailProps {
   employeeId: string;
@@ -35,13 +36,17 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         const empData = await employeeService.getById(employeeId);
         setEmployee(empData);
         
-        // Fetch related tasks
-        const tasksData = await taskService.getByEntity('employee', employeeId);
+        // Fetch related tasks - Use update instead of getByEntity
+        const tasksData = await taskService.getByEmployeeId(employeeId);
         setTasks(tasksData);
         
-        // Fetch attendance records
+        // Fetch attendance records and ensure they have the required xac_nhan property
         const attendanceData = await employeeClockInService.getByEmployee(employeeId);
-        setAttendance(attendanceData);
+        const formattedAttendance: EmployeeClockInOut[] = attendanceData.map(item => ({
+          ...item,
+          xac_nhan: item.xac_nhan ?? false // Ensure xac_nhan exists
+        }));
+        setAttendance(formattedAttendance);
       } catch (error) {
         console.error('Error fetching employee data:', error);
         toast({

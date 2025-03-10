@@ -10,7 +10,8 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recha
 import { format, subDays } from 'date-fns';
 import { Bell, BookOpen, Calendar, CheckCircle, ClipboardList, Clock, CreditCard, Users } from 'lucide-react';
 import { activityService, classService, enrollmentService, studentService, teachingSessionService } from '@/lib/supabase';
-import { Activity, Class, Student, TeachingSession } from '@/lib/types';
+import { Class, Student, TeachingSession } from '@/lib/types';
+import { Activity } from '@/lib/types/activity';
 
 // Example chart data
 const chartData = [
@@ -80,6 +81,9 @@ const Index = () => {
     }
   }).length;
 
+  // Helper function to render icons in a consistent way
+  const renderIcon = (icon: React.ReactNode) => icon;
+
   return (
     <div className="space-y-6 p-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -87,25 +91,25 @@ const Index = () => {
           title="Tổng Học Sinh" 
           value={students.length.toString()} 
           description="Học sinh đã đăng ký"
-          icon={<Users className="h-8 w-8 text-blue-600" />}
+          icon={renderIcon(<Users className="h-8 w-8 text-blue-600" />)}
         />
         <StatsCard 
           title="Lớp Đang Hoạt Động" 
           value={activeClasses.toString()} 
           description={`${((activeClasses / classes.length) * 100).toFixed(0)}% tổng số lớp`}
-          icon={<BookOpen className="h-8 w-8 text-green-600" />}
+          icon={renderIcon(<BookOpen className="h-8 w-8 text-green-600" />)}
         />
         <StatsCard 
           title="Buổi Học Hôm Nay" 
           value={todaySessions.toString()} 
           description="Lịch trình hôm nay"
-          icon={<Calendar className="h-8 w-8 text-yellow-600" />}
+          icon={renderIcon(<Calendar className="h-8 w-8 text-yellow-600" />)}
         />
         <StatsCard 
           title="Buổi Học Tuần Này" 
           value={thisWeekSessions.toString()} 
           description="7 ngày qua"
-          icon={<ClipboardList className="h-8 w-8 text-purple-600" />}
+          icon={renderIcon(<ClipboardList className="h-8 w-8 text-purple-600" />)}
         />
       </div>
 
@@ -133,7 +137,7 @@ const Index = () => {
             <CardDescription>10 hoạt động mới nhất</CardDescription>
           </CardHeader>
           <CardContent>
-            <RecentActivity activities={activities} loading={loading} />
+            <RecentActivity activities={activities} isLoading={loading} />
           </CardContent>
         </Card>
       </div>

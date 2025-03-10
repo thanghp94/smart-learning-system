@@ -1,113 +1,56 @@
-
 import { supabase } from './client';
-import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { Enrollment } from '@/lib/types';
-
-const table = 'enrollments';
 
 class EnrollmentService {
   async getAll() {
-    return fetchAll<Enrollment>(table);
+    return fetchAll<Enrollment>('enrollments');
   }
-
+  
   async getById(id: string) {
-    return fetchById<Enrollment>(table, id);
+    return fetchById<Enrollment>('enrollments', id);
   }
-
-  async getDetailedEnrollments() {
-    try {
-      const { data, error } = await supabase
-        .from('student_enrollments_with_details')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error fetching detailed enrollments:', error);
-      throw error;
-    }
+  
+  async create(data: Partial<Enrollment>) {
+    return insert<Enrollment>('enrollments', data);
+  }
+  
+  async update(id: string, data: Partial<Enrollment>) {
+    return update<Enrollment>('enrollments', id, data);
+  }
+  
+  async delete(id: string) {
+    return remove('enrollments', id);
   }
 
   async getByClass(classId: string) {
     try {
       const { data, error } = await supabase
-        .from('student_enrollments_with_details')
+        .from('enrollments')
         .select('*')
         .eq('lop_chi_tiet_id', classId);
       
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error fetching enrollments by class:', error);
+      console.error(`Error fetching enrollments for class ${classId}:`, error);
       throw error;
     }
   }
-
-  async getByStudent(studentId: string) {
+  
+  // Add the new method for fetching enrollments by class and session
+  async getByClassAndSession(classId: string, sessionId: string) {
     try {
       const { data, error } = await supabase
-        .from('student_enrollments_with_details')
+        .from('enrollments')
         .select('*')
-        .eq('hoc_sinh_id', studentId);
+        .eq('lop_chi_tiet_id', classId)
+        .eq('buoi_hoc_id', sessionId);
       
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error fetching enrollments by student:', error);
-      throw error;
-    }
-  }
-
-  async getBySession(sessionId: string) {
-    try {
-      const { data: teachingSession, error: sessionError } = await supabase
-        .from('teaching_sessions')
-        .select('lop_chi_tiet_id')
-        .eq('id', sessionId)
-        .single();
-      
-      if (sessionError) throw sessionError;
-      
-      if (!teachingSession || !teachingSession.lop_chi_tiet_id) {
-        throw new Error('Teaching session not found or has no class ID');
-      }
-      
-      return this.getByClass(teachingSession.lop_chi_tiet_id);
-    } catch (error) {
-      console.error('Error fetching enrollments by session:', error);
-      throw error;
-    }
-  }
-
-  async create(data: Partial<Enrollment>) {
-    try {
-      const result = await insert<Enrollment>(table, data);
-      await logActivity('create', 'enrollment', 'Ghi danh học sinh', 'system', 'completed');
-      return result;
-    } catch (error) {
-      console.error('Error creating enrollment:', error);
-      throw error;
-    }
-  }
-
-  async update(id: string, data: Partial<Enrollment>) {
-    try {
-      const result = await update<Enrollment>(table, id, data);
-      await logActivity('update', 'enrollment', 'Cập nhật ghi danh', 'system', 'completed');
-      return result;
-    } catch (error) {
-      console.error('Error updating enrollment:', error);
-      throw error;
-    }
-  }
-
-  async delete(id: string) {
-    try {
-      await remove(table, id);
-      await logActivity('delete', 'enrollment', 'Xóa ghi danh', 'system', 'completed');
-    } catch (error) {
-      console.error('Error deleting enrollment:', error);
+      console.error(`Error fetching enrollments for class ${classId} and session ${sessionId}:`, error);
       throw error;
     }
   }

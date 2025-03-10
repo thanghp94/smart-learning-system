@@ -1,164 +1,162 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { format } from 'date-fns';
+import { TeachingSession } from '@/lib/types';
+import { teachingSessionSchema } from './schemas/sessionSchema';
+import { classService, employeeService, facilityService, teachingSessionService } from '@/lib/supabase';
 import { Form } from '@/components/ui/form';
-import { useNavigate } from 'react-router-dom';
-import { sessionService } from '@/lib/supabase/session-service';
-import { teachingSessionService } from '@/lib/supabase/teaching-session-service';
-import { classService } from '@/lib/supabase/services/class';
-import { employeeService } from '@/lib/supabase/employee-service';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Session, Class, Employee, TeachingSession } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import SessionBasicInfoFields from './components/SessionBasicInfoFields';
+import SessionContentField from './components/SessionContentField';
 import SessionEvaluationFields from './components/SessionEvaluationFields';
-import { TeachingSessionSchema, teachingSessionSchema } from './schemas/sessionSchema';
-import { formatDate } from '@/utils/format';
+import { SessionFormData } from './schemas/sessionSchema';
 
 interface TeachingSessionFormProps {
-  initialData?: TeachingSession;
-  isEditMode?: boolean;
+  initialData?: Partial<TeachingSession>;
+  onSubmit: (data: Partial<TeachingSession>) => void;
+  onCancel: () => void;
+  isEdit?: boolean;
 }
 
-const TeachingSessionForm: React.FC<TeachingSessionFormProps> = ({ 
-  initialData, 
-  isEditMode = false 
+const TeachingSessionForm: React.FC<TeachingSessionFormProps> = ({
+  initialData,
+  onSubmit,
+  onCancel,
+  isEdit = false
 }) => {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [teachers, setTeachers] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [classes, setClasses] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [facilities, setFacilities] = useState([]);
   const { toast } = useToast();
-
-  const form = useForm<TeachingSessionSchema>({
+  
+  // Process initialData to convert Date objects to strings
+  const processedInitialData = initialData ? {
+    ...initialData,
+    // Convert Date objects to strings if necessary
+    ngay_hoc: initialData.ngay_hoc ? typeof initialData.ngay_hoc === 'object' 
+      ? format(initialData.ngay_hoc as Date, 'yyyy-MM-dd') 
+      : initialData.ngay_hoc 
+      : undefined
+  } : undefined;
+  
+  const form = useForm<SessionFormData>({
     resolver: zodResolver(teachingSessionSchema),
-    defaultValues: initialData ? {
-      ...initialData,
-      ngay_hoc: initialData.ngay_hoc ? new Date(initialData.ngay_hoc) : undefined,
-    } : {
-      ngay_hoc: new Date(),
-      thoi_gian_bat_dau: '08:00',
-      thoi_gian_ket_thuc: '09:30',
-      trang_thai: 'pending',
+    defaultValues: processedInitialData || {
+      lop_chi_tiet_id: '',
+      giao_vien: '',
+      ngay_hoc: '',
+      thoi_gian_bat_dau: '',
+      thoi_gian_ket_thuc: '',
+      session_id: '',
+      loai_bai_hoc: '',
+      phong_hoc_id: '',
+      tro_giang: '',
+      nhan_xet_chung: '',
+      ghi_chu: ''
     }
   });
-
+  
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        setLoading(true);
-        const [sessionsData, classesData, teachersData] = await Promise.all([
-          sessionService.getAll(),
-          classService.classBaseService.getAll(),
-          employeeService.getAll()
-        ]);
+        // Use the correct service method to fetch classes
+        const classesData = await classService.getAll();
+        const teachersData = await employeeService.getAll();
+        const facilitiesData = await facilityService.getAll();
         
-        setSessions(sessionsData);
         setClasses(classesData);
         setTeachers(teachersData);
+        setFacilities(facilitiesData);
       } catch (error) {
-        console.error('Error fetching data for teaching session form:', error);
+        console.error('Error fetching form data:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load form data',
-          variant: 'destructive',
+          description: 'Failed to load data. Please try again.',
+          variant: 'destructive'
         });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
+    
     fetchData();
-  }, []);
+  }, [toast]);
 
-  const onSubmit = async (data: TeachingSessionSchema) => {
-    try {
-      if (isEditMode && initialData) {
-        // Update existing teaching session
-        await teachingSessionService.update(initialData.id, {
-          ...data,
-          ngay_hoc: data.ngay_hoc ? formatDate(data.ngay_hoc) : undefined,
-        });
-        toast({
-          title: 'Thành công',
-          description: 'Buổi dạy đã được cập nhật',
-        });
-      } else {
-        // Create new teaching session
-        await teachingSessionService.create({
-          ...data,
-          ngay_hoc: data.ngay_hoc ? formatDate(data.ngay_hoc) : undefined,
-        });
-        toast({
-          title: 'Thành công',
-          description: 'Buổi dạy mới đã được tạo',
-        });
-      }
-      navigate('/teaching-sessions');
-    } catch (error) {
-      console.error('Error saving teaching session:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save teaching session',
-        variant: 'destructive',
-      });
-    }
+  // Handle form submission
+  const handleFormSubmit = (values: SessionFormData) => {
+    // Transform form values if needed
+    const sessionData = {
+      ...values,
+      // Add any other transformations needed
+    };
+    
+    onSubmit(sessionData);
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const calculateAverageScore = (data: SessionFormData): number | null => {
+    const scores = [
+      data.nhan_xet_1,
+      data.nhan_xet_2,
+      data.nhan_xet_3,
+      data.nhan_xet_4,
+      data.nhan_xet_5,
+      data.nhan_xet_6,
+    ].filter(score => score !== null && score !== undefined);
+  
+    if (scores.length === 0) {
+      return null;
+    }
+  
+    const total = scores.reduce((sum, score) => sum + Number(score), 0);
+    return total / scores.length;
+  };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold tracking-tight mb-4">
-        {isEditMode ? 'Chỉnh sửa buổi dạy' : 'Thêm buổi dạy mới'}
-      </h2>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin buổi dạy</CardTitle>
-              <CardDescription>Nhập thông tin cơ bản về buổi dạy</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <SessionBasicInfoFields 
-                form={form} 
-                sessions={sessions} 
-                classes={classes} 
-                teachers={teachers} 
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Đánh giá buổi dạy</CardTitle>
-              <CardDescription>Nhập đánh giá và nhận xét về buổi dạy</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <SessionEvaluationFields form={form} />
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/teaching-sessions')}
-              >
-                Hủy
-              </Button>
-              <Button type="submit">
-                {isEditMode ? 'Cập nhật' : 'Tạo buổi dạy'}
-              </Button>
-            </CardFooter>
-          </Card>
-        </form>
-      </Form>
-    </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+        {/* Session basic info fields */}
+        <SessionBasicInfoFields 
+          form={form} 
+          classes={classes} 
+          teachers={teachers} 
+          isLoading={isLoading} 
+        />
+        
+        <SessionContentField form={form} />
+        
+        <SessionEvaluationFields form={form} />
+        
+        <div className="flex justify-end space-x-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isEdit ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              isEdit ? 'Update Session' : 'Create Session'
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 
