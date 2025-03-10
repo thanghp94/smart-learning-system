@@ -1,139 +1,165 @@
-
 import React, { useState } from 'react';
-import { Check, X, MoreHorizontal } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { requestService } from '@/lib/supabase';
 import { Request } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
-import { ConfirmActionDialog } from '@/components/ui/confirm-action-dialog';
+import { requestService } from '@/lib/supabase';
+import { Check, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { eventService } from '@/lib/supabase';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+// Use default import instead
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog';
 
 interface RequestApprovalButtonsProps {
   request: Request;
-  onUpdate: () => void;
-  viewMode?: boolean;
+  onStatusChange: () => void;
 }
 
-export const getStatusBadge = (trangThai: string) => {
-  switch (trangThai) {
-    case 'approved':
-      return <Badge variant="success">Đã duyệt</Badge>;
-    case 'rejected':
-      return <Badge variant="destructive">Từ chối</Badge>;
-    case 'pending':
-      return <Badge variant="outline">Chờ duyệt</Badge>;
-    case 'completed':
-      return <Badge variant="default">Hoàn thành</Badge>;
-    default:
-      return <Badge variant="outline">{trangThai}</Badge>;
-  }
-};
-
 const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({ 
-  request, 
-  onUpdate,
-  viewMode = false 
+  request,
+  onStatusChange
 }) => {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [comments, setComments] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // If request is already approved or rejected, just show the status
-  if (viewMode || request.trang_thai === 'approved' || request.trang_thai === 'rejected') {
-    return getStatusBadge(request.trang_thai);
-  }
-
   const handleApprove = async () => {
+    setIsLoading(true);
     try {
-      setLoading(true);
-      await requestService.updateStatus(request.id, 'approved');
-      toast({
-        title: 'Thành công',
-        description: 'Yêu cầu đã được duyệt',
+      await requestService.updateStatus(request.id, 'approved', comments);
+      
+      // Log as an event
+      await eventService.create({
+        ten_su_kien: `Approved Request: ${request.noi_dung}`,
+        loai_su_kien: 'request_approval',
+        ngay_bat_dau: new Date().toISOString().split('T')[0],
+        entity_type: 'request',
+        entity_id: request.id,
+        trang_thai: 'completed'
       });
-      onUpdate();
+      
+      toast({
+        title: 'Request Approved',
+        description: 'The request has been successfully approved.',
+      });
+      onStatusChange();
     } catch (error) {
       console.error('Error approving request:', error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể duyệt yêu cầu',
-        variant: 'destructive',
+        title: 'Error',
+        description: 'There was an error approving the request. Please try again.',
+        variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
       setIsApproveDialogOpen(false);
+      setComments('');
     }
   };
 
   const handleReject = async () => {
+    setIsLoading(true);
     try {
-      setLoading(true);
-      await requestService.updateStatus(request.id, 'rejected');
-      toast({
-        title: 'Thành công',
-        description: 'Yêu cầu đã bị từ chối',
+      await requestService.updateStatus(request.id, 'rejected', comments);
+      
+      // Log as an event
+      await eventService.create({
+        ten_su_kien: `Rejected Request: ${request.noi_dung}`,
+        loai_su_kien: 'request_rejection',
+        ngay_bat_dau: new Date().toISOString().split('T')[0],
+        entity_type: 'request',
+        entity_id: request.id,
+        trang_thai: 'completed'
       });
-      onUpdate();
+      
+      toast({
+        title: 'Request Rejected',
+        description: 'The request has been rejected.',
+      });
+      onStatusChange();
     } catch (error) {
       console.error('Error rejecting request:', error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể từ chối yêu cầu',
-        variant: 'destructive',
+        title: 'Error',
+        description: 'There was an error rejecting the request. Please try again.',
+        variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
       setIsRejectDialogOpen(false);
+      setComments('');
     }
   };
 
+  // Disable buttons if request is not pending
+  const isPending = request.trang_thai === 'pending';
+
   return (
     <>
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Hành động</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setIsApproveDialogOpen(true)}>
-              <Check className="mr-2 h-4 w-4 text-green-500" />
-              <span>Duyệt</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsRejectDialogOpen(true)}>
-              <X className="mr-2 h-4 w-4 text-red-500" />
-              <span>Từ chối</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {getStatusBadge(request.trang_thai)}
+      <div className="flex space-x-2">
+        <Button
+          variant="ghost"
+          disabled={!isPending || isLoading}
+          onClick={() => setIsApproveDialogOpen(true)}
+        >
+          <Check className="h-4 w-4 mr-2" />
+          Approve
+        </Button>
+        <Button
+          variant="destructive"
+          disabled={!isPending || isLoading}
+          onClick={() => setIsRejectDialogOpen(true)}
+        >
+          <X className="h-4 w-4 mr-2" />
+          Reject
+        </Button>
       </div>
 
       <ConfirmActionDialog
         isOpen={isApproveDialogOpen}
         onClose={() => setIsApproveDialogOpen(false)}
         onConfirm={handleApprove}
-        title="Xác nhận phê duyệt"
-        description="Bạn có chắc chắn muốn phê duyệt yêu cầu này không?"
-        confirmText="Phê duyệt"
-        cancelText="Hủy"
-        isLoading={loading}
+        title="Approve Request"
+        description={
+          <>
+            Are you sure you want to approve this request?
+            <div className="grid gap-2 mt-4">
+              <Label htmlFor="comments">Comments</Label>
+              <Textarea
+                id="comments"
+                placeholder="Add any relevant comments here..."
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
+            </div>
+          </>
+        }
+        confirmText="Approve"
       />
 
       <ConfirmActionDialog
         isOpen={isRejectDialogOpen}
         onClose={() => setIsRejectDialogOpen(false)}
         onConfirm={handleReject}
-        title="Xác nhận từ chối"
-        description="Bạn có chắc chắn muốn từ chối yêu cầu này không?"
-        confirmText="Từ chối"
-        confirmVariant="destructive"
-        cancelText="Hủy"
-        isLoading={loading}
+        title="Reject Request"
+        description={
+          <>
+            Are you sure you want to reject this request?
+            <div className="grid gap-2 mt-4">
+              <Label htmlFor="comments">Comments</Label>
+              <Textarea
+                id="comments"
+                placeholder="Add any relevant comments here..."
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
+            </div>
+          </>
+        }
+        confirmText="Reject"
+        variant="destructive"
       />
     </>
   );

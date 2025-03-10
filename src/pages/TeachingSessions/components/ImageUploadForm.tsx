@@ -47,15 +47,25 @@ const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
         file
       );
       
+      if (!uploadResult) {
+        throw new Error('Upload failed: no result returned');
+      }
+      
       // Check if uploadResult is a string or object with error property
-      if (typeof uploadResult === 'object' && 'error' in uploadResult && uploadResult.error) {
-        throw uploadResult.error;
+      const hasError = typeof uploadResult === 'object' && 'error' in uploadResult && uploadResult.error;
+      if (hasError) {
+        throw new Error(`Upload failed: ${JSON.stringify(hasError)}`);
       }
       
       // Get path from the result safely
-      const path = typeof uploadResult === 'object' && 'path' in uploadResult 
-        ? uploadResult.path 
-        : uploadResult.toString();
+      let path: string;
+      if (typeof uploadResult === 'string') {
+        path = uploadResult;
+      } else if (typeof uploadResult === 'object' && 'path' in uploadResult) {
+        path = uploadResult.path as string;
+      } else {
+        throw new Error('Invalid upload result format');
+      }
       
       // Create image record in database
       const imageData = await imageService.create({

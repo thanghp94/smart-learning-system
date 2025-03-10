@@ -36,16 +36,19 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         const empData = await employeeService.getById(employeeId);
         setEmployee(empData);
         
-        // Fetch related tasks - Use update instead of getByEntity
+        // Fetch related tasks
         const tasksData = await taskService.getByEmployeeId(employeeId);
         setTasks(tasksData);
         
-        // Fetch attendance records and ensure they have the required xac_nhan property
+        // Fetch attendance records
         const attendanceData = await employeeClockInService.getByEmployee(employeeId);
-        const formattedAttendance: EmployeeClockInOut[] = attendanceData.map(item => ({
+        // Set default values for any missing required properties
+        const formattedAttendance = attendanceData.map(item => ({
           ...item,
-          xac_nhan: item.xac_nhan ?? false // Ensure xac_nhan exists
-        }));
+          xac_nhan: item.xac_nhan ?? false,
+          trang_thai: item.trang_thai || 'pending'
+        })) as EmployeeClockInOut[];
+        
         setAttendance(formattedAttendance);
       } catch (error) {
         console.error('Error fetching employee data:', error);
@@ -110,7 +113,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
       key: 'trang_thai',
       render: (value: string) => (
         <Badge variant={value === 'approved' ? 'success' : 'secondary'}>
-          {formatStatus(value)}
+          {formatStatus(value || 'pending')}
         </Badge>
       ),
     },

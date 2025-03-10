@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { Enrollment } from '@/lib/types';
@@ -38,7 +39,6 @@ class EnrollmentService {
     }
   }
   
-  // Add the new method for fetching enrollments by class and session
   async getByClassAndSession(classId: string, sessionId: string) {
     try {
       const { data, error } = await supabase
@@ -51,6 +51,21 @@ class EnrollmentService {
       return data;
     } catch (error) {
       console.error(`Error fetching enrollments for class ${classId} and session ${sessionId}:`, error);
+      throw error;
+    }
+  }
+
+  async getBySession(sessionId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select('*')
+        .eq('buoi_day_id', sessionId);
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching enrollments for session ${sessionId}:`, error);
       throw error;
     }
   }

@@ -8,7 +8,7 @@ export interface EmployeeClockInOut {
   buoi_day_id?: string;
   xac_nhan: boolean;
   ghi_chu?: string;
-  trang_thai: string;
+  trang_thai?: string; // Make this optional to match the actual data
   created_at?: string;
   updated_at?: string;
 }

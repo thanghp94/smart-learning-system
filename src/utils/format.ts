@@ -45,3 +45,38 @@ export const formatStatus = (status: string | undefined) => {
       return status;
   }
 };
+
+// Add the missing format functions
+export const formatGender = (gender: string | undefined) => {
+  if (!gender) return "N/A";
+  
+  switch (gender.toLowerCase()) {
+    case 'male':
+      return "Nam";
+    case 'female':
+      return "Nữ";
+    case 'other':
+      return "Khác";
+    default:
+      return gender;
+  }
+};
+
+export const formatStudentStatus = (status: string | undefined) => {
+  if (!status) return "N/A";
+  
+  switch (status.toLowerCase()) {
+    case 'active':
+      return "Đang học";
+    case 'completed':
+      return "Đã hoàn thành";
+    case 'pending':
+      return "Chờ xử lý";
+    case 'left':
+      return "Đã nghỉ";
+    case 'suspended':
+      return "Tạm ngưng";
+    default:
+      return status;
+  }
+};

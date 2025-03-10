@@ -80,8 +80,8 @@ class TaskService {
     
     const updatePromises = overdueTasks.map(task => 
       this.update(task.id, { 
-        trang_thai: 'overdue',
-        updated_at: new Date().toISOString()
+        trang_thai: 'overdue'
+        // Remove the invalid updated_at property
       })
     );
     

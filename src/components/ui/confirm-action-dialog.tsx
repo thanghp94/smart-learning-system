@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 interface ConfirmActionDialogProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ interface ConfirmActionDialogProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'default' | 'destructive';
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 }
 
 const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
@@ -30,13 +31,8 @@ const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
   description,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  variant = 'default',
+  variant = 'destructive'
 }) => {
-  const handleConfirm = () => {
-    onConfirm();
-    onClose();
-  };
-
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
@@ -46,12 +42,9 @@ const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={handleConfirm}
-            className={variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
-          >
+          <Button variant={variant} onClick={onConfirm}>
             {confirmText}
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -81,35 +81,39 @@ const Index = () => {
     }
   }).length;
 
-  // Helper function to render icons in a consistent way
-  const renderIcon = (icon: React.ReactNode) => icon;
+  // Convert values to strings for StatsCard
+  const studentsCount = students.length.toString();
+  const activeClassesCount = activeClasses.toString();
+  const todaySessionsCount = todaySessions.toString();
+  const thisWeekSessionsCount = thisWeekSessions.toString();
+  const activeClassesPercentage = `${((activeClasses / (classes.length || 1)) * 100).toFixed(0)}% tổng số lớp`;
 
   return (
     <div className="space-y-6 p-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard 
           title="Tổng Học Sinh" 
-          value={students.length.toString()} 
+          value={studentsCount} 
           description="Học sinh đã đăng ký"
-          icon={renderIcon(<Users className="h-8 w-8 text-blue-600" />)}
+          icon={<Users className="h-8 w-8 text-blue-600" />}
         />
         <StatsCard 
           title="Lớp Đang Hoạt Động" 
-          value={activeClasses.toString()} 
-          description={`${((activeClasses / classes.length) * 100).toFixed(0)}% tổng số lớp`}
-          icon={renderIcon(<BookOpen className="h-8 w-8 text-green-600" />)}
+          value={activeClassesCount} 
+          description={activeClassesPercentage}
+          icon={<BookOpen className="h-8 w-8 text-green-600" />}
         />
         <StatsCard 
           title="Buổi Học Hôm Nay" 
-          value={todaySessions.toString()} 
+          value={todaySessionsCount} 
           description="Lịch trình hôm nay"
-          icon={renderIcon(<Calendar className="h-8 w-8 text-yellow-600" />)}
+          icon={<Calendar className="h-8 w-8 text-yellow-600" />}
         />
         <StatsCard 
           title="Buổi Học Tuần Này" 
-          value={thisWeekSessions.toString()} 
+          value={thisWeekSessionsCount} 
           description="7 ngày qua"
-          icon={renderIcon(<ClipboardList className="h-8 w-8 text-purple-600" />)}
+          icon={<ClipboardList className="h-8 w-8 text-purple-600" />}
         />
       </div>
 

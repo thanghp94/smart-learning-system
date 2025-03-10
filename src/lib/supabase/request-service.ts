@@ -47,8 +47,7 @@ class RequestService {
   // Add updateStatus method
   async updateStatus(id: string, status: string, comments?: string) {
     const updates: Partial<Request> = {
-      trang_thai: status,
-      updated_at: new Date().toISOString()
+      trang_thai: status
     };
     
     if (comments) {

@@ -1,69 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Student, Enrollment, Finance, Event, Evaluation } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { studentService, financeService, eventService, evaluationService } from '@/lib/supabase';
-import { formatDate } from '@/utils/format';
-import { Student, Finance, Event, Evaluation } from '@/lib/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { PenSquare, UserPlus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
+import { financeService, eventService, evaluationService, enrollmentService } from '@/lib/supabase';
+import { formatDate, formatStatus, formatGender, formatStudentStatus } from '@/utils/format';
 import DataTable from '@/components/ui/DataTable';
 import EnrollStudentButton from './EnrollStudentButton';
-import { formatGender, formatStudentStatus } from '@/utils/format';
 
 interface StudentDetailProps {
-  studentId: string;
+  student: Student;
 }
 
-const StudentDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [student, setStudent] = useState<Student | null>(null);
+const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
   const [finances, setFinances] = useState<Finance[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStudentData = async () => {
-      if (!id) return;
-      
+    const fetchRelatedData = async () => {
+      setLoading(true);
       try {
-        setIsLoading(true);
-        
-        // Fetch student details
-        const studentData = await studentService.getById(id);
-        setStudent(studentData);
-        
-        // Fetch related finances
-        const financesData = await financeService.getByEntity('student', id);
-        setFinances(financesData);
-        
-        // Fetch related events
-        const eventsData = await eventService.getByEntity('student', id);
-        setEvents(eventsData);
-        
-        // Fetch evaluations
-        // We need to implement getByStudentId in evaluationService
-        const evaluationsData = await evaluationService.getByStudentId(id);
-        setEvaluations(evaluationsData);
-        
+        const [financeData, eventData, enrollmentData, evaluationData] = await Promise.all([
+          financeService.getByEntity('student', student.id),
+          eventService.getByEntity('student', student.id),
+          enrollmentService.getById(student.id),
+          evaluationService.getById(student.id) // Assuming this works for students or we could update this service
+        ]);
+
+        setFinances(financeData);
+        setEvents(eventData);
+        setEnrollments(Array.isArray(enrollmentData) ? enrollmentData : []);
+        setEvaluations(Array.isArray(evaluationData) ? evaluationData : []);
       } catch (error) {
-        console.error('Error fetching student data:', error);
-        toast({
-          title: 'Error',
-          description: 'Unable to load student data',
-          variant: 'destructive',
-        });
+        console.error('Error fetching student related data:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-    
-    fetchStudentData();
-  }, [id, toast]);
+
+    if (student.id) {
+      fetchRelatedData();
+    }
+  }, [student.id]);
 
   const financeColumns = [
     {
@@ -117,7 +101,7 @@ const StudentDetail: React.FC = () => {
     },
   ];
 
-  if (isLoading) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
@@ -135,7 +119,7 @@ const StudentDetail: React.FC = () => {
           </p>
         </div>
         <div className="space-x-2">
-          <EnrollStudentButton studentId={student.id} />
+          <EnrollStudentButton student={student} />
           <Button asChild>
             <Link to={`/students/edit/${student.id}`} className="flex items-center gap-1">
               <PenSquare className="h-4 w-4" /> Edit
