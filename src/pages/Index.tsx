@@ -1,179 +1,243 @@
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import StatsCard from '@/components/common/StatsCard';
 import RecentActivity from '@/components/dashboard/RecentActivity';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
-import { Users, GraduationCap, Home, BookOpen } from 'lucide-react';
-import { studentService } from '@/lib/supabase/student-service';
-import { classService } from '@/lib/supabase/services/class';
-import { facilityService } from '@/lib/supabase/facility-service';
-import { teachingSessionService } from '@/lib/supabase/teaching-session-service';
-import { activityService } from '@/lib/supabase/activity-service';
-import { formatDate } from '@/utils/format';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { format, subDays } from 'date-fns';
+import { Bell, BookOpen, Calendar, CheckCircle, ClipboardList, Clock, CreditCard, Users } from 'lucide-react';
+import { activityService, classService, enrollmentService, studentService, teachingSessionService } from '@/lib/supabase';
+import { Activity, Class, Student, TeachingSession } from '@/lib/types';
 
-interface ChartData {
-  name: string;
-  total: number;
-}
+// Example chart data
+const chartData = [
+  { name: 'T2', students: 10 },
+  { name: 'T3', students: 15 },
+  { name: 'T4', students: 8 },
+  { name: 'T5', students: 12 },
+  { name: 'T6', students: 18 },
+  { name: 'T7', students: 24 },
+  { name: 'CN', students: 5 },
+];
 
 const Index = () => {
-  const [studentCount, setStudentCount] = useState<number>(0);
-  const [classCount, setClassCount] = useState<number>(0);
-  const [facilityCount, setFacilityCount] = useState<number>(0);
-  const [sessionCount, setSessionCount] = useState<number>(0);
-  const [chartData, setChartData] = useState<ChartData[]>([]);
-  const [activities, setActivities] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [sessions, setSessions] = useState<TeachingSession[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
       try {
-        setLoading(true);
-        
-        // Fetch counts for stats cards
-        const students = await studentService.getAll();
-        const classes = await classService.getAll();
-        const facilities = await facilityService.getAll();
-        const sessions = await teachingSessionService.getAll();
-        
-        setStudentCount(students.length);
-        setClassCount(classes.length);
-        setFacilityCount(facilities.length);
-        setSessionCount(sessions.length);
-        
-        // Generate chart data
-        const now = new Date();
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(now.getMonth() - 6);
-        
-        const monthData: { [key: string]: number } = {};
-        for (let i = 0; i < 6; i++) {
-          const month = new Date();
-          month.setMonth(now.getMonth() - i);
-          const monthName = month.toLocaleString('vi-VN', { month: 'short' });
-          monthData[monthName] = 0;
-        }
-        
-        // Count students by creation month
-        students.forEach(student => {
-          if (!student.created_at) return;
-          
-          const createdAt = new Date(student.created_at);
-          if (createdAt >= sixMonthsAgo) {
-            const monthName = createdAt.toLocaleString('vi-VN', { month: 'short' });
-            if (monthData[monthName] !== undefined) {
-              monthData[monthName] += 1;
-            }
-          }
-        });
-        
-        // Convert to chart data format
-        const chartData = Object.entries(monthData).map(([name, total]) => ({
-          name,
-          total
-        })).reverse();
-        
-        setChartData(chartData);
-        
-        // Fetch recent activities
-        const recentActivities = await activityService.getRecent(10);
-        setActivities(recentActivities);
+        const [studentsData, classesData, sessionsData, activitiesData] = await Promise.all([
+          studentService.getAll(),
+          classService.getAll(),
+          teachingSessionService.getAll(),
+          activityService.getRecent(10)
+        ]);
+
+        setStudents(studentsData);
+        setClasses(classesData);
+        setSessions(sessionsData);
+        setActivities(activitiesData);
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error("Error fetching dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchDashboardData();
+
+    fetchData();
   }, []);
-  
+
+  // Calculate active classes
+  const activeClasses = classes.filter(c => c.tinh_trang === 'active').length;
+
+  // Calculate sessions for today
+  const todaySessions = sessions.filter(s => {
+    try {
+      const sessionDate = new Date(s.ngay_hoc);
+      const today = new Date();
+      return sessionDate.toDateString() === today.toDateString();
+    } catch (e) {
+      return false;
+    }
+  }).length;
+
+  // Calculate sessions for this week
+  const thisWeekSessions = sessions.filter(s => {
+    try {
+      const sessionDate = new Date(s.ngay_hoc);
+      const today = new Date();
+      const sevenDaysAgo = subDays(today, 7);
+      return sessionDate >= sevenDaysAgo && sessionDate <= today;
+    } catch (e) {
+      return false;
+    }
+  }).length;
+
   return (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold tracking-tight">Tổng quan</h2>
-      
+    <div className="space-y-6 p-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Tổng số học sinh"
-          value={loading ? '...' : studentCount.toString()}
-          description="Học sinh đang học"
-          icon={<Users className="h-4 w-4 text-muted-foreground" />}
+        <StatsCard 
+          title="Tổng Học Sinh" 
+          value={students.length.toString()} 
+          description="Học sinh đã đăng ký"
+          icon={<Users className="h-8 w-8 text-blue-600" />}
         />
-        <StatsCard
-          title="Lớp học"
-          value={loading ? '...' : classCount.toString()}
-          description="Tổng số lớp"
-          icon={<GraduationCap className="h-4 w-4 text-muted-foreground" />}
+        <StatsCard 
+          title="Lớp Đang Hoạt Động" 
+          value={activeClasses.toString()} 
+          description={`${((activeClasses / classes.length) * 100).toFixed(0)}% tổng số lớp`}
+          icon={<BookOpen className="h-8 w-8 text-green-600" />}
         />
-        <StatsCard
-          title="Cơ sở"
-          value={loading ? '...' : facilityCount.toString()}
-          description="Cơ sở đang hoạt động"
-          icon={<Home className="h-4 w-4 text-muted-foreground" />}
+        <StatsCard 
+          title="Buổi Học Hôm Nay" 
+          value={todaySessions.toString()} 
+          description="Lịch trình hôm nay"
+          icon={<Calendar className="h-8 w-8 text-yellow-600" />}
         />
-        <StatsCard
-          title="Buổi dạy"
-          value={loading ? '...' : sessionCount.toString()}
-          description="Tổng số buổi dạy"
-          icon={<BookOpen className="h-4 w-4 text-muted-foreground" />}
+        <StatsCard 
+          title="Buổi Học Tuần Này" 
+          value={thisWeekSessions.toString()} 
+          description="7 ngày qua"
+          icon={<ClipboardList className="h-8 w-8 text-purple-600" />}
         />
       </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-7 lg:col-span-4">
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="col-span-2">
           <CardHeader>
-            <CardTitle>Học sinh mới (6 tháng gần đây)</CardTitle>
-            <CardDescription>
-              Số lượng học sinh đăng ký mới theo tháng
-            </CardDescription>
+            <CardTitle>Học Sinh Theo Ngày</CardTitle>
+            <CardDescription>Số lượng học sinh tham gia các buổi học</CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="h-80 flex items-center justify-center">
-                <p>Đang tải dữ liệu...</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={chartData}>
-                  <XAxis
-                    dataKey="name"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `${value}`}
-                  />
-                  <Tooltip />
-                  <Bar
-                    dataKey="total"
-                    fill="currentColor"
-                    radius={[4, 4, 0, 0]}
-                    className="fill-primary"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="students" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
-        <Card className="col-span-7 lg:col-span-3">
+
+        <Card>
           <CardHeader>
-            <CardTitle>Hoạt động gần đây</CardTitle>
-            <CardDescription>
-              Các hoạt động mới nhất trên hệ thống
-            </CardDescription>
+            <CardTitle>Hoạt Động Gần Đây</CardTitle>
+            <CardDescription>10 hoạt động mới nhất</CardDescription>
           </CardHeader>
           <CardContent>
-            <RecentActivity 
-              activities={activities} 
-              isLoading={loading} 
-            />
+            <RecentActivity activities={activities} loading={loading} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Buổi Học</CardTitle>
+            <CardDescription>Quản lý buổi học</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-4">
+              <Calendar className="h-12 w-12 text-primary" />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/teaching-sessions" className="w-full">
+              <Button className="w-full">Xem Buổi Học</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Lịch Dạy</CardTitle>
+            <CardDescription>Lịch dạy của giáo viên</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-4">
+              <Clock className="h-12 w-12 text-primary" />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/teacher-schedule" className="w-full">
+              <Button className="w-full">Xem Lịch Dạy</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Điểm Danh</CardTitle>
+            <CardDescription>Quản lý điểm danh học sinh</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-4">
+              <CheckCircle className="h-12 w-12 text-primary" />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/attendances" className="w-full">
+              <Button className="w-full">Quản Lý Điểm Danh</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Học Phí</CardTitle>
+            <CardDescription>Quản lý học phí</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-4">
+              <CreditCard className="h-12 w-12 text-primary" />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/finance" className="w-full">
+              <Button className="w-full">Quản Lý Học Phí</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tiến Độ Hoàn Thành Mục Tiêu</CardTitle>
+            <CardDescription>Tiến độ hoàn thành các mục tiêu trong tháng</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium">Học sinh mới</div>
+                  <div className="text-sm text-muted-foreground">75%</div>
+                </div>
+                <Progress value={75} />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium">Buổi học đã hoàn thành</div>
+                  <div className="text-sm text-muted-foreground">60%</div>
+                </div>
+                <Progress value={60} />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium">Thu học phí</div>
+                  <div className="text-sm text-muted-foreground">90%</div>
+                </div>
+                <Progress value={90} />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

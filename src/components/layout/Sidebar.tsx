@@ -1,132 +1,123 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Sidebar as ShadcnSidebar, 
-  SidebarContent, 
-  SidebarHeader,
-  SidebarFooter,
-  SidebarTrigger
-} from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-// Define navigation categories to organize sidebar items
-const NAVIGATION_CATEGORIES = [
-  {
-    title: "Dashboard",
-    items: [
-      { title: "Trang Chủ", path: "/", icon: "Home" }
-    ]
-  },
-  {
-    title: "Học Tập",
-    items: [
-      { title: "Học Sinh", path: "/students", icon: "GraduationCap" },
-      { title: "Lớp Học", path: "/classes", icon: "BookOpen" },
-      { title: "Buổi Học", path: "/teaching-sessions", icon: "CalendarDays" },
-      { title: "Bài Học", path: "/lessons", icon: "FileText" },
-      { title: "Ghi Danh", path: "/enrollments", icon: "ClipboardCheck" },
-      { title: "Đánh Giá", path: "/evaluations", icon: "Star" }
-    ]
-  },
-  {
-    title: "Nhân Sự",
-    items: [
-      { title: "Nhân Viên", path: "/employees", icon: "Users" },
-      { title: "Bảng Lương", path: "/payroll", icon: "Wallet" },
-      { title: "Đề Xuất", path: "/requests", icon: "FileQuestion" }
-    ]
-  },
-  {
-    title: "Cơ Sở & Tài Sản",
-    items: [
-      { title: "Cơ Sở", path: "/facilities", icon: "Building" },
-      { title: "Tài Sản", path: "/assets", icon: "Package" },
-      { title: "Chuyển Tài Sản", path: "/assets/transfers", icon: "MoveRight" }
-    ]
-  },
-  {
-    title: "Quản Lý",
-    items: [
-      { title: "Sự Kiện", path: "/events", icon: "Calendar" },
-      { title: "Công Việc", path: "/tasks", icon: "CheckSquare" },
-      { title: "Tài Chính", path: "/finance", icon: "PiggyBank" },
-      { title: "Hình Ảnh", path: "/images", icon: "Image" },
-      { title: "Hồ Sơ", path: "/files", icon: "FolderArchive" },
-      { title: "Liên Hệ", path: "/contacts", icon: "AddressBook" }
-    ]
-  },
-  {
-    title: "Hệ Thống",
-    items: [
-      { title: "Cài Đặt", path: "/settings", icon: "Settings" },
-      { title: "Cơ Sở Dữ Liệu", path: "/database-schema", icon: "Database" }
-    ]
-  }
-];
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChevronLeft, ChevronRight, Home } from "lucide-react";
+import { primaryLinks, secondaryLinks } from "./SidebarLinks";
+import { useMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const { pathname } = useLocation();
+  const [expanded, setExpanded] = useState(true);
+  const isMobile = useMobile();
 
-  // Dynamically get icon component with type assertion
-  const getIconComponent = (iconName: string) => {
-    if (iconName && typeof iconName === "string" && iconName in LucideIcons) {
-      const Icon = (LucideIcons as any)[iconName];
-      return <Icon size={18} />;
+  useEffect(() => {
+    if (isMobile) {
+      setExpanded(false);
+    } else {
+      setExpanded(true);
     }
-    return <LucideIcons.CircleDot size={18} />;
+  }, [isMobile]);
+
+  const toggleSidebar = () => {
+    setExpanded(!expanded);
   };
 
   return (
-    <ShadcnSidebar>
-      <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center space-x-2 px-2">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold">S</span>
-          </div>
-          <div className="font-medium text-lg">Smart Learning</div>
-          <SidebarTrigger className="ml-auto" />
-        </div>
-      </SidebarHeader>
-      
-      <SidebarContent className="pb-6">
-        {NAVIGATION_CATEGORIES.map((category, index) => (
-          <div key={index} className="mt-4 first:mt-2">
-            <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              {category.title}
-            </h3>
-            <nav className="grid gap-1 px-2">
-              {category.items.map((item) => (
-                <Link 
-                  key={item.path} 
-                  to={item.path}
+    <div
+      className={cn(
+        "border-r bg-card fixed inset-y-0 z-30 flex h-full flex-col transition-all duration-300",
+        expanded ? "w-64" : "w-[60px]"
+      )}
+    >
+      <div className="border-b px-3 py-2 h-[57px] flex items-center justify-between">
+        {expanded ? (
+          <Link to="/" className="flex items-center">
+            <span className="text-lg font-bold">Admin Dashboard</span>
+          </Link>
+        ) : (
+          <span className="mx-auto">
+            <Home className="h-5 w-5" />
+          </span>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={toggleSidebar}
+        >
+          {expanded ? (
+            <ChevronLeft className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+      <ScrollArea className="flex-1">
+        <nav className="flex flex-col gap-2 p-2">
+          <div className="py-2">
+            <div
+              className={cn(
+                "mb-2 px-4 text-xs font-semibold tracking-tight",
+                expanded ? "block" : "hidden"
+              )}
+            >
+              Quản lý Chính
+            </div>
+            <div className="flex flex-col gap-1">
+              {primaryLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm",
-                    currentPath === item.path && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    "flex h-9 items-center rounded-md px-4 transition-colors",
+                    pathname === link.href
+                      ? "bg-accent text-accent-foreground font-medium"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    !expanded && "justify-center px-2"
                   )}
                 >
-                  {getIconComponent(item.icon)}
-                  <span>{item.title}</span>
+                  {link.icon}
+                  {expanded && <span className="ml-2">{link.name}</span>}
                 </Link>
               ))}
-            </nav>
+            </div>
           </div>
-        ))}
-      </SidebarContent>
-      
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <div className="flex justify-center">
-          <Button variant="outline" size="sm" className="w-full">
-            <LucideIcons.LogOut className="mr-2 h-4 w-4" />
-            Đăng xuất
-          </Button>
-        </div>
-      </SidebarFooter>
-    </ShadcnSidebar>
+
+          <div className="py-2">
+            <div
+              className={cn(
+                "mb-2 px-4 text-xs font-semibold tracking-tight",
+                expanded ? "block" : "hidden"
+              )}
+            >
+              Quản lý Khác
+            </div>
+            <div className="flex flex-col gap-1">
+              {secondaryLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={cn(
+                    "flex h-9 items-center rounded-md px-4 transition-colors",
+                    pathname === link.href
+                      ? "bg-accent text-accent-foreground font-medium"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    !expanded && "justify-center px-2"
+                  )}
+                >
+                  {link.icon}
+                  {expanded && <span className="ml-2">{link.name}</span>}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </nav>
+      </ScrollArea>
+    </div>
   );
-};
+}
 
 export default Sidebar;

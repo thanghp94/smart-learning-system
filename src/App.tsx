@@ -20,6 +20,7 @@ import Assets from "@/pages/Assets";
 import Finance from "@/pages/Finance";
 import Requests from "@/pages/Requests";
 import DatabaseSchema from "@/pages/DatabaseSchema";
+import TeacherSchedule from "@/pages/TeacherSchedule";
 import NotFound from "@/pages/NotFound";
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
           <Route path="facilities" element={<Facilities />} />
           <Route path="lessons" element={<Lessons />} />
           <Route path="teaching-sessions" element={<TeachingSessions />} />
+          <Route path="teacher-schedule" element={<TeacherSchedule />} />
           <Route path="events" element={<Events />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="enrollments" element={<Enrollments />} />

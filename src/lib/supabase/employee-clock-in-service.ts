@@ -5,7 +5,7 @@ import { fetchAll, fetchById, insert, update, remove } from './base-service';
 export interface EmployeeClockIn {
   id: string;
   nhan_vien_id: string;
-  ngay: string | Date;
+  ngay: string;
   thoi_gian_bat_dau?: string;
   thoi_gian_ket_thuc?: string;
   buoi_day_id?: string;
