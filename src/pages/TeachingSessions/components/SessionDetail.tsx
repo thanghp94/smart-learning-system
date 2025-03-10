@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +15,19 @@ import {
   StudentsTab,
   TeacherTab
 } from './SessionTabs';
+
+interface StudentData {
+  id?: string;
+  ten_hoc_sinh?: string;
+  hinh_anh_hoc_sinh?: string | null;
+  ma_hoc_sinh?: string;
+}
+
+interface EnrollmentWithStudent {
+  id: string;
+  hoc_sinh_id: string;
+  students?: StudentData;
+}
 
 export interface SessionDetailProps {
   session?: any;
@@ -107,9 +119,8 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           .eq('lop_chi_tiet_id', currentSession.lop_chi_tiet_id);
         
         if (!enrollmentsError && enrollmentsData) {
-          // Sửa: Truy cập đúng dữ liệu học sinh từ enrollmentsData
-          const students = enrollmentsData.map(enrollment => {
-            const studentData = enrollment.students || {};
+          const students = (enrollmentsData as EnrollmentWithStudent[]).map(enrollment => {
+            const studentData = enrollment.students || {} as StudentData;
             return {
               id: studentData.id || enrollment.hoc_sinh_id,
               name: studentData.ten_hoc_sinh || 'Unknown',
