@@ -1,61 +1,94 @@
 
-import { supabase } from './client';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { Request } from '@/lib/types';
+import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
+import { supabase } from './client';
 
-class RequestService {
+export const requestService = {
   async getAll() {
     return fetchAll<Request>('requests');
-  }
+  },
   
   async getById(id: string) {
     return fetchById<Request>('requests', id);
-  }
+  },
   
-  async create(request: Partial<Request>) {
-    return insert<Request>('requests', request);
-  }
+  async create(data: Partial<Request>) {
+    try {
+      const result = await insert<Request>('requests', data);
+      await logActivity('create', 'request', data.title || 'New request', 'system', 'completed');
+      return result;
+    } catch (error) {
+      console.error('Error creating request:', error);
+      throw error;
+    }
+  },
   
-  async update(id: string, updates: Partial<Request>) {
-    return update<Request>('requests', id, updates);
-  }
+  async update(id: string, data: Partial<Request>) {
+    try {
+      const result = await update<Request>('requests', id, data);
+      await logActivity('update', 'request', data.title || 'Update request', 'system', 'completed');
+      return result;
+    } catch (error) {
+      console.error('Error updating request:', error);
+      throw error;
+    }
+  },
   
   async delete(id: string) {
-    return remove('requests', id);
-  }
+    try {
+      await remove('requests', id);
+      await logActivity('delete', 'request', 'Delete request', 'system', 'completed');
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      throw error;
+    }
+  },
+  
+  async updateStatus(id: string, status: string, processedDate?: string) {
+    try {
+      const data: Partial<Request> = { 
+        status,
+        processed_at: processedDate || new Date().toISOString()
+      };
+      
+      const result = await update<Request>('requests', id, data);
+      await logActivity('update', 'request', `Request status updated to ${status}`, 'system', 'completed');
+      return result;
+    } catch (error) {
+      console.error('Error updating request status:', error);
+      throw error;
+    }
+  },
   
   async getByStatus(status: string) {
-    const { data, error } = await supabase
-      .from('requests')
-      .select('*')
-      .eq('trang_thai', status);
-    
-    if (error) throw error;
-    return data as Request[];
-  }
-  
-  async getByRequester(requester: string) {
-    const { data, error } = await supabase
-      .from('requests')
-      .select('*')
-      .eq('nguoi_yeu_cau', requester);
-    
-    if (error) throw error;
-    return data as Request[];
-  }
-  
-  // Add updateStatus method
-  async updateStatus(id: string, status: string, comments?: string) {
-    const updates: Partial<Request> = {
-      trang_thai: status
-    };
-    
-    if (comments) {
-      updates.ghi_chu = comments;
+    try {
+      const { data, error } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching requests with status ${status}:`, error);
+      throw error;
     }
-    
-    return this.update(id, updates);
-  }
-}
-
-export const requestService = new RequestService();
+  },
+  
+  async getByUser(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('requester', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching requests for user ${userId}:`, error);
+      throw error;
+    }
+  },
+};

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import RecentActivity from "@/components/dashboard/RecentActivity";
 import { Users, GraduationCap, School, Calendar } from "lucide-react";
 import StatsCard from "@/components/common/StatsCard";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,8 @@ const Index = () => {
         setStudents(studentsData);
         setClasses(classesData);
         setEmployees(employeesData);
-        setActivities(activitiesData as Activity[]);
+        // Type assertion to Activity[]
+        setActivities(activitiesData as unknown as Activity[]);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -60,17 +61,12 @@ const Index = () => {
   const calculateUpcomingClasses = () => {
     const now = new Date();
     return classes.filter(c => {
-      if (c.tu_ngay) {
-        const startDate = new Date(c.tu_ngay);
+      if (c.ngay_bat_dau) { // Using ngay_bat_dau instead of tu_ngay
+        const startDate = new Date(c.ngay_bat_dau);
         return startDate > now;
       }
       return false;
     }).length;
-  };
-
-  const renderIcon = (icon: React.ReactNode): string => {
-    // Convert the icon to a string representation
-    return icon ? "Icon" : "";
   };
 
   return (

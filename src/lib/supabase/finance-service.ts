@@ -109,6 +109,48 @@ class FinanceService {
     }
   }
 
+  async getReceiptTemplateById(id: string) {
+    try {
+      const template = await fetchById<ReceiptTemplate>('receipt_templates', id);
+      return template;
+    } catch (error) {
+      console.error(`Error fetching receipt template ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async createReceiptTemplate(template: Partial<ReceiptTemplate>) {
+    try {
+      const result = await insert<ReceiptTemplate>('receipt_templates', template);
+      await logActivity('create', 'receipt_template', template.name || 'Mẫu biên lai mới', 'system', 'completed');
+      return result;
+    } catch (error) {
+      console.error('Error creating receipt template:', error);
+      throw error;
+    }
+  }
+
+  async updateReceiptTemplate(id: string, template: Partial<ReceiptTemplate>) {
+    try {
+      const result = await update<ReceiptTemplate>('receipt_templates', id, template);
+      await logActivity('update', 'receipt_template', template.name || 'Cập nhật mẫu biên lai', 'system', 'completed');
+      return result;
+    } catch (error) {
+      console.error('Error updating receipt template:', error);
+      throw error;
+    }
+  }
+
+  async deleteReceiptTemplate(id: string) {
+    try {
+      await remove('receipt_templates', id);
+      await logActivity('delete', 'receipt_template', 'Xóa mẫu biên lai', 'system', 'completed');
+    } catch (error) {
+      console.error('Error deleting receipt template:', error);
+      throw error;
+    }
+  }
+
   async getDefaultReceiptTemplate(type: 'income' | 'expense') {
     try {
       const { data, error } = await supabase
@@ -135,7 +177,7 @@ class FinanceService {
 
       let template: ReceiptTemplate | null = null;
       if (templateId) {
-        template = await fetchById<ReceiptTemplate>('receipt_templates', templateId);
+        template = await this.getReceiptTemplateById(templateId);
       } else {
         template = await this.getDefaultReceiptTemplate(finance.loai_thu_chi as 'income' | 'expense');
       }

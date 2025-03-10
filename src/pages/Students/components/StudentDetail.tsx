@@ -1,17 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Student, Finance, Event, Evaluation } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { financeService, eventService, evaluationService } from '@/lib/supabase';
+import { Pencil, Download, Calendar } from 'lucide-react';
+import { Student } from '@/lib/types';
+import { Link } from 'react-router-dom';
 import DataTable from '@/components/ui/DataTable';
+import EnrollStudentButton from './EnrollStudentButton';
+import { enrollmentService, financeService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
-// Helper functions for formatting
 const formatGender = (gender: string | undefined) => {
   if (!gender) return 'N/A';
   return gender === 'male' ? 'Nam' : gender === 'female' ? 'Nữ' : gender;
@@ -19,11 +19,11 @@ const formatGender = (gender: string | undefined) => {
 
 const formatStudentStatus = (status: string | undefined) => {
   if (!status) return 'N/A';
-  switch (status) {
+  switch(status) {
     case 'active': return 'Đang học';
+    case 'inactive': return 'Nghỉ học';
+    case 'waiting': return 'Chờ nhập học';
     case 'graduated': return 'Đã tốt nghiệp';
-    case 'on_hold': return 'Tạm dừng';
-    case 'withdrawn': return 'Đã rút';
     default: return status;
   }
 };
@@ -33,212 +33,263 @@ interface StudentDetailProps {
 }
 
 const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
-  const [finances, setFinances] = useState<Finance[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [loading, setLoading] = useState({
-    finances: true,
-    events: true,
-    evaluations: true
-  });
+  const [enrollments, setEnrollments] = useState([]);
+  const [finances, setFinances] = useState([]);
+  const [isLoadingFinances, setIsLoadingFinances] = useState(true);
+  const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRelatedData = async () => {
+    const loadData = async () => {
       try {
-        // Get student finances
-        const financeData = await financeService.getByEntity('student', student.id);
-        setFinances(financeData);
-        
-        // Get student events
-        const eventData = await eventService.getByEntity('student', student.id);
-        setEvents(eventData);
-        
-        // Get student evaluations
-        const evaluationData = await evaluationService.getByEntity('student', student.id);
-        setEvaluations(evaluationData);
+        setIsLoadingEnrollments(true);
+        const enrollmentsData = await enrollmentService.getByStudent(student.id);
+        setEnrollments(enrollmentsData);
       } catch (error) {
-        console.error('Error fetching student related data:', error);
-      } finally {
-        setLoading({
-          finances: false,
-          events: false,
-          evaluations: false
+        console.error("Error loading enrollments:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải dữ liệu đăng ký lớp học",
+          variant: "destructive",
         });
+      } finally {
+        setIsLoadingEnrollments(false);
+      }
+
+      try {
+        setIsLoadingFinances(true);
+        const financesData = await financeService.getByStudent(student.id);
+        setFinances(financesData);
+      } catch (error) {
+        console.error("Error loading finances:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải dữ liệu tài chính",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingFinances(false);
       }
     };
-    
-    fetchRelatedData();
-  }, [student.id]);
+
+    loadData();
+  }, [student.id, toast]);
+
+  const basicInfoColumns = [
+    {
+      title: "Mã học sinh",
+      key: "ma_hoc_sinh",
+      render: () => student.ma_hoc_sinh || "N/A",
+    },
+    {
+      title: "Họ và tên",
+      key: "ho_va_ten",
+      render: () => student.ho_va_ten || "N/A",
+    },
+    {
+      title: "Ngày sinh",
+      key: "ngay_sinh",
+      render: () => student.ngay_sinh ? format(new Date(student.ngay_sinh), 'dd/MM/yyyy') : "N/A",
+    },
+    {
+      title: "Giới tính",
+      key: "gioi_tinh",
+      render: () => formatGender(student.gioi_tinh),
+    },
+    {
+      title: "Trạng thái",
+      key: "trang_thai",
+      render: () => (
+        <Badge variant={student.trang_thai === 'active' ? 'success' : 'secondary'}>
+          {formatStudentStatus(student.trang_thai)}
+        </Badge>
+      ),
+    },
+  ];
+
+  const parentInfoColumns = [
+    {
+      title: "Họ tên Phụ huynh",
+      key: "ten_phu_huynh",
+      render: () => student.ten_ph || "N/A",
+    },
+    {
+      title: "Số điện thoại",
+      key: "so_dien_thoai",
+      render: () => student.so_dien_thoai || "N/A",
+    },
+    {
+      title: "Email",
+      key: "email",
+      render: () => student.email_ph1 || "N/A",
+    },
+  ];
+
+  const schoolInfoColumns = [
+    {
+      title: "Trường học",
+      key: "truong",
+      render: () => student.truong || "N/A",
+    },
+    {
+      title: "Lớp học",
+      key: "lop",
+      render: () => student.lop || "N/A",
+    },
+  ];
+
+  const handleEnrollmentComplete = () => {
+    enrollmentService.getByStudent(student.id).then(data => {
+      setEnrollments(data);
+    });
+  };
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Thông tin cá nhân</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-muted-foreground">Mã học sinh</Label>
-              <div className="text-xl font-semibold">{student.ma_hs || 'N/A'}</div>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Trạng thái</Label>
-              <div>
-                <Badge variant={student.trang_thai === 'active' ? 'success' : 'secondary'}>
-                  {formatStudentStatus(student.trang_thai)}
-                </Badge>
-              </div>
-            </div>
-          </div>
-          
-          <Separator />
-          
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-muted-foreground">Họ tên</Label>
-              <div className="font-medium">{student.ho_ten || 'N/A'}</div>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Giới tính</Label>
-              <div className="font-medium">{formatGender(student.gioi_tinh)}</div>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Ngày sinh</Label>
-              <div className="font-medium">
-                {student.ngay_sinh ? format(new Date(student.ngay_sinh), 'dd/MM/yyyy') : 'N/A'}
-              </div>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Tên phụ huynh</Label>
-              <div className="font-medium">{student.ten_PH || 'N/A'}</div>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Số điện thoại phụ huynh</Label>
-              <div className="font-medium">{student.so_dien_thoai || 'N/A'}</div>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Email phụ huynh</Label>
-              <div className="font-medium">{student.email_PH || 'N/A'}</div>
-            </div>
-          </div>
-          
-          <Separator />
-          
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-muted-foreground">Trường học</Label>
-              <div className="font-medium">{student.truong_hoc || 'N/A'}</div>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Lớp học</Label>
-              <div className="font-medium">{student.lop_hoc || 'N/A'}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Tabs defaultValue="finances">
-        <TabsList>
-          <TabsTrigger value="finances">Tài chính</TabsTrigger>
-          <TabsTrigger value="events">Sự kiện</TabsTrigger>
-          <TabsTrigger value="evaluations">Đánh giá</TabsTrigger>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Thông tin học sinh</h2>
+          <p className="text-muted-foreground">Thông tin chi tiết về học sinh</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <EnrollStudentButton 
+            student={student.id}
+            onEnrollmentComplete={handleEnrollmentComplete}
+          />
+          <Button asChild variant="outline">
+            <Link to={`/students/edit/${student.id}`}>
+              <Pencil className="h-4 w-4 mr-2" /> Sửa thông tin
+            </Link>
+          </Button>
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" /> Xuất
+          </Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="basic-info">
+        <TabsList className="mb-4">
+          <TabsTrigger value="basic-info">Thông tin cơ bản</TabsTrigger>
+          <TabsTrigger value="enrollments">Đăng ký lớp học ({enrollments.length})</TabsTrigger>
+          <TabsTrigger value="finances">Tài chính ({finances.length})</TabsTrigger>
+          <TabsTrigger value="attendance">Điểm danh</TabsTrigger>
+          <TabsTrigger value="notes">Ghi chú</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="basic-info">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Thông tin học sinh</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={basicInfoColumns}
+                  data={[student]}
+                  noDataMessage="Không có thông tin học sinh"
+                  showHeader={false}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Thông tin phụ huynh</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={parentInfoColumns}
+                  data={[student]}
+                  noDataMessage="Không có thông tin phụ huynh"
+                  showHeader={false}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Thông tin trường học</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={schoolInfoColumns}
+                  data={[student]}
+                  noDataMessage="Không có thông tin trường học"
+                  showHeader={false}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Ghi chú</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">{student.ghi_chu || 'Không có ghi chú'}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="enrollments">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Đăng ký lớp học</CardTitle>
+              <Button variant="outline" size="sm">
+                <Calendar className="h-4 w-4 mr-1" /> Lịch học
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                {isLoadingEnrollments ? 'Đang tải...' : (
+                  enrollments.length === 0 ? 'Chưa đăng ký lớp học nào' : 'Danh sách lớp học đã đăng ký'
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
         
         <TabsContent value="finances">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Lịch sử tài chính</CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {/* Add functionality to add finance record */}}
-              >
-                Thêm giao dịch
-              </Button>
+            <CardHeader>
+              <CardTitle>Tài chính</CardTitle>
             </CardHeader>
             <CardContent>
-              <DataTable
-                columns={[
-                  { title: "Ngày", key: "ngay", sortable: true },
-                  { title: "Loại", key: "loai_thu_chi", sortable: true },
-                  { title: "Diễn giải", key: "dien_giai" },
-                  { title: "Số tiền", key: "tong_tien", sortable: true },
-                  { title: "Tình trạng", key: "tinh_trang", sortable: true }
-                ]}
-                data={finances}
-                isLoading={loading.finances}
-                searchable={true}
-                searchPlaceholder="Tìm kiếm giao dịch..."
-              />
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                {isLoadingFinances ? 'Đang tải...' : (
+                  finances.length === 0 ? 'Không có giao dịch tài chính' : 'Danh sách giao dịch tài chính'
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="events">
+
+        <TabsContent value="attendance">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Sự kiện</CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {/* Add functionality to add event */}}
-              >
-                Thêm sự kiện
-              </Button>
+            <CardHeader>
+              <CardTitle>Điểm danh</CardTitle>
             </CardHeader>
             <CardContent>
-              <DataTable
-                columns={[
-                  { title: "Ngày", key: "ngay_bat_dau", sortable: true },
-                  { title: "Tên sự kiện", key: "tieu_de", sortable: true },
-                  { title: "Loại", key: "loai" }
-                ]}
-                data={events}
-                isLoading={loading.events}
-                searchable={true}
-                searchPlaceholder="Tìm kiếm sự kiện..."
-              />
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                Thông tin điểm danh sẽ hiển thị ở đây
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="evaluations">
+
+        <TabsContent value="notes">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Đánh giá</CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {/* Add functionality to add evaluation */}}
-              >
-                Thêm đánh giá
-              </Button>
+            <CardHeader>
+              <CardTitle>Ghi chú</CardTitle>
             </CardHeader>
             <CardContent>
-              <DataTable
-                columns={[
-                  { title: "Ngày", key: "ngay", sortable: true },
-                  { title: "Lớp", key: "lop_chi_tiet_id" },
-                  { title: "Giáo viên", key: "giao_vien" },
-                  { title: "Điểm", key: "diem", sortable: true }
-                ]}
-                data={evaluations}
-                isLoading={loading.evaluations}
-                searchable={true}
-                searchPlaceholder="Tìm kiếm đánh giá..."
-              />
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                Các ghi chú về học sinh sẽ hiển thị ở đây
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-      
-      <Button 
-        onClick={() => {/* Functionality to enroll student */}} 
-        className="w-full"
-      >
-        Ghi danh vào lớp
-      </Button>
     </div>
   );
 };

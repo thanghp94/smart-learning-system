@@ -1,160 +1,161 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { UploadCloud, X } from 'lucide-react';
-import { imageService } from '@/lib/supabase';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { imageService } from '@/lib/supabase';
+import { Spinner } from '@/components/ui/spinner';
 
 interface ImageUploadFormProps {
   sessionId: string;
-  onUploadComplete: (imageUrl: string) => void;
-  entityType?: string;
-  entityId?: string;
-  onSuccess?: () => Promise<void>;
+  onUploadComplete: (imageId: string, path: string) => void;
 }
 
-const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
-  sessionId,
-  onUploadComplete,
-  entityType = 'teaching_session',
-  entityId,
-  onSuccess
+const ImageUploadForm: React.FC<ImageUploadFormProps> = ({ 
+  sessionId, 
+  onUploadComplete 
 }) => {
-  const [file, setFile] = useState<File | null>(null);
-  const [caption, setCaption] = useState('');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      setFile(null);
-      setPreviewUrl(null);
-      return;
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreview(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-    
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile);
-    
-    // Create preview URL
-    const objectUrl = URL.createObjectURL(selectedFile);
-    setPreviewUrl(objectUrl);
-    
-    // Clean up preview URL when component unmounts
-    return () => URL.revokeObjectURL(objectUrl);
   };
 
   const handleUpload = async () => {
-    if (!file || !sessionId) return;
+    if (!selectedFile) return;
     
     setIsUploading(true);
     try {
-      // Create a new image record
-      const uploadData = {
-        entity_type: entityType || 'teaching_session',
-        entity_id: entityId || sessionId,
-        caption: caption || file.name,
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size
-      };
+      const formData = new FormData();
+      formData.append('file', selectedFile);
       
-      const newImage = await imageService.create(uploadData);
+      // Upload the image
+      const uploadResult = await imageService.upload(formData);
       
-      if (newImage && newImage.id) {
-        // Get upload URL
-        const imageUrl = '/uploads/images/' + newImage.id + '/' + file.name;
+      if (uploadResult) {
+        // Create an entry in the images table
+        const imageData = {
+          entity_type: 'teaching_session',
+          entity_id: sessionId,
+          file_name: uploadResult.path,
+          url: uploadResult.publicUrl,
+          mime_type: selectedFile.type,
+          size: selectedFile.size,
+          description: 'Session image'
+        };
         
-        // Signal success
+        const savedImage = await imageService.create(imageData);
+        
         toast({
-          title: "Thành công",
-          description: "Đã tải lên hình ảnh buổi học",
+          title: "Upload thành công",
+          description: "Hình ảnh đã được tải lên",
         });
         
-        // Call the completion handlers
-        onUploadComplete(imageUrl);
-        if (onSuccess) {
-          await onSuccess();
-        }
+        // Reset state
+        setSelectedFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         
-        // Reset form
-        setFile(null);
-        setCaption('');
-        setPreviewUrl(null);
-      } else {
-        throw new Error('Upload failed');
+        // Notify parent component
+        onUploadComplete(savedImage.id, uploadResult.publicUrl);
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('Error uploading image:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể tải lên hình ảnh. Vui lòng thử lại sau.",
-        variant: "destructive",
+        title: "Lỗi tải lên",
+        description: "Đã xảy ra lỗi khi tải hình ảnh. Vui lòng thử lại.",
+        variant: "destructive"
       });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleRemovePreview = () => {
-    setFile(null);
-    setPreviewUrl(null);
+  const clearSelection = () => {
+    setSelectedFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <Card>
-      <CardContent className="pt-4">
-        <div className="space-y-4">
-          <div className="flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-gray-400 transition-colors" onClick={() => document.getElementById('file-upload')?.click()}>
-            {previewUrl ? (
-              <div className="relative">
-                <img src={previewUrl} alt="Preview" className="max-h-40 rounded" />
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemovePreview();
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center">
-                <UploadCloud className="mx-auto h-10 w-10 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-500">Nhấn để chọn hình ảnh</p>
-              </div>
-            )}
-            <input
-              id="file-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Tải lên hình ảnh</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {imagePreview ? (
+          <div className="relative">
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              className="w-full h-auto rounded-md max-h-[200px] object-contain bg-gray-100"
             />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="absolute top-2 right-2 h-8 w-8 bg-white hover:bg-red-50"
+              onClick={clearSelection}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          
-          <div>
-            <Input
-              placeholder="Caption (tùy chọn)"
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-            />
-          </div>
-          
-          <Button
-            onClick={handleUpload}
-            disabled={!file || isUploading}
-            className="w-full"
+        ) : (
+          <div 
+            className="border-2 border-dashed rounded-md p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
           >
-            {isUploading ? 'Đang tải lên...' : 'Tải lên'}
-          </Button>
-        </div>
+            <ImageIcon className="h-10 w-10 text-gray-400 mb-2" />
+            <p className="text-sm text-gray-500">Chọn hoặc kéo thả hình ảnh vào đây</p>
+            <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF (tối đa 5MB)</p>
+          </div>
+        )}
+        <Input 
+          type="file" 
+          ref={fileInputRef}
+          className="hidden" 
+          accept="image/*"
+          onChange={handleFileChange}
+        />
       </CardContent>
+      <CardFooter className="flex justify-end space-x-2">
+        <Button 
+          variant="ghost" 
+          onClick={clearSelection}
+          disabled={!selectedFile || isUploading}
+        >
+          Hủy
+        </Button>
+        <Button 
+          onClick={handleUpload}
+          disabled={!selectedFile || isUploading}
+        >
+          {isUploading ? (
+            <>
+              <Spinner className="mr-2" size="sm" /> Đang tải...
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4 mr-2" /> Tải lên
+            </>
+          )}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
