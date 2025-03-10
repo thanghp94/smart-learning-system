@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Filter, X, Building, User, GraduationCap, Factory, Check } from 'lucide-react';
+import { Filter, X, Building, User, GraduationCap, Factory, Check, Tag, Calendar } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -20,12 +20,12 @@ import { useIsMobile } from '@/hooks/use-mobile';
 export type FilterOption = {
   label: string;
   value: string;
-  type: 'facility' | 'employee' | 'student' | 'status' | 'other';
+  type: 'facility' | 'employee' | 'student' | 'status' | 'other' | 'date' | 'category';
 };
 
 export type FilterCategory = {
   name: string;
-  type: 'facility' | 'employee' | 'student' | 'status' | 'other';
+  type: 'facility' | 'employee' | 'student' | 'status' | 'other' | 'date' | 'category';
   options: FilterOption[];
 };
 
@@ -33,15 +33,24 @@ interface FilterButtonProps {
   onFilter: (filters: Record<string, string>) => void;
   categories: FilterCategory[];
   label?: string;
+  initialFilters?: Record<string, string>;
 }
 
 const FilterButton: React.FC<FilterButtonProps> = ({ 
   onFilter, 
   categories, 
-  label = "Lọc"
+  label = "Lọc",
+  initialFilters = {}
 }) => {
-  const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, string>>(initialFilters);
   const isMobile = useIsMobile();
+  
+  useEffect(() => {
+    if (Object.keys(initialFilters).length > 0) {
+      setActiveFilters(initialFilters);
+      onFilter(initialFilters);
+    }
+  }, [initialFilters, onFilter]);
   
   const handleFilterChange = (category: string, value: string) => {
     const newFilters = {
@@ -75,6 +84,12 @@ const FilterButton: React.FC<FilterButtonProps> = ({
         return <User className="h-4 w-4 mr-2" />;
       case 'student':
         return <GraduationCap className="h-4 w-4 mr-2" />;
+      case 'status':
+        return <Tag className="h-4 w-4 mr-2" />;
+      case 'date':
+        return <Calendar className="h-4 w-4 mr-2" />;
+      case 'category':
+        return <Tag className="h-4 w-4 mr-2" />;
       case 'other':
         return <Factory className="h-4 w-4 mr-2" />;
       default:
@@ -85,7 +100,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
   return (
     <div className="flex flex-wrap gap-1 items-center">
       {!isMobile && (
-        <Button variant="outline" size="sm" className="h-8 mr-1">
+        <Button variant="outline" size="sm" className="h-8 mr-1" disabled>
           <Filter className="h-4 w-4 mr-2" />
           {label}
         </Button>

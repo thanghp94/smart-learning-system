@@ -166,7 +166,11 @@ const Employees = () => {
     {
       title: "Họ và tên",
       key: "ten_nhan_su",
+      thumbnail: true,
       sortable: true,
+      render: (value: string, employee: Employee) => (
+        <span className="ml-2">{value}</span>
+      ),
     },
     {
       title: "Bộ phận",
@@ -200,6 +204,14 @@ const Employees = () => {
 
   const tableActions = (
     <div className="flex items-center space-x-2">
+      <Button size="sm" className="h-8" onClick={handleAddEmployee}>
+        <Plus className="h-4 w-4 mr-1" /> Thêm Nhân Viên
+      </Button>
+    </div>
+  );
+
+  const tableFilters = (
+    <div className="flex items-center space-x-2">
       <FilterButton 
         categories={filterCategories} 
         onFilter={setFilters}
@@ -209,9 +221,6 @@ const Employees = () => {
         filename="Danh_sach_nhan_vien" 
         label="Xuất dữ liệu"
       />
-      <Button size="sm" className="h-8" onClick={handleAddEmployee}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Nhân Viên
-      </Button>
     </div>
   );
 
@@ -220,6 +229,7 @@ const Employees = () => {
       title="Nhân Viên"
       description="Quản lý thông tin nhân viên trong hệ thống"
       actions={tableActions}
+      filters={tableFilters}
     >
       {connectionError && (
         <Alert variant="destructive" className="mb-4">

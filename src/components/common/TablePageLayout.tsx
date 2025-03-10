@@ -7,17 +7,26 @@ interface TablePageLayoutProps {
   description: string;
   children: ReactNode;
   actions?: ReactNode;
+  filters?: ReactNode;
 }
 
 const TablePageLayout = ({
   title,
   description,
   children,
-  actions
+  actions,
+  filters
 }: TablePageLayoutProps) => {
   return (
     <div className="container mx-auto px-4 py-6">
       <PageHeader title={title} description={description} rightContent={actions} />
+      
+      {filters && (
+        <div className="mb-4">
+          {filters}
+        </div>
+      )}
+      
       <div className="mt-6">
         {children}
       </div>

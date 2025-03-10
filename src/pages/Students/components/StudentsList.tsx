@@ -103,13 +103,11 @@ const StudentsList: React.FC<StudentsListProps> = ({
   const columns = [
     {
       title: 'Tên học sinh',
-      key: 'ten_hoc_sinh',
+      key: 'ho_va_ten',
+      thumbnail: true,
       sortable: true,
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          {value}
-        </div>
+      render: (value: string, student: Student) => (
+        <span className="ml-2">{student.ten_hoc_sinh || value}</span>
       ),
     },
     {

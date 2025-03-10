@@ -1,225 +1,211 @@
+
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Briefcase, Users, Calendar, Activity } from 'lucide-react';
-import { classService, studentService, eventService, facilityService } from '@/lib/supabase';
-import StatsCard from '@/components/common/StatsCard';
-import RecentActivity from '@/components/dashboard/RecentActivity';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/common/PageHeader';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { BarChart, AreaChart } from '@/components/ui/chart';
+import { CalendarCheck, GraduationCap, Users, Book } from 'lucide-react';
+import RecentActivity from '@/components/dashboard/RecentActivity';
+import { supabase } from '@/lib/supabase/client';
 
-// Types for dashboard data
-interface DashboardStats {
-  totalStudents: number;
-  totalClasses: number;
-  upcomingEvents: number;
-  totalFacilities: number;
-}
-
-interface DashboardActivity {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  action: string;
-  entity?: string;
+interface CountData {
+  students: number;
+  classes: number;
+  employees: number;
+  sessions: number;
 }
 
 const Index = () => {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalStudents: 0,
-    totalClasses: 0,
-    upcomingEvents: 0,
-    totalFacilities: 0
+  const [countData, setCountData] = useState<CountData>({
+    students: 0,
+    classes: 0,
+    employees: 0,
+    sessions: 0
   });
-  const [activities, setActivities] = useState<DashboardActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchCounts = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        
-        // Fetch stats
-        const [students, classes, events, facilities] = await Promise.all([
-          studentService.getAll(),
-          classService.getAll(),
-          eventService.getAll(),
-          facilityService.getAll()
-        ]);
-        
-        setStats({
-          totalStudents: students.length,
-          totalClasses: classes.length,
-          upcomingEvents: events.filter(e => new Date(e.ngay_bat_dau) > new Date()).length,
-          totalFacilities: facilities.length
-        });
-        
-        // Set dummy activities for now
-        setActivities([
-          {
-            id: '1',
-            title: 'New Student Enrolled',
-            description: 'Nguyen Van A enrolled in Math 101',
-            date: new Date().toISOString(),
-            action: 'enrolled',
-            entity: 'student'
-          },
-          {
-            id: '2',
-            title: 'Class Started',
-            description: 'English 202 class started today',
-            date: new Date().toISOString(),
-            action: 'started',
-            entity: 'class'
-          },
-          {
-            id: '3',
-            title: 'New Event Created',
-            description: 'Summer Festival event was created',
-            date: new Date().toISOString(),
-            action: 'created',
-            entity: 'event'
-          }
-        ]);
-        
+        // Fetch students count
+        const { count: studentsCount, error: studentsError } = await supabase
+          .from('students')
+          .select('*', { count: 'exact', head: true });
+
+        // Fetch classes count
+        const { count: classesCount, error: classesError } = await supabase
+          .from('classes')
+          .select('*', { count: 'exact', head: true });
+
+        // Fetch employees count
+        const { count: employeesCount, error: employeesError } = await supabase
+          .from('employees')
+          .select('*', { count: 'exact', head: true });
+
+        // Fetch sessions count
+        const { count: sessionsCount, error: sessionsError } = await supabase
+          .from('teaching_sessions')
+          .select('*', { count: 'exact', head: true });
+
+        if (studentsError || classesError || employeesError || sessionsError) {
+          console.error("Error fetching counts");
+        } else {
+          setCountData({
+            students: studentsCount || 0,
+            classes: classesCount || 0,
+            employees: employeesCount || 0,
+            sessions: sessionsCount || 0
+          });
+        }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast({
-          title: 'Error',
-          description: 'Could not load dashboard data',
-          variant: 'destructive',
-        });
+        console.error("Error fetching dashboard data:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    
-    fetchDashboardData();
-  }, [toast]);
+
+    fetchCounts();
+  }, []);
+
+  const studentData = [
+    { name: 'Tháng 1', total: 53 },
+    { name: 'Tháng 2', total: 55 },
+    { name: 'Tháng 3', total: 59 },
+    { name: 'Tháng 4', total: 62 },
+    { name: 'Tháng 5', total: 65 },
+    { name: 'Tháng 6', total: 72 },
+    { name: 'Tháng 7', total: 78 },
+    { name: 'Tháng 8', total: 82 },
+    { name: 'Tháng 9', total: 88 },
+    { name: 'Tháng 10', total: 91 },
+    { name: 'Tháng 11', total: 94 },
+    { name: 'Tháng 12', total: 98 },
+  ];
+
+  const classesData = [
+    { name: 'Tháng 1', total: 12 },
+    { name: 'Tháng 2', total: 13 },
+    { name: 'Tháng 3', total: 15 },
+    { name: 'Tháng 4', total: 15 },
+    { name: 'Tháng 5', total: 16 },
+    { name: 'Tháng 6', total: 17 },
+    { name: 'Tháng 7', total: 18 },
+    { name: 'Tháng 8', total: 19 },
+    { name: 'Tháng 9', total: 20 },
+    { name: 'Tháng 10', total: 21 },
+    { name: 'Tháng 11', total: 22 },
+    { name: 'Tháng 12', total: 24 },
+  ];
 
   return (
-    <div className="space-y-4 p-4 sm:p-6 md:p-8">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-      
+    <div className="container mx-auto space-y-6 p-6">
+      <PageHeader
+        title="Tổng Quan"
+        description="Xem thông tin tổng quan về trung tâm"
+        icon={<CalendarCheck className="h-6 w-6" />}
+      />
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard 
-          title="Học Sinh" 
-          value={stats.totalStudents.toString()}
-          description="Tổng số học sinh"
-          trend={{ 
-            value: "+5%", 
-            direction: "up",
-            text: "từ tháng trước" 
-          }}
-          iconComponent={<Users className="h-5 w-5" />}
-        />
-        
-        <StatsCard 
-          title="Lớp Học" 
-          value={stats.totalClasses.toString()}
-          description="Tổng số lớp học"
-          trend={{ 
-            value: "+2", 
-            direction: "up",
-            text: "lớp mới trong tháng" 
-          }}
-          iconComponent={<Briefcase className="h-5 w-5" />}
-        />
-        
-        <StatsCard 
-          title="Sự Kiện" 
-          value={stats.upcomingEvents.toString()}
-          description="Sự kiện sắp tới"
-          trend={{ 
-            value: "0", 
-            direction: "none",
-            text: "mới tạo hôm nay" 
-          }}
-          iconComponent={<Calendar className="h-5 w-5" />}
-        />
-        
-        <StatsCard 
-          title="Cơ Sở" 
-          value={stats.totalFacilities.toString()}
-          description="Tổng số cơ sở"
-          trend={{ 
-            value: "0", 
-            direction: "none",
-            text: "không thay đổi" 
-          }}
-          iconComponent={<Activity className="h-5 w-5" />}
-        />
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle>Hoạt Động Gần Đây</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Học sinh</CardTitle>
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <RecentActivity activities={activities as any} />
+            <div className="text-2xl font-bold">{isLoading ? '...' : countData.students}</div>
+            <p className="text-xs text-muted-foreground">
+              Tổng số học sinh đăng ký
+            </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Truy Cập Nhanh</CardTitle>
+            <CardTitle className="text-sm font-medium">Lớp học</CardTitle>
+            <Book className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Thêm học sinh mới
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Tạo lớp học mới
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Lên lịch sự kiện mới
-              </Button>
-            </div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : countData.classes}</div>
+            <p className="text-xs text-muted-foreground">
+              Tổng số lớp học hiện có
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Nhân viên</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{isLoading ? '...' : countData.employees}</div>
+            <p className="text-xs text-muted-foreground">
+              Tổng số nhân viên
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Buổi dạy</CardTitle>
+            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{isLoading ? '...' : countData.sessions}</div>
+            <p className="text-xs text-muted-foreground">
+              Tổng số buổi dạy
+            </p>
           </CardContent>
         </Card>
       </div>
-      
-      <Tabs defaultValue="upcoming">
+
+      <Tabs defaultValue="students" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="upcoming">Sắp Diễn Ra</TabsTrigger>
-          <TabsTrigger value="recent">Gần Đây</TabsTrigger>
+          <TabsTrigger value="students">Học sinh</TabsTrigger>
+          <TabsTrigger value="classes">Lớp học</TabsTrigger>
         </TabsList>
-        <TabsContent value="upcoming" className="space-y-4">
+        
+        <TabsContent value="students" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Các Sự Kiện Sắp Tới</CardTitle>
+              <CardTitle>Tăng trưởng học sinh</CardTitle>
+              <CardDescription>
+                Số lượng học sinh theo tháng trong năm
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-10 text-muted-foreground">
-                <p>Không có sự kiện nào sắp diễn ra</p>
-                <Button variant="outline" className="mt-4">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Tạo Sự Kiện Mới
-                </Button>
-              </div>
+            <CardContent className="pl-2">
+              <BarChart data={studentData} />
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="recent" className="space-y-4">
+        
+        <TabsContent value="classes" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Lớp Học Gần Đây</CardTitle>
+              <CardTitle>Tăng trưởng lớp học</CardTitle>
+              <CardDescription>
+                Số lượng lớp học theo tháng trong năm
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-10 text-muted-foreground">
-                <p>Không có dữ liệu lớp học gần đây</p>
-              </div>
+            <CardContent className="pl-2">
+              <AreaChart data={classesData} />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Hoạt động gần đây</CardTitle>
+          <CardDescription>
+            Các hoạt động mới nhất trong hệ thống
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RecentActivity />
+        </CardContent>
+      </Card>
     </div>
   );
 };

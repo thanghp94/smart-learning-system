@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Image } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export interface TableColumn {
   title: string;
@@ -19,6 +20,7 @@ export interface TableColumn {
   sortable?: boolean;
   render?: (value: any, record?: any) => React.ReactNode;
   header?: string; // For backward compatibility
+  thumbnail?: boolean; // New field for thumbnail support
 }
 
 export interface DataTableProps<T> {
@@ -120,6 +122,28 @@ function DataTable<T>({
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
+  };
+
+  // Render thumbnail
+  const renderThumbnail = (imageUrl: string | undefined) => {
+    if (!imageUrl) {
+      return (
+        <Avatar className="h-8 w-8">
+          <AvatarFallback>
+            <Image className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+      );
+    }
+    
+    return (
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={imageUrl} alt="Thumbnail" />
+        <AvatarFallback>
+          <Image className="h-4 w-4" />
+        </AvatarFallback>
+      </Avatar>
+    );
   };
 
   if (isLoading) {
@@ -228,9 +252,16 @@ function DataTable<T>({
                 >
                   {columns.map((column, colIndex) => (
                     <TableCell key={colIndex}>
-                      {column.render
-                        ? column.render(record[column.key], record)
-                        : record[column.key]}
+                      {column.thumbnail ? (
+                        <div className="flex items-center gap-2">
+                          {renderThumbnail(record[column.key])}
+                          {column.render ? column.render(record[column.key], record) : record[column.key]}
+                        </div>
+                      ) : column.render ? (
+                        column.render(record[column.key], record)
+                      ) : (
+                        record[column.key]
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>

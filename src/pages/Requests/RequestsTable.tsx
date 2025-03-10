@@ -141,6 +141,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
       <Button variant="outline" size="sm" className="h-8" onClick={onRefresh}>
         <RotateCw className="h-4 w-4 mr-1" /> Làm mới
       </Button>
+    </div>
+  );
+
+  const tableFilters = (
+    <div className="flex items-center space-x-2">
       <FilterButton 
         categories={filterCategories} 
         onFilter={setFilters} 
@@ -158,6 +163,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
       title="Đề Xuất"
       description="Quản lý các đề xuất xin phép"
       actions={tableActions}
+      filters={tableFilters}
     >
       <DataTable
         columns={columns}
