@@ -55,6 +55,8 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   const [selectedTransactionCategory, setSelectedTransactionCategory] = useState<string>(
     initialData?.loai_thu_chi || 'expense'
   );
+  const [selectedEntityName, setSelectedEntityName] = useState<string>('');
+  const [selectedTransactionType, setSelectedTransactionType] = useState<string>('');
 
   // Initialize the form with default values
   const form = useForm<FinanceFormValues>({
@@ -75,6 +77,20 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
       ghi_chu: initialData?.ghi_chu || '',
     },
   });
+
+  // Auto-generate the description based on selected options
+  useEffect(() => {
+    if (selectedTransactionCategory && selectedTransactionType && selectedEntityName) {
+      const transactionAction = selectedTransactionCategory === 'income' ? 'Thu' : 'Chi';
+      const generatedDescription = `${transactionAction} ${selectedTransactionType} ${selectedEntityName}`;
+      
+      // Only set the description if it hasn't been manually modified or is empty
+      const currentDescription = form.getValues('dien_giai');
+      if (!currentDescription || currentDescription === '') {
+        form.setValue('dien_giai', generatedDescription);
+      }
+    }
+  }, [selectedTransactionCategory, selectedTransactionType, selectedEntityName, form]);
 
   // Handle form submission
   const handleSubmit = (values: FinanceFormValues) => {
@@ -100,6 +116,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     setSelectedEntityType(value);
     form.setValue('loai_doi_tuong', value);
     form.setValue('doi_tuong_id', ''); // Reset entity ID when type changes
+    setSelectedEntityName(''); // Reset entity name
   };
 
   // Handle transaction category change
@@ -107,6 +124,19 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     setSelectedTransactionCategory(value);
     form.setValue('loai_thu_chi', value);
     form.setValue('loai_giao_dich', ''); // Reset transaction type when category changes
+    setSelectedTransactionType(''); // Reset transaction type name
+  };
+
+  // Handle entity name change
+  const handleEntityNameChange = (entityId: string, entityName: string) => {
+    form.setValue('doi_tuong_id', entityId);
+    setSelectedEntityName(entityName);
+  };
+
+  // Handle transaction type change
+  const handleTransactionTypeChange = (value: string) => {
+    form.setValue('loai_giao_dich', value);
+    setSelectedTransactionType(value);
   };
 
   return (
@@ -143,6 +173,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
             form={form} 
             selectedEntityType={selectedEntityType}
             onEntityTypeChange={handleEntityTypeChange}
+            onEntityNameChange={handleEntityNameChange}
             facilities={facilities}
           />
           
@@ -151,6 +182,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
             form={form} 
             selectedTransactionCategory={selectedTransactionCategory} 
             selectedEntityType={selectedEntityType}
+            onTransactionTypeChange={handleTransactionTypeChange}
           />
 
           {/* SECTION 2: Transaction Details */}

@@ -10,12 +10,14 @@ interface TransactionTypeSelectProps {
   form: UseFormReturn<any>;
   selectedTransactionCategory: string;
   selectedEntityType: string | null;
+  onTransactionTypeChange?: (value: string) => void;
 }
 
 const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
   form,
   selectedTransactionCategory,
   selectedEntityType,
+  onTransactionTypeChange,
 }) => {
   const [transactionTypes, setTransactionTypes] = useState<FinanceTransactionType[]>([]);
   const [filteredTransactionTypes, setFilteredTransactionTypes] = useState<FinanceTransactionType[]>([]);
@@ -102,8 +104,19 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
     const currentType = form.getValues('loai_giao_dich');
     if (currentType && !filtered.some(type => type.name === currentType)) {
       form.setValue('loai_giao_dich', '');
+      if (onTransactionTypeChange) {
+        onTransactionTypeChange('');
+      }
     }
-  }, [selectedTransactionCategory, selectedEntityType, transactionTypes, form]);
+  }, [selectedTransactionCategory, selectedEntityType, transactionTypes, form, onTransactionTypeChange]);
+
+  // Handle transaction type change
+  const handleTransactionTypeChange = (value: string) => {
+    form.setValue('loai_giao_dich', value);
+    if (onTransactionTypeChange) {
+      onTransactionTypeChange(value);
+    }
+  };
 
   return (
     <FormField
@@ -112,7 +125,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
       render={({ field }) => (
         <FormItem>
           <FormLabel>Hạng mục</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select onValueChange={handleTransactionTypeChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Chọn hạng mục" />

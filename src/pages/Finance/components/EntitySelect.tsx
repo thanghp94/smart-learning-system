@@ -10,6 +10,7 @@ interface EntitySelectProps {
   form: UseFormReturn<any>;
   selectedEntityType: string | null;
   onEntityTypeChange: (value: string) => void;
+  onEntityNameChange?: (entityId: string, entityName: string) => void;
   facilities?: Facility[];
 }
 
@@ -17,6 +18,7 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
   form,
   selectedEntityType,
   onEntityTypeChange,
+  onEntityNameChange,
   facilities = [],
 }) => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -77,6 +79,14 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
     loadEntities();
   }, [selectedEntityType]);
 
+  // Handle entity selection
+  const handleEntitySelection = (entityId: string, entityName: string) => {
+    form.setValue('doi_tuong_id', entityId);
+    if (onEntityNameChange) {
+      onEntityNameChange(entityId, entityName);
+    }
+  };
+
   return (
     <>
       <FormField
@@ -113,7 +123,37 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Đối tượng</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={(value) => {
+                  // Find the entity name based on the selected ID and entity type
+                  let entityName = '';
+                  
+                  if (selectedEntityType === 'student') {
+                    const student = students.find(s => s.id === value);
+                    entityName = student?.ten_hoc_sinh || '';
+                  } else if (selectedEntityType === 'employee') {
+                    const employee = employees.find(e => e.id === value);
+                    entityName = employee?.ten_nhan_su || '';
+                  } else if (selectedEntityType === 'contact') {
+                    const contact = contacts.find(c => c.id === value);
+                    entityName = contact?.ten_lien_he || '';
+                  } else if (selectedEntityType === 'facility') {
+                    const facility = facilities.find(f => f.id === value);
+                    entityName = facility?.ten_co_so || '';
+                  } else if (selectedEntityType === 'asset') {
+                    const asset = assets.find(a => a.id === value);
+                    entityName = asset?.ten_csvc || '';
+                  } else if (selectedEntityType === 'event') {
+                    const event = events.find(e => e.id === value);
+                    entityName = event?.ten_su_kien || '';
+                  } else if (selectedEntityType === 'government') {
+                    entityName = 'Cơ quan nhà nước';
+                  }
+                  
+                  handleEntitySelection(value, entityName);
+                }} 
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn đối tượng" />
