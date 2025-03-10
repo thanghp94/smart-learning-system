@@ -26,6 +26,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn, formatDate } from '@/lib/utils';
 import { supabase } from '@/lib/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Spinner } from '@/components/ui/spinner';
 
 // Schema for the attendance form
 const attendanceSchema = z.object({
@@ -51,6 +53,8 @@ interface AddAttendanceFormProps {
 const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCancel }) => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const { toast } = useToast();
 
   const form = useForm<AttendanceFormValues>({
     resolver: zodResolver(attendanceSchema),
@@ -74,6 +78,11 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
 
         if (error) {
           console.error("Error fetching employees:", error);
+          toast({
+            title: "Lỗi",
+            description: "Không thể tải danh sách nhân viên",
+            variant: "destructive"
+          });
           throw error;
         }
 
@@ -86,10 +95,11 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
     };
 
     fetchEmployees();
-  }, []);
+  }, [toast]);
 
   const handleSubmit = async (values: AttendanceFormValues) => {
     try {
+      setSubmitting(true);
       const formattedData = {
         nhan_vien_id: values.employee_id,
         ngay: values.date.toISOString().split('T')[0],
@@ -102,8 +112,24 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
       await onSubmit(formattedData);
     } catch (error) {
       console.error("Error in form submission:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể lưu dữ liệu chấm công. Vui lòng thử lại.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <Spinner size="lg" />
+        <p className="ml-2">Đang tải danh sách nhân viên...</p>
+      </div>
+    )
+  }
 
   return (
     <Form {...form}>
@@ -257,8 +283,8 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
           <Button type="button" variant="outline" onClick={onCancel}>
             Hủy
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Đang lưu..." : "Lưu thông tin"}
+          <Button type="submit" disabled={submitting || loading}>
+            {submitting ? "Đang lưu..." : "Lưu thông tin"}
           </Button>
         </div>
       </form>

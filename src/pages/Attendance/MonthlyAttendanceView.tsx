@@ -54,6 +54,8 @@ const MonthlyAttendanceView = () => {
   const fetchAttendanceData = async () => {
     setLoading(true);
     try {
+      console.log("Fetching attendance data for month:", currentMonth, "year:", currentYear);
+      
       // Call the stored function to get monthly attendance data
       const { data, error } = await supabase.rpc(
         'get_monthly_attendance_summary',
@@ -64,6 +66,8 @@ const MonthlyAttendanceView = () => {
         console.error("Error fetching attendance data:", error);
         throw error;
       }
+      
+      console.log("Received data:", data);
 
       // Process data for component state
       const groupedData: Record<string, any> = {};
@@ -85,9 +89,12 @@ const MonthlyAttendanceView = () => {
             };
           }
           
-          groupedData[employeeId].records[record.day_of_month] = {
-            status: record.status
-          };
+          if (record.day_of_month > 0) {
+            groupedData[employeeId].records[record.day_of_month] = {
+              status: record.status,
+              date: record.attendance_date
+            };
+          }
         });
       }
       
@@ -106,6 +113,8 @@ const MonthlyAttendanceView = () => {
 
   const handleAddAttendance = async (formData: any) => {
     try {
+      console.log("Adding attendance data:", formData);
+      
       const { data, error } = await supabase
         .from('employee_clock_in_out')
         .insert([formData]);

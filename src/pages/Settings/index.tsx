@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from '@/components/common/PageHeader';
-import { Settings as SettingsIcon, List, Database, UserCog } from 'lucide-react';
+import { Settings as SettingsIcon, List, Database, UserCog, FileText } from 'lucide-react';
 
 const Settings = () => {
   return (
@@ -21,6 +21,7 @@ const Settings = () => {
           <TabsTrigger value="general">Thiết lập chung</TabsTrigger>
           <TabsTrigger value="data">Quản lý dữ liệu</TabsTrigger>
           <TabsTrigger value="users">Người dùng</TabsTrigger>
+          <TabsTrigger value="files">Hồ sơ và tài liệu</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general" className="space-y-4 pt-4">
@@ -83,6 +84,29 @@ const Settings = () => {
             />
           </div>
         </TabsContent>
+        
+        <TabsContent value="files" className="space-y-4 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <SettingCard 
+              title="Quản lý hồ sơ" 
+              description="Quản lý hồ sơ nhân viên và văn bản"
+              icon={<FileText />}
+              href="/employee-files"
+            />
+            
+            <SettingCard 
+              title="Cấu hình lưu trữ" 
+              description="Thiết lập thư mục và cấu trúc lưu trữ tài liệu"
+              icon={<FileText />}
+            />
+            
+            <SettingCard 
+              title="Phân loại tài liệu" 
+              description="Quản lý các loại tài liệu trong hệ thống"
+              icon={<FileText />}
+            />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -97,7 +121,7 @@ interface SettingCardProps {
 
 const SettingCard = ({ title, description, icon, href }: SettingCardProps) => {
   const cardContent = (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <div className="flex items-center gap-2">
           {icon}
@@ -112,7 +136,7 @@ const SettingCard = ({ title, description, icon, href }: SettingCardProps) => {
   );
   
   if (href) {
-    return <Link to={href}>{cardContent}</Link>;
+    return <Link to={href} className="block h-full">{cardContent}</Link>;
   }
   
   return cardContent;

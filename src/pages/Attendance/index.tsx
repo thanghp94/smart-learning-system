@@ -1,57 +1,53 @@
 
 import React, { useState } from 'react';
 import PageHeader from '@/components/common/PageHeader';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, ClockIcon, UserRound } from 'lucide-react';
-import MonthlyAttendanceSummary from './MonthlyAttendanceSummary';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar as CalendarIcon, UserCheck, Clock } from 'lucide-react';
 import MonthlyAttendanceView from './MonthlyAttendanceView';
 import DailyAttendance from './DailyAttendance';
-import StudentAttendance from './StudentAttendance';
 import EmployeeAttendance from './EmployeeAttendance';
 
-const Attendance = () => {
+const AttendancePage = () => {
+  const [activeTab, setActiveTab] = useState('monthly');
+
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto py-6 space-y-6">
       <PageHeader
         title="Chấm công"
-        description="Quản lý và theo dõi chấm công nhân viên và học sinh"
-        icon={<ClockIcon className="h-6 w-6" />}
+        description="Quản lý thông tin chấm công nhân viên"
+        icon={<UserCheck className="h-6 w-6" />}
       />
 
-      <div className="mt-6">
-        <Tabs defaultValue="monthly-view">
-          <TabsList className="mb-6">
-            <TabsTrigger value="monthly-view">Bảng chấm công tháng</TabsTrigger>
-            <TabsTrigger value="summary">Thống kê tổng hợp</TabsTrigger>
-            <TabsTrigger value="daily">Chấm công hằng ngày</TabsTrigger>
-            <TabsTrigger value="employees">Nhân viên</TabsTrigger>
-            <TabsTrigger value="students">Học sinh</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="monthly">
+            <CalendarIcon className="h-4 w-4 mr-2" />
+            Chấm công tháng
+          </TabsTrigger>
+          <TabsTrigger value="daily">
+            <Clock className="h-4 w-4 mr-2" />
+            Chấm công ngày
+          </TabsTrigger>
+          <TabsTrigger value="employee">
+            <UserCheck className="h-4 w-4 mr-2" />
+            Chấm công theo nhân viên
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="monthly-view" className="space-y-4">
-            <MonthlyAttendanceView />
-          </TabsContent>
+        <TabsContent value="monthly" className="space-y-4">
+          <MonthlyAttendanceView />
+        </TabsContent>
 
-          <TabsContent value="summary" className="space-y-4">
-            <MonthlyAttendanceSummary />
-          </TabsContent>
+        <TabsContent value="daily" className="space-y-4">
+          <DailyAttendance />
+        </TabsContent>
 
-          <TabsContent value="daily" className="space-y-4">
-            <DailyAttendance />
-          </TabsContent>
-
-          <TabsContent value="employees" className="space-y-4">
-            <EmployeeAttendance />
-          </TabsContent>
-
-          <TabsContent value="students" className="space-y-4">
-            <StudentAttendance />
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="employee" className="space-y-4">
+          <EmployeeAttendance />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
-export default Attendance;
+export default AttendancePage;

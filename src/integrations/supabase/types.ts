@@ -2822,6 +2822,22 @@ export type Database = {
         }
         Returns: Json
       }
+      get_monthly_attendance_summary: {
+        Args: {
+          p_month: number
+          p_year: number
+        }
+        Returns: {
+          employee_id: string
+          employee_name: string
+          day_of_month: number
+          status: string
+          present_count: number
+          absent_count: number
+          late_count: number
+          attendance_date: string
+        }[]
+      }
       get_schema_info: {
         Args: Record<PropertyKey, never>
         Returns: {
