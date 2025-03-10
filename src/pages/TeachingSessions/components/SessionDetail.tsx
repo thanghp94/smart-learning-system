@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -119,15 +120,21 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           .eq('lop_chi_tiet_id', currentSession.lop_chi_tiet_id);
         
         if (!enrollmentsError && enrollmentsData) {
-          const students = (enrollmentsData as EnrollmentWithStudent[]).map(enrollment => {
-            const studentData = enrollment.students || {} as StudentData;
+          console.log('Enrollments data:', enrollmentsData);
+          
+          const students = enrollmentsData.map(enrollment => {
+            // Ensure enrollment has a students property and it's not null or undefined
+            const studentInfo = enrollment.students || {};
+            
             return {
-              id: studentData.id || enrollment.hoc_sinh_id,
-              name: studentData.ten_hoc_sinh || 'Unknown',
-              image: studentData.hinh_anh_hoc_sinh || null,
-              code: studentData.ma_hoc_sinh || 'N/A'
+              id: studentInfo.id || enrollment.hoc_sinh_id,
+              name: studentInfo.ten_hoc_sinh || 'Unknown',
+              image: studentInfo.hinh_anh_hoc_sinh || null,
+              code: studentInfo.ma_hoc_sinh || 'N/A'
             };
           });
+          
+          console.log('Processed students list:', students);
           setStudentsList(students);
         }
       }
