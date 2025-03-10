@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +36,8 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
     classData,
     studentsList,
     isLoading,
-    setSessionData
+    setSessionData,
+    fetchSessionData
   } = useSessionData(session, sessionId);
 
   const { toast } = useToast();

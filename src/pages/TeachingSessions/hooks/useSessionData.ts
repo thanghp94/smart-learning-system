@@ -12,6 +12,7 @@ interface UseSessionDataResult {
   studentsList: ProcessedStudent[];
   isLoading: boolean;
   setSessionData: (data: any) => void;
+  fetchSessionData: () => Promise<void>;
 }
 
 export const useSessionData = (session?: any, sessionId?: string): UseSessionDataResult => {
@@ -130,6 +131,7 @@ export const useSessionData = (session?: any, sessionId?: string): UseSessionDat
     classData,
     studentsList,
     isLoading,
-    setSessionData
+    setSessionData,
+    fetchSessionData
   };
 };
