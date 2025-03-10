@@ -59,6 +59,27 @@ class EnrollmentService {
     }
   }
 
+  async getBySession(sessionId: string) {
+    try {
+      const { data: teachingSession, error: sessionError } = await supabase
+        .from('teaching_sessions')
+        .select('lop_chi_tiet_id')
+        .eq('id', sessionId)
+        .single();
+      
+      if (sessionError) throw sessionError;
+      
+      if (!teachingSession || !teachingSession.lop_chi_tiet_id) {
+        throw new Error('Teaching session not found or has no class ID');
+      }
+      
+      return this.getByClass(teachingSession.lop_chi_tiet_id);
+    } catch (error) {
+      console.error('Error fetching enrollments by session:', error);
+      throw error;
+    }
+  }
+
   async create(data: Partial<Enrollment>) {
     try {
       const result = await insert<Enrollment>(table, data);

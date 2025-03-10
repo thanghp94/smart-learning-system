@@ -1,281 +1,292 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Pencil } from "lucide-react";
-import { Student, Enrollment, Finance, Contact, Event } from "@/lib/types";
-import { enrollmentService, financeService, eventService, contactService } from "@/lib/supabase";
-import DataTable from "@/components/ui/DataTable";
-import EnrollStudentButton from "./EnrollStudentButton";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { formatDate, formatCurrency } from '@/lib/utils';
+import { Student, Enrollment, Finance, Event, Contact, Evaluation } from '@/lib/types';
+import { Phone, Mail, Home, Calendar, School, User, FileText, DollarSign, Bell, Users, Star } from 'lucide-react';
+import { enrollmentService, financeService, eventService, contactService, evaluationService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DataTable from '@/components/ui/DataTable';
+import EnrollStudentButton from './EnrollStudentButton';
 
 interface StudentDetailProps {
   student: Student;
+  onRefresh: () => void;
 }
 
-const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
-  const navigate = useNavigate();
+const StudentDetail: React.FC<StudentDetailProps> = ({ student, onRefresh }) => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [finances, setFinances] = useState<Finance[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState({
-    enrollments: true,
-    finances: true,
-    events: true,
-    contacts: true
-  });
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    fetchStudentRelatedData();
-  }, [student.id]);
+    const fetchRelatedData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch related data in parallel
+        const [enrollmentsData, financesData, eventsData, contactsData, evaluationsData] = await Promise.all([
+          enrollmentService.getByStudent(student.id),
+          financeService.getByStudent(student.id),
+          eventService.getByEntity('student', student.id),
+          contactService.getByEntity('student', student.id),
+          evaluationService.getByStudent(student.id)
+        ]);
+        
+        setEnrollments(enrollmentsData);
+        setFinances(financesData);
+        setEvents(eventsData);
+        setContacts(contactsData);
+        setEvaluations(evaluationsData);
+      } catch (error) {
+        console.error('Error fetching student related data:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải dữ liệu liên quan đến học sinh',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const fetchStudentRelatedData = async () => {
+    if (student?.id) {
+      fetchRelatedData();
+    }
+  }, [student?.id, toast]);
+
+  const refreshData = async () => {
     try {
-      // Fetch enrollments
-      setLoading(prev => ({ ...prev, enrollments: true }));
+      setIsLoading(true);
       const enrollmentsData = await enrollmentService.getByStudent(student.id);
-      setEnrollments(enrollmentsData || []);
-      setLoading(prev => ({ ...prev, enrollments: false }));
-
-      // Fetch finances (học phí)
-      setLoading(prev => ({ ...prev, finances: true }));
-      const financesData = await financeService.getByEntity('student', student.id);
-      setFinances(financesData || []);
-      setLoading(prev => ({ ...prev, finances: false }));
-
-      // Fetch events related to this student
-      setLoading(prev => ({ ...prev, events: true }));
-      const eventsData = await eventService.getByEntity('student', student.id);
-      setEvents(eventsData || []);
-      setLoading(prev => ({ ...prev, events: false }));
-
-      // Fetch contacts related to this student
-      setLoading(prev => ({ ...prev, contacts: true }));
-      const contactsData = await contactService.getByType('student');
-      const filteredContacts = contactsData.filter(contact => contact.doi_tuong_id === student.id);
-      setContacts(filteredContacts || []);
-      setLoading(prev => ({ ...prev, contacts: false }));
-      
+      setEnrollments(enrollmentsData);
+      onRefresh();
     } catch (error) {
-      console.error("Error fetching student related data:", error);
+      console.error('Error refreshing enrollments:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể cập nhật danh sách ghi danh',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleEditClick = () => {
-    navigate(`/students/edit/${student.id}`);
-  };
+  const enrollmentColumns = [
+    { title: 'Lớp', key: 'lop_chi_tiet_id', sortable: true },
+    { title: 'Trạng thái', key: 'tinh_trang_diem_danh', sortable: true },
+    { title: 'Ngày tạo', key: 'created_at', sortable: true, render: (value: string) => formatDate(value) },
+    { title: 'Cập nhật', key: 'updated_at', sortable: true, render: (value: string) => formatDate(value) },
+  ];
 
-  const handleBackClick = () => {
-    navigate('/students');
-  };
+  const financeColumns = [
+    { title: 'Ngày', key: 'ngay', sortable: true, render: (value: string) => formatDate(value) },
+    { title: 'Tên phí', key: 'ten_phi', sortable: true },
+    { title: 'Loại thu chi', key: 'loai_thu_chi', sortable: true },
+    { title: 'Tổng tiền', key: 'tong_tien', sortable: true, render: (value: number) => formatCurrency(value) },
+    { title: 'Trạng thái', key: 'tinh_trang', sortable: true }
+  ];
+
+  const eventColumns = [
+    { title: 'Tên sự kiện', key: 'ten_su_kien', sortable: true },
+    { title: 'Loại sự kiện', key: 'loai_su_kien', sortable: true },
+    { title: 'Ngày bắt đầu', key: 'ngay_bat_dau', sortable: true, render: (value: string) => formatDate(value) },
+    { title: 'Địa điểm', key: 'dia_diem', sortable: true },
+    { title: 'Trạng thái', key: 'trang_thai', sortable: true }
+  ];
+
+  const contactColumns = [
+    { title: 'Tên liên hệ', key: 'ten_lien_he', sortable: true },
+    { title: 'Số điện thoại', key: 'sdt', sortable: true },
+    { title: 'Email', key: 'email', sortable: true },
+    { title: 'Phân loại', key: 'phan_loai', sortable: true },
+    { title: 'Trạng thái', key: 'trang_thai', sortable: true }
+  ];
+
+  const evaluationColumns = [
+    { title: 'Tên đánh giá', key: 'ten_danh_gia', sortable: true },
+    { title: 'Ngày bắt đầu', key: 'ngay_dau_dot_danh_gia', sortable: true, render: (value: string) => value ? formatDate(value) : 'N/A' },
+    { title: 'Ngày kết thúc', key: 'ngay_cuoi_dot_danh_gia', sortable: true, render: (value: string) => value ? formatDate(value) : 'N/A' },
+    { title: 'Nhận xét chung', key: 'nhan_xet_chung', sortable: true },
+    { title: 'Trạng thái', key: 'trang_thai', sortable: true }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center">
-          <Button variant="outline" onClick={handleBackClick} className="mr-4">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại
-          </Button>
-          <h1 className="text-2xl font-bold">{student.ten_hoc_sinh}</h1>
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-2xl font-semibold">{student.ten_hoc_sinh}</h3>
+          <p className="text-muted-foreground">
+            {student.gioi_tinh === 'nam' ? 'Nam' : 
+             student.gioi_tinh === 'nu' ? 'Nữ' : 
+             'Không xác định'} - {student.ngay_sinh ? formatDate(student.ngay_sinh) : 'Chưa có ngày sinh'}
+          </p>
         </div>
-        <div className="flex space-x-2">
-          <EnrollStudentButton studentId={student.id} onEnrollmentComplete={fetchStudentRelatedData} />
-          <Button onClick={handleEditClick}>
-            <Pencil className="mr-2 h-4 w-4" /> Chỉnh sửa
-          </Button>
-        </div>
+        <Badge variant={student.trang_thai === 'active' ? 'success' : 'destructive'}>
+          {student.trang_thai === 'active' ? 'Đang học' : 'Ngừng học'}
+        </Badge>
       </div>
 
-      <Tabs defaultValue="details">
-        <TabsList className="mb-4">
-          <TabsTrigger value="details">Thông tin chi tiết</TabsTrigger>
-          <TabsTrigger value="enrollments">Ghi danh</TabsTrigger>
-          <TabsTrigger value="tuition">Học phí</TabsTrigger>
-          <TabsTrigger value="events">Sự kiện</TabsTrigger>
-          <TabsTrigger value="contacts">Liên lạc</TabsTrigger>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Thông tin cá nhân</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>Ngày sinh: {student.ngay_sinh ? formatDate(student.ngay_sinh) : 'Chưa có'}</span>
+            </div>
+            <div className="flex items-center">
+              <Home className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>Địa chỉ: {student.dia_chi || 'Chưa có'}</span>
+            </div>
+            <div className="flex items-center">
+              <School className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>Chương trình: {student.ct_hoc || 'Chưa xác định'}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Thông tin phụ huynh</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center">
+              <User className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>Tên phụ huynh: {student.ten_PH || 'Chưa có'}</span>
+            </div>
+            <div className="flex items-center">
+              <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>Số điện thoại: {student.sdt_ph1 || 'Chưa có'}</span>
+            </div>
+            <div className="flex items-center">
+              <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>Email: {student.email_ph1 || 'Chưa có'}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex justify-end">
+        <EnrollStudentButton student={student} onEnrollmentComplete={refreshData} />
+      </div>
+
+      <Tabs defaultValue="enrollments" className="w-full pt-4">
+        <TabsList className="w-full justify-start mb-4">
+          <TabsTrigger value="enrollments" className="flex items-center">
+            <School className="h-4 w-4 mr-2" />
+            Ghi danh
+          </TabsTrigger>
+          <TabsTrigger value="finances" className="flex items-center">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Học phí
+          </TabsTrigger>
+          <TabsTrigger value="events" className="flex items-center">
+            <Bell className="h-4 w-4 mr-2" />
+            Sự kiện
+          </TabsTrigger>
+          <TabsTrigger value="contacts" className="flex items-center">
+            <Users className="h-4 w-4 mr-2" />
+            Liên lạc
+          </TabsTrigger>
+          <TabsTrigger value="evaluations" className="flex items-center">
+            <Star className="h-4 w-4 mr-2" />
+            Đánh giá
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="details">
+        <TabsContent value="enrollments" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Thông tin học sinh</CardTitle>
-              <CardDescription>Chi tiết thông tin cá nhân của học sinh</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium">Họ và tên</h3>
-                <p className="text-lg">{student.ten_hoc_sinh}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Giới tính</h3>
-                <p className="text-lg">{student.gioi_tinh || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Ngày sinh</h3>
-                <p className="text-lg">{student.ngay_sinh ? new Date(student.ngay_sinh.toString()).toLocaleDateString() : "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Phụ huynh</h3>
-                <p className="text-lg">{student.ten_PH || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Số điện thoại phụ huynh</h3>
-                <p className="text-lg">{student.sdt_ph1 || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Email phụ huynh</h3>
-                <p className="text-lg">{student.email_ph1 || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Địa chỉ</h3>
-                <p className="text-lg">{student.dia_chi || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Trạng thái</h3>
-                <p className="text-lg">{student.trang_thai || "Đang học"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Chương trình học</h3>
-                <p className="text-lg">{student.ct_hoc || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Hạn học phí</h3>
-                <p className="text-lg">{student.han_hoc_phi ? new Date(student.han_hoc_phi.toString()).toLocaleDateString() : "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Ghi chú</h3>
-                <p className="text-lg">{student.ghi_chu || "Không có ghi chú"}</p>
-              </div>
+            <CardContent className="p-4">
+              <DataTable
+                columns={enrollmentColumns}
+                data={enrollments}
+                isLoading={isLoading}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm ghi danh..."
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="enrollments">
+        <TabsContent value="finances" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Ghi danh</CardTitle>
-              <CardDescription>Các lớp học sinh đã ghi danh</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading.enrollments ? (
-                <p>Đang tải dữ liệu...</p>
-              ) : enrollments.length > 0 ? (
-                <DataTable 
-                  data={enrollments} 
-                  columns={[
-                    { accessorKey: 'ten_lop_full', header: 'Tên lớp' },
-                    { accessorKey: 'ct_hoc', header: 'Chương trình học' },
-                    { accessorKey: 'created_at', header: 'Ngày ghi danh', 
-                      cell: ({ row }) => row.original.created_at ? 
-                        new Date(row.original.created_at).toLocaleDateString() : 'N/A' 
-                    },
-                    { accessorKey: 'tinh_trang_diem_danh', header: 'Tình trạng điểm danh' }
-                  ]}
-                />
-              ) : (
-                <p>Học sinh chưa ghi danh vào lớp nào</p>
-              )}
+            <CardContent className="p-4">
+              <DataTable
+                columns={financeColumns}
+                data={finances}
+                isLoading={isLoading}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm học phí..."
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="tuition">
+        <TabsContent value="events" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Học phí</CardTitle>
-              <CardDescription>Lịch sử thanh toán học phí</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading.finances ? (
-                <p>Đang tải dữ liệu...</p>
-              ) : finances.length > 0 ? (
-                <DataTable 
-                  data={finances} 
-                  columns={[
-                    { accessorKey: 'ngay', header: 'Ngày', 
-                      cell: ({ row }) => row.original.ngay ? 
-                        new Date(row.original.ngay).toLocaleDateString() : 'N/A' 
-                    },
-                    { accessorKey: 'ten_phi', header: 'Tên phí' },
-                    { accessorKey: 'tong_tien', header: 'Số tiền',
-                      cell: ({ row }) => new Intl.NumberFormat('vi-VN', { 
-                        style: 'currency', currency: 'VND' 
-                      }).format(row.original.tong_tien)
-                    },
-                    { accessorKey: 'tinh_trang', header: 'Tình trạng' },
-                    { accessorKey: 'kieu_thanh_toan', header: 'Kiểu thanh toán' }
-                  ]}
-                />
-              ) : (
-                <p>Không có dữ liệu học phí</p>
-              )}
+            <CardContent className="p-4">
+              <DataTable
+                columns={eventColumns}
+                data={events}
+                isLoading={isLoading}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm sự kiện..."
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="events">
+        <TabsContent value="contacts" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Sự kiện</CardTitle>
-              <CardDescription>Các sự kiện liên quan đến học sinh</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading.events ? (
-                <p>Đang tải dữ liệu...</p>
-              ) : events.length > 0 ? (
-                <DataTable 
-                  data={events} 
-                  columns={[
-                    { accessorKey: 'ten_su_kien', header: 'Tên sự kiện' },
-                    { accessorKey: 'loai_su_kien', header: 'Loại sự kiện' },
-                    { accessorKey: 'ngay_bat_dau', header: 'Ngày diễn ra', 
-                      cell: ({ row }) => row.original.ngay_bat_dau ? 
-                        new Date(row.original.ngay_bat_dau).toLocaleDateString() : 'N/A' 
-                    },
-                    { accessorKey: 'dia_diem', header: 'Địa điểm' },
-                    { accessorKey: 'trang_thai', header: 'Trạng thái' }
-                  ]}
-                />
-              ) : (
-                <p>Không có sự kiện liên quan</p>
-              )}
+            <CardContent className="p-4">
+              <DataTable
+                columns={contactColumns}
+                data={contacts}
+                isLoading={isLoading}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm liên lạc..."
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="contacts">
+        <TabsContent value="evaluations" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Liên lạc</CardTitle>
-              <CardDescription>Lịch sử liên lạc với học sinh/phụ huynh</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading.contacts ? (
-                <p>Đang tải dữ liệu...</p>
-              ) : contacts.length > 0 ? (
-                <DataTable 
-                  data={contacts} 
-                  columns={[
-                    { accessorKey: 'ten_lien_he', header: 'Nội dung liên lạc' },
-                    { accessorKey: 'phan_loai', header: 'Phân loại' },
-                    { accessorKey: 'sdt', header: 'Số điện thoại' },
-                    { accessorKey: 'email', header: 'Email' },
-                    { accessorKey: 'created_at', header: 'Ngày tạo', 
-                      cell: ({ row }) => row.original.created_at ? 
-                        new Date(row.original.created_at).toLocaleDateString() : 'N/A' 
-                    }
-                  ]}
-                />
-              ) : (
-                <p>Không có lịch sử liên lạc</p>
-              )}
+            <CardContent className="p-4">
+              <DataTable
+                columns={evaluationColumns}
+                data={evaluations}
+                isLoading={isLoading}
+                searchable={true}
+                searchPlaceholder="Tìm kiếm đánh giá..."
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {student.ghi_chu && (
+        <Card>
+          <CardContent className="p-6">
+            <h4 className="font-medium mb-2">Ghi chú</h4>
+            <p>{student.ghi_chu}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="text-xs text-muted-foreground flex justify-between">
+        <span>Ngày tạo: {formatDate(student.created_at || '')}</span>
+        <span>Cập nhật: {formatDate(student.updated_at || '')}</span>
+      </div>
     </div>
   );
 };

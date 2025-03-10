@@ -72,6 +72,21 @@ class FinanceService {
   async getByFacility(facilityId: string) {
     return this.getByEntity('facility', facilityId);
   }
+
+  async getTransactionTypes() {
+    try {
+      const { data, error } = await supabase
+        .from('finance_transaction_types')
+        .select('*')
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching transaction types:', error);
+      throw error;
+    }
+  }
 }
 
 export const financeService = new FinanceService();

@@ -1,222 +1,123 @@
 
-import { useState } from 'react';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Check, X, Edit } from "lucide-react";
+import React from 'react';
+import { Check, X, Edit } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { requestService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Request } from '@/lib/types';
 
 interface RequestApprovalButtonsProps {
-  requestId: string;
-  onUpdate: () => void;
+  request: Request;
+  onStatusChange: () => void;
 }
 
-export function RequestApprovalButtons({ requestId, onUpdate }: RequestApprovalButtonsProps) {
-  const [showApproveDialog, setShowApproveDialog] = useState(false);
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [showAdjustDialog, setShowAdjustDialog] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({
+  request,
+  onStatusChange,
+}) => {
   const { toast } = useToast();
 
   const handleApprove = async () => {
-    setIsSubmitting(true);
     try {
-      await requestService.update(requestId, {
-        trang_thai: 'approved',
-        ghi_chu: notes
+      await requestService.update(request.id, {
+        trang_thai: 'approved'
       });
+      
       toast({
-        title: "Đã duyệt đề xuất",
-        description: "Đề xuất đã được duyệt thành công",
-        variant: "default",
+        title: 'Thành công',
+        description: 'Đã duyệt yêu cầu',
       });
-      onUpdate();
+      
+      onStatusChange();
     } catch (error) {
-      console.error("Error approving request:", error);
+      console.error('Error approving request:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể duyệt đề xuất. Vui lòng thử lại.",
-        variant: "destructive",
+        title: 'Lỗi',
+        description: 'Không thể duyệt yêu cầu',
+        variant: 'destructive',
       });
-    } finally {
-      setIsSubmitting(false);
-      setShowApproveDialog(false);
-      setNotes('');
     }
   };
 
   const handleReject = async () => {
-    setIsSubmitting(true);
     try {
-      await requestService.update(requestId, {
-        trang_thai: 'rejected',
-        ghi_chu: notes
+      await requestService.update(request.id, {
+        trang_thai: 'rejected'
       });
+      
       toast({
-        title: "Đã từ chối đề xuất",
-        description: "Đề xuất đã bị từ chối",
-        variant: "default",
+        title: 'Thành công',
+        description: 'Đã từ chối yêu cầu',
       });
-      onUpdate();
+      
+      onStatusChange();
     } catch (error) {
-      console.error("Error rejecting request:", error);
+      console.error('Error rejecting request:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể từ chối đề xuất. Vui lòng thử lại.",
-        variant: "destructive",
+        title: 'Lỗi',
+        description: 'Không thể từ chối yêu cầu',
+        variant: 'destructive',
       });
-    } finally {
-      setIsSubmitting(false);
-      setShowRejectDialog(false);
-      setNotes('');
     }
   };
 
-  const handleAdjust = async () => {
-    setIsSubmitting(true);
+  const handleRevise = async () => {
     try {
-      await requestService.update(requestId, {
-        trang_thai: 'needs_adjustment',
-        ghi_chu: notes
+      await requestService.update(request.id, {
+        trang_thai: 'needs_revision'
       });
+      
       toast({
-        title: "Yêu cầu điều chỉnh",
-        description: "Đã gửi yêu cầu điều chỉnh đề xuất",
-        variant: "default", // Changed from "success" to "default"
+        title: 'Thành công',
+        description: 'Đã gửi yêu cầu điều chỉnh',
       });
-      onUpdate();
+      
+      onStatusChange();
     } catch (error) {
-      console.error("Error requesting adjustment:", error);
+      console.error('Error sending revision request:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể gửi yêu cầu điều chỉnh. Vui lòng thử lại.",
-        variant: "destructive",
+        title: 'Lỗi',
+        description: 'Không thể gửi yêu cầu điều chỉnh',
+        variant: 'destructive',
       });
-    } finally {
-      setIsSubmitting(false);
-      setShowAdjustDialog(false);
-      setNotes('');
     }
   };
+
+  // Only show approval buttons if request is pending
+  if (request.trang_thai !== 'pending') {
+    return null;
+  }
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex space-x-2 mt-4">
       <Button 
         variant="outline" 
         size="sm" 
-        className="flex items-center text-green-600" 
-        onClick={() => setShowApproveDialog(true)}
+        className="text-green-600 border-green-600 hover:bg-green-50"
+        onClick={handleApprove}
       >
-        <Check className="mr-1 h-4 w-4" />
-        Duyệt
+        <Check className="h-4 w-4 mr-1" /> Duyệt
       </Button>
       
       <Button 
         variant="outline" 
         size="sm" 
-        className="flex items-center text-red-600" 
-        onClick={() => setShowRejectDialog(true)}
+        className="text-red-600 border-red-600 hover:bg-red-50"
+        onClick={handleReject}
       >
-        <X className="mr-1 h-4 w-4" />
-        Không duyệt
+        <X className="h-4 w-4 mr-1" /> Không duyệt
       </Button>
       
       <Button 
         variant="outline" 
         size="sm" 
-        className="flex items-center text-blue-600" 
-        onClick={() => setShowAdjustDialog(true)}
+        className="text-amber-600 border-amber-600 hover:bg-amber-50"
+        onClick={handleRevise}
       >
-        <Edit className="mr-1 h-4 w-4" />
-        Điều chỉnh
+        <Edit className="h-4 w-4 mr-1" /> Điều chỉnh thêm
       </Button>
-
-      {/* Approve Dialog */}
-      <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận duyệt đề xuất</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn duyệt đề xuất này không?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <Textarea
-            placeholder="Ghi chú (không bắt buộc)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="min-h-[100px]"
-          />
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleApprove} disabled={isSubmitting}>
-              {isSubmitting ? "Đang xử lý..." : "Duyệt"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reject Dialog */}
-      <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận từ chối đề xuất</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn từ chối đề xuất này không?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <Textarea
-            placeholder="Lý do từ chối (không bắt buộc)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="min-h-[100px]"
-          />
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReject} disabled={isSubmitting}>
-              {isSubmitting ? "Đang xử lý..." : "Từ chối"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Adjust Dialog */}
-      <AlertDialog open={showAdjustDialog} onOpenChange={setShowAdjustDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Yêu cầu điều chỉnh đề xuất</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hãy cung cấp chi tiết về những điều chỉnh cần thiết.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <Textarea
-            placeholder="Chi tiết điều chỉnh cần thực hiện"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="min-h-[100px]"
-            required
-          />
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAdjust} disabled={isSubmitting}>
-              {isSubmitting ? "Đang xử lý..." : "Gửi yêu cầu"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
-}
+};
 
 export default RequestApprovalButtons;
