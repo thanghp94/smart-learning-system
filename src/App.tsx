@@ -64,30 +64,30 @@ import AssetTransfer from '@/pages/Assets/AssetTransfer';
 import TransferManagement from '@/pages/Assets/TransferManagement';
 
 // Wrapper components to fix prop passing for routes
-const EmployeeDetailWrapper = () => <EmployeeDetail employeeId={0} />;
-const EmployeeFormWrapper = () => <EmployeeForm onSubmit={() => {}} />;
+const EmployeeDetailWrapper = () => <EmployeeDetail employeeId="0" />;
+const EmployeeFormWrapper = () => <EmployeeForm onSubmit={async () => {}} />;
 const ClassDetailWrapper = () => <ClassDetail classItem={{} as any} />;
-const ClassFormWrapper = () => <ClassForm onSubmit={() => {}} onCancel={() => {}} />;
-const FacilityDetailWrapper = () => <FacilityDetail facilityId={0} />;
-const FacilityFormWrapper = () => <FacilityForm onSubmit={() => {}} />;
+const ClassFormWrapper = () => <ClassForm onSubmit={async () => {}} onCancel={() => {}} />;
+const FacilityDetailWrapper = () => <FacilityDetail facilityId="0" />;
+const FacilityFormWrapper = () => <FacilityForm onSubmit={async () => {}} />;
 const SessionDetailWrapper = () => <SessionDetail session={{} as any} />;
-const TeachingSessionFormWrapper = () => <TeachingSessionForm onSubmit={() => {}} onCancel={() => {}} />;
-const SessionFormWrapper = () => <SessionForm onSubmit={() => {}} onCancel={() => {}} />;
-const EventFormWrapper = () => <EventForm onSubmit={() => {}} onCancel={() => {}} />;
+const TeachingSessionFormWrapper = () => <TeachingSessionForm onSubmit={async (data) => {}} onCancel={() => {}} />;
+const SessionFormWrapper = () => <SessionForm onSubmit={async () => {}} onCancel={() => {}} />;
+const EventFormWrapper = () => <EventForm onSubmit={async () => {}} onCancel={() => {}} />;
 const TaskDetailWrapper = () => <TaskDetail task={{} as any} />;
-const TaskFormWrapper = () => <TaskForm onSubmit={() => {}} onCancel={() => {}} />;
+const TaskFormWrapper = () => <TaskForm onSubmit={async () => {}} onCancel={() => {}} />;
 const LessonDetailWrapper = () => <LessonDetail lesson={{} as any} />;
-const LessonFormWrapper = () => <LessonForm onSubmit={() => {}} onCancel={() => {}} />;
-const EvaluationFormWrapper = () => <EvaluationForm initialData={{} as any} onSubmit={() => {}} />;
+const LessonFormWrapper = () => <LessonForm onSubmit={async () => {}} onCancel={() => {}} />;
+const EvaluationFormWrapper = () => <EvaluationForm initialData={{} as any} onSubmit={async () => {}} />;
 const FinanceDetailWrapper = () => <FinanceDetail finance={{} as any} />;
-const FinanceFormWrapper = () => <FinanceForm onSubmit={() => {}} onCancel={() => {}} facilities={[]} />;
-const FileFormWrapper = () => <FileForm onSubmit={() => {}} onCancel={() => {}} />;
+const FinanceFormWrapper = () => <FinanceForm onSubmit={async (formData) => {}} onCancel={() => {}} facilities={[]} />;
+const FileFormWrapper = () => <FileForm onSubmit={async () => {}} onCancel={() => {}} />;
 const ContactDetailWrapper = () => <ContactDetail contact={{} as any} />;
-const ContactFormWrapper = () => <ContactForm onSubmit={() => {}} onCancel={() => {}} />;
+const ContactFormWrapper = () => <ContactForm onSubmit={async () => {}} onCancel={() => {}} />;
 const AssetDetailWrapper = () => <AssetDetail asset={{} as any} />;
-const AssetFormWrapper = () => <AssetForm onSubmit={() => {}} onCancel={() => {}} />;
+const AssetFormWrapper = () => <AssetForm onSubmit={async () => {}} onCancel={() => {}} />;
 const AssetTransferWrapper = () => <AssetTransfer asset={{} as any} onTransferComplete={() => {}} />;
-const PayrollFormWrapper = () => <PayrollForm onSubmit={() => {}} onCancel={() => {}} />;
+const PayrollFormWrapper = () => <PayrollForm onSubmit={async () => {}} onCancel={() => {}} />;
 
 const queryClient = new QueryClient();
 
