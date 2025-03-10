@@ -46,3 +46,28 @@ export interface FinanceTransactionType {
 export interface FinanceLedgerEntry extends Finance {
   isEditing?: boolean;
 }
+
+// New interface for receipt templates
+export interface ReceiptTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  template_html: string;
+  type: 'income' | 'expense' | 'all';
+  is_default: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Interface for generated receipts
+export interface GeneratedReceipt {
+  id: string;
+  finance_id: string;
+  template_id: string;
+  generated_html: string;
+  generated_at: string;
+  printed_at?: string;
+  status: 'draft' | 'final';
+  created_at?: string;
+  updated_at?: string;
+}

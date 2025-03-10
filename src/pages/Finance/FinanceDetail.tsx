@@ -1,153 +1,151 @@
 
-import React from "react";
-import { Finance } from "@/lib/types";
-import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
+import React, { useState } from 'react';
+import { Finance } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { format } from 'date-fns';
+import { FileText } from 'lucide-react';
+import ReceiptGenerator from './components/ReceiptGenerator';
 
 interface FinanceDetailProps {
   finance: Finance;
 }
 
 const FinanceDetail: React.FC<FinanceDetailProps> = ({ finance }) => {
+  const [showReceiptGenerator, setShowReceiptGenerator] = useState(false);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return "N/A";
-    try {
-      return format(new Date(dateString), "dd/MM/yyyy");
-    } catch (e) {
-      return "N/A";
-    }
-  };
-
-  const getEntityTypeName = (type?: string) => {
-    const typeMap: Record<string, string> = {
-      'student': 'Học sinh',
-      'employee': 'Nhân viên',
-      'contact': 'Liên hệ',
-      'facility': 'Cơ sở',
-      'asset': 'Cơ sở vật chất',
-      'event': 'Sự kiện',
-      'government': 'Cơ quan nhà nước'
-    };
-    
-    return typeMap[type || ''] || type || 'N/A';
-  };
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">
-          {finance.loai_thu_chi === "income" ? "Thu" : "Chi"}: {finance.dien_giai || "N/A"}
-        </h2>
-        <p className="text-muted-foreground">
-          Ngày: {formatDate(finance.ngay)}
-        </p>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">
+          {finance.loai_thu_chi === 'income' ? 'Phiếu Thu' : 'Phiếu Chi'} - {finance.ten_phi}
+        </h3>
+        <Badge
+          variant={
+            finance.tinh_trang === "completed" ? "success" : 
+            finance.tinh_trang === "pending" ? "secondary" : 
+            "outline"
+          }
+        >
+          {finance.tinh_trang === "completed" ? "Hoàn thành" : 
+           finance.tinh_trang === "pending" ? "Chờ xử lý" : 
+           finance.tinh_trang || "N/A"}
+        </Badge>
       </div>
-      
-      <Separator />
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <span className="text-sm font-medium text-muted-foreground">Loại giao dịch:</span>
-          <p>
-            <Badge variant={finance.loai_thu_chi === "income" ? "success" : "destructive"}>
-              {finance.loai_thu_chi === "income" ? "Thu" : "Chi"}
-            </Badge>
-          </p>
+          <p className="text-sm text-gray-500">Ngày</p>
+          <p>{finance.ngay ? format(new Date(finance.ngay), 'dd/MM/yyyy') : 'N/A'}</p>
         </div>
-        
-        {finance.loai_giao_dich && (
-          <div>
-            <span className="text-sm font-medium text-muted-foreground">Hạng mục:</span>
-            <p>{finance.loai_giao_dich}</p>
-          </div>
-        )}
-        
         <div>
-          <span className="text-sm font-medium text-muted-foreground">Số tiền:</span>
-          <p className="font-semibold">{formatCurrency(finance.tong_tien)}</p>
+          <p className="text-sm text-gray-500">Loại Thu Chi</p>
+          <Badge variant={finance.loai_thu_chi === "income" ? "success" : "destructive"}>
+            {finance.loai_thu_chi === "income" ? "Thu" : "Chi"}
+          </Badge>
         </div>
-        
-        {finance.bang_chu && (
-          <div className="col-span-2">
-            <span className="text-sm font-medium text-muted-foreground">Bằng chữ:</span>
-            <p>{finance.bang_chu}</p>
-          </div>
-        )}
-        
-        {finance.kieu_thanh_toan && (
-          <div>
-            <span className="text-sm font-medium text-muted-foreground">Kiểu thanh toán:</span>
-            <p>{finance.kieu_thanh_toan}</p>
-          </div>
-        )}
-        
         <div>
-          <span className="text-sm font-medium text-muted-foreground">Trạng thái:</span>
+          <p className="text-sm text-gray-500">Hạng Mục</p>
+          <p>{finance.loai_giao_dich || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Kiểu Thanh Toán</p>
           <p>
-            <Badge variant={
-              finance.tinh_trang === "completed" ? "success" : 
-              finance.tinh_trang === "pending" ? "secondary" : 
-              "outline"
-            }>
-              {finance.tinh_trang === "completed" ? "Hoàn thành" : 
-              finance.tinh_trang === "pending" ? "Chờ xử lý" : 
-              finance.tinh_trang || "N/A"}
-            </Badge>
+            {finance.kieu_thanh_toan === 'cash' ? 'Tiền mặt' : 
+             finance.kieu_thanh_toan === 'bank_transfer' ? 'Chuyển khoản' : 
+             finance.kieu_thanh_toan === 'credit_card' ? 'Thẻ tín dụng' : 
+             finance.kieu_thanh_toan || 'N/A'}
           </p>
         </div>
       </div>
-      
+
       <Separator />
-      
-      {(finance.loai_doi_tuong || finance.doi_tuong_id) && (
+
+      <div className="space-y-2">
+        <h4 className="font-medium">Diễn Giải</h4>
+        <p>{finance.dien_giai || 'Không có diễn giải'}</p>
+      </div>
+
+      {(finance.so_luong !== undefined || finance.don_vi !== undefined || finance.gia_tien !== undefined) && (
         <>
-          <div className="grid grid-cols-2 gap-4">
-            {finance.loai_doi_tuong && (
-              <div>
-                <span className="text-sm font-medium text-muted-foreground">Đối tượng:</span>
-                <p>{getEntityTypeName(finance.loai_doi_tuong)}</p>
-              </div>
-            )}
-            
-            {finance.doi_tuong_id && (
-              <div>
-                <span className="text-sm font-medium text-muted-foreground">ID đối tượng:</span>
-                <p>{finance.doi_tuong_id}</p>
-              </div>
-            )}
-          </div>
-          
           <Separator />
+          <div className="space-y-4">
+            <h4 className="font-medium">Chi Tiết Thanh Toán</h4>
+            <div className="grid grid-cols-3 gap-4">
+              {finance.so_luong !== undefined && (
+                <div>
+                  <p className="text-sm text-gray-500">Số Lượng</p>
+                  <p>{finance.so_luong}</p>
+                </div>
+              )}
+              {finance.don_vi !== undefined && (
+                <div>
+                  <p className="text-sm text-gray-500">Đơn Vị</p>
+                  <p>{finance.don_vi}</p>
+                </div>
+              )}
+              {finance.gia_tien !== undefined && (
+                <div>
+                  <p className="text-sm text-gray-500">Giá Tiền</p>
+                  <p>{formatCurrency(finance.gia_tien)}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </>
       )}
-      
-      {finance.ghi_chu && (
-        <div>
-          <span className="text-sm font-medium text-muted-foreground">Ghi chú:</span>
-          <p className="whitespace-pre-line">{finance.ghi_chu}</p>
+
+      <Separator />
+
+      <div className="flex justify-between items-center">
+        <h4 className="font-medium">Tổng Tiền</h4>
+        <p className="text-xl font-bold">
+          {formatCurrency(finance.tong_tien)}
+        </p>
+      </div>
+
+      {finance.bang_chu && (
+        <div className="italic text-gray-600">
+          Bằng chữ: {finance.bang_chu}
         </div>
       )}
-      
-      <div className="grid grid-cols-2 gap-4">
-        {finance.tg_tao && (
-          <div>
-            <span className="text-sm font-medium text-muted-foreground">Thời gian tạo:</span>
-            <p>{formatDate(finance.tg_tao)}</p>
+
+      {finance.ghi_chu && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <h4 className="font-medium">Ghi Chú</h4>
+            <p>{finance.ghi_chu}</p>
           </div>
-        )}
-        
-        {finance.tg_hoan_thanh && (
-          <div>
-            <span className="text-sm font-medium text-muted-foreground">Thời gian hoàn thành:</span>
-            <p>{formatDate(finance.tg_hoan_thanh)}</p>
-          </div>
-        )}
+        </>
+      )}
+
+      <div className="flex justify-end pt-4">
+        <Button 
+          onClick={() => setShowReceiptGenerator(true)}
+          className="gap-2"
+        >
+          <FileText className="h-4 w-4" />
+          Tạo Biên Lai
+        </Button>
       </div>
+
+      <Sheet open={showReceiptGenerator} onOpenChange={setShowReceiptGenerator}>
+        <SheetContent className="w-[800px] sm:max-w-[800px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Biên Lai Giao Dịch</SheetTitle>
+          </SheetHeader>
+          <div className="py-4">
+            <ReceiptGenerator finance={finance} onClose={() => setShowReceiptGenerator(false)} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
