@@ -3,16 +3,19 @@ import React, { useState } from 'react';
 import PageHeader from '@/components/common/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, ClockIcon } from 'lucide-react';
+import { Calendar, ClockIcon, UserRound } from 'lucide-react';
 import MonthlyAttendanceSummary from './MonthlyAttendanceSummary';
 import MonthlyAttendanceView from './MonthlyAttendanceView';
+import DailyAttendance from './DailyAttendance';
+import StudentAttendance from './StudentAttendance';
+import EmployeeAttendance from './EmployeeAttendance';
 
 const Attendance = () => {
   return (
     <div className="container mx-auto p-6">
       <PageHeader
         title="Chấm công"
-        description="Quản lý và theo dõi chấm công nhân viên"
+        description="Quản lý và theo dõi chấm công nhân viên và học sinh"
         icon={<ClockIcon className="h-6 w-6" />}
       />
 
@@ -21,7 +24,9 @@ const Attendance = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="monthly-view">Bảng chấm công tháng</TabsTrigger>
             <TabsTrigger value="summary">Thống kê tổng hợp</TabsTrigger>
-            <TabsTrigger value="daily">Chấm công hàng ngày</TabsTrigger>
+            <TabsTrigger value="daily">Chấm công hằng ngày</TabsTrigger>
+            <TabsTrigger value="employees">Nhân viên</TabsTrigger>
+            <TabsTrigger value="students">Học sinh</TabsTrigger>
           </TabsList>
 
           <TabsContent value="monthly-view" className="space-y-4">
@@ -33,13 +38,15 @@ const Attendance = () => {
           </TabsContent>
 
           <TabsContent value="daily" className="space-y-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center h-40">
-                  <p className="text-muted-foreground">Chức năng chấm công hàng ngày đang được phát triển.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <DailyAttendance />
+          </TabsContent>
+
+          <TabsContent value="employees" className="space-y-4">
+            <EmployeeAttendance />
+          </TabsContent>
+
+          <TabsContent value="students" className="space-y-4">
+            <StudentAttendance />
           </TabsContent>
         </Tabs>
       </div>

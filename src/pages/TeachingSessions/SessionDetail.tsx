@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { enrollmentService } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users } from "lucide-react";
+import { Calendar, Clock, Users, GraduationCap } from "lucide-react";
 import DataTable from "@/components/ui/DataTable";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface SessionDetailProps {
   session: TeachingSession;
@@ -52,9 +54,25 @@ const SessionDetail = ({ session, class: classItem, teacher }: SessionDetailProp
 
   const enrollmentColumns = [
     {
-      title: "Học sinh ID",
+      title: "Học sinh",
       key: "hoc_sinh_id",
       sortable: true,
+      render: (_: string, record: any) => (
+        <Link to={`/students/${record.hoc_sinh_id}`} className="hover:underline flex items-center gap-2">
+          {record.student_image ? (
+            <img 
+              src={record.student_image} 
+              alt="Học sinh" 
+              className="w-8 h-8 rounded-full object-cover" 
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
+              <GraduationCap className="h-4 w-4 text-slate-500" />
+            </div>
+          )}
+          <span>{record.student_name || 'Học sinh'}</span>
+        </Link>
+      ),
     },
     {
       title: "Điểm danh",
@@ -77,13 +95,24 @@ const SessionDetail = ({ session, class: classItem, teacher }: SessionDetailProp
       key: "ghi_chu",
       render: (value: string) => <span>{value || "Không có"}</span>,
     },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_: string, record: any) => (
+        <Button size="sm" variant="outline" asChild>
+          <Link to={`/students/${record.hoc_sinh_id}`}>
+            Xem học sinh
+          </Link>
+        </Button>
+      ),
+    }
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">
-          {classItem?.Ten_lop_full} - Buổi {session.session_id}
+          {classItem?.Ten_lop_full || classItem?.ten_lop_full} - Buổi {session.session_id}
         </h2>
         <p className="text-muted-foreground">Loại bài học: {session.loai_bai_hoc}</p>
       </div>
@@ -96,7 +125,11 @@ const SessionDetail = ({ session, class: classItem, teacher }: SessionDetailProp
           <CardContent className="space-y-3">
             <div className="grid grid-cols-3 gap-1">
               <span className="text-sm font-medium text-muted-foreground">Lớp:</span>
-              <span className="text-sm col-span-2">{classItem?.Ten_lop_full}</span>
+              <span className="text-sm col-span-2">
+                <Link to={`/classes/${classItem?.id}`} className="hover:underline">
+                  {classItem?.Ten_lop_full || classItem?.ten_lop_full}
+                </Link>
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-1">
               <span className="text-sm font-medium text-muted-foreground">Ngày học:</span>
@@ -112,13 +145,17 @@ const SessionDetail = ({ session, class: classItem, teacher }: SessionDetailProp
               <span className="text-sm col-span-2">
                 <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
-                  {session.thoi_gian_bat_dau.substring(0, 5)} - {session.thoi_gian_ket_thuc.substring(0, 5)}
+                  {session.thoi_gian_bat_dau?.substring(0, 5)} - {session.thoi_gian_ket_thuc?.substring(0, 5)}
                 </div>
               </span>
             </div>
             <div className="grid grid-cols-3 gap-1">
               <span className="text-sm font-medium text-muted-foreground">Giáo viên:</span>
-              <span className="text-sm col-span-2">{teacher?.ten_nhan_su || session.giao_vien}</span>
+              <span className="text-sm col-span-2">
+                <Link to={`/employees/${teacher?.id || session.giao_vien}`} className="hover:underline">
+                  {teacher?.ten_nhan_su || session.giao_vien}
+                </Link>
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-1">
               <span className="text-sm font-medium text-muted-foreground">Trợ giảng:</span>

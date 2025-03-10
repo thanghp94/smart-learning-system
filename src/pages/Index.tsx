@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { BarChart, AreaChart } from 'recharts';
 import { CalendarCheck, GraduationCap, Users, Book } from 'lucide-react';
 import RecentActivity from '@/components/dashboard/RecentActivity';
