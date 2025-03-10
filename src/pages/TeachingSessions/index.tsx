@@ -16,6 +16,7 @@ import SessionForm from './SessionForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import PlaceholderPage from '@/components/common/PlaceholderPage';
 import ExportButton from '@/components/ui/ExportButton';
+import AttendanceDialog from './components/AttendanceDialog';
 
 const TeachingSessions = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
@@ -24,7 +25,7 @@ const TeachingSessions = () => {
   const [selectedSession, setSelectedSession] = useState<TeachingSession | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showAttendanceForm, setShowAttendanceForm] = useState(false);
+  const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [showConfirmTimeDialog, setShowConfirmTimeDialog] = useState(false);
   const { toast } = useToast();
@@ -114,7 +115,7 @@ const TeachingSessions = () => {
 
   const handleAddAttendance = (session: TeachingSession) => {
     setSelectedSession(session);
-    setShowAttendanceForm(true);
+    setShowAttendanceDialog(true);
   };
 
   const handleAddEvaluation = (session: TeachingSession) => {
@@ -316,28 +317,14 @@ const TeachingSessions = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showAttendanceForm} onOpenChange={setShowAttendanceForm}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Thêm Điểm Danh</DialogTitle>
-            <DialogDescription>
-              Thêm thông tin điểm danh cho buổi học {selectedSession?.buoi_hoc_so || selectedSession?.session_id}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-center text-muted-foreground py-4">
-              Chức năng điểm danh đang được phát triển
-            </p>
-            <div className="flex justify-end">
-              <Button 
-                onClick={() => setShowAttendanceForm(false)}
-              >
-                Đóng
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {selectedSession && (
+        <AttendanceDialog
+          isOpen={showAttendanceDialog}
+          onClose={() => setShowAttendanceDialog(false)}
+          sessionId={selectedSession.id}
+          classId={selectedSession.lop_chi_tiet_id}
+        />
+      )}
 
       <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
         <DialogContent className="sm:max-w-[600px]">
