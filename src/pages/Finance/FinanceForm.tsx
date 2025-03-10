@@ -28,13 +28,13 @@ import { financeService } from '@/lib/supabase/finance-service';
 // Define the schema for the finance form
 const financeSchema = z.object({
   loai_thu_chi: z.string().min(1, { message: 'Vui lòng chọn loại giao dịch' }),
+  loai_doi_tuong: z.string().optional(),
   loai_giao_dich: z.string().optional(),
   dien_giai: z.string().min(2, { message: 'Diễn giải quá ngắn' }),
   ngay: z.string().min(1, { message: 'Vui lòng chọn ngày' }),
   tong_tien: z.string().min(1, { message: 'Vui lòng nhập số tiền' }),
   co_so: z.string().optional(),
   doi_tuong_id: z.string().optional(),
-  loai_doi_tuong: z.string().optional(),
   thoi_gian_phai_tra: z.string().optional(),
   tinh_trang: z.string().default('pending'),
   ghi_chu: z.string().optional(),
@@ -61,6 +61,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   const [assets, setAssets] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<FinanceTransactionType[]>([]);
+  const [filteredTransactionTypes, setFilteredTransactionTypes] = useState<FinanceTransactionType[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<string | null>(
     initialData?.loai_doi_tuong || null
   );
@@ -73,13 +74,13 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     resolver: zodResolver(financeSchema),
     defaultValues: {
       loai_thu_chi: initialData?.loai_thu_chi || 'expense',
+      loai_doi_tuong: initialData?.loai_doi_tuong || '',
       loai_giao_dich: initialData?.loai_giao_dich || '',
       dien_giai: initialData?.dien_giai || '',
       ngay: initialData?.ngay || new Date().toISOString().split('T')[0],
       tong_tien: initialData?.tong_tien?.toString() || '',
       co_so: initialData?.co_so || '',
       doi_tuong_id: initialData?.doi_tuong_id || '',
-      loai_doi_tuong: initialData?.loai_doi_tuong || '',
       thoi_gian_phai_tra: initialData?.thoi_gian_phai_tra
         ? new Date(initialData.thoi_gian_phai_tra).toISOString().split('T')[0]
         : '',
@@ -88,19 +89,90 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     },
   });
 
-  // Update transaction types when transaction category changes
+  // Load all transaction types on component mount
   useEffect(() => {
-    const loadTransactionTypes = async () => {
+    const loadAllTransactionTypes = async () => {
       try {
-        const types = await financeService.getTransactionTypes(selectedTransactionCategory);
+        const types = await financeService.getTransactionTypes();
         setTransactionTypes(types);
+        
+        // Also filter for the currently selected category
+        const filtered = types.filter(type => type.category === selectedTransactionCategory);
+        setFilteredTransactionTypes(filtered);
       } catch (error) {
         console.error('Error loading transaction types:', error);
       }
     };
     
-    loadTransactionTypes();
-  }, [selectedTransactionCategory]);
+    loadAllTransactionTypes();
+  }, []);
+
+  // Update transaction types when transaction category changes
+  useEffect(() => {
+    // Filter transaction types by category
+    const filtered = transactionTypes.filter(type => type.category === selectedTransactionCategory);
+    
+    // Further filter by entity type if needed
+    if (selectedEntityType) {
+      let typeSpecificItems: FinanceTransactionType[] = [];
+      
+      // Filter transaction types specific to the selected entity type
+      switch (selectedEntityType) {
+        case 'student':
+          typeSpecificItems = filtered.filter(type => 
+            ['Học phí', 'Sách học', 'Hoàn học phí', 'Khen thưởng'].includes(type.name)
+          );
+          break;
+        case 'facility':
+          typeSpecificItems = filtered.filter(type => 
+            ['Tiền điện', 'Tiền nước', 'Tiền Internet', 'Phí điện thoại cố định', 
+             'Tiền rác', 'Tiền thuê nhà', 'Văn phòng phẩm', 'Mua máy móc thiết bị', 
+             'Sửa chữa cơ sở vật chất', 'Làm mới cơ sở vật chất', 'Nạp mực in', 
+             'Mua dụng cụ vệ sinh nhà cửa'].includes(type.name)
+          );
+          break;
+        case 'employee':
+          typeSpecificItems = filtered.filter(type => 
+            ['Lương', 'Thưởng', 'Phụ cấp đi lại', 'Lương bảo hiểm', 'Tạm ứng', 
+             'Phụ cấp điện thoại', 'Bảo hiểm xã hội', 'Bảo hiểm y tế', 
+             'Thưởng Lễ Tết', 'Phụ cấp ăn ở'].includes(type.name)
+          );
+          break;
+        case 'government':
+          typeSpecificItems = filtered.filter(type => 
+            ['Phí giấy phép lao động', 'Phí thẻ tạm trú'].includes(type.name)
+          );
+          break;
+        case 'event':
+          typeSpecificItems = filtered.filter(type => 
+            ['Phí thuê địa điểm', 'Phí thuê xe', 'Tiền ăn', 
+             'Tiền lương nhân sự', 'Phí sự kiện'].includes(type.name)
+          );
+          break;
+        case 'asset':
+          typeSpecificItems = filtered.filter(type => 
+            ['Văn phòng phẩm', 'Mua máy móc thiết bị', 'Sửa chữa cơ sở vật chất', 
+             'Làm mới cơ sở vật chất', 'Nạp mực in', 'Mua dụng cụ vệ sinh nhà cửa',
+             'Phí cơ sở vật chất'].includes(type.name)
+          );
+          break;
+        default:
+          typeSpecificItems = filtered;
+          break;
+      }
+      
+      // If we have entity-specific items, use those; otherwise fallback to all items in the category
+      setFilteredTransactionTypes(typeSpecificItems.length > 0 ? typeSpecificItems : filtered);
+    } else {
+      setFilteredTransactionTypes(filtered);
+    }
+    
+    // Reset the transaction type if it's no longer valid for the new category or entity type
+    const currentType = form.getValues('loai_giao_dich');
+    if (currentType && !filtered.some(type => type.name === currentType)) {
+      form.setValue('loai_giao_dich', '');
+    }
+  }, [selectedTransactionCategory, selectedEntityType, transactionTypes, form]);
 
   // Load related entities when the form loads or entity type changes
   useEffect(() => {
@@ -183,6 +255,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* SECTION 1: Transaction Type and Entity Selection */}
           <FormField
             control={form.control}
             name="loai_thu_chi"
@@ -207,6 +280,33 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
 
           <FormField
             control={form.control}
+            name="loai_doi_tuong"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Loại đối tượng</FormLabel>
+                <Select onValueChange={(value) => handleEntityTypeChange(value)} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn loại đối tượng" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="student">Học sinh</SelectItem>
+                    <SelectItem value="employee">Nhân viên</SelectItem>
+                    <SelectItem value="contact">Liên hệ</SelectItem>
+                    <SelectItem value="facility">Cơ sở</SelectItem>
+                    <SelectItem value="asset">Cơ sở vật chất</SelectItem>
+                    <SelectItem value="event">Sự kiện</SelectItem>
+                    <SelectItem value="government">Cơ quan nhà nước</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="loai_giao_dich"
             render={({ field }) => (
               <FormItem>
@@ -218,7 +318,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {transactionTypes.map((type) => (
+                    {filteredTransactionTypes.map((type) => (
                       <SelectItem key={type.id} value={type.name}>
                         {type.name}
                       </SelectItem>
@@ -230,6 +330,74 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
             )}
           />
 
+          {selectedEntityType && (
+            <FormField
+              control={form.control}
+              name="doi_tuong_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Đối tượng</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn đối tượng" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedEntityType === 'student' &&
+                        students.map((student) => (
+                          <SelectItem key={student.id} value={student.id}>
+                            {student.ten_hoc_sinh}
+                          </SelectItem>
+                        ))}
+                      
+                      {selectedEntityType === 'employee' &&
+                        employees.map((employee) => (
+                          <SelectItem key={employee.id} value={employee.id}>
+                            {employee.ten_nhan_su}
+                          </SelectItem>
+                        ))}
+                      
+                      {selectedEntityType === 'contact' &&
+                        contacts.map((contact) => (
+                          <SelectItem key={contact.id} value={contact.id}>
+                            {contact.ten_lien_he}
+                          </SelectItem>
+                        ))}
+                        
+                      {selectedEntityType === 'facility' &&
+                        facilities.map((facility) => (
+                          <SelectItem key={facility.id} value={facility.id}>
+                            {facility.ten_co_so}
+                          </SelectItem>
+                        ))}
+                        
+                      {selectedEntityType === 'asset' &&
+                        assets.map((asset) => (
+                          <SelectItem key={asset.id} value={asset.id}>
+                            {asset.ten_csvc}
+                          </SelectItem>
+                        ))}
+                        
+                      {selectedEntityType === 'event' &&
+                        events.map((event) => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {event.ten_su_kien}
+                          </SelectItem>
+                        ))}
+                        
+                      {selectedEntityType === 'government' &&
+                        <SelectItem value="government">Cơ quan nhà nước</SelectItem>
+                      }
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* SECTION 2: Transaction Details */}
           <FormField
             control={form.control}
             name="ngay"
@@ -319,102 +487,6 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
               </FormItem>
             )}
           />
-        </div>
-
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="loai_doi_tuong"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Loại đối tượng</FormLabel>
-                <Select onValueChange={(value) => handleEntityTypeChange(value)} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn loại đối tượng" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="student">Học sinh</SelectItem>
-                    <SelectItem value="employee">Nhân viên</SelectItem>
-                    <SelectItem value="contact">Liên hệ</SelectItem>
-                    <SelectItem value="facility">Cơ sở</SelectItem>
-                    <SelectItem value="asset">Cơ sở vật chất</SelectItem>
-                    <SelectItem value="event">Sự kiện</SelectItem>
-                    <SelectItem value="government">Cơ quan nhà nước</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {selectedEntityType && (
-            <FormField
-              control={form.control}
-              name="doi_tuong_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Đối tượng</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn đối tượng" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {selectedEntityType === 'student' &&
-                        students.map((student) => (
-                          <SelectItem key={student.id} value={student.id}>
-                            {student.ten_hoc_sinh}
-                          </SelectItem>
-                        ))}
-                      
-                      {selectedEntityType === 'employee' &&
-                        employees.map((employee) => (
-                          <SelectItem key={employee.id} value={employee.id}>
-                            {employee.ten_nhan_su}
-                          </SelectItem>
-                        ))}
-                      
-                      {selectedEntityType === 'contact' &&
-                        contacts.map((contact) => (
-                          <SelectItem key={contact.id} value={contact.id}>
-                            {contact.ten_lien_he}
-                          </SelectItem>
-                        ))}
-                        
-                      {selectedEntityType === 'facility' &&
-                        facilities.map((facility) => (
-                          <SelectItem key={facility.id} value={facility.id}>
-                            {facility.ten_co_so}
-                          </SelectItem>
-                        ))}
-                        
-                      {selectedEntityType === 'asset' &&
-                        assets.map((asset) => (
-                          <SelectItem key={asset.id} value={asset.id}>
-                            {asset.ten_csvc}
-                          </SelectItem>
-                        ))}
-                        
-                      {selectedEntityType === 'event' &&
-                        events.map((event) => (
-                          <SelectItem key={event.id} value={event.id}>
-                            {event.ten_su_kien}
-                          </SelectItem>
-                        ))}
-                        
-                      {selectedEntityType === 'government' &&
-                        <SelectItem value="government">Cơ quan nhà nước</SelectItem>
-                      }
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
         </div>
 
         <FormField

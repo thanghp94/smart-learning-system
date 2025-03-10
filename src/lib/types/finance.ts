@@ -7,7 +7,7 @@ export interface Finance {
   co_so?: string;
   ngay?: string;
   loai_thu_chi: string;
-  loai_giao_dich?: string; // New field for transaction type
+  loai_giao_dich?: string; // Transaction type
   dien_giai?: string;
   ten_phi?: string;
   thoi_gian_phai_tra?: string;
