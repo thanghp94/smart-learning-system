@@ -672,6 +672,36 @@ export type Database = {
           },
         ]
       }
+      enum_values: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          order_num: number | null
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_num?: number | null
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_num?: number | null
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
       evaluations: {
         Row: {
           created_at: string | null
@@ -2640,6 +2670,15 @@ export type Database = {
       }
     }
     Functions: {
+      add_enum_value: {
+        Args: {
+          p_category: string
+          p_value: string
+          p_description?: string
+          p_order_num?: number
+        }
+        Returns: Json
+      }
       create_attendance_records_for_date: {
         Args: {
           check_date?: string
@@ -2666,6 +2705,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      delete_enum_value: {
+        Args: {
+          p_id: string
+        }
+        Returns: Json
+      }
       get_schema_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -2678,6 +2723,15 @@ export type Database = {
           sql: string
         }
         Returns: undefined
+      }
+      update_enum_value: {
+        Args: {
+          p_id: string
+          p_value: string
+          p_description?: string
+          p_order_num?: number
+        }
+        Returns: Json
       }
     }
     Enums: {

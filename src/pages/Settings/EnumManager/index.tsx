@@ -1,19 +1,23 @@
 
-import React, { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, RefreshCw, Settings, Database } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
-import { EnumValue, EnumCategory, enumService } from '@/lib/supabase/enum-service';
-import { EnumValueForm } from './EnumValueForm';
-import { EnumValuesList } from './EnumValuesList';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,235 +28,285 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { EnumValuesList } from './EnumValuesList';
+import { EnumValueForm } from './EnumValueForm';
+import { EnumValue, EnumCategory, enumService } from '@/lib/supabase/enum-service';
 import PageHeader from '@/components/common/PageHeader';
 
 const EnumManager: React.FC = () => {
-  const { toast } = useToast();
+  const [enumCategories, setEnumCategories] = useState<EnumCategory[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [groupedEnums, setGroupedEnums] = useState<EnumCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentEnum, setCurrentEnum] = useState<EnumValue | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  
+  const [showForm, setShowForm] = useState(false);
+  const [editingValue, setEditingValue] = useState<EnumValue | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [valueToDelete, setValueToDelete] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const allEnums = await enumService.getAllEnumValues();
-        const categoryList = await enumService.getEnumCategories();
-        
-        const grouped = enumService.groupEnumsByCategory(allEnums);
-        
-        setCategories(categoryList);
-        setGroupedEnums(grouped);
-        
-        if (categoryList.length > 0 && !activeTab) {
-          setActiveTab(categoryList[0]);
-        }
-      } catch (error) {
-        console.error('Error loading enum data:', error);
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải dữ liệu enum. Vui lòng thử lại sau.',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadData();
-  }, [refreshTrigger, toast, activeTab]);
+  const { toast } = useToast();
 
-  const handleAddEnumValue = async (data: Omit<EnumValue, 'id' | 'created_at' | 'updated_at'>) => {
+  // Fetch enum data
+  const fetchEnumData = async () => {
+    setIsLoading(true);
     try {
-      await enumService.addEnumValue(data);
-      setIsAddDialogOpen(false);
-      setRefreshTrigger(prev => prev + 1);
-      toast({
-        title: 'Thành công',
-        description: 'Đã thêm giá trị enum mới.',
-      });
+      const values = await enumService.getAllEnumValues();
+      const categoryNames = await enumService.getEnumCategories();
+      
+      setCategories(categoryNames);
+      const groupedEnums = enumService.groupEnumsByCategory(values);
+      setEnumCategories(groupedEnums);
+      
+      // Set active tab to first category if not set
+      if (!activeTab && groupedEnums.length > 0) {
+        setActiveTab(groupedEnums[0].name);
+      }
     } catch (error) {
-      console.error('Error adding enum value:', error);
+      console.error('Error fetching enum data:', error);
       toast({
         title: 'Lỗi',
-        description: error instanceof Error ? error.message : 'Không thể thêm giá trị enum.',
+        description: 'Không thể tải dữ liệu enum. Vui lòng thử lại sau.',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleEditEnumValue = async (data: Omit<EnumValue, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!currentEnum) return;
-    
+  useEffect(() => {
+    fetchEnumData();
+  }, []);
+
+  // Handle adding new enum value
+  const handleAddValue = async (data: any) => {
     try {
-      await enumService.updateEnumValue(currentEnum.id, {
+      await enumService.addEnumValue({
+        category: data.category,
         value: data.value,
         description: data.description,
         order_num: data.order_num,
       });
       
-      setIsEditDialogOpen(false);
-      setCurrentEnum(null);
-      setRefreshTrigger(prev => prev + 1);
+      toast({
+        title: 'Thành công',
+        description: 'Đã thêm giá trị enum mới',
+      });
+      
+      setShowForm(false);
+      fetchEnumData();
+    } catch (error) {
+      console.error('Error adding enum value:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể thêm giá trị enum. Vui lòng thử lại.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Handle updating enum value
+  const handleUpdateValue = async (data: any) => {
+    if (!editingValue) return;
+    
+    try {
+      await enumService.updateEnumValue(editingValue.id, {
+        value: data.value,
+        description: data.description,
+        order_num: data.order_num,
+      });
       
       toast({
         title: 'Thành công',
-        description: 'Đã cập nhật giá trị enum.',
+        description: 'Đã cập nhật giá trị enum',
       });
+      
+      setEditingValue(null);
+      setShowForm(false);
+      fetchEnumData();
     } catch (error) {
       console.error('Error updating enum value:', error);
       toast({
         title: 'Lỗi',
-        description: error instanceof Error ? error.message : 'Không thể cập nhật giá trị enum.',
+        description: 'Không thể cập nhật giá trị enum. Vui lòng thử lại.',
         variant: 'destructive',
       });
     }
   };
 
-  const handleDeleteEnumValue = async () => {
-    if (!currentEnum) return;
+  // Handle deleting enum value
+  const handleDeleteValue = async () => {
+    if (!valueToDelete) return;
     
     try {
-      await enumService.deleteEnumValue(currentEnum.id);
-      
-      setIsDeleteDialogOpen(false);
-      setCurrentEnum(null);
-      setRefreshTrigger(prev => prev + 1);
+      await enumService.deleteEnumValue(valueToDelete);
       
       toast({
         title: 'Thành công',
-        description: 'Đã xóa giá trị enum.',
+        description: 'Đã xóa giá trị enum',
       });
+      
+      setValueToDelete(null);
+      setDeleteConfirmOpen(false);
+      fetchEnumData();
     } catch (error) {
       console.error('Error deleting enum value:', error);
       toast({
         title: 'Lỗi',
-        description: error instanceof Error ? error.message : 'Không thể xóa giá trị enum.',
+        description: 'Không thể xóa giá trị enum. Vui lòng thử lại.',
         variant: 'destructive',
       });
     }
   };
 
-  const handleOpenEditDialog = (enumValue: EnumValue) => {
-    setCurrentEnum(enumValue);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleOpenDeleteDialog = (id: string) => {
-    const enumToDelete = groupedEnums
-      .flatMap(category => category.values)
-      .find(enumValue => enumValue.id === id);
-    
-    if (enumToDelete) {
-      setCurrentEnum(enumToDelete);
-      setIsDeleteDialogOpen(true);
-    }
-  };
-
-  const handleRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
-  };
+  // Filter enums based on search query and category filter
+  const filteredCategories = enumCategories
+    .filter(category => 
+      filterCategory === 'all' || category.name === filterCategory
+    )
+    .map(category => ({
+      ...category,
+      values: category.values.filter(value => 
+        value.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (value.description && value.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    }))
+    .filter(category => category.values.length > 0);
 
   return (
     <div className="container mx-auto p-4">
       <PageHeader 
-        title="Quản lý Enum Values" 
-        description="Quản lý các giá trị enum được sử dụng trong ứng dụng"
+        title="Quản lý Enum" 
+        description="Quản lý các giá trị enum được sử dụng trong hệ thống" 
         rightContent={
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Làm mới
-            </Button>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Thêm giá trị mới
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Thêm giá trị enum mới</DialogTitle>
-                </DialogHeader>
-                <EnumValueForm
-                  categories={categories}
-                  onSubmit={handleAddEnumValue}
-                  isEditMode={false}
-                  initialData={{ category: activeTab }}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
+          <Button onClick={() => { setEditingValue(null); setShowForm(true); }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Thêm giá trị mới
+          </Button>
         }
       />
 
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <p>Đang tải dữ liệu...</p>
+      <div className="flex flex-col md:flex-row gap-4 my-4">
+        <div className="md:w-1/3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Tìm kiếm giá trị..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
+        
+        <div className="md:w-1/3">
+          <Select
+            value={filterCategory}
+            onValueChange={setFilterCategory}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn danh mục" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả danh mục</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="md:w-1/3 flex justify-end">
+          <Button variant="outline" onClick={fetchEnumData}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Làm mới
+          </Button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center my-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      ) : filteredCategories.length > 0 ? (
+        <Tabs value={activeTab || undefined} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4 flex flex-wrap">
-            {categories.map(category => (
-              <TabsTrigger key={category} value={category}>
-                {category}
+            {filteredCategories.map((category) => (
+              <TabsTrigger key={category.name} value={category.name}>
+                {category.name} ({category.values.length})
               </TabsTrigger>
             ))}
           </TabsList>
           
-          {groupedEnums.map(category => (
-            <TabsContent key={category.name} value={category.name}>
+          {filteredCategories.map((category) => (
+            <TabsContent key={category.name} value={category.name} className="mt-0">
               <EnumValuesList
-                enumValues={category.values}
-                onEdit={handleOpenEditDialog}
-                onDelete={handleOpenDeleteDialog}
                 title={`Danh mục: ${category.name}`}
+                enumValues={category.values}
+                onEdit={(value) => {
+                  setEditingValue(value);
+                  setShowForm(true);
+                }}
+                onDelete={(id) => {
+                  setValueToDelete(id);
+                  setDeleteConfirmOpen(true);
+                }}
               />
             </TabsContent>
           ))}
         </Tabs>
+      ) : (
+        <div className="text-center my-8">
+          <Database className="h-12 w-12 mx-auto text-gray-400" />
+          <h3 className="mt-4 text-lg font-medium">Không tìm thấy dữ liệu</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {searchQuery || filterCategory !== 'all'
+              ? 'Không tìm thấy kết quả phù hợp. Vui lòng thử lại với tiêu chí khác.'
+              : 'Chưa có giá trị enum nào. Hãy thêm giá trị mới để bắt đầu.'}
+          </p>
+        </div>
       )}
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* Form Dialog */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Chỉnh sửa giá trị enum</DialogTitle>
+            <DialogTitle>
+              {editingValue ? 'Cập nhật giá trị enum' : 'Thêm giá trị enum mới'}
+            </DialogTitle>
           </DialogHeader>
-          {currentEnum && (
-            <EnumValueForm
-              initialData={currentEnum}
-              categories={categories}
-              onSubmit={handleEditEnumValue}
-              isEditMode={true}
-            />
-          )}
+          <EnumValueForm
+            initialData={editingValue || undefined}
+            categories={categories}
+            isEditMode={!!editingValue}
+            onSubmit={editingValue ? handleUpdateValue : handleAddValue}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingValue(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa giá trị enum '{currentEnum?.value}' trong danh mục '{currentEnum?.category}'?
-              <br />
-              <span className="font-bold text-destructive">
-                Lưu ý: Việc xóa có thể ảnh hưởng đến dữ liệu hiện có sử dụng giá trị này.
-              </span>
+              Bạn có chắc chắn muốn xóa giá trị enum này không? Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteEnumValue}>Xóa</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setValueToDelete(null)}>
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteValue}>
+              Xóa
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

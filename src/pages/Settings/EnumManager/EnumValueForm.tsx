@@ -16,13 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { EnumValue } from '@/lib/supabase/enum-service';
 
-interface EnumValueFormProps {
-  initialData?: Partial<EnumValue>;
-  categories: string[];
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
-  isEditMode: boolean;
-}
-
 const formSchema = z.object({
   category: z.string().min(1, {
     message: 'Danh mục không được để trống',
@@ -31,14 +24,23 @@ const formSchema = z.object({
     message: 'Giá trị không được để trống',
   }),
   description: z.string().optional(),
-  order_num: z.coerce.number().int().min(0).optional(),
+  order_num: z.coerce.number().int().optional(),
 });
+
+interface EnumValueFormProps {
+  initialData?: EnumValue;
+  categories: string[];
+  isEditMode: boolean;
+  onSubmit: (values: z.infer<typeof formSchema>) => void;
+  onCancel: () => void;
+}
 
 export const EnumValueForm: React.FC<EnumValueFormProps> = ({
   initialData,
   categories,
-  onSubmit,
   isEditMode,
+  onSubmit,
+  onCancel,
 }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,7 +48,7 @@ export const EnumValueForm: React.FC<EnumValueFormProps> = ({
       category: initialData?.category || '',
       value: initialData?.value || '',
       description: initialData?.description || '',
-      order_num: initialData?.order_num || 0,
+      order_num: initialData?.order_num || undefined,
     },
   });
 
@@ -63,8 +65,12 @@ export const EnumValueForm: React.FC<EnumValueFormProps> = ({
                 {isEditMode ? (
                   <Input {...field} disabled />
                 ) : (
-                  <div className="flex space-x-2">
-                    <Input {...field} placeholder="Nhập tên danh mục" list="categories" />
+                  <div className="flex gap-2">
+                    <Input
+                      list="categories"
+                      {...field}
+                      placeholder="Chọn hoặc nhập danh mục mới"
+                    />
                     <datalist id="categories">
                       {categories.map((category) => (
                         <option key={category} value={category} />
@@ -85,7 +91,7 @@ export const EnumValueForm: React.FC<EnumValueFormProps> = ({
             <FormItem>
               <FormLabel>Giá trị</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Nhập giá trị enum" />
+                <Input {...field} placeholder="Nhập giá trị" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,7 +105,11 @@ export const EnumValueForm: React.FC<EnumValueFormProps> = ({
             <FormItem>
               <FormLabel>Mô tả</FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder="Mô tả về giá trị enum" />
+                <Textarea
+                  {...field}
+                  placeholder="Nhập mô tả (tùy chọn)"
+                  className="resize-none"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -111,18 +121,28 @@ export const EnumValueForm: React.FC<EnumValueFormProps> = ({
           name="order_num"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Thứ tự hiển thị</FormLabel>
+              <FormLabel>Thứ tự</FormLabel>
               <FormControl>
-                <Input {...field} type="number" min="0" placeholder="Thứ tự hiển thị" />
+                <Input
+                  type="number"
+                  {...field}
+                  value={field.value || ''}
+                  placeholder="Nhập thứ tự (tùy chọn)"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button type="submit" className="w-full">
-          {isEditMode ? 'Cập nhật' : 'Thêm mới'}
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Hủy
+          </Button>
+          <Button type="submit">
+            {isEditMode ? 'Cập nhật' : 'Thêm mới'}
+          </Button>
+        </div>
       </form>
     </Form>
   );
