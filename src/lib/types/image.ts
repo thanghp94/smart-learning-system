@@ -5,15 +5,20 @@ export interface Image {
   doi_tuong: string;
   doi_tuong_id: string;
   ten_anh: string;
-  file_name?: string; // Added for compatibility
-  url?: string; // Added for compatibility
-  mime_type?: string; // Added for compatibility
-  size?: number; // Added for compatibility
-  description?: string; // Added for compatibility
-  entity_type?: string; // Added for compatibility
-  entity_id?: string; // Added for compatibility
+  file_name?: string;
+  url?: string;
+  path?: string;
+  publicUrl?: string;
+  mime_type?: string;
+  size?: number;
+  description?: string;
+  entity_type?: string;
+  entity_id?: string;
   image?: string;
   video?: string;
   tg_tao?: string;
   created_at?: string;
+  type?: string;
+  error?: any;
+  data?: any;
 }

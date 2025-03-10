@@ -98,7 +98,13 @@ export const imageService = {
       
       const uploadResult = await storageService.uploadFile('images', filePath, file);
       
-      if (uploadResult && 'error' in uploadResult && uploadResult.error) throw uploadResult.error;
+      // Handle the result correctly
+      if (typeof uploadResult === 'string') {
+        return {
+          publicUrl: uploadResult,
+          path: filePath
+        };
+      }
       
       return uploadResult;
     } catch (error) {

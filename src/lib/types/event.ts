@@ -2,6 +2,8 @@
 export interface Event {
   id: string;
   title?: string; // Added for compatibility
+  type?: string; // Added for compatibility
+  description?: string; // Added for compatibility
   loai_su_kien: string;
   danh_muc_su_kien: string;
   doi_tuong_id: string;
@@ -18,5 +20,4 @@ export interface Event {
   tg_tao?: string;
   entity_type?: string; // Added for compatibility
   entity_id?: string; // Added for compatibility
-  description?: string; // Added for compatibility
 }

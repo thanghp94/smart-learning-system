@@ -22,4 +22,26 @@ export interface TeachingSession {
   gio_ket_thuc?: string;
   noi_dung?: string;
   ghi_chu?: string;
+  
+  // Additional fields needed by the application
+  lop_chi_tiet_id?: string;
+  giao_vien?: string;
+  thoi_gian_bat_dau?: string;
+  thoi_gian_ket_thuc?: string;
+  session_id?: string;
+  loai_bai_hoc?: string;
+  nhan_xet_1?: string | null;
+  nhan_xet_2?: string | null;
+  nhan_xet_3?: string | null;
+  nhan_xet_4?: string | null;
+  nhan_xet_5?: string | null;
+  nhan_xet_6?: string | null;
+  trung_binh?: number | null;
+  phong_hoc_id?: string;
+  tro_giang?: string;
+  nhan_xet_chung?: string;
+  class_name?: string;
+  teacher_name?: string;
+  completed?: boolean;
+  lesson_content?: string;
 }

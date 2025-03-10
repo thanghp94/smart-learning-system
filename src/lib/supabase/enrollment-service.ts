@@ -74,5 +74,38 @@ export const enrollmentService = {
       console.error(`Error fetching enrollments for class ${classId}:`, error);
       throw error;
     }
+  },
+
+  async getBySession(sessionId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching enrollments for session ${sessionId}:`, error);
+      throw error;
+    }
+  },
+
+  async getByClassAndSession(classId: string, sessionId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select('*')
+        .eq('class_id', classId)
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching enrollments for class ${classId} and session ${sessionId}:`, error);
+      throw error;
+    }
   }
 };
