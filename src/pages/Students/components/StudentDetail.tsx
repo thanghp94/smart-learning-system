@@ -1,290 +1,333 @@
+
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter,
+  Tabs, TabsContent, TabsList, TabsTrigger
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Student, Enrollment, Finance, Event } from '@/lib/types';
+import { 
+  User, Calendar, MapPin, Phone, Mail, School, FileText, 
+  DollarSign, Edit, Trash, Clock, Pencil, Globe
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Download, Calendar } from 'lucide-react';
-import { Student } from '@/lib/types';
-import { Link } from 'react-router-dom';
 import DataTable from '@/components/ui/DataTable';
-import EnrollStudentButton from './EnrollStudentButton';
-import { enrollmentService, financeService } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-
-const formatGender = (gender: string | undefined) => {
-  if (!gender) return 'N/A';
-  return gender === 'male' ? 'Nam' : gender === 'female' ? 'Nữ' : gender;
-};
-
-const formatStudentStatus = (status: string | undefined) => {
-  if (!status) return 'N/A';
-  switch(status) {
-    case 'active': return 'Đang học';
-    case 'inactive': return 'Nghỉ học';
-    case 'waiting': return 'Chờ nhập học';
-    case 'graduated': return 'Đã tốt nghiệp';
-    default: return status;
-  }
-};
+import { enrollmentService, financeService, eventService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { Link, useNavigate } from 'react-router-dom';
+import EnrollStudentButton from './EnrollStudentButton';
 
 interface StudentDetailProps {
   student: Student;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
-  const [enrollments, setEnrollments] = useState([]);
-  const [finances, setFinances] = useState([]);
-  const [isLoadingFinances, setIsLoadingFinances] = useState(true);
-  const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(true);
+const StudentDetail: React.FC<StudentDetailProps> = ({ student, onEdit, onDelete }) => {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [finances, setFinances] = useState<Finance[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadStudentData = async () => {
+      setIsLoading(true);
       try {
-        setIsLoadingEnrollments(true);
+        // Get enrollments for this student
         const enrollmentsData = await enrollmentService.getByStudent(student.id);
-        setEnrollments(enrollmentsData);
+        setEnrollments(enrollmentsData || []);
+        
+        // Get finances related to this student
+        const financesData = await financeService.getByEntity('student', student.id);
+        setFinances(financesData || []);
+        
+        // Get events related to this student
+        const eventsData = await eventService.getByEntity('student', student.id);
+        setEvents(eventsData || []);
+        
       } catch (error) {
-        console.error("Error loading enrollments:", error);
+        console.error('Error loading student data:', error);
         toast({
-          title: "Lỗi",
-          description: "Không thể tải dữ liệu đăng ký lớp học",
-          variant: "destructive",
+          title: 'Lỗi',
+          description: 'Không thể tải dữ liệu học sinh. Vui lòng thử lại sau.',
+          variant: 'destructive',
         });
       } finally {
-        setIsLoadingEnrollments(false);
-      }
-
-      try {
-        setIsLoadingFinances(true);
-        const financesData = await financeService.getByStudent(student.id);
-        setFinances(financesData);
-      } catch (error) {
-        console.error("Error loading finances:", error);
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải dữ liệu tài chính",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingFinances(false);
+        setIsLoading(false);
       }
     };
-
-    loadData();
+    
+    loadStudentData();
   }, [student.id, toast]);
 
-  const basicInfoColumns = [
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge variant="success">Hoạt động</Badge>;
+      case 'inactive':
+        return <Badge variant="secondary">Không hoạt động</Badge>;
+      case 'pending':
+        return <Badge variant="outline">Chờ xử lý</Badge>;
+      default:
+        return <Badge variant="outline">{status || 'N/A'}</Badge>;
+    }
+  };
+
+  // Table columns for enrollments
+  const enrollmentColumns = [
     {
-      title: "Mã học sinh",
-      key: "ma_hoc_sinh",
-      render: () => student.ma_hoc_sinh || "N/A",
+      title: "Lớp học",
+      key: "class_id",
+      render: () => "Tên lớp"
     },
     {
-      title: "Họ và tên",
-      key: "ho_va_ten",
-      render: () => student.ho_va_ten || "N/A",
-    },
-    {
-      title: "Ngày sinh",
-      key: "ngay_sinh",
-      render: () => student.ngay_sinh ? format(new Date(student.ngay_sinh), 'dd/MM/yyyy') : "N/A",
-    },
-    {
-      title: "Giới tính",
-      key: "gioi_tinh",
-      render: () => formatGender(student.gioi_tinh),
+      title: "Ngày bắt đầu",
+      key: "start_date",
+      render: () => "01/01/2023"
     },
     {
       title: "Trạng thái",
-      key: "trang_thai",
-      render: () => (
-        <Badge variant={student.trang_thai === 'active' ? 'success' : 'secondary'}>
-          {formatStudentStatus(student.trang_thai)}
-        </Badge>
-      ),
+      key: "status",
+      render: () => <Badge variant="success">Đang học</Badge>
     },
+    {
+      title: "Học phí",
+      key: "fee",
+      render: () => "2,000,000 ₫"
+    },
+    {
+      title: "Hạn đóng phí",
+      key: "due_date",
+      render: () => "15/01/2023"
+    }
   ];
 
-  const parentInfoColumns = [
+  // Table columns for finances
+  const financeColumns = [
     {
-      title: "Họ tên Phụ huynh",
-      key: "ten_phu_huynh",
-      render: () => student.ten_ph || "N/A",
+      title: "Ngày",
+      key: "date",
+      render: () => "01/01/2023"
     },
     {
-      title: "Số điện thoại",
-      key: "so_dien_thoai",
-      render: () => student.so_dien_thoai || "N/A",
+      title: "Loại",
+      key: "type",
+      render: () => "Học phí"
     },
     {
-      title: "Email",
-      key: "email",
-      render: () => student.email_ph1 || "N/A",
-    },
+      title: "Số tiền",
+      key: "amount",
+      render: () => "2,000,000 ₫"
+    }
   ];
 
-  const schoolInfoColumns = [
+  // Table columns for events
+  const eventColumns = [
     {
-      title: "Trường học",
-      key: "truong",
-      render: () => student.truong || "N/A",
+      title: "Ngày",
+      key: "date",
+      render: () => "01/01/2023"
     },
     {
-      title: "Lớp học",
-      key: "lop",
-      render: () => student.lop || "N/A",
+      title: "Tên sự kiện",
+      key: "name",
+      render: () => "Sự kiện A"
     },
+    {
+      title: "Loại",
+      key: "type",
+      render: () => "Hoạt động ngoại khóa"
+    },
+    {
+      title: "Trạng thái",
+      key: "status",
+      render: () => <Badge variant="outline">Sắp diễn ra</Badge>
+    }
   ];
 
-  const handleEnrollmentComplete = () => {
-    enrollmentService.getByStudent(student.id).then(data => {
-      setEnrollments(data);
-    });
+  const loadClassEnrollments = async () => {
+    try {
+      setActiveTab('enrollments');
+      if (enrollments.length === 0) {
+        const enrollmentsData = await enrollmentService.getByStudent(student.id);
+        setEnrollments(enrollmentsData || []);
+      }
+    } catch (error) {
+      console.error('Error loading enrollments:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải dữ liệu lớp học. Vui lòng thử lại sau.',
+        variant: 'destructive',
+      });
+    }
   };
 
+  // Placeholder data
+  const dummyStudentData: Student = student;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Thông tin học sinh</h2>
-          <p className="text-muted-foreground">Thông tin chi tiết về học sinh</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <EnrollStudentButton 
-            student={student.id}
-            onEnrollmentComplete={handleEnrollmentComplete}
-          />
-          <Button asChild variant="outline">
-            <Link to={`/students/edit/${student.id}`}>
-              <Pencil className="h-4 w-4 mr-2" /> Sửa thông tin
-            </Link>
-          </Button>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" /> Xuất
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="text-2xl font-bold">{dummyStudentData.ho_va_ten || dummyStudentData.ten_hoc_sinh}</CardTitle>
+            <CardDescription className="flex items-center mt-1">
+              <span>{dummyStudentData.ma_hoc_sinh || 'MS12345'}</span>
+              <span className="mx-2">•</span>
+              {getStatusBadge(dummyStudentData.trang_thai)}
+            </CardDescription>
+          </div>
+          <div className="flex space-x-2">
+            {onEdit && (
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                <Edit className="h-4 w-4 mr-1" /> Sửa
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="destructive" size="sm" onClick={onDelete}>
+                <Trash className="h-4 w-4 mr-1" /> Xóa
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+      </Card>
 
-      <Tabs defaultValue="basic-info">
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="basic-info">Thông tin cơ bản</TabsTrigger>
-          <TabsTrigger value="enrollments">Đăng ký lớp học ({enrollments.length})</TabsTrigger>
-          <TabsTrigger value="finances">Tài chính ({finances.length})</TabsTrigger>
-          <TabsTrigger value="attendance">Điểm danh</TabsTrigger>
-          <TabsTrigger value="notes">Ghi chú</TabsTrigger>
+          <TabsTrigger value="overview">Tổng quan</TabsTrigger>
+          <TabsTrigger value="enrollments">Lớp học</TabsTrigger>
+          <TabsTrigger value="finances">Tài chính</TabsTrigger>
+          <TabsTrigger value="events">Sự kiện</TabsTrigger>
+          <TabsTrigger value="history">Lịch sử</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="basic-info">
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+        
+        <TabsContent value="overview">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Thông tin học sinh</CardTitle>
+                <CardTitle>Thông tin cá nhân</CardTitle>
               </CardHeader>
-              <CardContent>
-                <DataTable
-                  columns={basicInfoColumns}
-                  data={[student]}
-                  noDataMessage="Không có thông tin học sinh"
-                  showHeader={false}
-                />
+              <CardContent className="space-y-3">
+                <div className="flex items-center">
+                  <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground w-32">Họ và tên:</span>
+                  <span>{dummyStudentData.ho_va_ten || dummyStudentData.ten_hoc_sinh}</span>
+                </div>
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground w-32">Ngày sinh:</span>
+                  <span>{dummyStudentData.ngay_sinh ? format(new Date(dummyStudentData.ngay_sinh), 'dd/MM/yyyy') : 'N/A'}</span>
+                </div>
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground w-32">Địa chỉ:</span>
+                  <span>{dummyStudentData.dia_chi || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="flex items-center">
+                  <School className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground w-32">Trường:</span>
+                  <span>{dummyStudentData.truong || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="flex items-center">
+                  <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground w-32">Nguồn đến:</span>
+                  <span>{dummyStudentData.nguon_den || 'Chưa cập nhật'}</span>
+                </div>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardHeader>
                 <CardTitle>Thông tin phụ huynh</CardTitle>
               </CardHeader>
-              <CardContent>
-                <DataTable
-                  columns={parentInfoColumns}
-                  data={[student]}
-                  noDataMessage="Không có thông tin phụ huynh"
-                  showHeader={false}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Thông tin trường học</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable
-                  columns={schoolInfoColumns}
-                  data={[student]}
-                  noDataMessage="Không có thông tin trường học"
-                  showHeader={false}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Ghi chú</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">{student.ghi_chu || 'Không có ghi chú'}</p>
+              <CardContent className="space-y-3">
+                <div className="flex items-center">
+                  <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground w-32">Tên phụ huynh:</span>
+                  <span>{dummyStudentData.ten_PH || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="flex items-center">
+                  <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground w-32">Số điện thoại:</span>
+                  <span>{dummyStudentData.sdt_ph1 || dummyStudentData.so_dien_thoai || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground w-32">Email:</span>
+                  <span>{dummyStudentData.email_ph1 || 'Chưa cập nhật'}</span>
+                </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-
+        
         <TabsContent value="enrollments">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Đăng ký lớp học</CardTitle>
-              <Button variant="outline" size="sm">
-                <Calendar className="h-4 w-4 mr-1" /> Lịch học
-              </Button>
+              <CardTitle>Danh sách lớp học</CardTitle>
+              <EnrollStudentButton studentId={student.id} onEnrollmentCreated={loadClassEnrollments} />
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                {isLoadingEnrollments ? 'Đang tải...' : (
-                  enrollments.length === 0 ? 'Chưa đăng ký lớp học nào' : 'Danh sách lớp học đã đăng ký'
-                )}
-              </div>
+              <DataTable
+                columns={enrollmentColumns}
+                data={enrollments}
+                emptyMessage="Học sinh chưa đăng ký lớp học nào"
+                showHeader={true}
+              />
             </CardContent>
           </Card>
         </TabsContent>
         
         <TabsContent value="finances">
           <Card>
-            <CardHeader>
-              <CardTitle>Tài chính</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Thông tin tài chính</CardTitle>
+              <Button variant="outline" size="sm">
+                <DollarSign className="h-4 w-4 mr-1" /> Tạo giao dịch mới
+              </Button>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                {isLoadingFinances ? 'Đang tải...' : (
-                  finances.length === 0 ? 'Không có giao dịch tài chính' : 'Danh sách giao dịch tài chính'
-                )}
-              </div>
+              <DataTable
+                columns={financeColumns}
+                data={finances}
+                emptyMessage="Chưa có thông tin tài chính"
+                showHeader={true}
+              />
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="attendance">
+        
+        <TabsContent value="events">
           <Card>
-            <CardHeader>
-              <CardTitle>Điểm danh</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Sự kiện tham gia</CardTitle>
+              <Button variant="outline" size="sm">
+                <Calendar className="h-4 w-4 mr-1" /> Đăng ký sự kiện
+              </Button>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Thông tin điểm danh sẽ hiển thị ở đây
-              </div>
+              <DataTable
+                columns={eventColumns}
+                data={events}
+                emptyMessage="Chưa tham gia sự kiện nào"
+                showHeader={true}
+              />
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="notes">
+        
+        <TabsContent value="history">
           <Card>
             <CardHeader>
-              <CardTitle>Ghi chú</CardTitle>
+              <CardTitle>Lịch sử hoạt động</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Các ghi chú về học sinh sẽ hiển thị ở đây
+              <div className="text-center py-10 text-muted-foreground">
+                <p>Chưa có dữ liệu lịch sử</p>
               </div>
             </CardContent>
           </Card>

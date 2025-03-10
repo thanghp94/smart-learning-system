@@ -18,4 +18,5 @@ export interface Event {
   tg_tao?: string;
   entity_type?: string; // Added for compatibility
   entity_id?: string; // Added for compatibility
+  description?: string; // Added for compatibility
 }

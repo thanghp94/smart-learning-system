@@ -16,7 +16,7 @@ export const imageService = {
   async create(image: Partial<Image>) {
     try {
       const result = await insert<Image>('images', image);
-      await logActivity('create', 'image', image.file_name || 'New image', 'system', 'completed');
+      await logActivity('create', 'image', image.ten_anh || image.file_name || 'New image', 'system', 'completed');
       return result;
     } catch (error) {
       console.error('Error creating image record:', error);
@@ -27,7 +27,7 @@ export const imageService = {
   async update(id: string, updates: Partial<Image>) {
     try {
       const result = await update<Image>('images', id, updates);
-      await logActivity('update', 'image', updates.file_name || 'Update image', 'system', 'completed');
+      await logActivity('update', 'image', updates.ten_anh || updates.file_name || 'Update image', 'system', 'completed');
       return result;
     } catch (error) {
       console.error('Error updating image record:', error);
@@ -39,9 +39,9 @@ export const imageService = {
     try {
       // Get the image record first to find the path
       const image = await this.getById(id);
-      if (image && image.file_name) {
+      if (image && (image.file_name || image.ten_anh)) {
         // Delete from storage
-        await storageService.deleteFile('images', image.file_name);
+        await storageService.deleteFile('images', image.file_name || image.ten_anh);
       }
       
       // Delete the record
@@ -96,11 +96,11 @@ export const imageService = {
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${fileName}`;
       
-      const result = await storageService.uploadFile('images', filePath, file);
+      const uploadResult = await storageService.uploadFile('images', filePath, file);
       
-      if (result.error) throw result.error;
+      if (uploadResult && 'error' in uploadResult && uploadResult.error) throw uploadResult.error;
       
-      return result.data;
+      return uploadResult;
     } catch (error) {
       console.error('Error uploading image:', error);
       throw error;

@@ -51,6 +51,9 @@ const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
       if (uploadResult) {
         // Create an entry in the images table
         const imageData = {
+          doi_tuong: 'teaching_session',
+          doi_tuong_id: sessionId,
+          ten_anh: 'Session image',
           entity_type: 'teaching_session',
           entity_id: sessionId,
           file_name: uploadResult.path,

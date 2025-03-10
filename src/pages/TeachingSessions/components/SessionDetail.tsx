@@ -86,12 +86,12 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
       <div className="flex flex-col space-y-2">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">
-            Buổi {session.buoi_so} - {session.unit_name}
+            Buổi {session.buoi_so || session.session_number} - {session.unit_name || 'Unnamed Unit'}
           </h2>
-          {formatStatus(session.trang_thai)}
+          {formatStatus(session.trang_thai || session.status || 'unknown')}
         </div>
         <div className="text-muted-foreground">
-          {session.ngay_hoc && format(new Date(session.ngay_hoc), 'dd/MM/yyyy')} | {session.gio_bat_dau} - {session.gio_ket_thuc}
+          {session.ngay_hoc && format(new Date(session.ngay_hoc), 'dd/MM/yyyy')} | {session.gio_bat_dau || session.start_time} - {session.gio_ket_thuc || session.end_time}
         </div>
       </div>
 
@@ -111,7 +111,7 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  {session.noi_dung || 'Chưa có nội dung cho buổi học này.'}
+                  {session.noi_dung || session.content || 'Chưa có nội dung cho buổi học này.'}
                 </div>
               </CardContent>
             </Card>

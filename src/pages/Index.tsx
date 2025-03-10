@@ -1,182 +1,221 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import RecentActivity from "@/components/dashboard/RecentActivity";
-import { Users, GraduationCap, School, Calendar } from "lucide-react";
-import StatsCard from "@/components/common/StatsCard";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { studentService, classService, employeeService } from "@/lib/supabase";
-import { Student, Class, Employee } from "@/lib/types";
-import { activityService } from "@/lib/supabase/activity-service";
+import { PlusCircle, Briefcase, Users, Calendar, Activity } from 'lucide-react';
+import { classService, studentService, eventService, facilityService } from '@/lib/supabase';
+import StatsCard from '@/components/common/StatsCard';
+import RecentActivity from '@/components/dashboard/RecentActivity';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
-// Type for activity that matches the one used in RecentActivity component
+// Types for dashboard data
+interface DashboardStats {
+  totalStudents: number;
+  totalClasses: number;
+  upcomingEvents: number;
+  totalFacilities: number;
+}
+
 interface DashboardActivity {
   id: string;
+  title: string;
+  description: string;
+  date: string;
   action: string;
-  entity_type: string;
-  entity_name: string;
-  actor: string;
-  status: string;
-  created_at: string;
-  actor_id?: string;
-  entity_id?: string;
-  details?: string;
+  entity?: string;
 }
 
 const Index = () => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalStudents: 0,
+    totalClasses: 0,
+    upcomingEvents: 0,
+    totalFacilities: 0
+  });
   const [activities, setActivities] = useState<DashboardActivity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDashboardData = async () => {
       try {
-        setLoading(true);
-        const [studentsData, classesData, employeesData, activitiesData] = await Promise.all([
+        setIsLoading(true);
+        
+        // Fetch stats
+        const [students, classes, events, facilities] = await Promise.all([
           studentService.getAll(),
           classService.getAll(),
-          employeeService.getAll(),
-          activityService.getRecent(10)
+          eventService.getAll(),
+          facilityService.getAll()
         ]);
         
-        setStudents(studentsData);
-        setClasses(classesData);
-        setEmployees(employeesData);
-        // Type assertion to DashboardActivity[]
-        setActivities(activitiesData as unknown as DashboardActivity[]);
+        setStats({
+          totalStudents: students.length,
+          totalClasses: classes.length,
+          upcomingEvents: events.filter(e => new Date(e.ngay_bat_dau) > new Date()).length,
+          totalFacilities: facilities.length
+        });
+        
+        // Set dummy activities for now
+        setActivities([
+          {
+            id: '1',
+            title: 'New Student Enrolled',
+            description: 'Nguyen Van A enrolled in Math 101',
+            date: new Date().toISOString(),
+            action: 'enrolled',
+            entity: 'student'
+          },
+          {
+            id: '2',
+            title: 'Class Started',
+            description: 'English 202 class started today',
+            date: new Date().toISOString(),
+            action: 'started',
+            entity: 'class'
+          },
+          {
+            id: '3',
+            title: 'New Event Created',
+            description: 'Summer Festival event was created',
+            date: new Date().toISOString(),
+            action: 'created',
+            entity: 'event'
+          }
+        ]);
+        
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error('Error fetching dashboard data:', error);
+        toast({
+          title: 'Error',
+          description: 'Could not load dashboard data',
+          variant: 'destructive',
+        });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
     
-    fetchData();
-  }, []);
-
-  const calculateUpcomingClasses = () => {
-    const now = new Date();
-    return classes.filter(c => {
-      if (c.ngay_bat_dau) { // Using ngay_bat_dau instead of tu_ngay
-        const startDate = new Date(c.ngay_bat_dau);
-        return startDate > now;
-      }
-      return false;
-    }).length;
-  };
+    fetchDashboardData();
+  }, [toast]);
 
   return (
-    <div className="flex flex-col space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Bảng Điều Khiển</h2>
-        <div className="flex space-x-2">
-          <Button asChild>
-            <Link to="/classes/add">Tạo lớp mới</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/students/add">Thêm học sinh</Link>
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-4 p-4 sm:p-6 md:p-8">
+      <h1 className="text-3xl font-bold">Dashboard</h1>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Tổng Học Sinh"
-          value={students.length.toString()}
-          description="Học sinh đang theo học"
+        <StatsCard 
+          title="Học Sinh" 
+          value={stats.totalStudents.toString()}
           icon={<Users className="h-5 w-5" />}
-          iconClassName="bg-blue-500"
-          href="/students"
+          description="Tổng số học sinh"
+          trend={{ 
+            value: "+5%", 
+            direction: "up",
+            text: "từ tháng trước" 
+          }}
         />
-        <StatsCard
-          title="Tổng Lớp Học"
-          value={classes.length.toString()}
-          description="Lớp học đang hoạt động"
-          icon={<GraduationCap className="h-5 w-5" />}
-          iconClassName="bg-green-500"
-          href="/classes"
+        
+        <StatsCard 
+          title="Lớp Học" 
+          value={stats.totalClasses.toString()}
+          icon={<Briefcase className="h-5 w-5" />}
+          description="Tổng số lớp học"
+          trend={{ 
+            value: "+2", 
+            direction: "up",
+            text: "lớp mới trong tháng" 
+          }}
         />
-        <StatsCard
-          title="Lớp Sắp Mở"
-          value={calculateUpcomingClasses().toString()}
-          description="Lớp học sắp bắt đầu"
+        
+        <StatsCard 
+          title="Sự Kiện" 
+          value={stats.upcomingEvents.toString()}
           icon={<Calendar className="h-5 w-5" />}
-          iconClassName="bg-yellow-500"
-          href="/classes"
+          description="Sự kiện sắp tới"
+          trend={{ 
+            value: "0", 
+            direction: "none",
+            text: "mới tạo hôm nay" 
+          }}
         />
-        <StatsCard
-          title="Nhân viên"
-          value={employees.length.toString()}
-          description="Giáo viên và nhân viên"
-          icon={<School className="h-5 w-5" />}
-          iconClassName="bg-purple-500"
-          href="/employees"
+        
+        <StatsCard 
+          title="Cơ Sở" 
+          value={stats.totalFacilities.toString()}
+          icon={<Activity className="h-5 w-5" />}
+          description="Tổng số cơ sở"
+          trend={{ 
+            value: "0", 
+            direction: "none",
+            text: "không thay đổi" 
+          }}
         />
       </div>
-
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Tổng Quan</TabsTrigger>
-          <TabsTrigger value="analytics">Thống Kê</TabsTrigger>
-          <TabsTrigger value="reports">Báo Cáo</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Hoạt Động Gần Đây</CardTitle>
-                <CardDescription>10 hoạt động gần đây nhất trong hệ thống</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RecentActivity activities={activities} isLoading={loading} />
-              </CardContent>
-            </Card>
-            
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Tổng Quan Lớp Học</CardTitle>
-                <CardDescription>Phân bố lớp học theo trạng thái</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  Biểu đồ sẽ hiển thị ở đây
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="col-span-2">
+          <CardHeader>
+            <CardTitle>Hoạt Động Gần Đây</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RecentActivity activities={activities as any} />
+          </CardContent>
+        </Card>
         
-        <TabsContent value="analytics">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Truy Cập Nhanh</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Button variant="outline" className="w-full justify-start">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Thêm học sinh mới
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Tạo lớp học mới
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Lên lịch sự kiện mới
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <Tabs defaultValue="upcoming">
+        <TabsList>
+          <TabsTrigger value="upcoming">Sắp Diễn Ra</TabsTrigger>
+          <TabsTrigger value="recent">Gần Đây</TabsTrigger>
+        </TabsList>
+        <TabsContent value="upcoming" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Thống Kê</CardTitle>
-              <CardDescription>
-                Hiển thị thống kê về học sinh, lớp học và tài chính
-              </CardDescription>
+              <CardTitle>Các Sự Kiện Sắp Tới</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-                Đang phát triển...
+              <div className="text-center py-10 text-muted-foreground">
+                <p>Không có sự kiện nào sắp diễn ra</p>
+                <Button variant="outline" className="mt-4">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Tạo Sự Kiện Mới
+                </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="reports">
+        <TabsContent value="recent" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Báo Cáo</CardTitle>
-              <CardDescription>
-                Xem và xuất báo cáo
-              </CardDescription>
+              <CardTitle>Lớp Học Gần Đây</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-                Đang phát triển...
+              <div className="text-center py-10 text-muted-foreground">
+                <p>Không có dữ liệu lớp học gần đây</p>
               </div>
             </CardContent>
           </Card>
