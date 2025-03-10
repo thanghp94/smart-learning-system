@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -51,8 +51,15 @@ const TeacherSchedule = () => {
   const fetchTeachers = async () => {
     try {
       setIsLoading(true);
-      const teacherList = await employeeService.getByRole('teacher');
-      setTeachers(teacherList);
+      let teacherList = await employeeService.getByRole('teacher');
+      
+      // If no teachers with role 'teacher', fetch all employees
+      if (!teacherList || teacherList.length === 0) {
+        teacherList = await employeeService.getAll();
+        console.log("Fetched all employees instead:", teacherList);
+      }
+      
+      setTeachers(teacherList || []);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -69,7 +76,8 @@ const TeacherSchedule = () => {
     try {
       setIsLoading(true);
       const teacherSessions = await teachingSessionService.getByTeacher(teacherId);
-      setSessions(teacherSessions);
+      console.log("Teacher sessions:", teacherSessions);
+      setSessions(teacherSessions || []);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching teacher sessions:', error);
@@ -215,11 +223,26 @@ const TeacherSchedule = () => {
       description="Xem lịch dạy theo tuần của giáo viên"
       actions={tableActions}
     >
-      {selectedTeacher ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center h-60">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+          <p className="text-muted-foreground">Đang tải dữ liệu...</p>
+        </div>
+      ) : selectedTeacher ? (
         renderWeekView()
       ) : (
         <div className="flex flex-col items-center justify-center h-60">
           <p className="text-muted-foreground">Vui lòng chọn giáo viên để xem lịch dạy</p>
+          
+          {teachers.length === 0 && (
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={fetchTeachers}
+            >
+              Tải lại danh sách giáo viên
+            </Button>
+          )}
         </div>
       )}
     </TablePageLayout>

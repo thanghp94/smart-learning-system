@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, Calendar, User, Users, Book, Building, 
@@ -30,11 +31,13 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const enrollmentsData = await enrollmentService.getByClass(classItem.id);
-        setEnrollments(enrollmentsData);
-        
-        const sessionsData = await teachingSessionService.getByClass(classItem.id);
-        setSessions(sessionsData);
+        if (classItem?.id) {
+          const enrollmentsData = await enrollmentService.getByClass(classItem.id);
+          setEnrollments(enrollmentsData || []);
+          
+          const sessionsData = await teachingSessionService.getByClass(classItem.id);
+          setSessions(sessionsData || []);
+        }
       } catch (error) {
         console.error('Error fetching class details:', error);
         toast({
@@ -56,10 +59,10 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
     if (classItem?.id) {
       try {
         const sessionsData = await teachingSessionService.getByClass(classItem.id);
-        setSessions(sessionsData);
+        setSessions(sessionsData || []);
         
         const enrollmentsData = await enrollmentService.getByClass(classItem.id);
-        setEnrollments(enrollmentsData);
+        setEnrollments(enrollmentsData || []);
         
         toast({
           title: 'Thành công',

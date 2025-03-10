@@ -30,6 +30,8 @@ function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Index />} />
           <Route path="students" element={<Students />} />
+          <Route path="students/:id" element={<Students edit={true} />} />
+          <Route path="students/add" element={<Students add={true} />} />
           <Route path="classes" element={<Classes />} />
           <Route path="employees" element={<Employees />} />
           <Route path="facilities" element={<Facilities />} />

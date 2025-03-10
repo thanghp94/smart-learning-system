@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
+import { Plus, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
 import { financeService, facilityService } from "@/lib/supabase";
@@ -16,6 +16,7 @@ import PlaceholderPage from "@/components/common/PlaceholderPage";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FinanceLedger from "./components/FinanceLedger";
+import ExportButton from "@/components/ui/ExportButton";
 
 const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
@@ -171,9 +172,11 @@ const FinancePage = () => {
       <Button variant="outline" size="sm" className="h-8">
         <Filter className="h-4 w-4 mr-1" /> Lọc
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
-      </Button>
+      <ExportButton 
+        data={finances} 
+        filename="Danh_sach_tai_chinh" 
+        label="Xuất dữ liệu"
+      />
       <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Giao Dịch
       </Button>
