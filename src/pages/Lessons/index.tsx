@@ -1,69 +1,21 @@
 
-import React, { useState, useEffect } from "react";
-import { Plus, Filter, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
-import { Session } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
-import TablePageLayout from "@/components/common/TablePageLayout";
-import DetailPanel from "@/components/ui/DetailPanel";
-import LessonDetail from "./LessonDetail";
-import LessonForm from "./LessonForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import PlaceholderPage from "@/components/common/PlaceholderPage";
-import { format } from "date-fns";
-import { supabase } from "@/lib/supabase/client";
-import ExportButton from "@/components/ui/ExportButton";
-
-// Create a service for sessions
-const sessionService = {
-  getAll: async (): Promise<Session[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error("Error fetching sessions:", error);
-        throw error;
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error("Error in getAll sessions:", error);
-      return [];
-    }
-  },
-  
-  create: async (sessionData: Partial<Session>): Promise<Session | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .insert(sessionData)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error creating session:", error);
-        throw error;
-      }
-      
-      return data;
-    } catch (error) {
-      console.error("Error in create session:", error);
-      throw error;
-    }
-  }
-};
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import TablePageLayout from '@/components/common/TablePageLayout';
+import DataTable from '@/components/ui/DataTable';
+import { Session } from '@/lib/types';
+import { sessionService } from '@/lib/supabase/session-service';
+import { format } from 'date-fns';
+import { Plus, FileDown, Filter, RotateCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import PlaceholderPage from '@/components/common/PlaceholderPage';
 
 const Lessons = () => {
   const [lessons, setLessons] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedLesson, setSelectedLesson] = useState<Session | null>(null);
-  const [showDetail, setShowDetail] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchLessons();
@@ -73,10 +25,9 @@ const Lessons = () => {
     try {
       setIsLoading(true);
       const data = await sessionService.getAll();
-      console.log("Fetched sessions from database:", data);
       setLessons(data);
     } catch (error) {
-      console.error("Error fetching lessons:", error);
+      console.error('Error fetching lessons:', error);
       toast({
         title: "Lỗi",
         description: "Không thể tải danh sách bài học",
@@ -88,64 +39,33 @@ const Lessons = () => {
   };
 
   const handleRowClick = (lesson: Session) => {
-    setSelectedLesson(lesson);
-    setShowDetail(true);
-  };
-
-  const closeDetail = () => {
-    setShowDetail(false);
+    navigate(`/lessons/${lesson.id}`);
   };
 
   const handleAddClick = () => {
-    setShowAddForm(true);
-  };
-
-  const handleAddFormCancel = () => {
-    setShowAddForm(false);
-  };
-
-  const handleAddFormSubmit = async (formData: Partial<Session>) => {
-    try {
-      setIsLoading(true);
-      const newLesson = await sessionService.create(formData);
-      
-      if (newLesson) {
-        toast({
-          title: "Thành công",
-          description: "Thêm bài học mới thành công",
-        });
-        fetchLessons(); // Refresh the data
-      }
-      
-      setShowAddForm(false);
-    } catch (error) {
-      console.error("Error adding lesson:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể thêm bài học mới",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    navigate('/lessons/add');
   };
 
   const columns = [
     {
-      title: "Buổi Học Số",
+      title: "Buổi học số",
       key: "buoi_hoc_so",
       sortable: true,
     },
     {
-      title: "Nội Dung Bài Học",
+      title: "Nội dung bài học",
       key: "noi_dung_bai_hoc",
+      render: (value: string) => (
+        <div className="max-w-md truncate">{value}</div>
+      )
     },
     {
       title: "Unit ID",
       key: "unit_id",
+      sortable: true,
     },
     {
-      title: "Ngày Tạo",
+      title: "Ngày tạo",
       key: "tg_tao",
       sortable: true,
       render: (value: string) => value ? format(new Date(value), 'dd/MM/yyyy') : '',
@@ -155,18 +75,16 @@ const Lessons = () => {
   const tableActions = (
     <div className="flex items-center space-x-2">
       <Button variant="outline" size="sm" className="h-8" onClick={fetchLessons}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
+        <RotateCw className="h-4 w-4 mr-1" /> Làm mới
       </Button>
       <Button variant="outline" size="sm" className="h-8">
         <Filter className="h-4 w-4 mr-1" /> Lọc
       </Button>
-      <ExportButton 
-        data={lessons} 
-        filename="Danh_sach_bai_hoc" 
-        label="Xuất dữ liệu"
-      />
+      <Button variant="outline" size="sm" className="h-8">
+        <FileDown className="h-4 w-4 mr-1" /> Xuất
+      </Button>
       <Button size="sm" className="h-8" onClick={handleAddClick}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Bài Học
+        <Plus className="h-4 w-4 mr-1" /> Thêm bài học
       </Button>
     </div>
   );
@@ -175,13 +93,13 @@ const Lessons = () => {
     <>
       {lessons.length === 0 && !isLoading ? (
         <PlaceholderPage
-          title="Bài Học"
+          title="Bài học"
           description="Quản lý thông tin bài học"
           addButtonAction={handleAddClick}
         />
       ) : (
         <TablePageLayout
-          title="Bài Học"
+          title="Bài học"
           description="Quản lý thông tin bài học"
           actions={tableActions}
         >
@@ -195,31 +113,6 @@ const Lessons = () => {
           />
         </TablePageLayout>
       )}
-
-      {selectedLesson && (
-        <DetailPanel
-          title="Thông Tin Bài Học"
-          isOpen={showDetail}
-          onClose={closeDetail}
-        >
-          <LessonDetail lesson={selectedLesson} />
-        </DetailPanel>
-      )}
-
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Thêm Bài Học Mới</DialogTitle>
-            <DialogDescription>
-              Nhập thông tin bài học mới vào biểu mẫu bên dưới
-            </DialogDescription>
-          </DialogHeader>
-          <LessonForm 
-            onSubmit={handleAddFormSubmit}
-            onCancel={handleAddFormCancel}
-          />
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
