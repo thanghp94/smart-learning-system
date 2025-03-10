@@ -106,6 +106,14 @@ const Evaluations = () => {
   };
   
   const handleAddClick = () => {
+    const emptySession: Partial<TeachingSession> = {
+      lop_chi_tiet_id: '', // Changed from class_id to lop_chi_tiet_id
+      giao_vien: '',
+      ngay_hoc: new Date().toISOString().split('T')[0],
+      thoi_gian_bat_dau: '09:00',
+      thoi_gian_ket_thuc: '10:30'
+    };
+    setSelectedEvaluation(emptySession);
     setShowAddForm(true);
   };
   

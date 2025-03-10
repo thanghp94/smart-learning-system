@@ -7,6 +7,7 @@ export interface Session {
   tsi_lesson_plan?: string;
   rep_lesson_plan?: string;
   bai_tap?: string;
-  created_at?: string;
+  created_at?: string; 
   updated_at?: string;
+  tg_tao?: string;
 }
