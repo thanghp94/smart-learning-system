@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, Calendar, User, Users, Book, Building, 
   Trash2, Share2, FileEdit, ArrowLeft
 } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -103,13 +105,13 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
         <div className="flex items-center gap-2">
           <User className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium">Giáo viên chính:</span>
-          <span>{classItem.gv_chinh_name || 'Not assigned'}</span>
+          <span>{classItem.teacher_name || 'Not assigned'}</span>
         </div>
         
         <div className="flex items-center gap-2">
           <Building className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium">Cơ sở:</span>
-          <span>{classItem.co_so_name || 'Not assigned'}</span>
+          <span>{classItem.facility_name || 'Not assigned'}</span>
         </div>
         
         <div className="flex items-center gap-2">
@@ -165,29 +167,29 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="text-base">
-                          {session.buoi_hoc_so || 'Session'} - {session.ngay_hoc ? format(parseISO(session.ngay_hoc), 'dd/MM/yyyy') : 'No date'}
+                          {session.lesson_content || 'Session'} - {session.ngay_hoc ? format(parseISO(session.ngay_hoc), 'dd/MM/yyyy') : 'No date'}
                         </CardTitle>
                         <CardDescription>
-                          {session.giao_vien || 'Not assigned'}
+                          {session.teacher_name || 'Not assigned'}
                         </CardDescription>
                       </div>
                       <Badge variant={
-                        session.status === 'completed' ? 'success' :
-                        session.status === 'cancelled' ? 'destructive' :
+                        session.completed === 'completed' ? 'success' :
+                        session.completed === 'cancelled' ? 'destructive' :
                         'secondary'
                       }>
                         {
-                          session.status === 'completed' ? 'Đã hoàn thành' :
-                          session.status === 'cancelled' ? 'Đã hủy' :
-                          session.status === 'scheduled' ? 'Đã lên lịch' :
+                          session.completed === 'completed' ? 'Đã hoàn thành' :
+                          session.completed === 'cancelled' ? 'Đã hủy' :
+                          session.completed === 'scheduled' ? 'Đã lên lịch' :
                           'Chưa xác định'
                         }
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {session.noi_dung_bai_hoc ? (
-                      <p className="text-sm">{session.noi_dung_bai_hoc}</p>
+                    {session.nhan_xet_1 ? (
+                      <p className="text-sm">{session.nhan_xet_1}</p>
                     ) : (
                       <p className="text-sm text-muted-foreground italic">Chưa có nội dung</p>
                     )}
@@ -250,7 +252,7 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
                       <div className="flex items-center gap-1">
                         <Book className="h-4 w-4 text-muted-foreground" />
                         <span>Học phí:</span>
-                        <span>{enrollment.hoc_phi || 'Not set'}</span>
+                        <span>{enrollment.tong_tien || 'Not set'}</span>
                       </div>
                     </div>
                   </CardContent>

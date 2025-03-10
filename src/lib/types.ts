@@ -68,6 +68,7 @@ export interface TeachingSession {
   ghi_chu?: string;
   created_at?: string;
   updated_at?: string;
+  completed?: string;
   
   class_name?: string;
   teacher_name?: string;
@@ -125,6 +126,7 @@ export interface Enrollment {
   ten_lop_full?: string;
   ten_lop?: string;
   ct_hoc?: string;
+  tong_tien?: number;
 }
 
 export interface ActivityItem {

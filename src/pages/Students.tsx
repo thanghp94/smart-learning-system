@@ -64,6 +64,10 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
   const handleAddStudent = () => {
     navigate("/students/add");
   };
+  
+  const handleStudentClick = (student: Student) => {
+    navigate(`/students/${student.id}`);
+  };
 
   // Show form for add/edit
   if (add) {
@@ -96,6 +100,7 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
           isLoading={isLoading}
           onRefresh={fetchStudents}
           onAddStudent={handleAddStudent}
+          onRowClick={handleStudentClick}
         />
       )}
     </>

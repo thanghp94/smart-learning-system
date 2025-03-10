@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Student } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/DataTable';
+import DataTable from '@/components/ui/DataTable';
 import { CalendarDays, Flag, User, UserPlus } from 'lucide-react';
 
 interface StudentsListProps {
@@ -9,9 +10,16 @@ interface StudentsListProps {
   isLoading: boolean;
   onAddStudent: () => void;
   onRowClick: (student: Student) => void;
+  onRefresh?: () => Promise<void>;
 }
 
-const StudentsList: React.FC<StudentsListProps> = ({ data, isLoading: loading, onAddStudent, onRowClick }) => {
+const StudentsList: React.FC<StudentsListProps> = ({ 
+  data, 
+  isLoading: loading, 
+  onAddStudent, 
+  onRowClick, 
+  onRefresh 
+}) => {
   const columns = [
     {
       title: 'Name',

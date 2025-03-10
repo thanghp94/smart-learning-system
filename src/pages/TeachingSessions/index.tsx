@@ -7,9 +7,9 @@ import { teachingSessionService } from '@/lib/supabase/teaching-session-service'
 import { attendanceService } from '@/lib/supabase/attendance-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DataTable } from '@/components/ui/DataTable';
-import { PageHeader } from '@/components/common/PageHeader';
-import { TablePageLayout } from '@/components/common/TablePageLayout';
+import DataTable from '@/components/ui/DataTable';
+import PageHeader from '@/components/common/PageHeader';
+import TablePageLayout from '@/components/common/TablePageLayout';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarDays, Flag, Plus, RefreshCw, UserCheck } from 'lucide-react';
@@ -57,7 +57,7 @@ const TeachingSessionsPage: React.FC = () => {
       toast({
         title: 'Attendance Records Generated',
         description: `Created ${result.created} new records. ${result.skipped} records already existed.`,
-        variant: result.created > 0 ? 'default' : 'secondary',
+        variant: result.created > 0 ? 'default' : 'destructive',
       });
     } catch (error) {
       console.error('Error generating attendance records:', error);
@@ -126,7 +126,7 @@ const TeachingSessionsPage: React.FC = () => {
     },
     {
       title: 'Status',
-      key: 'status',
+      key: 'completed',
       sortable: true,
       render: (value: string) => (
         <div className="flex items-center gap-2">
@@ -142,38 +142,38 @@ const TeachingSessionsPage: React.FC = () => {
       <PageHeader 
         title="Teaching Sessions" 
         description="Manage teaching sessions and attendance"
-        buttons={[
-          <DatePicker 
-            key="date-picker"
-            date={selectedDate} 
-            onSelect={setSelectedDate}
-            className="mr-2"
-          />,
-          <Button 
-            key="generate-attendance"
-            variant="outline"
-            onClick={handleGenerateAttendance}
-            disabled={isGeneratingAttendance || sessions.length === 0}
-            className="mr-2"
-          >
-            {isGeneratingAttendance ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <UserCheck className="mr-2 h-4 w-4" />
-                Generate Attendance
-              </>
-            )}
-          </Button>,
-          <Button key="add-session" onClick={handleAddSession}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Session
-          </Button>,
-        ]}
+        action={{
+          label: "Add Session",
+          onClick: handleAddSession,
+          icon: <Plus className="h-4 w-4" />
+        }}
       />
+      
+      <div className="flex mb-4 gap-2">
+        <DatePicker 
+          date={selectedDate} 
+          onSelect={setSelectedDate}
+          className="max-w-xs"
+        />
+        <Button 
+          variant="outline"
+          onClick={handleGenerateAttendance}
+          disabled={isGeneratingAttendance || sessions.length === 0}
+        >
+          {isGeneratingAttendance ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <UserCheck className="mr-2 h-4 w-4" />
+              Generate Attendance
+            </>
+          )}
+        </Button>
+      </div>
+      
       <Card>
         <CardHeader>
           <CardTitle>
