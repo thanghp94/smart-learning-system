@@ -1,227 +1,240 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { formatDate, formatCurrency } from '@/lib/utils';
-import { Facility, Finance, Event, Asset, FileDocument } from '@/lib/types';
-import { Phone, Mail, MapPin, User, FileText, DollarSign, Package, Calendar } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DataTable from '@/components/ui/DataTable';
-import { assetService, eventService, fileService, financeService } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from "react";
+import { Facility, Asset, Finance, Event, File } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { FileText, DollarSign, Calendar, Package } from "lucide-react";
+import { formatDate, formatCurrency, formatStatus } from "@/utils/format";
+import { assetService, financeService, eventService, fileService } from "@/lib/supabase";
 
 interface FacilityDetailProps {
   facility: Facility;
 }
 
-const FacilityDetail = ({ facility }: FacilityDetailProps) => {
-  const [files, setFiles] = useState<FileDocument[]>([]);
-  const [finances, setFinances] = useState<Finance[]>([]);
+const FacilityDetail: React.FC<FacilityDetailProps> = ({ facility }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [finances, setFinances] = useState<Finance[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [files, setFiles] = useState<File[]>([]);
 
   useEffect(() => {
-    const fetchRelatedData = async () => {
-      setIsLoading(true);
+    const fetchData = async () => {
       try {
-        // Fetch related data in parallel
-        const [filesData, financeData, assetData, eventData] = await Promise.all([
-          fileService.getByEntity('co_so', facility.id),
-          financeService.getByEntity('facility', facility.id),
-          assetService.getByOwner('facility', facility.id),
-          eventService.getByEntity('facility', facility.id)
+        const [assetsData, financesData, eventsData, filesData] = await Promise.all([
+          assetService.getByEntity("facility", facility.id),
+          financeService.getByEntity("facility", facility.id),
+          eventService.getByEntity("facility", facility.id),
+          fileService.getByEntity("facility", facility.id)
         ]);
         
+        setAssets(assetsData);
+        setFinances(financesData);
+        setEvents(eventsData);
         setFiles(filesData);
-        setFinances(financeData);
-        setAssets(assetData);
-        setEvents(eventData);
       } catch (error) {
-        console.error('Error fetching facility related data:', error);
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải dữ liệu liên quan đến cơ sở',
-          variant: 'destructive'
-        });
-      } finally {
-        setIsLoading(false);
+        console.error("Error fetching facility data:", error);
       }
     };
-
-    fetchRelatedData();
-  }, [facility.id, toast]);
-
-  const fileColumns = [
-    { title: 'Tên tài liệu', key: 'ten_tai_lieu', sortable: true },
-    { title: 'Nhóm', key: 'nhom_tai_lieu', sortable: true },
-    { title: 'Ngày cấp', key: 'ngay_cap', sortable: true, render: (value: string) => value ? formatDate(value) : 'N/A' },
-    { title: 'Hạn tài liệu', key: 'han_tai_lieu', sortable: true, render: (value: string) => value ? formatDate(value) : 'N/A' },
-    { title: 'Trạng thái', key: 'trang_thai', sortable: true }
-  ];
-
-  const financeColumns = [
-    { title: 'Ngày', key: 'ngay', sortable: true, render: (value: string) => value ? formatDate(value) : 'N/A' },
-    { title: 'Tên phí', key: 'ten_phi', sortable: true },
-    { title: 'Loại thu chi', key: 'loai_thu_chi', sortable: true },
-    { title: 'Tổng tiền', key: 'tong_tien', sortable: true, render: (value: number) => formatCurrency(value) },
-    { title: 'Trạng thái', key: 'tinh_trang', sortable: true }
-  ];
-
-  const assetColumns = [
-    { title: 'Tên tài sản', key: 'ten_csvc', sortable: true },
-    { title: 'Loại', key: 'loai', sortable: true },
-    { title: 'Số lượng', key: 'so_luong', sortable: true },
-    { title: 'Ngày mua', key: 'ngay_mua', sortable: true, render: (value: string) => value ? formatDate(value) : 'N/A' },
-    { title: 'Tình trạng', key: 'tinh_trang', sortable: true }
-  ];
-
-  const eventColumns = [
-    { title: 'Tên sự kiện', key: 'ten_su_kien', sortable: true },
-    { title: 'Loại sự kiện', key: 'loai_su_kien', sortable: true },
-    { title: 'Ngày bắt đầu', key: 'ngay_bat_dau', sortable: true, render: (value: string) => formatDate(value) },
-    { title: 'Địa điểm', key: 'dia_diem', sortable: true },
-    { title: 'Trạng thái', key: 'trang_thai', sortable: true }
-  ];
+    
+    fetchData();
+  }, [facility.id]);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <div>
+        <h2 className="text-2xl font-semibold">{facility.ten_co_so}</h2>
+        <p className="text-muted-foreground">{facility.loai_co_so}</p>
+      </div>
+      
+      <Separator />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <h3 className="text-2xl font-semibold">{facility.ten_co_so}</h3>
-          <p className="text-muted-foreground">{facility.loai_co_so}</p>
+          <p className="font-medium">Địa chỉ:</p>
+          <p>{facility.dia_chi_co_so || "N/A"}</p>
         </div>
-        <Badge variant={facility.trang_thai === 'active' ? 'success' : 'destructive'}>
-          {facility.trang_thai === 'active' ? 'Đang hoạt động' : 'Ngừng hoạt động'}
-        </Badge>
+        <div>
+          <p className="font-medium">Người chủ:</p>
+          <p>{facility.nguoi_chu || "N/A"}</p>
+        </div>
+        <div>
+          <p className="font-medium">Điện thoại:</p>
+          <p>{facility.phone || "N/A"}</p>
+        </div>
+        <div>
+          <p className="font-medium">Email:</p>
+          <p>{facility.email || "N/A"}</p>
+        </div>
+        <div>
+          <p className="font-medium">Trạng thái:</p>
+          <Badge variant={facility.trang_thai === "active" ? "default" : "secondary"}>
+            {formatStatus(facility.trang_thai)}
+          </Badge>
+        </div>
+        {facility.ghi_chu && (
+          <div className="col-span-2">
+            <p className="font-medium">Ghi chú:</p>
+            <p>{facility.ghi_chu}</p>
+          </div>
+        )}
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <h4 className="font-medium mb-4">Thông tin liên hệ</h4>
-          <div className="space-y-3">
-            <div className="flex items-center">
-              <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-              <span>{facility.dia_chi_co_so || 'Chưa có địa chỉ'}</span>
-            </div>
-            <div className="flex items-center">
-              <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-              <span>{facility.phone || 'Chưa có số điện thoại'}</span>
-            </div>
-            <div className="flex items-center">
-              <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-              <span>{facility.email || 'Chưa có email'}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Separator />
 
-      <Card>
-        <CardContent className="p-6">
-          <h4 className="font-medium mb-4">Thông tin quản lý</h4>
-          <div className="space-y-3">
-            <div className="flex items-center">
-              <User className="h-4 w-4 mr-2 text-muted-foreground" />
-              <span>Người quản lý: {facility.nguoi_phu_trach || 'Chưa phân công'}</span>
-            </div>
-            <div className="flex items-center">
-              <User className="h-4 w-4 mr-2 text-muted-foreground" />
-              <span>Người chủ: {facility.nguoi_chu || 'Không có thông tin'}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {facility.ghi_chu && (
-        <Card>
-          <CardContent className="p-6">
-            <h4 className="font-medium mb-2">Ghi chú</h4>
-            <p>{facility.ghi_chu}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      <Tabs defaultValue="documents" className="w-full pt-4">
-        <TabsList className="w-full justify-start mb-4">
-          <TabsTrigger value="documents" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Tài liệu
-          </TabsTrigger>
-          <TabsTrigger value="finances" className="flex items-center">
-            <DollarSign className="h-4 w-4 mr-2" />
-            Thu chi
-          </TabsTrigger>
-          <TabsTrigger value="assets" className="flex items-center">
+      <Tabs defaultValue="assets" className="w-full">
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="assets">
             <Package className="h-4 w-4 mr-2" />
             Cơ sở vật chất
           </TabsTrigger>
-          <TabsTrigger value="events" className="flex items-center">
+          <TabsTrigger value="finances">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Tài chính
+          </TabsTrigger>
+          <TabsTrigger value="files">
+            <FileText className="h-4 w-4 mr-2" />
+            Tài liệu
+          </TabsTrigger>
+          <TabsTrigger value="events">
             <Calendar className="h-4 w-4 mr-2" />
             Sự kiện
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="documents" className="space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              <DataTable
-                columns={fileColumns}
-                data={files}
-                isLoading={isLoading}
-                searchable={true}
-                searchPlaceholder="Tìm tài liệu..."
-              />
-            </CardContent>
-          </Card>
+        <TabsContent value="assets" className="py-4">
+          {assets.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tên CSVC</TableHead>
+                  <TableHead>Loại</TableHead>
+                  <TableHead>Số lượng</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Ghi chú</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {assets.map((asset) => (
+                  <TableRow key={asset.id}>
+                    <TableCell>{asset.ten_csvc}</TableCell>
+                    <TableCell>{asset.loai || "N/A"}</TableCell>
+                    <TableCell>{asset.so_luong || 0}</TableCell>
+                    <TableCell>
+                      <Badge variant={asset.tinh_trang === "active" ? "default" : "secondary"}>
+                        {formatStatus(asset.tinh_trang)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{asset.ghi_chu || "N/A"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">Không có dữ liệu cơ sở vật chất</p>
+          )}
         </TabsContent>
 
-        <TabsContent value="finances" className="space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              <DataTable
-                columns={financeColumns}
-                data={finances}
-                isLoading={isLoading}
-                searchable={true}
-                searchPlaceholder="Tìm giao dịch..."
-              />
-            </CardContent>
-          </Card>
+        <TabsContent value="finances" className="py-4">
+          {finances.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ngày</TableHead>
+                  <TableHead>Loại</TableHead>
+                  <TableHead>Tên phí</TableHead>
+                  <TableHead>Số tiền</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {finances.map((finance) => (
+                  <TableRow key={finance.id}>
+                    <TableCell>{formatDate(finance.ngay)}</TableCell>
+                    <TableCell>{finance.loai_thu_chi || "N/A"}</TableCell>
+                    <TableCell>{finance.ten_phi || finance.dien_giai || "N/A"}</TableCell>
+                    <TableCell>{formatCurrency(finance.tong_tien)}</TableCell>
+                    <TableCell>
+                      <Badge variant={finance.tinh_trang === "completed" ? "default" : "outline"}>
+                        {formatStatus(finance.tinh_trang)}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">Không có dữ liệu tài chính</p>
+          )}
         </TabsContent>
 
-        <TabsContent value="assets" className="space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              <DataTable
-                columns={assetColumns}
-                data={assets}
-                isLoading={isLoading}
-                searchable={true}
-                searchPlaceholder="Tìm tài sản..."
-              />
-            </CardContent>
-          </Card>
+        <TabsContent value="files" className="py-4">
+          {files.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tên tài liệu</TableHead>
+                  <TableHead>Nhóm tài liệu</TableHead>
+                  <TableHead>Ngày cấp</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Ghi chú</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {files.map((file) => (
+                  <TableRow key={file.id}>
+                    <TableCell>{file.ten_tai_lieu}</TableCell>
+                    <TableCell>{file.nhom_tai_lieu || "N/A"}</TableCell>
+                    <TableCell>{formatDate(file.ngay_cap)}</TableCell>
+                    <TableCell>
+                      <Badge variant={file.trang_thai === "active" ? "default" : "secondary"}>
+                        {formatStatus(file.trang_thai)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{file.ghi_chu || "N/A"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">Không có tài liệu</p>
+          )}
         </TabsContent>
 
-        <TabsContent value="events" className="space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              <DataTable
-                columns={eventColumns}
-                data={events}
-                isLoading={isLoading}
-                searchable={true}
-                searchPlaceholder="Tìm sự kiện..."
-              />
-            </CardContent>
-          </Card>
+        <TabsContent value="events" className="py-4">
+          {events.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tên sự kiện</TableHead>
+                  <TableHead>Loại sự kiện</TableHead>
+                  <TableHead>Ngày bắt đầu</TableHead>
+                  <TableHead>Địa điểm</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {events.map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell>{event.ten_su_kien}</TableCell>
+                    <TableCell>{event.loai_su_kien || "N/A"}</TableCell>
+                    <TableCell>{formatDate(event.ngay_bat_dau)}</TableCell>
+                    <TableCell>{event.dia_diem || "N/A"}</TableCell>
+                    <TableCell>
+                      <Badge variant={event.trang_thai === "completed" ? "default" : "outline"}>
+                        {formatStatus(event.trang_thai)}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">Không có sự kiện</p>
+          )}
         </TabsContent>
       </Tabs>
-
-      <div className="text-xs text-muted-foreground">
-        Ngày tạo: {formatDate(facility.tg_tao || '')}
-      </div>
     </div>
   );
 };

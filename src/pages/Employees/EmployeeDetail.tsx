@@ -1,263 +1,283 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Employee, Task, Finance, File, EmployeeClockIn } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ArrowLeft, Pencil } from "lucide-react";
-import { Employee, Finance, EmployeeClockInOut } from "@/lib/types";
-import { employeeService, financeService, fileService, payrollService, employeeClockInService } from "@/lib/supabase";
-import DataTable from "@/components/ui/DataTable"; // Fixed import
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Calendar, FileText, DollarSign, ClipboardCheck } from "lucide-react";
+import { taskService, financeService, fileService } from "@/lib/supabase";
+import { employeeClockInService } from "@/lib/supabase/employee-clock-in-service";
 
-const EmployeeDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [employee, setEmployee] = useState<Employee | null>(null);
+interface EmployeeDetailProps {
+  employee: Employee;
+}
+
+const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employee }) => {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [finances, setFinances] = useState<Finance[]>([]);
-  const [files, setFiles] = useState<any[]>([]);
-  const [payrolls, setPayrolls] = useState<any[]>([]);
-  const [clockIns, setClockIns] = useState<EmployeeClockInOut[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [files, setFiles] = useState<File[]>([]);
+  const [attendances, setAttendances] = useState<EmployeeClockIn[]>([]);
 
   useEffect(() => {
-    if (id) {
-      fetchEmployeeData();
-    }
-  }, [id]);
-
-  const fetchEmployeeData = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Fetch employee details
-      const employeeData = await employeeService.getById(id!);
-      setEmployee(employeeData);
-      
-      // Fetch related data if employee exists
-      if (employeeData) {
-        // Fetch finances related to this employee
-        const financesData = await financeService.getByEmployee(id!);
-        setFinances(financesData || []);
+    const fetchData = async () => {
+      try {
+        const [tasksData, financesData, filesData, attendancesData] = await Promise.all([
+          taskService.getByEntity("employee", employee.id),
+          financeService.getByEntity("employee", employee.id),
+          fileService.getByEntity("employee", employee.id),
+          employeeClockInService.getByEmployee(employee.id)
+        ]);
         
-        // Fetch files related to this employee
-        const filesData = await fileService.getByEntity('employee', id!);
-        setFiles(filesData || []);
-        
-        // Fetch payroll data for this employee
-        const payrollsData = await payrollService.getByEmployee(id!);
-        setPayrolls(payrollsData || []);
-        
-        // Fetch clock in/out records
-        const clockInData = await employeeClockInService.getByEmployeeId(id!);
-        setClockIns(clockInData || []);
+        setTasks(tasksData);
+        setFinances(financesData);
+        setFiles(filesData);
+        setAttendances(attendancesData);
+      } catch (error) {
+        console.error("Error fetching employee data:", error);
       }
+    };
+    
+    fetchData();
+  }, [employee.id]);
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return "N/A";
+    try {
+      return format(new Date(date), "dd/MM/yyyy", { locale: vi });
     } catch (error) {
-      console.error("Error fetching employee data:", error);
-    } finally {
-      setIsLoading(false);
+      return date;
     }
   };
 
-  const handleEditClick = () => {
-    navigate(`/employees/edit/${id}`);
+  const formatCurrency = (amount: number | undefined) => {
+    if (amount === undefined) return "N/A";
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
-  const handleBackClick = () => {
-    navigate('/employees');
+  const formatTime = (time: string | undefined) => {
+    if (!time) return "N/A";
+    return time.substring(0, 5); // Format HH:MM
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!employee) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold">Không tìm thấy nhân viên</h2>
-          <Button onClick={handleBackClick} className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <Button variant="outline" onClick={handleBackClick} className="mr-4">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại
-          </Button>
-          <h1 className="text-3xl font-bold">{employee.ten_nhan_su}</h1>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold">{employee.ten_nhan_su}</h2>
+        {employee.ten_tieng_anh && (
+          <p className="text-muted-foreground">{employee.ten_tieng_anh}</p>
+        )}
+      </div>
+      
+      <Separator />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <p className="font-medium">Chức danh:</p>
+          <p>{employee.chuc_danh || "N/A"}</p>
         </div>
-        <Button onClick={handleEditClick}>
-          <Pencil className="mr-2 h-4 w-4" /> Chỉnh sửa
-        </Button>
+        <div>
+          <p className="font-medium">Bộ phận:</p>
+          <p>{employee.bo_phan || "N/A"}</p>
+        </div>
+        <div>
+          <p className="font-medium">Giới tính:</p>
+          <p>{employee.gioi_tinh || "N/A"}</p>
+        </div>
+        <div>
+          <p className="font-medium">Ngày sinh:</p>
+          <p>{formatDate(employee.ngay_sinh)}</p>
+        </div>
+        <div>
+          <p className="font-medium">Điện thoại:</p>
+          <p>{employee.dien_thoai || "N/A"}</p>
+        </div>
+        <div>
+          <p className="font-medium">Email:</p>
+          <p>{employee.email || "N/A"}</p>
+        </div>
+        <div>
+          <p className="font-medium">Địa chỉ:</p>
+          <p>{employee.dia_chi || "N/A"}</p>
+        </div>
+        <div>
+          <p className="font-medium">Tình trạng:</p>
+          <Badge variant={employee.tinh_trang_lao_dong === "active" ? "default" : "secondary"}>
+            {employee.tinh_trang_lao_dong === "active" ? "Đang làm việc" : employee.tinh_trang_lao_dong}
+          </Badge>
+        </div>
       </div>
 
-      <Tabs defaultValue="details">
-        <TabsList className="mb-4">
-          <TabsTrigger value="details">Thông tin chi tiết</TabsTrigger>
-          <TabsTrigger value="finances">Tài chính</TabsTrigger>
-          <TabsTrigger value="documents">Tài liệu</TabsTrigger>
-          <TabsTrigger value="payroll">Bảng lương</TabsTrigger>
-          <TabsTrigger value="attendance">Chấm công</TabsTrigger>
+      <Separator />
+
+      <Tabs defaultValue="attendance" className="w-full">
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="attendance">
+            <Calendar className="h-4 w-4 mr-2" />
+            Chấm công
+          </TabsTrigger>
+          <TabsTrigger value="tasks">
+            <ClipboardCheck className="h-4 w-4 mr-2" />
+            Công việc
+          </TabsTrigger>
+          <TabsTrigger value="finances">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Tài chính
+          </TabsTrigger>
+          <TabsTrigger value="files">
+            <FileText className="h-4 w-4 mr-2" />
+            Tài liệu
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="details">
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin nhân viên</CardTitle>
-              <CardDescription>Chi tiết thông tin cá nhân và liên hệ</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium">Tên nhân sự</h3>
-                <p className="text-lg">{employee.ten_nhan_su}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Giới tính</h3>
-                <p className="text-lg">{employee.gioi_tinh || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Ngày sinh</h3>
-                <p className="text-lg">{employee.ngay_sinh ? new Date(employee.ngay_sinh).toLocaleDateString() : "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Email</h3>
-                <p className="text-lg">{employee.email || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Điện thoại</h3>
-                <p className="text-lg">{employee.dien_thoai || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Địa chỉ</h3>
-                <p className="text-lg">{employee.dia_chi || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Bộ phận</h3>
-                <p className="text-lg">{employee.bo_phan || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Chức danh</h3>
-                <p className="text-lg">{employee.chuc_danh || "Chưa cập nhật"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Tình trạng lao động</h3>
-                <p className="text-lg">{employee.tinh_trang_lao_dong || "Đang làm việc"}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium">Ghi chú</h3>
-                <p className="text-lg">{employee.ghi_chu || "Không có ghi chú"}</p>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="attendance" className="py-4">
+          {attendances.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ngày</TableHead>
+                  <TableHead>Bắt đầu</TableHead>
+                  <TableHead>Kết thúc</TableHead>
+                  <TableHead>Buổi dạy</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Ghi chú</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {attendances.map((attendance) => (
+                  <TableRow key={attendance.id}>
+                    <TableCell>{formatDate(attendance.ngay)}</TableCell>
+                    <TableCell>{formatTime(attendance.thoi_gian_bat_dau)}</TableCell>
+                    <TableCell>{formatTime(attendance.thoi_gian_ket_thuc)}</TableCell>
+                    <TableCell>{attendance.buoi_day_id || "N/A"}</TableCell>
+                    <TableCell>
+                      <Badge variant={attendance.xac_nhan ? "default" : "outline"}>
+                        {attendance.xac_nhan ? "Đã xác nhận" : attendance.trang_thai || "Chờ xác nhận"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{attendance.ghi_chu || "N/A"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">Không có dữ liệu chấm công</p>
+          )}
         </TabsContent>
 
-        <TabsContent value="finances">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tài chính</CardTitle>
-              <CardDescription>Các giao dịch tài chính liên quan đến nhân viên</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {finances.length > 0 ? (
-                <DataTable 
-                  data={finances} 
-                  columns={[
-                    { accessorKey: 'ngay', header: 'Ngày' },
-                    { accessorKey: 'loai_thu_chi', header: 'Loại thu chi' },
-                    { accessorKey: 'dien_giai', header: 'Diễn giải' },
-                    { accessorKey: 'tong_tien', header: 'Tổng tiền' },
-                    { accessorKey: 'tinh_trang', header: 'Tình trạng' }
-                  ]}
-                />
-              ) : (
-                <p>Không có dữ liệu tài chính</p>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="tasks" className="py-4">
+          {tasks.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tên công việc</TableHead>
+                  <TableHead>Loại việc</TableHead>
+                  <TableHead>Hạn</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Ghi chú</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tasks.map((task) => (
+                  <TableRow key={task.id}>
+                    <TableCell>{task.ten_viec}</TableCell>
+                    <TableCell>{task.loai_viec || "N/A"}</TableCell>
+                    <TableCell>{formatDate(task.ngay_den_han)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          task.trang_thai === "completed" ? "default" : 
+                          task.trang_thai === "pending" ? "outline" : "secondary"
+                        }
+                      >
+                        {task.trang_thai === "completed" ? "Hoàn thành" : 
+                         task.trang_thai === "pending" ? "Đang chờ" : task.trang_thai}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{task.ghi_chu || "N/A"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">Không có công việc</p>
+          )}
         </TabsContent>
 
-        <TabsContent value="documents">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tài liệu</CardTitle>
-              <CardDescription>Tài liệu liên quan đến nhân viên</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {files.length > 0 ? (
-                <DataTable 
-                  data={files} 
-                  columns={[
-                    { accessorKey: 'ten_tai_lieu', header: 'Tên tài liệu' },
-                    { accessorKey: 'nhom_tai_lieu', header: 'Nhóm tài liệu' },
-                    { accessorKey: 'ngay_cap', header: 'Ngày cấp' },
-                    { accessorKey: 'trang_thai', header: 'Trạng thái' }
-                  ]}
-                />
-              ) : (
-                <p>Không có tài liệu</p>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="finances" className="py-4">
+          {finances.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ngày</TableHead>
+                  <TableHead>Loại</TableHead>
+                  <TableHead>Tên phí</TableHead>
+                  <TableHead>Số tiền</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {finances.map((finance) => (
+                  <TableRow key={finance.id}>
+                    <TableCell>{formatDate(finance.ngay)}</TableCell>
+                    <TableCell>{finance.loai_thu_chi || "N/A"}</TableCell>
+                    <TableCell>{finance.ten_phi || finance.dien_giai || "N/A"}</TableCell>
+                    <TableCell>{formatCurrency(finance.tong_tien)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          finance.tinh_trang === "completed" ? "default" : 
+                          finance.tinh_trang === "pending" ? "outline" : "secondary"
+                        }
+                      >
+                        {finance.tinh_trang === "completed" ? "Hoàn thành" : 
+                         finance.tinh_trang === "pending" ? "Đang chờ" : finance.tinh_trang}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">Không có dữ liệu tài chính</p>
+          )}
         </TabsContent>
 
-        <TabsContent value="payroll">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bảng lương</CardTitle>
-              <CardDescription>Lịch sử bảng lương của nhân viên</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {payrolls.length > 0 ? (
-                <DataTable 
-                  data={payrolls} 
-                  columns={[
-                    { accessorKey: 'thang', header: 'Tháng' },
-                    { accessorKey: 'nam', header: 'Năm' },
-                    { accessorKey: 'tong_luong_thuc_te', header: 'Tổng lương thực tế' },
-                    { accessorKey: 'trang_thai', header: 'Trạng thái' }
-                  ]}
-                />
-              ) : (
-                <p>Không có dữ liệu bảng lương</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="attendance">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chấm công</CardTitle>
-              <CardDescription>Lịch sử chấm công của nhân viên</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {clockIns.length > 0 ? (
-                <DataTable 
-                  data={clockIns} 
-                  columns={[
-                    { accessorKey: 'ngay', header: 'Ngày' },
-                    { accessorKey: 'thoi_gian_bat_dau', header: 'Giờ vào' },
-                    { accessorKey: 'thoi_gian_ket_thuc', header: 'Giờ ra' },
-                    { accessorKey: 'xac_nhan', header: 'Xác nhận' },
-                    { accessorKey: 'trang_thai', header: 'Trạng thái' }
-                  ]}
-                />
-              ) : (
-                <p>Không có dữ liệu chấm công</p>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="files" className="py-4">
+          {files.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tên tài liệu</TableHead>
+                  <TableHead>Nhóm tài liệu</TableHead>
+                  <TableHead>Ngày cấp</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Ghi chú</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {files.map((file) => (
+                  <TableRow key={file.id}>
+                    <TableCell>{file.ten_tai_lieu}</TableCell>
+                    <TableCell>{file.nhom_tai_lieu || "N/A"}</TableCell>
+                    <TableCell>{formatDate(file.ngay_cap)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={file.trang_thai === "active" ? "default" : "secondary"}
+                      >
+                        {file.trang_thai === "active" ? "Đang sử dụng" : file.trang_thai}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{file.ghi_chu || "N/A"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">Không có tài liệu</p>
+          )}
         </TabsContent>
       </Tabs>
     </div>

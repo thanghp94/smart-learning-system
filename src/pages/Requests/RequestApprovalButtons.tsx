@@ -1,19 +1,19 @@
 
 import React from 'react';
-import { Check, X, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { requestService } from '@/lib/supabase';
+import { Check, X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Request } from '@/lib/types';
+import { Request } from '@/lib/types/request';
+import { requestService } from '@/lib/supabase';
 
 interface RequestApprovalButtonsProps {
   request: Request;
-  onStatusChange: () => void;
+  onRequestUpdate: () => void;
 }
 
-const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({
-  request,
-  onStatusChange,
+const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({ 
+  request, 
+  onRequestUpdate 
 }) => {
   const { toast } = useToast();
 
@@ -24,17 +24,17 @@ const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({
       });
       
       toast({
-        title: 'Thành công',
-        description: 'Đã duyệt yêu cầu',
+        title: "Thành công",
+        description: "Đã phê duyệt yêu cầu",
       });
       
-      onStatusChange();
+      onRequestUpdate();
     } catch (error) {
-      console.error('Error approving request:', error);
+      console.error("Error approving request:", error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể duyệt yêu cầu',
-        variant: 'destructive',
+        title: "Lỗi",
+        description: "Không thể phê duyệt yêu cầu",
+        variant: "destructive"
       });
     }
   };
@@ -46,75 +46,76 @@ const RequestApprovalButtons: React.FC<RequestApprovalButtonsProps> = ({
       });
       
       toast({
-        title: 'Thành công',
-        description: 'Đã từ chối yêu cầu',
+        title: "Thành công",
+        description: "Đã từ chối yêu cầu",
       });
       
-      onStatusChange();
+      onRequestUpdate();
     } catch (error) {
-      console.error('Error rejecting request:', error);
+      console.error("Error rejecting request:", error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể từ chối yêu cầu',
-        variant: 'destructive',
+        title: "Lỗi",
+        description: "Không thể từ chối yêu cầu",
+        variant: "destructive"
       });
     }
   };
 
-  const handleRevise = async () => {
+  const handleReviewNeeded = async () => {
     try {
       await requestService.update(request.id, {
-        trang_thai: 'needs_revision'
+        trang_thai: 'review_needed'
       });
       
       toast({
-        title: 'Thành công',
-        description: 'Đã gửi yêu cầu điều chỉnh',
+        title: "Thành công",
+        description: "Đã đánh dấu yêu cầu cần xem xét lại",
       });
       
-      onStatusChange();
+      onRequestUpdate();
     } catch (error) {
-      console.error('Error sending revision request:', error);
+      console.error("Error marking request for review:", error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể gửi yêu cầu điều chỉnh',
-        variant: 'destructive',
+        title: "Lỗi",
+        description: "Không thể đánh dấu yêu cầu",
+        variant: "destructive"
       });
     }
   };
 
-  // Only show approval buttons if request is pending
+  // Only show buttons for pending requests
   if (request.trang_thai !== 'pending') {
     return null;
   }
 
   return (
-    <div className="flex space-x-2 mt-4">
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="text-green-600 border-green-600 hover:bg-green-50"
+    <div className="flex space-x-2">
+      <Button
+        size="sm"
+        variant="default"
         onClick={handleApprove}
+        className="bg-green-500 hover:bg-green-600"
       >
-        <Check className="h-4 w-4 mr-1" /> Duyệt
+        <Check className="h-4 w-4 mr-1" />
+        Phê duyệt
       </Button>
       
       <Button 
-        variant="outline" 
         size="sm" 
-        className="text-red-600 border-red-600 hover:bg-red-50"
+        variant="outline"
+        onClick={handleReviewNeeded}
+      >
+        <AlertCircle className="h-4 w-4 mr-1" />
+        Cần xem xét
+      </Button>
+      
+      <Button 
+        size="sm" 
+        variant="destructive"
         onClick={handleReject}
       >
-        <X className="h-4 w-4 mr-1" /> Không duyệt
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="text-amber-600 border-amber-600 hover:bg-amber-50"
-        onClick={handleRevise}
-      >
-        <Edit className="h-4 w-4 mr-1" /> Điều chỉnh thêm
+        <X className="h-4 w-4 mr-1" />
+        Từ chối
       </Button>
     </div>
   );

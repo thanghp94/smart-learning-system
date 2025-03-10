@@ -1,73 +1,47 @@
 
-/**
- * Format a number as currency with the given locale and currency code
- * @param value Number value to format
- * @param locale Locale to use for formatting (defaults to 'vi-VN')
- * @param currency Currency code to use (defaults to 'VND')
- * @returns Formatted currency string
- */
-export const formatCurrency = (
-  value: number | string | undefined | null,
-  locale = 'vi-VN',
-  currency = 'VND'
-): string => {
-  if (value === null || value === undefined) return '';
-  
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  
-  if (isNaN(numValue)) return '';
-  
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(numValue);
-};
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 
-/**
- * Format a date string into a localized date display
- * @param dateString Date string to format
- * @param locale Locale to use for formatting (defaults to 'vi-VN')
- * @returns Formatted date string
- */
-export const formatDate = (
-  dateString: string | undefined | null,
-  locale = 'vi-VN'
-): string => {
-  if (!dateString) return '';
-  
+export const formatDate = (date: string | Date | undefined) => {
+  if (!date) return "N/A";
   try {
-    const date = new Date(dateString);
-    
-    if (isNaN(date.getTime())) return dateString;
-    
-    return date.toLocaleDateString(locale, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return dateString || '';
+    return format(new Date(date), "dd/MM/yyyy", { locale: vi });
+  } catch (e) {
+    return String(date);
   }
 };
 
-/**
- * Format a number with thousand separators
- * @param value Number to format
- * @param locale Locale to use for formatting (defaults to 'vi-VN')
- * @returns Formatted number string
- */
-export const formatNumber = (
-  value: number | string | undefined | null,
-  locale = 'vi-VN'
-): string => {
-  if (value === null || value === undefined) return '';
+export const formatTime = (time: string | undefined) => {
+  if (!time) return "N/A";
+  return time.substring(0, 5); // Format HH:MM
+};
+
+export const formatCurrency = (amount: number | undefined) => {
+  if (amount === undefined) return "N/A";
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+};
+
+export const formatStatus = (status: string | undefined) => {
+  if (!status) return "N/A";
   
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  
-  if (isNaN(numValue)) return '';
-  
-  return new Intl.NumberFormat(locale).format(numValue);
+  switch (status.toLowerCase()) {
+    case 'active':
+      return "Đang hoạt động";
+    case 'pending':
+      return "Chờ xử lý";
+    case 'completed':
+      return "Hoàn thành";
+    case 'approved':
+      return "Đã phê duyệt";
+    case 'rejected':
+      return "Đã từ chối";
+    case 'review_needed':
+      return "Cần xem xét";
+    case 'inactive':
+      return "Không hoạt động";
+    case 'closed':
+      return "Đã đóng";
+    default:
+      return status;
+  }
 };
