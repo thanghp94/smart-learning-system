@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PlusCircle, Briefcase, Users, Calendar, Activity } from 'lucide-react';
 import { classService, studentService, eventService, facilityService } from '@/lib/supabase';
@@ -108,7 +107,6 @@ const Index = () => {
         <StatsCard 
           title="Học Sinh" 
           value={stats.totalStudents.toString()}
-          icon={<Users className="h-5 w-5" />}
           description="Tổng số học sinh"
           trend={{ 
             value: "+5%", 
@@ -121,7 +119,6 @@ const Index = () => {
         <StatsCard 
           title="Lớp Học" 
           value={stats.totalClasses.toString()}
-          icon={<Briefcase className="h-5 w-5" />}
           description="Tổng số lớp học"
           trend={{ 
             value: "+2", 
@@ -134,7 +131,6 @@ const Index = () => {
         <StatsCard 
           title="Sự Kiện" 
           value={stats.upcomingEvents.toString()}
-          icon={<Calendar className="h-5 w-5" />}
           description="Sự kiện sắp tới"
           trend={{ 
             value: "0", 
@@ -147,7 +143,6 @@ const Index = () => {
         <StatsCard 
           title="Cơ Sở" 
           value={stats.totalFacilities.toString()}
-          icon={<Activity className="h-5 w-5" />}
           description="Tổng số cơ sở"
           trend={{ 
             value: "0", 

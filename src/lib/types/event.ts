@@ -25,4 +25,5 @@ export interface Event {
   start_date?: string;
   location?: string; // Added for compatibility with RequestApprovalButtons
   created_by?: string; // Added for compatibility with RequestApprovalButtons
+  status?: string; // Added for compatibility with RequestApprovalButtons
 }
