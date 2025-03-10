@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -28,7 +27,7 @@ const Sidebar = () => {
   return (
     <div
       className={cn(
-        "border-r bg-card fixed inset-y-0 z-30 flex h-full flex-col transition-all duration-300",
+        "h-full border-r bg-card flex flex-col transition-all duration-300",
         expanded ? "w-64" : "w-[60px]"
       )}
     >

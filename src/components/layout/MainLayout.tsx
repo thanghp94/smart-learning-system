@@ -43,10 +43,14 @@ const MainLayout = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        {!isMobile && <Sidebar />}
+        {!isMobile && (
+          <div className="w-64 flex-shrink-0"> {/* Fixed width sidebar container */}
+            <Sidebar />
+          </div>
+        )}
         
-        <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-30 h-16 flex items-center justify-between px-4 md:px-6 bg-background/80 backdrop-blur-md border-b border-border animate-fade-in">
+        <div className="flex-1 flex flex-col min-w-0"> {/* min-w-0 prevents content overflow */}
+          <header className="sticky top-0 z-30 h-16 flex items-center justify-between px-4 md:px-6 bg-background/80 backdrop-blur-md border-b border-border">
             <div className="flex items-center gap-2">
               {isMobile && (
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -83,10 +87,12 @@ const MainLayout = () => {
               </Avatar>
             </div>
           </header>
-          <div className="container mx-auto px-2 sm:px-4 md:px-6 py-4 md:py-6 flex-1 max-w-full overflow-x-hidden">
-            {/* This will render the current route component */}
-            <Outlet />
-          </div>
+
+          <main className="flex-1 overflow-auto bg-background">
+            <div className="container mx-auto px-4 py-6">
+              <Outlet />
+            </div>
+          </main>
         </div>
       </div>
     </SidebarProvider>
