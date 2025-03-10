@@ -31,7 +31,7 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
     try {
       setIsLoading(true);
       const data = await studentService.getAll();
-      console.log("Students data received:", data);
+      console.log("Dữ liệu học sinh đã nhận:", data);
       
       if (Array.isArray(data)) {
         // Ensure we have proper Student objects with all required fields
@@ -46,11 +46,11 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
         
         setStudents(studentsWithRequiredFields);
       } else {
-        console.error("Invalid students data format:", data);
+        console.error("Định dạng dữ liệu học sinh không hợp lệ:", data);
         setStudents([]);
       }
     } catch (error) {
-      console.error("Error fetching students:", error);
+      console.error("Lỗi khi tải danh sách học sinh:", error);
       toast({
         title: "Lỗi",
         description: "Không thể tải danh sách học sinh. Vui lòng thử lại sau.",
@@ -93,7 +93,7 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Đang tải dữ liệu...</span>
+          <span className="ml-2">Đang tải dữ liệu học sinh...</span>
         </div>
       ) : (
         <StudentsList 

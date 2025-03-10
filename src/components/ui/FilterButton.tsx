@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Filter, X, Building, User, GraduationCap } from 'lucide-react';
 import {
@@ -81,41 +81,40 @@ const FilterButton: React.FC<FilterButtonProps> = ({
   };
 
   return (
-    <div>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 gap-1">
-            <Filter className="h-4 w-4" />
-            {label}
-            {getActiveFilterCount() > 0 && (
-              <Badge variant="secondary" className="ml-1 px-1 min-w-4 h-4 rounded-full">
-                {getActiveFilterCount()}
-              </Badge>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-72 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-medium text-sm">Bộ lọc</h4>
-            {getActiveFilterCount() > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={clearFilters}
+    <div className="flex items-center gap-1">
+      <div className="flex flex-wrap gap-1 items-center">
+        {categories.map((category) => (
+          <Popover key={category.name}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={activeFilters[category.name] ? "default" : "outline"} 
+                size="sm" 
+                className="h-8 gap-1"
               >
-                <X className="h-3 w-3 mr-1" />
-                Xóa tất cả
+                {getCategoryIcon(category.type)}
+                {category.name}
+                {activeFilters[category.name] && (
+                  <Badge variant="secondary" className="ml-1 px-1 min-w-4 h-4 rounded-full">
+                    ✓
+                  </Badge>
+                )}
               </Button>
-            )}
-          </div>
-
-          <div className="space-y-3 max-h-80 overflow-auto pr-1">
-            {categories.map((category) => (
-              <div key={category.name} className="space-y-2">
-                <div className="flex items-center">
-                  {getCategoryIcon(category.type)}
-                  <span className="text-sm font-medium">{category.name}</span>
+            </PopoverTrigger>
+            <PopoverContent className="w-52 p-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm">{category.name}</h4>
+                  {activeFilters[category.name] && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleFilterChange(category.name, "")}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Xóa
+                    </Button>
+                  )}
                 </div>
                 <Select
                   value={activeFilters[category.name] || ""}
@@ -133,12 +132,23 @@ const FilterButton: React.FC<FilterButtonProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-                <Separator className="my-1" />
               </div>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+            </PopoverContent>
+          </Popover>
+        ))}
+        
+        {getActiveFilterCount() > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2"
+            onClick={clearFilters}
+          >
+            <X className="h-4 w-4 mr-1" />
+            Xóa tất cả
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
