@@ -4,7 +4,7 @@ import {
   Users, Briefcase, School, Calendar, BookOpen, FileText, 
   Image, Clipboard, Building2, PanelLeft, Tag, CircleDollarSign, 
   FolderOpen, Mail, Package, FileQuestion, Database, CalendarCheck,
-  Clock, UserCheck, FileContract
+  Clock, UserCheck, FileSymlink
 } from 'lucide-react';
 
 export const primaryLinks = [
@@ -31,5 +31,5 @@ export const secondaryLinks = [
   { name: 'Tài sản', href: '/assets', icon: <Package className="w-5 h-5" /> },
   { name: 'Yêu cầu', href: '/requests', icon: <FileQuestion className="w-5 h-5" /> },
   { name: 'Database', href: '/database-schema', icon: <Database className="w-5 h-5" /> },
-  { name: 'Hợp đồng', href: '/employees/contracts', icon: <FileContract className="w-5 h-5" /> },
+  { name: 'Hợp đồng', href: '/employees/contracts', icon: <FileSymlink className="w-5 h-5" /> },
 ];

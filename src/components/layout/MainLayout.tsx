@@ -56,7 +56,7 @@ const MainLayout = () => {
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="p-0">
-                    <Sidebar onNavItemClick={() => setIsMobileMenuOpen(false)} />
+                    <Sidebar />
                   </SheetContent>
                 </Sheet>
               )}

@@ -30,8 +30,12 @@ const AttendancePage = () => {
       console.log("Attendance data received:", data);
       
       if (Array.isArray(data)) {
-        // Make sure data is properly typed as EmployeeClockInOut[]
-        setAttendanceRecords(data);
+        // Convert EmployeeClockIn[] to EmployeeClockInOut[] with explicit type casting
+        const typedData: EmployeeClockInOut[] = data.map(record => ({
+          ...record,
+          xac_nhan: record.xac_nhan ?? false, // Provide default value if undefined
+        }));
+        setAttendanceRecords(typedData);
       } else {
         console.error("Lỗi định dạng dữ liệu chấm công:", data);
         setAttendanceRecords([]);
