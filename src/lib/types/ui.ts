@@ -1,4 +1,6 @@
 
+import { ActivityItem } from './activity';
+
 export interface StatsCardProps {
   title: string;
   value: number | string;

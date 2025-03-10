@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { financeService } from "@/lib/supabase";
-import { Finance } from "@/lib/types";
+import { financeService, facilityService } from "@/lib/supabase";
+import { Finance, Facility } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import { format } from "date-fns";
 
 const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -24,6 +26,7 @@ const FinancePage = () => {
 
   useEffect(() => {
     fetchFinances();
+    fetchFacilities();
   }, []);
 
   const fetchFinances = async () => {
@@ -48,6 +51,20 @@ const FinancePage = () => {
       setFinances([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchFacilities = async () => {
+    try {
+      const data = await facilityService.getAll();
+      setFacilities(data);
+    } catch (error) {
+      console.error("Error fetching facilities:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh sách cơ sở.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -201,6 +218,7 @@ const FinancePage = () => {
           <FinanceForm 
             onSubmit={handleAddFormSubmit}
             onCancel={handleAddFormCancel}
+            facilities={facilities}
           />
         </DialogContent>
       </Dialog>

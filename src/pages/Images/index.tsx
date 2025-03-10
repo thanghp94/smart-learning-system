@@ -1,21 +1,31 @@
 
 import React, { useState, useEffect } from "react";
-import { Image as ImageIcon, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, Image as ImageIcon, RotateCw, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PageHeader from "@/components/common/PageHeader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Image } from "@/lib/types";
 import { imageService } from "@/lib/supabase/image-service";
 import { useToast } from "@/hooks/use-toast";
+import TablePageLayout from "@/components/common/TablePageLayout";
+import PlaceholderPage from "@/components/common/PlaceholderPage";
+import { format } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import ImageUploadForm from "./ImageUploadForm";
+import ImageDetailView from "./ImageDetailView";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const Images: React.FC = () => {
   const [images, setImages] = useState<Image[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [entityFilter, setEntityFilter] = useState<string>("");
+  const [showDetailView, setShowDetailView] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -23,15 +33,15 @@ const Images: React.FC = () => {
   }, []);
 
   const fetchImages = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const data = await imageService.getAll();
       setImages(data);
     } catch (error) {
       console.error("Error fetching images:", error);
       toast({
         title: "Error",
-        description: "Failed to load images. Please try again.",
+        description: "Failed to load images",
         variant: "destructive",
       });
     } finally {
@@ -39,171 +49,174 @@ const Images: React.FC = () => {
     }
   };
 
-  const handleAddImage = () => {
-    setShowUploadForm(true);
-  };
-
-  const handleCloseUploadForm = () => {
-    setShowUploadForm(false);
+  const handleImageClick = (image: Image) => {
+    setSelectedImage(image);
+    setShowDetailView(true);
   };
 
   const handleUploadSuccess = () => {
     setShowUploadForm(false);
     fetchImages();
+    toast({
+      title: "Success",
+      description: "Image uploaded successfully",
+    });
   };
 
-  const handleDeleteImage = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this image?")) {
-      return;
-    }
+  const handleAddImage = () => {
+    setShowUploadForm(true);
+  };
 
+  const handleDeleteClick = (image: Image, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedImage(image);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedImage) return;
+    
     try {
-      await imageService.delete(id);
+      await imageService.delete(selectedImage.id);
+      fetchImages();
+      setShowDeleteConfirm(false);
       toast({
         title: "Success",
         description: "Image deleted successfully",
       });
-      fetchImages();
     } catch (error) {
       console.error("Error deleting image:", error);
       toast({
         title: "Error",
-        description: "Failed to delete image. Please try again.",
+        description: "Failed to delete image",
         variant: "destructive",
       });
     }
   };
 
-  const filteredImages = images.filter((image) => {
-    const matchesSearch =
-      !searchTerm ||
-      (image.ten_anh && image.ten_anh.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (image.caption && image.caption.toLowerCase().includes(searchTerm.toLowerCase()));
+  const renderImageGrid = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <RotateCw className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading images...</span>
+        </div>
+      );
+    }
 
-    const matchesEntityType = !entityFilter || image.doi_tuong === entityFilter;
-
-    return matchesSearch && matchesEntityType;
-  });
-
-  return (
-    <div className="container mx-auto p-4">
-      <PageHeader
-        title="Hình Ảnh"
-        description="Quản lý kho hình ảnh trong hệ thống"
-        action={{
-          label: "Thêm Hình Ảnh",
-          onClick: handleAddImage,
-          icon: <Plus className="h-4 w-4" />,
-        }}
-      />
-
-      {showUploadForm ? (
-        <ImageUploadForm
-          onSuccess={handleUploadSuccess}
-          onCancel={handleCloseUploadForm}
+    if (images.length === 0) {
+      return (
+        <PlaceholderPage
+          title="No Images Found"
+          description="Upload your first image to get started"
+          addButtonAction={handleAddImage}
         />
-      ) : (
-        <>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Tìm kiếm hình ảnh</CardTitle>
-              <CardDescription>
-                Tìm kiếm hình ảnh theo tên hoặc mô tả
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex-1 min-w-[200px]">
-                  <Input
-                    placeholder="Tìm theo tên hoặc mô tả..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {images.map((image) => (
+          <Card
+            key={image.id}
+            className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleImageClick(image)}
+          >
+            <div className="relative aspect-square bg-muted">
+              {image.image ? (
+                <img
+                  src={image.image}
+                  alt={image.caption || image.ten_anh}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full bg-muted">
+                  <ImageIcon className="h-12 w-12 text-muted-foreground" />
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={fetchImages}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                  )}
-                  Làm mới
-                </Button>
-              </div>
+              )}
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute top-1 right-1 h-8 w-8"
+                onClick={(e) => handleDeleteClick(image, e)}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </div>
+            <CardContent className="p-3">
+              <h3 className="font-medium truncate">{image.ten_anh}</h3>
+              <p className="text-sm text-muted-foreground truncate">
+                {image.doi_tuong}: {image.caption || "No caption"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {image.tg_tao
+                  ? format(new Date(image.tg_tao), "dd/MM/yyyy")
+                  : "Unknown date"}
+              </p>
             </CardContent>
           </Card>
+        ))}
+      </div>
+    );
+  };
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {isLoading ? (
-              Array.from({ length: 8 }).map((_, index) => (
-                <Card key={index} className="overflow-hidden">
-                  <div className="aspect-square bg-gray-200 animate-pulse" />
-                  <CardContent className="p-4">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2" />
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3" />
-                  </CardContent>
-                </Card>
-              ))
-            ) : filteredImages.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center p-12 text-center">
-                <ImageIcon className="h-16 w-16 text-muted-foreground/40 mb-4" />
-                <h3 className="text-lg font-medium">Không tìm thấy hình ảnh</h3>
-                <p className="text-muted-foreground mt-2 mb-4">
-                  {searchTerm
-                    ? "Không có hình ảnh nào phù hợp với từ khóa tìm kiếm."
-                    : "Chưa có hình ảnh nào trong hệ thống."}
-                </p>
-                <Button onClick={handleAddImage}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Thêm Hình Ảnh
-                </Button>
-              </div>
-            ) : (
-              filteredImages.map((image) => (
-                <Card key={image.id} className="overflow-hidden group relative">
-                  <div className="aspect-square relative overflow-hidden">
-                    {image.image ? (
-                      <img
-                        src={image.image}
-                        alt={image.caption || image.ten_anh}
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <ImageIcon className="h-12 w-12 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteImage(image.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-medium truncate">{image.ten_anh}</h3>
-                    {image.caption && (
-                      <p className="text-sm text-muted-foreground truncate">
-                        {image.caption}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {image.doi_tuong}: {image.doi_tuong_id}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </>
-      )}
+  const tableActions = (
+    <div className="flex items-center space-x-2">
+      <Button variant="outline" size="sm" className="h-8" onClick={fetchImages}>
+        <RotateCw className="h-4 w-4 mr-1" /> Refresh
+      </Button>
+      <Button size="sm" className="h-8" onClick={handleAddImage}>
+        <Plus className="h-4 w-4 mr-1" /> Add Image
+      </Button>
     </div>
+  );
+
+  return (
+    <>
+      <TablePageLayout
+        title="Images"
+        description="Manage images for your application"
+        actions={tableActions}
+      >
+        {renderImageGrid()}
+      </TablePageLayout>
+
+      <Dialog open={showUploadForm} onOpenChange={setShowUploadForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Upload Image</DialogTitle>
+          </DialogHeader>
+          <ImageUploadForm
+            onSuccess={handleUploadSuccess}
+            onCancel={() => setShowUploadForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDetailView} onOpenChange={setShowDetailView}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Image Details</DialogTitle>
+          </DialogHeader>
+          {selectedImage && <ImageDetailView image={selectedImage} />}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this image? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
