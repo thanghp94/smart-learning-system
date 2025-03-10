@@ -11,8 +11,8 @@ import { studentService, classService, employeeService } from "@/lib/supabase";
 import { Student, Class, Employee } from "@/lib/types";
 import { activityService } from "@/lib/supabase/activity-service";
 
-// Type alias for Activity
-type Activity = {
+// Type for activity that matches the one used in RecentActivity component
+interface DashboardActivity {
   id: string;
   action: string;
   entity_type: string;
@@ -23,13 +23,13 @@ type Activity = {
   actor_id?: string;
   entity_id?: string;
   details?: string;
-};
+}
 
 const Index = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activities, setActivities] = useState<DashboardActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,8 +46,8 @@ const Index = () => {
         setStudents(studentsData);
         setClasses(classesData);
         setEmployees(employeesData);
-        // Type assertion to Activity[]
-        setActivities(activitiesData as unknown as Activity[]);
+        // Type assertion to DashboardActivity[]
+        setActivities(activitiesData as unknown as DashboardActivity[]);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {

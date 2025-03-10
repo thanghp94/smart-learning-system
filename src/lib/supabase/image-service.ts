@@ -96,11 +96,11 @@ export const imageService = {
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${fileName}`;
       
-      const { data, error } = await storageService.uploadFile('images', filePath, file);
+      const result = await storageService.uploadFile('images', filePath, file);
       
-      if (error) throw error;
+      if (result.error) throw result.error;
       
-      return data;
+      return result.data;
     } catch (error) {
       console.error('Error uploading image:', error);
       throw error;

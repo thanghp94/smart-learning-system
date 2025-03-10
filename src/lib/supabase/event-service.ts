@@ -15,7 +15,7 @@ export const eventService = {
   async create(data: Partial<Event>) {
     try {
       const result = await insert<Event>('events', data);
-      await logActivity('create', 'event', data.title || 'New event', 'system', 'completed');
+      await logActivity('create', 'event', data.ten_su_kien || data.title || 'New event', 'system', 'completed');
       return result;
     } catch (error) {
       console.error('Error creating event:', error);
@@ -26,7 +26,7 @@ export const eventService = {
   async update(id: string, data: Partial<Event>) {
     try {
       const result = await update<Event>('events', id, data);
-      await logActivity('update', 'event', data.title || 'Update event', 'system', 'completed');
+      await logActivity('update', 'event', data.ten_su_kien || data.title || 'Update event', 'system', 'completed');
       return result;
     } catch (error) {
       console.error('Error updating event:', error);

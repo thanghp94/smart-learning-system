@@ -91,4 +91,21 @@ export const requestService = {
       throw error;
     }
   },
+
+  async getByEntity(entityType: string, entityId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('entity_type', entityType)
+        .eq('entity_id', entityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching requests for ${entityType} ${entityId}:`, error);
+      throw error;
+    }
+  },
 };

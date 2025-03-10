@@ -38,7 +38,8 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
         const studentsWithRequiredFields = data.map(student => ({
           ...student,
           id: student.id || crypto.randomUUID(),
-          ten_hoc_sinh: student.ten_hoc_sinh || '',
+          ho_va_ten: student.ho_va_ten || student.ten_hoc_sinh || '',
+          ten_hoc_sinh: student.ten_hoc_sinh || student.ho_va_ten || '',
           co_so_id: student.co_so_id || '',
           trang_thai: student.trang_thai || 'active'
         })) as Student[];
