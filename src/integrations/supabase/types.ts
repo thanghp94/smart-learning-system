@@ -1636,6 +1636,7 @@ export type Database = {
           nhan_xet_6: string | null
           nhan_xet_chung: string | null
           phong_hoc_id: string | null
+          session_buoi_hoc_id: string | null
           session_id: string
           thoi_gian_bat_dau: string
           thoi_gian_ket_thuc: string
@@ -1659,6 +1660,7 @@ export type Database = {
           nhan_xet_6?: string | null
           nhan_xet_chung?: string | null
           phong_hoc_id?: string | null
+          session_buoi_hoc_id?: string | null
           session_id: string
           thoi_gian_bat_dau: string
           thoi_gian_ket_thuc: string
@@ -1682,6 +1684,7 @@ export type Database = {
           nhan_xet_6?: string | null
           nhan_xet_chung?: string | null
           phong_hoc_id?: string | null
+          session_buoi_hoc_id?: string | null
           session_id?: string
           thoi_gian_bat_dau?: string
           thoi_gian_ket_thuc?: string
@@ -1716,6 +1719,13 @@ export type Database = {
             columns: ["lop_chi_tiet_id"]
             isOneToOne: false
             referencedRelation: "classes_with_student_count"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teaching_sessions_session_buoi_hoc_id_fkey"
+            columns: ["session_buoi_hoc_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
           {

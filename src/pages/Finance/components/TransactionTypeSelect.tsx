@@ -10,7 +10,7 @@ interface TransactionTypeSelectProps {
   form: UseFormReturn<any>;
   selectedTransactionCategory: string;
   selectedEntityType: string | null;
-  onTransactionTypeChange?: (value: string) => void;
+  onTransactionTypeChange?: (value: string, transactionTypeName: string) => void;
 }
 
 const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
@@ -105,7 +105,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
     if (currentType && !filtered.some(type => type.name === currentType)) {
       form.setValue('loai_giao_dich', '');
       if (onTransactionTypeChange) {
-        onTransactionTypeChange('');
+        onTransactionTypeChange('', '');
       }
     }
   }, [selectedTransactionCategory, selectedEntityType, transactionTypes, form, onTransactionTypeChange]);
@@ -114,7 +114,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
   const handleTransactionTypeChange = (value: string) => {
     form.setValue('loai_giao_dich', value);
     if (onTransactionTypeChange) {
-      onTransactionTypeChange(value);
+      onTransactionTypeChange(value, value);
     }
   };
 
