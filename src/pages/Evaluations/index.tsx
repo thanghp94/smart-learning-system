@@ -17,9 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import PlaceholderPage from '@/components/common/PlaceholderPage';
 
 // Default empty session for new evaluation forms
-const DEFAULT_EMPTY_SESSION: TeachingSession = {
+const DEFAULT_EMPTY_SESSION: Partial<TeachingSession> = {
   id: '',
-  class_id: '',
   lop_chi_tiet_id: '',
   session_id: '',
   loai_bai_hoc: '',
@@ -106,14 +105,7 @@ const Evaluations = () => {
   };
   
   const handleAddClick = () => {
-    const emptySession: Partial<TeachingSession> = {
-      lop_chi_tiet_id: '', // Changed from class_id to lop_chi_tiet_id
-      giao_vien: '',
-      ngay_hoc: new Date().toISOString().split('T')[0],
-      thoi_gian_bat_dau: '09:00',
-      thoi_gian_ket_thuc: '10:30'
-    };
-    setSelectedEvaluation(emptySession);
+    setSelectedEvaluation(DEFAULT_EMPTY_SESSION as TeachingSession);
     setShowAddForm(true);
   };
   
@@ -273,8 +265,8 @@ const Evaluations = () => {
             initialData={selectedEvaluation}
             onSubmit={handleUpdateEvaluation}
             onCancel={closeDetail}
-            classInfo={classesInfo[selectedEvaluation.lop_chi_tiet_id]}
-            teacherInfo={teachersInfo[selectedEvaluation.giao_vien]}
+            classInfo={classesInfo[selectedEvaluation.lop_chi_tiet_id || '']}
+            teacherInfo={teachersInfo[selectedEvaluation.giao_vien || '']}
           />
         </DetailPanel>
       )}
@@ -288,7 +280,7 @@ const Evaluations = () => {
             </DialogDescription>
           </DialogHeader>
           <EvaluationForm
-            initialData={DEFAULT_EMPTY_SESSION}
+            initialData={DEFAULT_EMPTY_SESSION as TeachingSession}
             onSubmit={handleAddEvaluation}
             onCancel={handleFormCancel}
           />
