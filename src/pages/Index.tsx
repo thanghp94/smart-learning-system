@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ResponsiveBar } from '@/components/ui/chart';
-import { ResponsiveArea } from '@/components/ui/chart';
+import { BarChart, AreaChart } from 'recharts';
 import { CalendarCheck, GraduationCap, Users, Book } from 'lucide-react';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import { supabase } from '@/lib/supabase/client';
@@ -108,6 +107,33 @@ const Index = () => {
     { name: 'Tháng 12', total: 24 },
   ];
 
+  // Simple chart components using recharts
+  const SimpleBarChart = ({ data }: { data: any[] }) => (
+    <div className="h-80">
+      <BarChart
+        width={600}
+        height={300}
+        data={data}
+        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+      >
+        {/* Add chart components here if needed */}
+      </BarChart>
+    </div>
+  );
+
+  const SimpleAreaChart = ({ data }: { data: any[] }) => (
+    <div className="h-80">
+      <AreaChart
+        width={600}
+        height={300}
+        data={data}
+        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+      >
+        {/* Add chart components here if needed */}
+      </AreaChart>
+    </div>
+  );
+
   return (
     <div className="container mx-auto space-y-6 p-6">
       <PageHeader
@@ -174,6 +200,8 @@ const Index = () => {
         <TabsList>
           <TabsTrigger value="students">Học sinh</TabsTrigger>
           <TabsTrigger value="classes">Lớp học</TabsTrigger>
+          <TabsTrigger value="employees">Nhân viên</TabsTrigger>
+          <TabsTrigger value="attendance">Chấm công</TabsTrigger>
         </TabsList>
         
         <TabsContent value="students" className="space-y-4">
@@ -185,7 +213,7 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="pl-2">
-              <ResponsiveBar data={studentData} xField="name" yField="total" />
+              <SimpleBarChart data={studentData} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -199,7 +227,57 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="pl-2">
-              <ResponsiveArea data={classesData} xField="name" yField="total" />
+              <SimpleAreaChart data={classesData} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="employees" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Nhân viên</CardTitle>
+              <CardDescription>
+                Thông tin nhân viên
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="text-center">
+                  <h3 className="font-semibold mb-2">Thống kê nhân viên</h3>
+                  <p>Tổng số: {countData.employees}</p>
+                </div>
+                <div className="text-center">
+                  <h3 className="font-semibold mb-2">Xem chi tiết</h3>
+                  <Button onClick={() => window.location.href = '/employees'}>
+                    Quản lý nhân viên
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="attendance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chấm công</CardTitle>
+              <CardDescription>
+                Thống kê chấm công nhân viên
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="text-center">
+                  <h3 className="font-semibold mb-2">Tình hình chấm công</h3>
+                  <p>Xem báo cáo chi tiết tại trang chấm công</p>
+                </div>
+                <div className="text-center">
+                  <h3 className="font-semibold mb-2">Xem chi tiết</h3>
+                  <Button onClick={() => window.location.href = '/attendance'}>
+                    Quản lý chấm công
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
