@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PlusCircle, Briefcase, Users, Calendar, Activity } from 'lucide-react';
 import { classService, studentService, eventService, facilityService } from '@/lib/supabase';

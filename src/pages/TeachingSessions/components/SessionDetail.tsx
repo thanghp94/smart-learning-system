@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,14 +13,15 @@ import ImageUploadForm from './ImageUploadForm';
 import AssignmentForm from './AssignmentForm';
 import AssignmentList from './AssignmentList';
 
-interface SessionDetailProps {
-  session: TeachingSession;
+export interface SessionDetailProps {
+  session?: any;
+  sessionId?: string;
   onSave: (updatedSession: Partial<TeachingSession>) => Promise<void>;
 }
 
-const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
+const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSave }) => {
   const [editingNotes, setEditingNotes] = useState(false);
-  const [notes, setNotes] = useState(session.ghi_chu || '');
+  const [notes, setNotes] = useState(session?.ghi_chu || '');
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -86,12 +86,12 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
       <div className="flex flex-col space-y-2">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">
-            Buổi {session.buoi_so || session.session_number} - {session.unit_name || 'Unnamed Unit'}
+            Buổi {session?.buoi_so || session?.session_number} - {session?.unit_name || 'Unnamed Unit'}
           </h2>
-          {formatStatus(session.trang_thai || session.status || 'unknown')}
+          {formatStatus(session?.trang_thai || session?.status || 'unknown')}
         </div>
         <div className="text-muted-foreground">
-          {session.ngay_hoc && format(new Date(session.ngay_hoc), 'dd/MM/yyyy')} | {session.gio_bat_dau || session.start_time} - {session.gio_ket_thuc || session.end_time}
+          {session?.ngay_hoc && format(new Date(session?.ngay_hoc), 'dd/MM/yyyy')} | {session?.gio_bat_dau || session?.start_time} - {session?.gio_ket_thuc || session?.end_time}
         </div>
       </div>
 
@@ -111,7 +111,7 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  {session.noi_dung || session.content || 'Chưa có nội dung cho buổi học này.'}
+                  {session?.noi_dung || session?.content || 'Chưa có nội dung cho buổi học này.'}
                 </div>
               </CardContent>
             </Card>
@@ -146,7 +146,7 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
                       <Button 
                         variant="outline" 
                         onClick={() => {
-                          setNotes(session.ghi_chu || '');
+                          setNotes(session?.ghi_chu || '');
                           setEditingNotes(false);
                         }}
                         disabled={isSaving}
@@ -204,7 +204,7 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
               </Button>
             </CardHeader>
             <CardContent>
-              <AssignmentList sessionId={session.id} />
+              <AssignmentList sessionId={session?.id || sessionId} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -230,7 +230,7 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
             <DialogTitle>Tải lên hình ảnh</DialogTitle>
           </DialogHeader>
           <ImageUploadForm 
-            sessionId={session.id}
+            sessionId={session?.id || sessionId}
             onUploadComplete={handleImageUploadComplete}
           />
         </DialogContent>
@@ -243,7 +243,7 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, onSave }) => {
             <DialogTitle>Thêm bài tập mới</DialogTitle>
           </DialogHeader>
           <AssignmentForm 
-            sessionId={session.id}
+            sessionId={session?.id || sessionId}
             onSuccess={handleAssignmentAdded}
           />
         </DialogContent>

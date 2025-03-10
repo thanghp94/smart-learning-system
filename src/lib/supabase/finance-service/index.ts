@@ -1,6 +1,7 @@
 
 import { financeService as baseFinanceService } from '../finance-service';
 import { receiptTemplateService } from './receipt-template-service';
+import { Finance } from '@/lib/types';
 
 // Additional methods to extend financeService
 const extendedFinanceService = {
@@ -111,7 +112,15 @@ const extendedFinanceService = {
       console.error(`Error fetching transaction types:`, error);
       return [];
     }
-  }
+  },
+  
+  // Add the missing methods
+  getAll: baseFinanceService.getAll,
+  getById: baseFinanceService.getById,
+  create: baseFinanceService.create,
+  update: baseFinanceService.update,
+  delete: baseFinanceService.delete,
+  getByEntity: baseFinanceService.getByEntity
 };
 
 // Import supabase for extended methods

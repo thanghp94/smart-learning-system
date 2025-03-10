@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, Calendar, User, Users, Book, Building, 
@@ -174,15 +173,19 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
                         </CardDescription>
                       </div>
                       <Badge variant={
-                        session.completed === 'completed' ? 'success' :
-                        session.completed === 'cancelled' ? 'destructive' :
-                        'secondary'
+                        typeof session.completed === 'boolean' 
+                          ? (session.completed ? 'success' : 'destructive')
+                          : session.completed === 'completed' ? 'success' :
+                            session.completed === 'cancelled' ? 'destructive' :
+                            'secondary'
                       }>
                         {
-                          session.completed === 'completed' ? 'Đã hoàn thành' :
-                          session.completed === 'cancelled' ? 'Đã hủy' :
-                          session.completed === 'scheduled' ? 'Đã lên lịch' :
-                          'Chưa xác định'
+                          typeof session.completed === 'boolean'
+                            ? (session.completed ? 'Đã hoàn thành' : 'Chưa hoàn thành')
+                            : session.completed === 'completed' ? 'Đã hoàn thành' :
+                              session.completed === 'cancelled' ? 'Đã hủy' :
+                              session.completed === 'scheduled' ? 'Đã lên lịch' :
+                              'Chưa xác định'
                         }
                       </Badge>
                     </div>
@@ -229,15 +232,19 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
                     <div className="flex justify-between">
                       <CardTitle className="text-base">{enrollment.ten_hoc_sinh || 'Học sinh'}</CardTitle>
                       <Badge variant={
-                        enrollment.tinh_trang_diem_danh === 'active' ? 'success' :
-                        enrollment.tinh_trang_diem_danh === 'inactive' ? 'destructive' :
-                        'secondary'
+                        typeof enrollment.tinh_trang_diem_danh === 'boolean' 
+                          ? (enrollment.tinh_trang_diem_danh ? 'success' : 'destructive')
+                          : enrollment.tinh_trang_diem_danh === 'active' ? 'success' :
+                            enrollment.tinh_trang_diem_danh === 'inactive' ? 'destructive' :
+                            'secondary'
                       }>
                         {
-                          enrollment.tinh_trang_diem_danh === 'active' ? 'Đang học' :
-                          enrollment.tinh_trang_diem_danh === 'inactive' ? 'Đã nghỉ' :
-                          enrollment.tinh_trang_diem_danh === 'pending' ? 'Chờ xử lý' :
-                          'Khác'
+                          typeof enrollment.tinh_trang_diem_danh === 'boolean'
+                            ? (enrollment.tinh_trang_diem_danh ? 'Đang học' : 'Chưa học')
+                            : enrollment.tinh_trang_diem_danh === 'active' ? 'Đang học' :
+                              enrollment.tinh_trang_diem_danh === 'inactive' ? 'Đã nghỉ' :
+                              enrollment.tinh_trang_diem_danh === 'pending' ? 'Chờ xử lý' :
+                              'Khác'
                         }
                       </Badge>
                     </div>

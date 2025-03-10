@@ -20,4 +20,7 @@ export interface Event {
   tg_tao?: string;
   entity_type?: string; // Added for compatibility
   entity_id?: string; // Added for compatibility
+  
+  // Additional compatibility fields
+  start_date?: string;
 }

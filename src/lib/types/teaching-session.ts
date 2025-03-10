@@ -42,6 +42,6 @@ export interface TeachingSession {
   nhan_xet_chung?: string;
   class_name?: string;
   teacher_name?: string;
-  completed?: boolean;
+  completed?: boolean | string;
   lesson_content?: string;
 }

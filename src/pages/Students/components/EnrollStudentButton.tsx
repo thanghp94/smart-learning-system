@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -9,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery } from '@tanstack/react-query';
 
 interface EnrollStudentButtonProps {
-  student: Student;
-  onEnrollmentComplete: () => void;
+  student?: any;
+  studentId?: string;
+  onEnrollmentCreated: () => Promise<void>;
 }
 
-const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student, onEnrollmentComplete }) => {
+const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student, studentId, onEnrollmentCreated }) => {
   const [open, setOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +41,7 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student, onEn
     setIsSubmitting(true);
     try {
       const enrollmentData = {
-        hoc_sinh_id: student.id,
+        hoc_sinh_id: studentId,
         lop_chi_tiet_id: selectedClassId,
         tinh_trang_diem_danh: 'pending'
       };
@@ -54,7 +54,7 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student, onEn
       });
       
       setOpen(false);
-      onEnrollmentComplete();
+      await onEnrollmentCreated();
     } catch (error) {
       console.error("Error enrolling student:", error);
       toast({
@@ -76,7 +76,7 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student, onEn
           <DialogHeader>
             <DialogTitle>Đăng ký học sinh vào lớp</DialogTitle>
             <DialogDescription>
-              Chọn lớp học để đăng ký học sinh {student.ten_hoc_sinh}
+              Chọn lớp học để đăng ký học sinh {student?.ten_hoc_sinh}
             </DialogDescription>
           </DialogHeader>
           

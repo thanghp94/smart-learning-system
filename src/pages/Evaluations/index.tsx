@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +19,7 @@ import PlaceholderPage from '@/components/common/PlaceholderPage';
 // Default empty session for new evaluation forms
 const DEFAULT_EMPTY_SESSION: TeachingSession = {
   id: '',
+  class_id: '',
   lop_chi_tiet_id: '',
   session_id: '',
   loai_bai_hoc: '',
