@@ -69,5 +69,53 @@ export const financeService = {
     }
     
     return data as Finance[];
+  },
+
+  // Get finances by student
+  getByStudent: async (studentId: string): Promise<Finance[]> => {
+    const { data, error } = await supabase
+      .from('finances')
+      .select('*')
+      .eq('doi_tuong_id', studentId)
+      .eq('loai_doi_tuong', 'student');
+    
+    if (error) {
+      console.error('Error fetching finances by student:', error);
+      throw error;
+    }
+    
+    return data as Finance[];
+  },
+  
+  // Get finances by employee
+  getByEmployee: async (employeeId: string): Promise<Finance[]> => {
+    const { data, error } = await supabase
+      .from('finances')
+      .select('*')
+      .eq('doi_tuong_id', employeeId)
+      .eq('loai_doi_tuong', 'employee');
+    
+    if (error) {
+      console.error('Error fetching finances by employee:', error);
+      throw error;
+    }
+    
+    return data as Finance[];
+  },
+  
+  // Get finances by contact
+  getByContact: async (contactId: string): Promise<Finance[]> => {
+    const { data, error } = await supabase
+      .from('finances')
+      .select('*')
+      .eq('doi_tuong_id', contactId)
+      .eq('loai_doi_tuong', 'contact');
+    
+    if (error) {
+      console.error('Error fetching finances by contact:', error);
+      throw error;
+    }
+    
+    return data as Finance[];
   }
 };

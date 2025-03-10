@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
-import { Plus, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { Class, TeachingSession } from '@/lib/types';
-import { teachingSessionService, employeeService } from '@/lib/supabase';
+import { teachingSessionService } from '@/lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import SessionForm from '../TeachingSessions/SessionForm';
 
@@ -83,8 +82,10 @@ const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ cla
           <SessionForm 
             onSubmit={handleSubmit}
             onCancel={handleCancel}
-            classId={classData.id}
-            defaultTeacher={classData.gv_chinh}
+            initialData={{
+              lop_chi_tiet_id: classData.id,
+              giao_vien: classData.gv_chinh
+            }}
           />
         </DialogContent>
       </Dialog>

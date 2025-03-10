@@ -1,49 +1,50 @@
 
 import React, { useState } from 'react';
-import { ClipboardList } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Evaluation, Student, Enrollment } from '@/lib/types';
+import { Student, Enrollment, Evaluation } from '@/lib/types';
 import { evaluationService } from '@/lib/supabase';
-import { DataTable } from '@/components/ui/DataTable';
+import DataTable from '@/components/ui/DataTable';
+import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 interface ViewEvaluationsButtonProps {
   studentId?: string;
   enrollmentId?: string;
-  buttonLabel?: string;
-  variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
+  classId?: string;
+  showAsSheet?: boolean;
+  buttonText?: string;
 }
 
-const ViewEvaluationsButton: React.FC<ViewEvaluationsButtonProps> = ({ 
-  studentId, 
+const ViewEvaluationsButton: React.FC<ViewEvaluationsButtonProps> = ({
+  studentId,
   enrollmentId,
-  buttonLabel = "Xem đánh giá",
-  variant = "outline",
-  size = "sm"
+  classId,
+  showAsSheet = true,
+  buttonText = "Xem đánh giá"
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const openSheet = async () => {
+  const loadEvaluations = async () => {
     try {
       setIsLoading(true);
-      let evaluationsData: Evaluation[] = [];
+      let data: Evaluation[] = [];
       
-      if (enrollmentId) {
-        // Fetch evaluations by enrollment ID
-        evaluationsData = await evaluationService.getByEnrollment(enrollmentId);
-      } else if (studentId) {
-        // Fetch evaluations by student ID
-        evaluationsData = await evaluationService.getByStudent(studentId);
+      if (studentId) {
+        data = await evaluationService.getByStudent(studentId);
+      } else if (enrollmentId) {
+        data = await evaluationService.getByEnrollment(enrollmentId);
+      } else if (classId) {
+        data = await evaluationService.getByClass(classId);
       }
       
-      setEvaluations(evaluationsData || []);
-      setIsOpen(true);
+      setEvaluations(data);
     } catch (error) {
       console.error('Error fetching evaluations:', error);
       toast({
@@ -54,6 +55,11 @@ const ViewEvaluationsButton: React.FC<ViewEvaluationsButtonProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOpen = async () => {
+    await loadEvaluations();
+    setIsOpen(true);
   };
 
   const columns = [
@@ -71,66 +77,82 @@ const ViewEvaluationsButton: React.FC<ViewEvaluationsButtonProps> = ({
       title: "Ngày đánh giá",
       key: "ngay_dau_dot_danh_gia",
       sortable: true,
-      render: (value: string) => value ? new Date(value).toLocaleDateString('vi-VN') : '',
-    },
-    {
-      title: "Hạn hoàn thành",
-      key: "han_hoan_thanh",
-      sortable: true,
-      render: (value: string) => value ? new Date(value).toLocaleDateString('vi-VN') : '',
+      render: (value: string) => formatDate(value),
     },
     {
       title: "Trạng thái",
       key: "trang_thai",
       sortable: true,
       render: (value: string) => (
-        <Badge variant={
-          value === "completed" ? "success" : 
-          value === "in-progress" ? "warning" : 
-          "secondary"
-        }>
-          {value === "completed" ? "Hoàn thành" : 
-           value === "in-progress" ? "Đang thực hiện" : 
-           "Chưa bắt đầu"}
+        <Badge
+          variant={
+            value === 'completed' ? 'success' :
+            value === 'pending' ? 'warning' :
+            'secondary'
+          }
+        >
+          {value === 'completed' ? 'Hoàn thành' :
+           value === 'pending' ? 'Đang chờ' :
+           value}
         </Badge>
       ),
     },
   ];
 
+  const content = (
+    <>
+      {isLoading ? (
+        <div className="flex justify-center p-8">Đang tải...</div>
+      ) : evaluations.length === 0 ? (
+        <div className="p-8 text-center text-muted-foreground">
+          Không có đánh giá nào
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={evaluations}
+          searchable={true}
+          searchPlaceholder="Tìm kiếm đánh giá..."
+        />
+      )}
+    </>
+  );
+
   return (
     <>
-      <Button 
-        variant={variant} 
-        size={size} 
-        onClick={openSheet}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleOpen}
         disabled={isLoading}
       >
-        <ClipboardList className="h-4 w-4 mr-1" />
-        {buttonLabel}
+        <Star className="h-4 w-4 mr-1" />
+        {buttonText}
       </Button>
-      
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent className="w-[400px] sm:w-[640px] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Danh sách đánh giá</SheetTitle>
-          </SheetHeader>
-          <div className="py-4">
-            {evaluations.length > 0 ? (
-              <DataTable
-                columns={columns}
-                data={evaluations}
-                isLoading={isLoading}
-                searchable={true}
-                searchPlaceholder="Tìm kiếm đánh giá..."
-              />
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Không có đánh giá nào</p>
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+
+      {showAsSheet ? (
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetContent className="sm:max-w-md overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Lịch sử đánh giá</SheetTitle>
+            </SheetHeader>
+            <div className="py-6">
+              {content}
+            </div>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="sm:max-w-[800px] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Lịch sử đánh giá</DialogTitle>
+            </DialogHeader>
+            <div className="py-3">
+              {content}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };

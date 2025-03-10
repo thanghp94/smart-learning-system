@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { financeService, facilityService } from "@/lib/supabase";
-import { Finance, Facility } from "@/lib/types";
+import { financeService, facilityService, studentService, employeeService, contactService } from "@/lib/supabase";
+import { Finance, Facility, Student, Employee, Contact } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +16,16 @@ import { formatDate } from "@/lib/utils";
 const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchFinances();
-    fetchFacilities();
+    fetchRelatedEntities();
   }, []);
 
   const fetchFinances = async () => {
@@ -42,12 +45,27 @@ const FinancePage = () => {
     }
   };
 
-  const fetchFacilities = async () => {
+  const fetchRelatedEntities = async () => {
     try {
-      const data = await facilityService.getAll();
-      setFacilities(data);
+      // Fetch all related entities in parallel
+      const [facilitiesData, studentsData, employeesData, contactsData] = await Promise.all([
+        facilityService.getAll(),
+        studentService.getAll(),
+        employeeService.getAll(),
+        contactService.getAll()
+      ]);
+      
+      setFacilities(facilitiesData);
+      setStudents(studentsData);
+      setEmployees(employeesData);
+      setContacts(contactsData);
     } catch (error) {
-      console.error("Error fetching facilities:", error);
+      console.error("Error fetching related entities:", error);
+      toast({
+        title: "Cảnh báo",
+        description: "Không thể tải đầy đủ dữ liệu liên quan",
+        variant: "warning"
+      });
     }
   };
 
@@ -91,6 +109,22 @@ const FinancePage = () => {
     }
   };
 
+  // Helper function to get entity name by ID
+  const getEntityName = (entityType: string | undefined, entityId: string | undefined): string => {
+    if (!entityType || !entityId) return 'N/A';
+    
+    switch (entityType) {
+      case 'student':
+        return students.find(s => s.id === entityId)?.ten_hoc_sinh || 'Unknown Student';
+      case 'employee':
+        return employees.find(e => e.id === entityId)?.ten_nhan_su || 'Unknown Employee';
+      case 'contact':
+        return contacts.find(c => c.id === entityId)?.ten_lien_he || 'Unknown Contact';
+      default:
+        return 'N/A';
+    }
+  };
+
   const columns = [
     {
       title: "Loại",
@@ -118,6 +152,27 @@ const FinancePage = () => {
       key: "tong_tien",
       sortable: true,
       render: (value: number) => formatCurrency(value),
+    },
+    {
+      title: "Đối tượng",
+      key: "loai_doi_tuong",
+      sortable: true,
+      render: (value: string, record: Finance) => {
+        if (!value || !record.doi_tuong_id) return 'N/A';
+        
+        const entityName = getEntityName(value, record.doi_tuong_id);
+        let displayText = `${entityName}`;
+        
+        if (value === 'student') {
+          displayText = `Học sinh: ${entityName}`;
+        } else if (value === 'employee') {
+          displayText = `Nhân viên: ${entityName}`;
+        } else if (value === 'contact') {
+          displayText = `Liên hệ: ${entityName}`;
+        }
+        
+        return displayText;
+      },
     },
     {
       title: "Trạng thái",
