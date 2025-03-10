@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, Mail, Phone, MapPin, Users, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { UserRound, BookOpen } from 'lucide-react';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 interface TeacherTabProps {
   teacher: any;
@@ -14,98 +15,83 @@ interface TeacherTabProps {
 
 const TeacherTab: React.FC<TeacherTabProps> = ({ teacher, classData, studentCount }) => {
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Thông tin giáo viên</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {teacher ? (
-            <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0">
+    <Card>
+      <CardHeader>
+        <CardTitle>Thông tin giáo viên</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {teacher ? (
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-16 w-16">
                 {teacher.hinh_anh ? (
-                  <img 
-                    src={teacher.hinh_anh} 
-                    alt={teacher.ten_nhan_su} 
-                    className="h-20 w-20 rounded-full object-cover"
-                  />
+                  <AvatarImage src={teacher.hinh_anh} alt={teacher.ten_nhan_su} />
                 ) : (
-                  <div className="h-20 w-20 rounded-full bg-slate-200 flex items-center justify-center">
-                    <UserRound className="h-10 w-10 text-slate-500" />
-                  </div>
+                  <AvatarFallback className="text-xl">
+                    {teacher.ten_nhan_su?.charAt(0) || '?'}
+                  </AvatarFallback>
                 )}
-              </div>
-              <div className="flex-grow">
-                <h3 className="text-lg font-semibold">
-                  <Link to={`/employees/${teacher.id}`} className="hover:underline">
-                    {teacher.ten_nhan_su}
-                  </Link>
-                </h3>
-                <p className="text-sm text-muted-foreground">{teacher.chuc_danh || 'Giáo viên'}</p>
-                <p className="text-sm mt-2">Email: {teacher.email || 'N/A'}</p>
-                <p className="text-sm">Điện thoại: {teacher.dien_thoai || 'N/A'}</p>
-                <div className="mt-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => window.location.href = `/employees/${teacher.id}`}
-                  >
-                    Xem chi tiết
-                  </Button>
+              </Avatar>
+              <div>
+                <h3 className="text-lg font-semibold">{teacher.ten_nhan_su}</h3>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Badge variant="outline">{teacher.chuc_danh || 'Giáo viên'}</Badge>
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              Không tìm thấy thông tin giáo viên.
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle>Thông tin lớp học</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {classData ? (
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="font-medium">Tên lớp:</span>
-                <Link to={`/classes/${classData.id}`} className="hover:underline">
-                  {classData.ten_lop_full}
-                </Link>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Thông tin liên hệ</h4>
+                {teacher.email && (
+                  <div className="flex items-center text-sm">
+                    <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span>{teacher.email}</span>
+                  </div>
+                )}
+                {teacher.dien_thoai && (
+                  <div className="flex items-center text-sm">
+                    <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span>{teacher.dien_thoai}</span>
+                  </div>
+                )}
+                {teacher.dia_chi && (
+                  <div className="flex items-start text-sm">
+                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground mt-0.5" />
+                    <span>{teacher.dia_chi}</span>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Chương trình học:</span>
-                <span>{classData.ct_hoc || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Ngày bắt đầu:</span>
-                <span>{classData.ngay_bat_dau ? format(new Date(classData.ngay_bat_dau), 'dd/MM/yyyy') : 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Số học sinh:</span>
-                <span>{studentCount}</span>
-              </div>
-              <div className="mt-3">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.location.href = `/classes/${classData.id}`}
-                >
-                  <BookOpen className="h-4 w-4 mr-1" /> Xem chi tiết lớp học
-                </Button>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Thông tin giảng dạy</h4>
+                <div className="flex items-center text-sm">
+                  <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>Bộ phận: {teacher.bo_phan || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>Số học sinh: {studentCount}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>Lớp: {classData?.ten_lop_full || 'Chưa phân lớp'}</span>
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              Không tìm thấy thông tin lớp học.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </>
+
+            <Button variant="outline" size="sm" className="self-start" asChild>
+              <Link to={`/employees/${teacher.id}`}>Xem hồ sơ đầy đủ</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground space-y-2">
+            <Users className="h-12 w-12" />
+            <p>Chưa có thông tin giáo viên</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,56 +1,70 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { User, Star, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { GraduationCap } from 'lucide-react';
 
-interface Student {
-  id: string;
-  name: string;
-  image: string | null;
-  code: string;
+interface StudentTabProps {
+  students: any[];
 }
 
-interface StudentsTabProps {
-  students: Student[];
-}
-
-const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
+const StudentsTab: React.FC<StudentTabProps> = ({ students }) => {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Danh sách học sinh</CardTitle>
+        <Badge variant="outline">{students.length} học sinh</Badge>
       </CardHeader>
       <CardContent>
         {students.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {students.map(student => (
-              <div key={student.id} className="flex items-center p-3 border rounded-md">
-                <div className="flex-shrink-0 mr-3">
-                  {student.image ? (
-                    <img 
-                      src={student.image} 
-                      alt={student.name} 
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center">
-                      <GraduationCap className="h-5 w-5 text-slate-500" />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Học sinh</TableHead>
+                <TableHead>Mã học sinh</TableHead>
+                <TableHead>Hành động</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {students.map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        {student.image ? (
+                          <AvatarImage src={student.image} alt={student.name} />
+                        ) : (
+                          <AvatarFallback>
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <span className="font-medium">{student.name}</span>
                     </div>
-                  )}
-                </div>
-                <div className="flex-grow">
-                  <Link to={`/students/${student.id}`} className="text-sm font-medium hover:underline">
-                    {student.name}
-                  </Link>
-                  <p className="text-xs text-muted-foreground">Mã: {student.code}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono">
+                      {student.code}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/students/${student.id}`}>
+                        <GraduationCap className="h-4 w-4 mr-1" /> Chi tiết
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            Chưa có học sinh nào trong lớp này.
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            Chưa có học sinh nào trong lớp này
           </div>
         )}
       </CardContent>
