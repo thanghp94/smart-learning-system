@@ -1,81 +1,121 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from '@/components/common/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, List, Database, UserCog } from 'lucide-react';
 
-const settingTabs = [
-  {
-    id: 'general',
-    title: 'Cài đặt chung',
-    description: 'Thiết lập các thông tin chung của hệ thống',
-    path: '/settings',
-  },
-  {
-    id: 'enum-manager',
-    title: 'Quản lý Enum',
-    description: 'Quản lý các giá trị enum/danh sách được sử dụng trong hệ thống',
-    path: '/settings/enum-manager',
-  },
-  // Thêm các tab khác nếu cần
-];
-
-const Settings: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const currentPath = location.pathname;
-  
-  const currentTab = settingTabs.find(tab => tab.path === currentPath)?.id || 'general';
-  
-  const handleTabChange = (value: string) => {
-    const tab = settingTabs.find(tab => tab.id === value);
-    if (tab) {
-      navigate(tab.path);
-    }
-  };
-
+const Settings = () => {
   return (
-    <div className="container mx-auto p-4">
-      <PageHeader
-        title="Cài đặt hệ thống"
-        description="Quản lý các thiết lập và cấu hình cho hệ thống"
-        icon={<SettingsIcon className="h-6 w-6" />}
+    <div className="container mx-auto py-6 space-y-8">
+      <PageHeader 
+        title="Cài đặt" 
+        subtitle="Quản lý các thiết lập của hệ thống" 
+        icon={<SettingsIcon className="h-6 w-6" />} 
       />
       
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Chọn phần cài đặt</CardTitle>
-          <CardDescription>
-            Chọn một trong các phần cài đặt bên dưới để tiếp tục
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList>
+          <TabsTrigger value="general">Thiết lập chung</TabsTrigger>
+          <TabsTrigger value="data">Quản lý dữ liệu</TabsTrigger>
+          <TabsTrigger value="users">Người dùng</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="general" className="space-y-4 pt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {settingTabs.map((tab) => (
-              <Card key={tab.id} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <CardTitle>{tab.title}</CardTitle>
-                  <CardDescription>{tab.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    variant="default" 
-                    className="w-full"
-                    onClick={() => navigate(tab.path)}
-                  >
-                    Truy cập
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            <SettingCard 
+              title="Danh mục" 
+              description="Quản lý các loại danh mục trong hệ thống"
+              icon={<List />}
+              href="/settings/enum-manager"
+            />
+            
+            <SettingCard 
+              title="Cấu hình email" 
+              description="Thiết lập các mẫu email và thông tin gửi"
+              icon={<SettingsIcon />}
+            />
+            
+            <SettingCard 
+              title="Thiết lập hiển thị" 
+              description="Tùy chỉnh giao diện và cách hiển thị"
+              icon={<SettingsIcon />}
+            />
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+        
+        <TabsContent value="data" className="space-y-4 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <SettingCard 
+              title="Khởi tạo dữ liệu" 
+              description="Thiết lập dữ liệu mẫu hoặc khởi tạo lại"
+              icon={<Database />}
+            />
+            
+            <SettingCard 
+              title="Sao lưu & phục hồi" 
+              description="Quản lý sao lưu và phục hồi dữ liệu"
+              icon={<Database />}
+            />
+            
+            <SettingCard 
+              title="Nhập/Xuất dữ liệu" 
+              description="Chức năng nhập xuất dữ liệu từ file"
+              icon={<Database />}
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="users" className="space-y-4 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <SettingCard 
+              title="Phân quyền" 
+              description="Quản lý quyền và vai trò người dùng"
+              icon={<UserCog />}
+            />
+            
+            <SettingCard 
+              title="Nhóm người dùng" 
+              description="Quản lý các nhóm và phân quyền nhóm"
+              icon={<UserCog />}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
+};
+
+interface SettingCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  href?: string;
+}
+
+const SettingCard = ({ title, description, icon, href }: SettingCardProps) => {
+  const cardContent = (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          {icon}
+          <CardTitle>{title}</CardTitle>
+        </div>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex justify-end pt-2">
+        <Button>Truy cập</Button>
+      </CardContent>
+    </Card>
+  );
+  
+  if (href) {
+    return <Link to={href}>{cardContent}</Link>;
+  }
+  
+  return cardContent;
 };
 
 export default Settings;

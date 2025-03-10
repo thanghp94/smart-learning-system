@@ -64,6 +64,12 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onCancel, employees
     onSubmit(data);
   };
 
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -223,7 +229,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onCancel, employees
 
         <div className="flex justify-end space-x-2 pt-4">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={handleCancel}>
               Hủy
             </Button>
           )}

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ import {
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Facility, Employee, Student } from '@/lib/types';
+import { supabase } from '@/lib/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const eventSchema = z.object({
   type: z.string().min(1, { message: "Vui lòng chọn loại sự kiện" }),
@@ -41,13 +43,18 @@ interface EventFormProps {
 
 const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees = [], students = [] }: EventFormProps) => {
   const [selectedEntityType, setSelectedEntityType] = useState(initialData?.entity_type || 'company');
+  const [isLoading, setIsLoading] = useState(false);
+  const [facilityList, setFacilityList] = useState<Facility[]>(facilities);
+  const [employeeList, setEmployeeList] = useState<Employee[]>(employees);
+  const [studentList, setStudentList] = useState<Student[]>(students);
+  const { toast } = useToast();
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      type: initialData?.type || initialData?.loai_su_kien || '',
-      entity_type: initialData?.entity_type || initialData?.doi_tuong_loai || 'company',
-      entity_id: initialData?.entity_id || initialData?.doi_tuong_id || '',
+      type: initialData?.type || '',
+      entity_type: initialData?.entity_type || 'company',
+      entity_id: initialData?.entity_id || '',
       ten_su_kien: initialData?.ten_su_kien || '',
       mieu_ta: initialData?.mieu_ta || '',
       ngay_bat_dau: initialData?.ngay_bat_dau || '',
@@ -57,7 +64,53 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
     }
   });
 
-  console.log("Rendering EventForm component");
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch facilities if not provided
+        if (facilities.length === 0) {
+          const { data: facilitiesData, error: facilitiesError } = await supabase
+            .from('facilities')
+            .select('*');
+          
+          if (facilitiesError) throw facilitiesError;
+          setFacilityList(facilitiesData || []);
+        }
+        
+        // Fetch employees if not provided
+        if (employees.length === 0) {
+          const { data: employeesData, error: employeesError } = await supabase
+            .from('employees')
+            .select('*');
+          
+          if (employeesError) throw employeesError;
+          setEmployeeList(employeesData || []);
+        }
+        
+        // Fetch students if not provided
+        if (students.length === 0) {
+          const { data: studentsData, error: studentsError } = await supabase
+            .from('students')
+            .select('*');
+          
+          if (studentsError) throw studentsError;
+          setStudentList(studentsData || []);
+        }
+      } catch (error) {
+        console.error("Error fetching data for event form:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải dữ liệu cho form sự kiện",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
   
   const handleEntityTypeChange = (value: string) => {
     setSelectedEntityType(value);
@@ -109,7 +162,7 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
         {errors.entity_type && <p className="text-red-500 text-xs mt-1">{errors.entity_type.message}</p>}
       </div>
       
-      {selectedEntityType === 'facility' && facilities.length > 0 && (
+      {selectedEntityType === 'facility' && facilityList.length > 0 && (
         <div>
           <Label htmlFor="entity_id">Chọn cơ sở</Label>
           <Select
@@ -120,7 +173,7 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
               <SelectValue placeholder="Chọn cơ sở" />
             </SelectTrigger>
             <SelectContent>
-              {facilities.map(facility => (
+              {facilityList.map(facility => (
                 <SelectItem key={facility.id} value={facility.id}>
                   {facility.ten_co_so}
                 </SelectItem>
@@ -130,7 +183,7 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
         </div>
       )}
       
-      {selectedEntityType === 'employee' && employees.length > 0 && (
+      {selectedEntityType === 'employee' && employeeList.length > 0 && (
         <div>
           <Label htmlFor="entity_id">Chọn nhân viên</Label>
           <Select
@@ -141,7 +194,7 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
               <SelectValue placeholder="Chọn nhân viên" />
             </SelectTrigger>
             <SelectContent>
-              {employees.map(employee => (
+              {employeeList.map(employee => (
                 <SelectItem key={employee.id} value={employee.id}>
                   {employee.ten_nhan_su}
                 </SelectItem>
@@ -151,7 +204,7 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
         </div>
       )}
       
-      {selectedEntityType === 'student' && students.length > 0 && (
+      {selectedEntityType === 'student' && studentList.length > 0 && (
         <div>
           <Label htmlFor="entity_id">Chọn học sinh</Label>
           <Select
@@ -162,7 +215,7 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
               <SelectValue placeholder="Chọn học sinh" />
             </SelectTrigger>
             <SelectContent>
-              {students.map(student => (
+              {studentList.map(student => (
                 <SelectItem key={student.id} value={student.id}>
                   {student.ten_hoc_sinh}
                 </SelectItem>
@@ -234,7 +287,9 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
 
       <div className="pt-4 flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
-        <Button type="submit">Lưu thông tin</Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Đang lưu..." : "Lưu thông tin"}
+        </Button>
       </div>
     </form>
   );
