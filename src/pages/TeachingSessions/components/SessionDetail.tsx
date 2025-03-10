@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,9 +112,9 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           // Fix type issues by correctly mapping the data
           const students = enrollmentsData.map(e => ({
             id: e.hoc_sinh_id,
-            name: e.students?.ten_hoc_sinh || 'Unknown',
-            image: e.students?.hinh_anh_hoc_sinh || null,
-            code: e.students?.ma_hoc_sinh || 'N/A'
+            name: e.students ? e.students.ten_hoc_sinh : 'Unknown',
+            image: e.students ? e.students.hinh_anh_hoc_sinh : null,
+            code: e.students ? e.students.ma_hoc_sinh : 'N/A'
           }));
           setStudentsList(students);
         }

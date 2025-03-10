@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Admission, ADMISSION_STATUS_MAP } from '@/lib/types/admission';
+import { Admission, ADMISSION_STATUS_MAP, AdmissionStatus } from '@/lib/types/admission';
 import { useToast } from '@/hooks/use-toast';
 import { admissionService } from '@/lib/supabase/admission-service';
 import { employeeService } from '@/lib/supabase/employee-service';
@@ -90,7 +90,7 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
   // Fetch employees for the assignee dropdown
   useEffect(() => {
     const fetchEmployees = async () => {
-      const data = await employeeService.getEmployees();
+      const data = await employeeService.getAll();
       setEmployees(data);
     };
     fetchEmployees();
@@ -104,6 +104,7 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
         ...values,
         ngay_sinh: values.ngay_sinh ? values.ngay_sinh.toISOString() : undefined,
         ngay_cap_nhat: new Date().toISOString(),
+        trang_thai: values.trang_thai as AdmissionStatus,
       };
 
       // Submit data
