@@ -1,7 +1,7 @@
 
+import { supabase } from './client';
 import { Event } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
-import { supabase } from './client';
 
 export const eventService = {
   getAll: () => fetchAll<Event>('events'),
@@ -19,6 +19,22 @@ export const eventService = {
     
     if (error) {
       console.error(`Error fetching events by type ${eventType}:`, error);
+      throw error;
+    }
+    
+    return data as Event[];
+  },
+  
+  // Get events by entity
+  getByEntity: async (entityType: string, entityId: string): Promise<Event[]> => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('doi_tuong_id', entityId)
+      .order('ngay_bat_dau', { ascending: false });
+    
+    if (error) {
+      console.error(`Error fetching events for ${entityType} ${entityId}:`, error);
       throw error;
     }
     

@@ -25,6 +25,22 @@ export const contactService = {
     return data as Contact[];
   },
   
+  // Get contacts by entity
+  getByEntity: async (entityType: string, entityId: string): Promise<Contact[]> => {
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('doi_tuong_id', entityId)
+      .eq('phan_loai', entityType);
+    
+    if (error) {
+      console.error(`Error fetching contacts for ${entityType} ${entityId}:`, error);
+      throw error;
+    }
+    
+    return data as Contact[];
+  },
+  
   // Get active contacts
   getActive: async (): Promise<Contact[]> => {
     const { data, error } = await supabase

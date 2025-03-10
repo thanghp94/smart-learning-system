@@ -1,114 +1,95 @@
 
-import { Enrollment } from '../types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
+import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
+import { Enrollment } from '@/lib/types';
 
-export const enrollmentService = {
-  getAll: async (): Promise<Enrollment[]> => {
+const table = 'enrollments';
+
+class EnrollmentService {
+  async getAll() {
+    return fetchAll<Enrollment>(table);
+  }
+
+  async getById(id: string) {
+    return fetchById<Enrollment>(table, id);
+  }
+
+  async getDetailedEnrollments() {
     try {
-      // Use the view that joins enrollment data with student and class info
       const { data, error } = await supabase
         .from('student_enrollments_with_details')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) {
-        console.error('Error fetching all enrollments:', error);
-        throw error;
-      }
-      
-      return data as Enrollment[];
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Error in getAll enrollments:', error);
-      return [];
+      console.error('Error fetching detailed enrollments:', error);
+      throw error;
     }
-  },
-  
-  getById: async (id: string): Promise<Enrollment | null> => {
+  }
+
+  async getByClass(classId: string) {
     try {
       const { data, error } = await supabase
         .from('student_enrollments_with_details')
         .select('*')
-        .eq('id', id)
-        .maybeSingle();
+        .eq('lop_chi_tiet_id', classId);
       
-      if (error) {
-        console.error('Error fetching enrollment by ID:', error);
-        throw error;
-      }
-      
-      return data as Enrollment;
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error(`Error getting enrollment with ID ${id}:`, error);
-      return null;
-    }
-  },
-  
-  create: async (enrollment: Partial<Enrollment>): Promise<Enrollment> => {
-    console.log('Creating enrollment with data:', enrollment);
-    return insert<Enrollment>('enrollments', enrollment);
-  },
-  
-  update: async (id: string, updates: Partial<Enrollment>): Promise<Enrollment> => {
-    console.log(`Updating enrollment ${id} with data:`, updates);
-    return update<Enrollment>('enrollments', id, updates);
-  },
-  
-  delete: (id: string) => remove('enrollments', id),
-  
-  getByStudent: async (studentId: string): Promise<Enrollment[]> => {
-    const { data, error } = await supabase
-      .from('student_enrollments_with_details')
-      .select('*')
-      .eq('hoc_sinh_id', studentId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching enrollments by student:', error);
-      throw error;
-    }
-    
-    return data as Enrollment[];
-  },
-  
-  getByClass: async (classId: string): Promise<Enrollment[]> => {
-    const { data, error } = await supabase
-      .from('student_enrollments_with_details')
-      .select('*')
-      .eq('lop_chi_tiet_id', classId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
       console.error('Error fetching enrollments by class:', error);
       throw error;
     }
-    
-    return data as Enrollment[];
-  },
-  
-  getBySession: async (sessionId: string): Promise<Enrollment[]> => {
-    const { data, error } = await supabase
-      .from('student_enrollments_with_details')
-      .select('*')
-      .eq('buoi_day_id', sessionId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching enrollments by session:', error);
+  }
+
+  async getByStudent(studentId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('student_enrollments_with_details')
+        .select('*')
+        .eq('hoc_sinh_id', studentId);
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching enrollments by student:', error);
       throw error;
     }
-    
-    return data as Enrollment[];
-  },
-  
-  markAttendance: async (
-    id: string, 
-    status: string, 
-    notes?: string
-  ): Promise<Enrollment> => {
-    return update<Enrollment>('enrollments', id, {
-      tinh_trang_diem_danh: status,
-      ghi_chu: notes
-    });
   }
-};
+
+  async create(data: Partial<Enrollment>) {
+    try {
+      const result = await insert<Enrollment>(table, data);
+      await logActivity('create', 'enrollment', 'Ghi danh học sinh', 'system', 'completed');
+      return result;
+    } catch (error) {
+      console.error('Error creating enrollment:', error);
+      throw error;
+    }
+  }
+
+  async update(id: string, data: Partial<Enrollment>) {
+    try {
+      const result = await update<Enrollment>(table, id, data);
+      await logActivity('update', 'enrollment', 'Cập nhật ghi danh', 'system', 'completed');
+      return result;
+    } catch (error) {
+      console.error('Error updating enrollment:', error);
+      throw error;
+    }
+  }
+
+  async delete(id: string) {
+    try {
+      await remove(table, id);
+      await logActivity('delete', 'enrollment', 'Xóa ghi danh', 'system', 'completed');
+    } catch (error) {
+      console.error('Error deleting enrollment:', error);
+      throw error;
+    }
+  }
+}
+
+export const enrollmentService = new EnrollmentService();
