@@ -1,14 +1,123 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays, User, Users, BookOpen, Clock } from "lucide-react";
-import { Class } from "@/lib/types";
+import { CalendarDays, User, Users, BookOpen, Clock, UserPlus, Calendar, ClipboardList } from "lucide-react";
+import { Class, Enrollment, TeachingSession } from "@/lib/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { enrollmentService, teachingSessionService } from "@/lib/supabase";
+import { format } from "date-fns";
+import { DataTable } from "@/components/ui/DataTable";
+import ViewEvaluationsButton from "../Evaluations/ViewEvaluationsButton";
+import AddTeachingSessionButton from "./AddTeachingSessionButton";
 
 const ClassDetail = ({ classData }: { classData: Class }) => {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [teachingSessions, setTeachingSessions] = useState<TeachingSession[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  
   // Ensure we handle both capitalization variants
   const className = classData.ten_lop_full || classData.Ten_lop_full || '';
   const teacher = classData.gv_chinh || classData.GV_chinh || '';
+
+  useEffect(() => {
+    fetchClassData();
+  }, [classData.id]);
+
+  const fetchClassData = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch enrollments for this class
+      const enrollmentsData = await enrollmentService.getByClass(classData.id);
+      setEnrollments(enrollmentsData || []);
+      
+      // Fetch teaching sessions for this class
+      const sessionsData = await teachingSessionService.getByClass(classData.id);
+      setTeachingSessions(sessionsData || []);
+    } catch (error) {
+      console.error("Error fetching class data:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải dữ liệu lớp học",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const enrollmentColumns = [
+    {
+      title: "Học sinh",
+      key: "ten_hoc_sinh",
+      sortable: true,
+    },
+    {
+      title: "Trạng thái điểm danh",
+      key: "tinh_trang_diem_danh",
+      sortable: true,
+      render: (value: string) => (
+        <Badge variant={
+          value === "present" ? "success" : 
+          value === "absent" ? "destructive" : 
+          "secondary"
+        }>
+          {value === "present" ? "Có mặt" : 
+           value === "absent" ? "Vắng mặt" : 
+           "Chưa điểm danh"}
+        </Badge>
+      ),
+    },
+    {
+      title: "Ghi chú",
+      key: "ghi_chu",
+      render: (value: string) => value || "-",
+    },
+    {
+      title: "",
+      key: "actions",
+      render: (_: any, record: Enrollment) => (
+        <div className="flex space-x-2">
+          <ViewEvaluationsButton 
+            enrollmentId={record.id} 
+            buttonLabel="Đánh giá"
+            size="sm"
+            variant="outline"
+          />
+        </div>
+      ),
+    },
+  ];
+
+  const sessionColumns = [
+    {
+      title: "Buổi học số",
+      key: "session_id",
+      sortable: true,
+    },
+    {
+      title: "Ngày học",
+      key: "ngay_hoc",
+      sortable: true,
+      render: (value: string) => value ? format(new Date(value), 'dd/MM/yyyy') : '',
+    },
+    {
+      title: "Thời gian",
+      key: "thoi_gian_bat_dau",
+      render: (value: string, record: TeachingSession) => (
+        `${value?.substring(0, 5) || ""} - ${record.thoi_gian_ket_thuc?.substring(0, 5) || ""}`
+      ),
+    },
+    {
+      title: "Đánh giá TB",
+      key: "trung_binh",
+      sortable: true,
+      render: (value: number) => <span>{value?.toFixed(1) || "N/A"}</span>,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -52,7 +161,7 @@ const ClassDetail = ({ classData }: { classData: Class }) => {
           <div>
             <p className="text-sm text-muted-foreground">Ngày bắt đầu</p>
             <p className="font-medium">
-              {new Date(classData.ngay_bat_dau).toLocaleDateString("vi-VN")}
+              {classData.ngay_bat_dau ? new Date(classData.ngay_bat_dau).toLocaleDateString("vi-VN") : 'N/A'}
             </p>
           </div>
         </div>
@@ -64,7 +173,7 @@ const ClassDetail = ({ classData }: { classData: Class }) => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Số học sinh</p>
-              <p className="font-medium">{classData.so_hs}</p>
+              <p className="font-medium">{classData.so_hs || enrollments.length}</p>
             </div>
           </div>
         )}
@@ -93,6 +202,48 @@ const ClassDetail = ({ classData }: { classData: Class }) => {
           </div>
         </>
       )}
+
+      <Separator />
+
+      <Tabs defaultValue="enrollments" className="w-full">
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="enrollments">Danh sách học sinh</TabsTrigger>
+            <TabsTrigger value="sessions">Buổi học</TabsTrigger>
+          </TabsList>
+          <div className="flex space-x-2">
+            <ViewEvaluationsButton 
+              studentId={classData.id} 
+              buttonLabel="Xem đánh giá"
+              variant="outline"
+            />
+            <AddTeachingSessionButton 
+              classData={classData} 
+              onSuccess={fetchClassData}
+            />
+          </div>
+        </div>
+        
+        <TabsContent value="enrollments" className="mt-4">
+          <DataTable 
+            columns={enrollmentColumns}
+            data={enrollments}
+            isLoading={isLoading}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm học sinh..."
+          />
+        </TabsContent>
+        
+        <TabsContent value="sessions" className="mt-4">
+          <DataTable 
+            columns={sessionColumns}
+            data={teachingSessions}
+            isLoading={isLoading}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm buổi học..."
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

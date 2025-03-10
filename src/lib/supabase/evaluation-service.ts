@@ -1,97 +1,110 @@
 
-import { supabase } from './client';
+import { Evaluation } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
-
-interface Evaluation {
-  id: string;
-  ten_danh_gia: string;
-  doi_tuong: string;
-  trang_thai: string;
-  created_at: string;
-  updated_at: string;
-}
+import { supabase } from './client';
 
 export const evaluationService = {
-  getAll: async (): Promise<Evaluation[]> => {
+  getAll: () => fetchAll<Evaluation>('evaluations'),
+  getById: (id: string) => fetchById<Evaluation>('evaluations', id),
+  create: (evaluation: Partial<Evaluation>) => insert<Evaluation>('evaluations', evaluation),
+  update: (id: string, evaluation: Partial<Evaluation>) => update<Evaluation>('evaluations', id, evaluation),
+  delete: (id: string) => remove('evaluations', id),
+  
+  // Get evaluations by student ID
+  getByStudent: async (studentId: string): Promise<Evaluation[]> => {
     try {
-      return await fetchAll<Evaluation>('evaluations');
+      // First get enrollments for this student
+      const { data: enrollments, error: enrollmentsError } = await supabase
+        .from('enrollments')
+        .select('id')
+        .eq('hoc_sinh_id', studentId);
+      
+      if (enrollmentsError) {
+        console.error('Error fetching enrollments for student:', enrollmentsError);
+        throw enrollmentsError;
+      }
+      
+      if (!enrollments || enrollments.length === 0) {
+        return [];
+      }
+      
+      // Get all enrollment IDs
+      const enrollmentIds = enrollments.map(e => e.id);
+      
+      // Get evaluations for these enrollments
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('*')
+        .in('ghi_danh_id', enrollmentIds);
+      
+      if (error) {
+        console.error('Error fetching evaluations by student enrollments:', error);
+        throw error;
+      }
+      
+      return data || [];
     } catch (error) {
-      console.error('Error fetching all evaluations:', error);
+      console.error('Error in getByStudent:', error);
       return [];
     }
   },
   
-  getById: async (id: string): Promise<Evaluation | null> => {
-    try {
-      return await fetchById<Evaluation>('evaluations', id);
-    } catch (error) {
-      console.error('Error fetching evaluation by ID:', error);
-      return null;
-    }
-  },
-  
-  create: async (evaluation: Partial<Evaluation>): Promise<Evaluation | null> => {
-    try {
-      return await insert<Evaluation>('evaluations', evaluation);
-    } catch (error) {
-      console.error('Error creating evaluation:', error);
-      throw error;
-    }
-  },
-  
-  update: async (id: string, updates: Partial<Evaluation>): Promise<Evaluation | null> => {
-    try {
-      return await update<Evaluation>('evaluations', id, updates);
-    } catch (error) {
-      console.error('Error updating evaluation:', error);
-      throw error;
-    }
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    try {
-      await remove('evaluations', id);
-    } catch (error) {
-      console.error('Error deleting evaluation:', error);
-      throw error;
-    }
-  },
-  
-  getByStatus: async (status: string): Promise<Evaluation[]> => {
+  // Get evaluations by enrollment ID
+  getByEnrollment: async (enrollmentId: string): Promise<Evaluation[]> => {
     try {
       const { data, error } = await supabase
         .from('evaluations')
         .select('*')
-        .eq('trang_thai', status);
+        .eq('ghi_danh_id', enrollmentId);
       
       if (error) {
-        console.error('Error fetching evaluations by status:', error);
+        console.error('Error fetching evaluations by enrollment:', error);
         throw error;
       }
       
-      return data as Evaluation[];
+      return data || [];
     } catch (error) {
-      console.error('Error in getByStatus:', error);
+      console.error('Error in getByEnrollment:', error);
       return [];
     }
   },
   
-  getByTarget: async (target: string): Promise<Evaluation[]> => {
+  // Get evaluations by class ID (through enrollments)
+  getByClass: async (classId: string): Promise<Evaluation[]> => {
     try {
+      // First get enrollments for this class
+      const { data: enrollments, error: enrollmentsError } = await supabase
+        .from('enrollments')
+        .select('id')
+        .eq('lop_chi_tiet_id', classId);
+      
+      if (enrollmentsError) {
+        console.error('Error fetching enrollments for class:', enrollmentsError);
+        throw enrollmentsError;
+      }
+      
+      if (!enrollments || enrollments.length === 0) {
+        return [];
+      }
+      
+      // Get all enrollment IDs
+      const enrollmentIds = enrollments.map(e => e.id);
+      
+      // Get evaluations for these enrollments
       const { data, error } = await supabase
         .from('evaluations')
         .select('*')
-        .eq('doi_tuong', target);
+        .in('ghi_danh_id', enrollmentIds);
       
       if (error) {
-        console.error('Error fetching evaluations by target:', error);
+        console.error('Error fetching evaluations by class enrollments:', error);
         throw error;
       }
       
-      return data as Evaluation[];
+      return data || [];
     } catch (error) {
-      console.error('Error in getByTarget:', error);
+      console.error('Error in getByClass:', error);
       return [];
     }
-  }
+  },
 };

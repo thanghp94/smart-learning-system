@@ -45,7 +45,7 @@ export interface TeachingSession {
   id: string;
   lop_chi_tiet_id: string;
   session_id: string;
-  loai_bai_hoc: string;
+  loai_bai_hoc?: string;
   ngay_hoc: string;
   thoi_gian_bat_dau: string;
   thoi_gian_ket_thuc: string;
@@ -61,6 +61,8 @@ export interface TeachingSession {
   nhan_xet_5?: string;
   nhan_xet_6?: string;
   trung_binh?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Employee {
@@ -100,12 +102,15 @@ export interface Enrollment {
   hoc_sinh_id: string;
   lop_chi_tiet_id: string;
   buoi_day_id?: string;
-  tinh_trang_diem_danh: string;
+  tinh_trang_diem_danh?: string;
   ghi_chu?: string;
   nhan_xet_tieu_chi_1?: string;
   nhan_xet_tieu_chi_2?: string;
   nhan_xet_tieu_chi_3?: string;
   chon_de_danh_gia?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  
   ten_hoc_sinh?: string;
   ten_lop_full?: string;
   ten_lop?: string;
@@ -255,15 +260,18 @@ export interface Finance {
 
 export interface Evaluation {
   id: string;
-  doi_tuong: string;
   ghi_danh_id?: string;
   nhanvien_id?: string;
-  ten_danh_gia: string;
+  ngay_dau_dot_danh_gia?: string;
+  ngay_cuoi_dot_danh_gia?: string;
+  han_hoan_thanh?: string;
+  tg_tao?: string;
+  created_at?: string;
+  updated_at?: string;
   email?: string;
+  doi_tuong: string;
+  ten_danh_gia: string;
   hinh_anh?: string;
-  ngay_dau_dot_danh_gia: string;
-  ngay_cuoi_dot_danh_gia: string;
-  han_hoan_thanh: string;
   tieu_chi_1?: string;
   tieu_chi_2?: string;
   tieu_chi_3?: string;
@@ -281,10 +289,12 @@ export interface Evaluation {
   nhan_xet_chung?: string;
   nhan_xet_cua_cap_tren?: string;
   nhan_xet_tong_hop?: string;
-  trang_thai: string;
-  ghi_chu?: string;
+  trang_thai?: string;
   pdf_dg_hoc_sinh?: string;
-  tg_tao?: string;
+  ghi_chu?: string;
+  
+  ten_hoc_sinh?: string;
+  ten_lop_full?: string;
 }
 
 export interface File {
@@ -431,3 +441,4 @@ export interface DataTableProps<T> {
 export interface RecentActivityProps {
   activities: ActivityItem[];
 }
+

@@ -24,7 +24,9 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ student, onSu
     try {
       setIsLoading(true);
       const classesData = await classService.getAll();
-      setClasses(classesData || []);
+      // Filter out inactive classes
+      const activeClasses = classesData?.filter(c => c.tinh_trang === 'active') || [];
+      setClasses(activeClasses);
       setIsOpen(true);
     } catch (error) {
       console.error('Error fetching classes:', error);
