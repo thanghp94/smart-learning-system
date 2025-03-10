@@ -1,23 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, User, Building, RotateCw } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
-import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
-import { useToast } from '@/hooks/use-toast';
+import { Calendar, UserCheck, Clock, Filter, RotateCw } from 'lucide-react';
 import DataTable from '@/components/ui/DataTable';
+import { employeeClockInService } from '@/lib/supabase';
+import { EmployeeClockIn } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/common/PageHeader';
-import FilterButton, { FilterCategory } from '@/components/ui/FilterButton';
-import ExportButton from '@/components/ui/ExportButton';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const AttendancePage = () => {
-  const [attendanceRecords, setAttendanceRecords] = useState<EmployeeClockInOut[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<EmployeeClockIn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState<Record<string, string>>({});
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchAttendanceRecords();
@@ -26,189 +26,124 @@ const AttendancePage = () => {
   const fetchAttendanceRecords = async () => {
     try {
       setIsLoading(true);
-      const records = await employeeClockInService.getAll();
-      setAttendanceRecords(records);
+      const data = await employeeClockInService.getAll();
+      console.log("Attendance data received:", data);
+      
+      if (Array.isArray(data)) {
+        // Make sure data is properly typed as EmployeeClockIn[]
+        setAttendanceRecords(data);
+      } else {
+        console.error("Invalid attendance data format:", data);
+        setAttendanceRecords([]);
+      }
     } catch (error) {
-      console.error('Lỗi khi tải dữ liệu chấm công:', error);
+      console.error("Lỗi khi tải dữ liệu chấm công:", error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể tải dữ liệu chấm công. Vui lòng thử lại sau.',
-        variant: 'destructive',
+        title: "Lỗi",
+        description: "Không thể tải dữ liệu chấm công. Vui lòng thử lại sau.",
+        variant: "destructive",
       });
+      setAttendanceRecords([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const statusOptions = [
-    { label: 'Chờ xử lý', value: 'pending', type: 'status' as const },
-    { label: 'Đã xác nhận', value: 'approved', type: 'status' as const },
-    { label: 'Từ chối', value: 'rejected', type: 'status' as const },
-  ];
+  const handleRowClick = (record: EmployeeClockIn) => {
+    // Navigate to detail or show detail panel
+    toast({
+      title: "Chi tiết chấm công",
+      description: `Xem chi tiết chấm công của ${record.employee_name || 'nhân viên'}`,
+    });
+  };
 
-  const filterCategories: FilterCategory[] = [
-    {
-      name: 'Trạng thái',
-      type: 'status',
-      options: statusOptions,
-    }
-  ];
-
-  // Apply filters
-  const filteredRecords = attendanceRecords.filter(record => {
-    for (const [category, value] of Object.entries(filters)) {
-      if (value && category === 'Trạng thái' && record.trang_thai !== value) {
-        return false;
-      }
-    }
-    return true;
-  });
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN');
+  // Format time string to display format
+  const formatTime = (timeString?: string) => {
+    if (!timeString) return 'N/A';
+    return timeString;
   };
 
   const columns = [
     {
-      title: 'Ngày',
-      key: 'ngay',
+      title: "Nhân viên",
+      key: "employee_name",
       sortable: true,
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          {formatDate(value)}
-        </div>
-      ),
     },
     {
-      title: 'Nhân viên',
-      key: 'nhan_vien_id',
+      title: "Ngày",
+      key: "ngay_cham_cong",
       sortable: true,
+      render: (value: string) => value ? format(new Date(value), 'dd/MM/yyyy') : 'N/A',
+    },
+    {
+      title: "Giờ vào",
+      key: "thoi_gian_vao",
+      render: (value: string) => formatTime(value),
+    },
+    {
+      title: "Giờ ra",
+      key: "thoi_gian_ra",
+      render: (value: string) => formatTime(value),
+    },
+    {
+      title: "Trạng thái",
+      key: "trang_thai",
       render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          {value}
-        </div>
+        <Badge variant={
+          value === "present" ? "success" : 
+          value === "late" ? "warning" : 
+          value === "absent" ? "destructive" : 
+          "outline"
+        }>
+          {value === "present" ? "Có mặt" : 
+           value === "late" ? "Đi muộn" : 
+           value === "absent" ? "Vắng mặt" : 
+           value || "N/A"}
+        </Badge>
       ),
     },
     {
-      title: 'Giờ vào',
-      key: 'thoi_gian_bat_dau',
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          {value || 'Chưa ghi nhận'}
-        </div>
-      ),
-    },
-    {
-      title: 'Giờ ra',
-      key: 'thoi_gian_ket_thuc',
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          {value || 'Chưa ghi nhận'}
-        </div>
-      ),
-    },
-    {
-      title: 'Trạng thái',
-      key: 'trang_thai',
-      sortable: true,
-      render: (value: string) => {
-        let variant: 'default' | 'success' | 'destructive' | 'warning' = 'default';
-        
-        if (value === 'approved') variant = 'success';
-        else if (value === 'rejected') variant = 'destructive';
-        else if (value === 'pending') variant = 'warning';
-        
-        return (
-          <Badge variant={variant}>
-            {value === 'approved' ? 'Đã xác nhận' : 
-             value === 'rejected' ? 'Từ chối' : 
-             value === 'pending' ? 'Chờ xử lý' : value || 'Chờ xử lý'}
-          </Badge>
-        );
-      },
+      title: "Ghi chú",
+      key: "ghi_chu",
     },
   ];
-
-  const tableActions = (
-    <div className="flex items-center space-x-2">
-      <FilterButton 
-        categories={filterCategories} 
-        onFilter={setFilters} 
-      />
-      <ExportButton 
-        data={filteredRecords}
-        filename="du_lieu_cham_cong"
-        label="Xuất dữ liệu"
-      />
-      <Button variant="outline" size="sm" className="h-8" onClick={fetchAttendanceRecords}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm mới
-      </Button>
-    </div>
-  );
+  
+  // Responsive columns for mobile
+  const mobileColumns = isMobile 
+    ? columns.filter(col => ['employee_name', 'ngay_cham_cong', 'trang_thai'].includes(col.key)) 
+    : columns;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Chấm công"
-        description="Quản lý dữ liệu chấm công của nhân viên"
+        description="Quản lý thông tin chấm công của nhân viên"
         action={{
-          label: "Tạo mới",
-          onClick: () => {
-            toast({
-              title: "Thông báo",
-              description: "Tính năng đang được phát triển",
-            });
-          }
+          label: "Thêm chấm công",
+          onClick: () => toast({ title: "Chức năng đang phát triển", description: "Tính năng thêm chấm công sẽ sớm được triển khai." })
         }}
       />
-
-      <div className="grid gap-4">
-        <Tabs defaultValue="all">
-          <div className="flex justify-between items-center">
-            <TabsList>
-              <TabsTrigger value="all">Tất cả</TabsTrigger>
-              <TabsTrigger value="pending">Chờ xử lý</TabsTrigger>
-              <TabsTrigger value="approved">Đã xác nhận</TabsTrigger>
-            </TabsList>
-            {tableActions}
-          </div>
-
-          <TabsContent value="all" className="mt-4">
-            <DataTable
-              columns={columns}
-              data={filteredRecords}
-              isLoading={isLoading}
-              searchable={true}
-              searchPlaceholder="Tìm kiếm chấm công..."
-            />
-          </TabsContent>
-          
-          <TabsContent value="pending" className="mt-4">
-            <DataTable
-              columns={columns}
-              data={filteredRecords.filter(r => r.trang_thai === 'pending')}
-              isLoading={isLoading}
-              searchable={true}
-              searchPlaceholder="Tìm kiếm chấm công..."
-            />
-          </TabsContent>
-          
-          <TabsContent value="approved" className="mt-4">
-            <DataTable
-              columns={columns}
-              data={filteredRecords.filter(r => r.trang_thai === 'approved')}
-              isLoading={isLoading}
-              searchable={true}
-              searchPlaceholder="Tìm kiếm chấm công..."
-            />
-          </TabsContent>
-        </Tabs>
+      
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Button variant="outline" size="sm" onClick={fetchAttendanceRecords}>
+          <RotateCw className="h-4 w-4 mr-2" /> Làm mới
+        </Button>
+        <Button variant="outline" size="sm">
+          <Calendar className="h-4 w-4 mr-2" /> Chọn ngày
+        </Button>
+        <Button variant="outline" size="sm">
+          <Filter className="h-4 w-4 mr-2" /> Lọc
+        </Button>
       </div>
+
+      <DataTable
+        columns={mobileColumns}
+        data={attendanceRecords}
+        isLoading={isLoading}
+        onRowClick={handleRowClick}
+        searchable={true}
+        searchPlaceholder="Tìm kiếm nhân viên..."
+      />
     </div>
   );
 };

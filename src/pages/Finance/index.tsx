@@ -17,9 +17,12 @@ import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FinanceLedger from "./components/FinanceLedger";
 import ExportButton from "@/components/ui/ExportButton";
+import FilterButton, { FilterCategory } from "@/components/ui/FilterButton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
+  const [filteredFinances, setFilteredFinances] = useState<Finance[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
@@ -27,11 +30,16 @@ const FinancePage = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeTab, setActiveTab] = useState("table");
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchFinances();
     fetchFacilities();
   }, []);
+  
+  useEffect(() => {
+    setFilteredFinances(finances);
+  }, [finances]);
 
   const fetchFinances = async () => {
     try {
@@ -41,9 +49,11 @@ const FinancePage = () => {
       
       if (Array.isArray(data)) {
         setFinances(data as Finance[]);
+        setFilteredFinances(data as Finance[]);
       } else {
         console.error("Invalid finances data format:", data);
         setFinances([]);
+        setFilteredFinances([]);
       }
     } catch (error) {
       console.error("Error fetching finances:", error);
@@ -53,6 +63,7 @@ const FinancePage = () => {
         variant: "destructive",
       });
       setFinances([]);
+      setFilteredFinances([]);
     } finally {
       setIsLoading(false);
     }
@@ -163,20 +174,81 @@ const FinancePage = () => {
       ),
     },
   ];
+  
+  // Mobile columns subset for responsive design
+  const mobileColumns = isMobile ? 
+    columns.filter(col => ['ngay', 'loai_thu_chi', 'tong_tien'].includes(col.key)) : 
+    columns;
+    
+  // Filter categories
+  const filterCategories: FilterCategory[] = [
+    {
+      name: "Cơ sở",
+      type: "facility",
+      options: facilities.map(facility => ({
+        label: facility.ten_co_so || facility.id,
+        value: facility.id,
+        type: "facility"
+      }))
+    },
+    {
+      name: "Loại thu chi",
+      type: "other",
+      options: [
+        { label: "Thu", value: "income", type: "other" },
+        { label: "Chi", value: "expense", type: "other" }
+      ]
+    },
+    {
+      name: "Tình trạng",
+      type: "status",
+      options: [
+        { label: "Hoàn thành", value: "completed", type: "status" },
+        { label: "Chờ xử lý", value: "pending", type: "status" }
+      ]
+    }
+  ];
+  
+  // Handle filter changes
+  const handleFilter = (filters: Record<string, string>) => {
+    console.log("Applied filters:", filters);
+    
+    let result = [...finances];
+    
+    // Apply each filter
+    if (filters["Cơ sở"]) {
+      result = result.filter(item => item.co_so === filters["Cơ sở"]);
+    }
+    
+    if (filters["Loại thu chi"]) {
+      result = result.filter(item => item.loai_thu_chi === filters["Loại thu chi"]);
+    }
+    
+    if (filters["Tình trạng"]) {
+      result = result.filter(item => item.tinh_trang === filters["Tình trạng"]);
+    }
+    
+    setFilteredFinances(result);
+  };
 
   const tableActions = (
-    <div className="flex items-center space-x-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button variant="outline" size="sm" className="h-8" onClick={fetchFinances}>
         <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
+      
+      <FilterButton 
+        categories={filterCategories}
+        onFilter={handleFilter}
+        label="Lọc"
+      />
+      
       <ExportButton 
-        data={finances} 
+        data={filteredFinances} 
         filename="Danh_sach_tai_chinh" 
         label="Xuất dữ liệu"
       />
+      
       <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Giao Dịch
       </Button>
@@ -190,14 +262,14 @@ const FinancePage = () => {
         description="Quản lý thu chi và giao dịch tài chính"
         actions={tableActions}
       >
-        <Tabs defaultValue="table" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue="table" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="table">Bảng Dữ Liệu</TabsTrigger>
             <TabsTrigger value="ledger">Sổ Kế Toán</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="table">
-            {finances.length === 0 && !isLoading ? (
+          <TabsContent value="table" className="w-full">
+            {filteredFinances.length === 0 && !isLoading ? (
               <PlaceholderPage
                 title="Tài Chính"
                 description="Quản lý thu chi và giao dịch tài chính"
@@ -205,8 +277,8 @@ const FinancePage = () => {
               />
             ) : (
               <DataTable
-                columns={columns}
-                data={finances}
+                columns={mobileColumns}
+                data={filteredFinances}
                 isLoading={isLoading}
                 onRowClick={handleRowClick}
                 searchable={true}

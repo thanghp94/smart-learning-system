@@ -21,6 +21,7 @@ import Finance from "@/pages/Finance";
 import Requests from "@/pages/Requests";
 import DatabaseSchema from "@/pages/DatabaseSchema";
 import TeacherSchedule from "@/pages/TeacherSchedule";
+import Attendance from "@/pages/Attendance";
 import NotFound from "@/pages/NotFound";
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
           <Route path="assets" element={<Assets />} />
           <Route path="finance" element={<Finance />} />
           <Route path="requests" element={<Requests />} />
+          <Route path="attendance" element={<Attendance />} />
           <Route path="database-schema" element={<DatabaseSchema />} />
           <Route path="*" element={<NotFound />} />
         </Route>

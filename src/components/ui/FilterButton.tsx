@@ -1,7 +1,7 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Filter, X, Building, User, GraduationCap } from 'lucide-react';
+import { Filter, X, Building, User, GraduationCap, Factory, Check } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from "@/components/ui/separator";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export type FilterOption = {
   label: string;
@@ -40,8 +40,8 @@ const FilterButton: React.FC<FilterButtonProps> = ({
   categories, 
   label = "Lọc"
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+  const isMobile = useIsMobile();
   
   const handleFilterChange = (category: string, value: string) => {
     const newFilters = {
@@ -75,13 +75,22 @@ const FilterButton: React.FC<FilterButtonProps> = ({
         return <User className="h-4 w-4 mr-2" />;
       case 'student':
         return <GraduationCap className="h-4 w-4 mr-2" />;
+      case 'other':
+        return <Factory className="h-4 w-4 mr-2" />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex flex-wrap gap-1 items-center">
+      {!isMobile && (
+        <Button variant="outline" size="sm" className="h-8 mr-1">
+          <Filter className="h-4 w-4 mr-2" />
+          {label}
+        </Button>
+      )}
+      
       <div className="flex flex-wrap gap-1 items-center">
         {categories.map((category) => (
           <Popover key={category.name}>
@@ -95,7 +104,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
                 {category.name}
                 {activeFilters[category.name] && (
                   <Badge variant="secondary" className="ml-1 px-1 min-w-4 h-4 rounded-full">
-                    ✓
+                    <Check className="h-3 w-3" />
                   </Badge>
                 )}
               </Button>

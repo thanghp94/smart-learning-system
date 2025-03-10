@@ -4,7 +4,7 @@ import {
   Users, Briefcase, School, Calendar, BookOpen, FileText, 
   Image, Clipboard, Building2, PanelLeft, Tag, CircleDollarSign, 
   FolderOpen, Mail, Package, FileQuestion, Database, CalendarCheck,
-  Clock
+  Clock, UserCheck
 } from 'lucide-react';
 
 export const primaryLinks = [
@@ -16,7 +16,7 @@ export const primaryLinks = [
   { name: 'Bài học', href: '/lessons', icon: <BookOpen className="w-5 h-5" /> },
   { name: 'Sự kiện', href: '/events', icon: <Calendar className="w-5 h-5" /> },
   { name: 'Công việc', href: '/tasks', icon: <Clipboard className="w-5 h-5" /> },
-  { name: 'Chấm công', href: '/attendance', icon: <Clock className="w-5 h-5" /> },
+  { name: 'Chấm công', href: '/attendance', icon: <UserCheck className="w-5 h-5" /> },
 ];
 
 export const secondaryLinks = [

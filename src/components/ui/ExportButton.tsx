@@ -150,8 +150,12 @@ const ExportButton: React.FC<ExportButtonProps> = ({
         return;
       }
 
-      // Create a new PDF document
-      const doc = new jsPDF();
+      // Create a new PDF document with landscape orientation
+      const doc = new jsPDF({
+        orientation: 'landscape', 
+        unit: 'mm',
+        format: 'a4'
+      });
       
       // Add title to PDF
       doc.setFontSize(16);
