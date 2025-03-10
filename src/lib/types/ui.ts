@@ -4,9 +4,16 @@ import { ActivityItem } from './activity';
 export interface StatsCardProps {
   title: string;
   value: number | string;
+  description?: string;
   change?: number;
   changeType?: 'increase' | 'decrease' | 'neutral';
   icon?: string;
+  iconComponent?: React.ReactNode;
+  trend?: {
+    value: string;
+    direction: string;
+    text: string;
+  };
   className?: string;
 }
 

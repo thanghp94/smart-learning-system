@@ -11,6 +11,9 @@ const StatsCard = ({
   change,
   changeType = "neutral",
   icon,
+  iconComponent,
+  description,
+  trend,
   className
 }: StatsCardProps) => {
   // Get the icon component using a type assertion
@@ -28,11 +31,18 @@ const StatsCard = ({
         <div>
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <h3 className="mt-2 text-3xl font-bold">{value}</h3>
+          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>
         
         {IconComponent && (
           <div className="rounded-full p-2 bg-primary/10">
             <IconComponent className="h-6 w-6 text-primary" />
+          </div>
+        )}
+        
+        {iconComponent && (
+          <div className="rounded-full p-2 bg-primary/10">
+            {iconComponent}
           </div>
         )}
       </div>
@@ -59,6 +69,29 @@ const StatsCard = ({
             {change}
             {changeType !== "neutral" && "%"}
             {" so với tháng trước"}
+          </p>
+        </div>
+      )}
+      
+      {trend && (
+        <div className="mt-4 flex items-center">
+          {trend.direction === "up" ? (
+            <ArrowUpIcon className="mr-1 h-4 w-4 text-green-500" />
+          ) : trend.direction === "down" ? (
+            <ArrowDownIcon className="mr-1 h-4 w-4 text-red-500" />
+          ) : (
+            <MinusIcon className="mr-1 h-4 w-4 text-gray-500" />
+          )}
+          
+          <p
+            className={cn(
+              "text-sm font-medium",
+              trend.direction === "up" && "text-green-500",
+              trend.direction === "down" && "text-red-500", 
+              trend.direction === "none" && "text-gray-500"
+            )}
+          >
+            {trend.value} {trend.text}
           </p>
         </div>
       )}
