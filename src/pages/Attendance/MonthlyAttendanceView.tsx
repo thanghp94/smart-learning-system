@@ -25,50 +25,31 @@ import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types/employee-clock-in-out';
 import AddAttendanceForm from './AddAttendanceForm';
+import { format } from 'date-fns';
 
-interface MonthlyAttendanceViewProps {
-  month: number;
-  year: number;
-}
-
-interface AttendanceRecord {
-  employee_id: string;
-  employee_name: string;
-  records: {
-    [day: number]: {
-      status: string;
-      time_in?: string;
-      time_out?: string;
-    };
-  };
-  summary: {
-    present: number;
-    absent: number;
-    late: number;
-  };
-}
-
-const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({ month, year }) => {
-  const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
+const MonthlyAttendanceView = () => {
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [daysInMonth, setDaysInMonth] = useState<number[]>([]);
   const [showDialog, setShowDialog] = useState<boolean>(false);
+  const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth() + 1);
+  const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
   const { toast } = useToast();
 
   useEffect(() => {
     fetchAttendanceData();
     
     // Calculate days in month
-    const date = new Date(year, month - 1, 1);
+    const date = new Date(currentYear, currentMonth - 1, 1);
     const days = [];
-    const lastDay = new Date(year, month, 0).getDate();
+    const lastDay = new Date(currentYear, currentMonth, 0).getDate();
     
     for (let i = 1; i <= lastDay; i++) {
       days.push(i);
     }
     
     setDaysInMonth(days);
-  }, [month, year]);
+  }, [currentMonth, currentYear]);
 
   const fetchAttendanceData = async () => {
     setLoading(true);
@@ -76,36 +57,39 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({ month, ye
       // Call the stored function to get monthly attendance data
       const { data, error } = await supabase.rpc(
         'get_monthly_attendance_summary',
-        { p_month: month, p_year: year }
+        { p_month: currentMonth, p_year: currentYear }
       );
 
       if (error) {
+        console.error("Error fetching attendance data:", error);
         throw error;
       }
 
       // Process data for component state
-      const groupedData: Record<string, AttendanceRecord> = {};
+      const groupedData: Record<string, any> = {};
       
-      data.forEach((record: MonthlyAttendanceSummary) => {
-        const employeeId = record.employee_id;
-        
-        if (!groupedData[employeeId]) {
-          groupedData[employeeId] = {
-            employee_id: employeeId,
-            employee_name: record.employee_name,
-            records: {},
-            summary: {
-              present: record.present_count || 0,
-              absent: record.absent_count || 0,
-              late: record.late_count || 0
-            }
+      if (data && data.length > 0) {
+        data.forEach((record: MonthlyAttendanceSummary) => {
+          const employeeId = record.employee_id;
+          
+          if (!groupedData[employeeId]) {
+            groupedData[employeeId] = {
+              employee_id: employeeId,
+              employee_name: record.employee_name,
+              records: {},
+              summary: {
+                present: record.present_count || 0,
+                absent: record.absent_count || 0,
+                late: record.late_count || 0
+              }
+            };
+          }
+          
+          groupedData[employeeId].records[record.day_of_month] = {
+            status: record.status
           };
-        }
-        
-        groupedData[employeeId].records[record.day_of_month] = {
-          status: record.status
-        };
-      });
+        });
+      }
       
       setAttendanceData(Object.values(groupedData));
     } catch (error) {
@@ -122,11 +106,14 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({ month, ye
 
   const handleAddAttendance = async (formData: any) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('employee_clock_in_out')
         .insert([formData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error adding attendance:", error);
+        throw error;
+      }
 
       toast({
         title: 'Thành công',
@@ -134,11 +121,11 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({ month, ye
       });
       setShowDialog(false);
       await fetchAttendanceData(); // Refresh the data
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding attendance:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể thêm dữ liệu chấm công',
+        description: `Không thể thêm dữ liệu chấm công: ${error.message || 'Đã xảy ra lỗi'}`,
         variant: 'destructive',
       });
     }
@@ -159,20 +146,58 @@ const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({ month, ye
     }
   };
 
+  const handleMonthChange = (value: string) => {
+    setCurrentMonth(parseInt(value));
+  };
+
+  const handleYearChange = (value: string) => {
+    setCurrentYear(parseInt(value));
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
           <h2 className="text-xl font-semibold">
-            Chấm công tháng {month}/{year}
+            Chấm công tháng {currentMonth}/{currentYear}
           </h2>
         </div>
         
-        <Button onClick={() => setShowDialog(true)} className="gap-1">
-          <PlusCircle className="h-4 w-4" />
-          Thêm chấm công
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-2">
+            <Select value={currentMonth.toString()} onValueChange={handleMonthChange}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Tháng" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                  <SelectItem key={month} value={month.toString()}>
+                    Tháng {month}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={currentYear.toString()} onValueChange={handleYearChange}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Năm" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Button onClick={() => setShowDialog(true)} className="gap-1">
+            <PlusCircle className="h-4 w-4" />
+            Thêm chấm công
+          </Button>
+        </div>
       </div>
       
       {loading ? (

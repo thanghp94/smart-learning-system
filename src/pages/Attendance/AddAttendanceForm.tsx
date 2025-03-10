@@ -25,6 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn, formatDate } from '@/lib/utils';
 import { supabase } from '@/lib/supabase/client';
+import { Textarea } from '@/components/ui/textarea';
 
 // Schema for the attendance form
 const attendanceSchema = z.object({
@@ -72,6 +73,7 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
           .order('ten_nhan_su', { ascending: true });
 
         if (error) {
+          console.error("Error fetching employees:", error);
           throw error;
         }
 
@@ -86,15 +88,21 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
     fetchEmployees();
   }, []);
 
-  const handleSubmit = (values: AttendanceFormValues) => {
-    onSubmit({
-      nhan_vien_id: values.employee_id,
-      ngay: values.date.toISOString().split('T')[0],
-      thoi_gian_bat_dau: values.time_in,
-      thoi_gian_ket_thuc: values.time_out,
-      trang_thai: values.status,
-      ghi_chu: values.notes,
-    });
+  const handleSubmit = async (values: AttendanceFormValues) => {
+    try {
+      const formattedData = {
+        nhan_vien_id: values.employee_id,
+        ngay: values.date.toISOString().split('T')[0],
+        thoi_gian_bat_dau: values.time_in,
+        thoi_gian_ket_thuc: values.time_out,
+        trang_thai: values.status,
+        ghi_chu: values.notes,
+      };
+      
+      await onSubmit(formattedData);
+    } catch (error) {
+      console.error("Error in form submission:", error);
+    }
   };
 
   return (
@@ -234,9 +242,10 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
             <FormItem>
               <FormLabel>Ghi chú</FormLabel>
               <FormControl>
-                <Input
+                <Textarea
                   placeholder="Nhập ghi chú nếu có"
                   {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />

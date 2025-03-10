@@ -12,7 +12,7 @@ const Settings = () => {
     <div className="container mx-auto py-6 space-y-8">
       <PageHeader 
         title="Cài đặt" 
-        subtitle="Quản lý các thiết lập của hệ thống" 
+        description="Quản lý các thiết lập của hệ thống" 
         icon={<SettingsIcon className="h-6 w-6" />} 
       />
       
