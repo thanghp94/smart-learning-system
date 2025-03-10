@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -18,16 +17,16 @@ import {
 } from './SessionTabs';
 
 interface StudentData {
-  id?: string;
-  ten_hoc_sinh?: string;
-  hinh_anh_hoc_sinh?: string | null;
-  ma_hoc_sinh?: string;
+  id: string;
+  ten_hoc_sinh: string;
+  hinh_anh_hoc_sinh: string | null;
+  ma_hoc_sinh: string;
 }
 
 interface EnrollmentWithStudent {
   id: string;
   hoc_sinh_id: string;
-  students?: StudentData;
+  students: StudentData;
 }
 
 export interface SessionDetailProps {
@@ -122,15 +121,19 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
         if (!enrollmentsError && enrollmentsData) {
           console.log('Enrollments data:', enrollmentsData);
           
-          const students = enrollmentsData.map(enrollment => {
-            // Ensure enrollment has a students property and it's not null or undefined
-            const studentInfo = enrollment.students || {};
+          const students = (enrollmentsData as EnrollmentWithStudent[]).map(enrollment => {
+            const studentInfo = enrollment.students || {
+              id: enrollment.hoc_sinh_id,
+              ten_hoc_sinh: 'Unknown',
+              hinh_anh_hoc_sinh: null,
+              ma_hoc_sinh: 'N/A'
+            };
             
             return {
-              id: studentInfo.id || enrollment.hoc_sinh_id,
-              name: studentInfo.ten_hoc_sinh || 'Unknown',
-              image: studentInfo.hinh_anh_hoc_sinh || null,
-              code: studentInfo.ma_hoc_sinh || 'N/A'
+              id: studentInfo.id,
+              name: studentInfo.ten_hoc_sinh,
+              image: studentInfo.hinh_anh_hoc_sinh,
+              code: studentInfo.ma_hoc_sinh
             };
           });
           
