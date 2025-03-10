@@ -8,7 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Print, Download, Save, Eye, FileText } from 'lucide-react';
+import { FileText, Download, Save, Printer } from 'lucide-react';
 
 interface ReceiptGeneratorProps {
   finance: Finance;
@@ -391,7 +391,7 @@ const ReceiptGenerator: React.FC<ReceiptGeneratorProps> = ({ finance, onClose })
                     Tải xuống
                   </Button>
                   <Button onClick={handlePrintReceipt}>
-                    <Print className="h-4 w-4 mr-2" />
+                    <Printer className="h-4 w-4 mr-2" />
                     In biên lai
                   </Button>
                 </div>

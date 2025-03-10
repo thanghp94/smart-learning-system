@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { primaryLinks, secondaryLinks } from "./SidebarLinks";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Sidebar = () => {
   const { pathname } = useLocation();
   const [expanded, setExpanded] = useState(true);
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (isMobile) {
