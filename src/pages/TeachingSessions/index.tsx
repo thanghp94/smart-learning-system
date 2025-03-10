@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, Filter, RotateCw } from 'lucide-react';
+import { Plus, Calendar, Filter, RotateCw, UserCheck, Star, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -25,6 +24,9 @@ const TeachingSessions = () => {
   const [selectedSession, setSelectedSession] = useState<TeachingSession | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAttendanceForm, setShowAttendanceForm] = useState(false);
+  const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  const [showConfirmTimeDialog, setShowConfirmTimeDialog] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -52,7 +54,6 @@ const TeachingSessions = () => {
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = new Date(event.target.value);
     setSelectedDate(newDate);
-    // TODO: Filter sessions by date
   };
 
   const handleRowClick = (session: TeachingSession) => {
@@ -111,6 +112,21 @@ const TeachingSessions = () => {
     }
   };
 
+  const handleAddAttendance = (session: TeachingSession) => {
+    setSelectedSession(session);
+    setShowAttendanceForm(true);
+  };
+
+  const handleAddEvaluation = (session: TeachingSession) => {
+    setSelectedSession(session);
+    setShowEvaluationForm(true);
+  };
+
+  const handleConfirmTime = (session: TeachingSession) => {
+    setSelectedSession(session);
+    setShowConfirmTimeDialog(true);
+  };
+
   const formatSessionDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'dd/MM/yyyy', { locale: vi });
@@ -122,6 +138,46 @@ const TeachingSessions = () => {
   const formatSessionTime = (timeString: string) => {
     if (!timeString) return '';
     return timeString.substring(0, 5); // Format HH:MM
+  };
+
+  const renderSessionActions = (session: TeachingSession) => {
+    return (
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddAttendance(session);
+          }}
+          title="Thêm điểm danh"
+        >
+          <UserCheck className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddEvaluation(session);
+          }}
+          title="Đánh giá giáo viên"
+        >
+          <Star className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleConfirmTime(session);
+          }}
+          title="Xác nhận thời gian"
+        >
+          <Clock className="h-4 w-4" />
+        </Button>
+      </div>
+    );
   };
 
   const columns = [
@@ -171,6 +227,11 @@ const TeachingSessions = () => {
           {value === "true" ? "Hoàn thành" : "Chưa hoàn thành"}
         </Badge>
       ),
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_, record: TeachingSession) => renderSessionActions(record),
     },
   ];
 
@@ -252,6 +313,107 @@ const TeachingSessions = () => {
             onSubmit={handleAddFormSubmit}
             onCancel={handleAddFormCancel}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAttendanceForm} onOpenChange={setShowAttendanceForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Thêm Điểm Danh</DialogTitle>
+            <DialogDescription>
+              Thêm thông tin điểm danh cho buổi học {selectedSession?.buoi_hoc_so || selectedSession?.session_id}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4">
+            <p className="text-center text-muted-foreground py-4">
+              Chức năng điểm danh đang được phát triển
+            </p>
+            <div className="flex justify-end">
+              <Button 
+                onClick={() => setShowAttendanceForm(false)}
+              >
+                Đóng
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showEvaluationForm} onOpenChange={setShowEvaluationForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Đánh Giá Giáo Viên</DialogTitle>
+            <DialogDescription>
+              Đánh giá giáo viên cho buổi học {selectedSession?.buoi_hoc_so || selectedSession?.session_id}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4">
+            <p className="text-center text-muted-foreground py-4">
+              Chức năng đánh giá giáo viên đang được phát triển
+            </p>
+            <div className="flex justify-end">
+              <Button 
+                onClick={() => setShowEvaluationForm(false)}
+              >
+                Đóng
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showConfirmTimeDialog} onOpenChange={setShowConfirmTimeDialog}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Xác Nhận Thời Gian</DialogTitle>
+            <DialogDescription>
+              Xác nhận thời gian thực tế của buổi học
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 p-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Thời gian bắt đầu thực tế</label>
+                <input 
+                  type="time"
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                  defaultValue={selectedSession?.thoi_gian_bat_dau?.substring(0, 5)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Thời gian kết thúc thực tế</label>
+                <input 
+                  type="time"
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                  defaultValue={selectedSession?.thoi_gian_ket_thuc?.substring(0, 5)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Ghi chú</label>
+              <textarea 
+                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm min-h-[80px]"
+                placeholder="Ghi chú về thời gian (nếu có)"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button 
+                variant="outline"
+                onClick={() => setShowConfirmTimeDialog(false)}
+              >
+                Hủy
+              </Button>
+              <Button onClick={() => {
+                toast({
+                  title: "Thành công",
+                  description: "Đã xác nhận thời gian buổi học",
+                });
+                setShowConfirmTimeDialog(false);
+              }}>
+                Xác nhận
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

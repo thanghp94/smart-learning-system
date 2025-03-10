@@ -2863,6 +2863,23 @@ export type Database = {
     }
     Enums: {
       "Giới tính": "Nam" | "Nữ"
+      job_position:
+        | "CTY.GD"
+        | "CTY.VH.PGD"
+        | "HCNS.TP"
+        | "HCNS.NV"
+        | "TCKT.TP"
+        | "TCKT.NV"
+        | "TS.TP"
+        | "TS.NV"
+        | "CSKH.TP"
+        | "CSKH.TT"
+        | "CSKH.NV"
+        | "VH.TP"
+        | "VH.TT.CM"
+        | "VH.NV"
+        | "GV"
+        | "TG"
     }
     CompositeTypes: {
       [_ in never]: never
