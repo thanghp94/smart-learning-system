@@ -15,6 +15,9 @@ import {
   DropdownMenuTrigger,
 } from './dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface ExportButtonProps {
   data: any[];
@@ -32,16 +35,23 @@ const ExportButton: React.FC<ExportButtonProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
+  const checkData = () => {
+    if (!data.length) {
+      toast({
+        title: 'Không có dữ liệu',
+        description: 'Không có dữ liệu để xuất',
+        variant: 'default',
+      });
+      return false;
+    }
+    return true;
+  };
+
   const exportToCSV = (data: any[]) => {
     try {
       setIsExporting(true);
       
-      if (!data.length) {
-        toast({
-          title: 'Không có dữ liệu',
-          description: 'Không có dữ liệu để xuất',
-          variant: 'default',
-        });
+      if (!checkData()) {
         setIsExporting(false);
         return;
       }
@@ -94,16 +104,103 @@ const ExportButton: React.FC<ExportButtonProps> = ({
     }
   };
 
+  const exportToExcel = (data: any[]) => {
+    try {
+      setIsExporting(true);
+      
+      if (!checkData()) {
+        setIsExporting(false);
+        return;
+      }
+
+      // Create a new workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Convert data to worksheet
+      const ws = XLSX.utils.json_to_sheet(data);
+      
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      
+      // Generate XLSX file and trigger download
+      XLSX.writeFile(wb, `${filename}.xlsx`);
+
+      toast({
+        title: 'Xuất thành công',
+        description: 'Dữ liệu đã được xuất dưới dạng Excel',
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xuất dữ liệu Excel',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportToPDF = (data: any[]) => {
+    try {
+      setIsExporting(true);
+      
+      if (!checkData()) {
+        setIsExporting(false);
+        return;
+      }
+
+      // Create a new PDF document
+      const doc = new jsPDF();
+      
+      // Add title to PDF
+      doc.setFontSize(16);
+      doc.text(filename, 14, 15);
+      
+      // Add timestamp
+      doc.setFontSize(10);
+      doc.text(`Xuất ngày: ${new Date().toLocaleString('vi-VN')}`, 14, 22);
+      
+      // Prepare data for autotable
+      const headers = Object.keys(data[0]);
+      const rows = data.map(row => Object.values(row).map(val => 
+        val !== null && val !== undefined ? String(val) : ''
+      ));
+      
+      // Add table to PDF
+      autoTable(doc, {
+        head: [headers],
+        body: rows,
+        startY: 30,
+        headStyles: { fillColor: [66, 139, 202] },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { top: 30 },
+      });
+      
+      // Save the PDF
+      doc.save(`${filename}.pdf`);
+
+      toast({
+        title: 'Xuất thành công',
+        description: 'Dữ liệu đã được xuất dưới dạng PDF',
+      });
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xuất dữ liệu PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const exportToHTML = (data: any[]) => {
     try {
       setIsExporting(true);
       
-      if (!data.length) {
-        toast({
-          title: 'Không có dữ liệu',
-          description: 'Không có dữ liệu để xuất',
-          variant: 'default',
-        });
+      if (!checkData()) {
         setIsExporting(false);
         return;
       }
@@ -184,15 +281,14 @@ const ExportButton: React.FC<ExportButtonProps> = ({
       case 'csv':
         exportToCSV(data);
         break;
+      case 'excel':
+        exportToExcel(data);
+        break;
+      case 'pdf':
+        exportToPDF(data);
+        break;
       case 'html':
         exportToHTML(data);
-        break;
-      case 'excel':
-      case 'pdf':
-        toast({
-          title: 'Tính năng đang phát triển',
-          description: `Xuất định dạng ${format.toUpperCase()} sẽ được hỗ trợ trong phiên bản tiếp theo.`,
-        });
         break;
       default:
         break;

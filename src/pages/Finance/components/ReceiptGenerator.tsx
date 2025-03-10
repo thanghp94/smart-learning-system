@@ -146,6 +146,7 @@ const ReceiptGenerator: React.FC<ReceiptGeneratorProps> = ({ finance, onClose })
     toast({
       title: 'Thông báo',
       description: 'Tính năng xuất Excel sẽ được cập nhật trong phiên bản tiếp theo.',
+      variant: 'default',  // Fixed the variant type here from 'warning' to 'default'
     });
   };
 
