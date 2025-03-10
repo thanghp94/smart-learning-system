@@ -1,11 +1,141 @@
-
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { 
-  Users, Briefcase, School, Calendar, BookOpen, FileText, 
-  Image, Clipboard, Building2, PanelLeft, Tag, CircleDollarSign, 
-  FolderOpen, Mail, Package, FileQuestion, Database, CalendarCheck,
-  Clock, UserCheck, FileSymlink, Settings
+  BookOpen, Users, School, Building, Calendar, ClipboardList, 
+  GraduationCap, Landmark, FileText, Phone, PieChart, Clock,
+  Database, Settings, User, Mail, FileBox, Boxes, Award, FolderInput
 } from 'lucide-react';
+
+export interface NavLink {
+  title: string;
+  href: string;
+  icon: React.ReactNode;
+  section?: string;
+}
+
+export const adminLinks: NavLink[] = [
+  {
+    title: 'Trang chủ',
+    href: '/',
+    icon: <PieChart className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Học sinh',
+    href: '/students',
+    icon: <GraduationCap className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Tuyển sinh',
+    href: '/admissions',
+    icon: <FolderInput className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Lớp học',
+    href: '/classes',
+    icon: <School className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Cơ sở',
+    href: '/facilities',
+    icon: <Building className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Nhân viên',
+    href: '/employees',
+    icon: <User className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Sự kiện',
+    href: '/events',
+    icon: <Calendar className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Ghi danh',
+    href: '/enrollments',
+    icon: <ClipboardList className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Nhiệm vụ',
+    href: '/tasks',
+    icon: <Award className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Buổi học',
+    href: '/lessons',
+    icon: <BookOpen className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Đánh giá',
+    href: '/evaluations',
+    icon: <Users className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Tài chính',
+    href: '/finance',
+    icon: <Landmark className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Lương',
+    href: '/payroll',
+    icon: <FileText className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Liên hệ',
+    href: '/contacts',
+    icon: <Phone className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Tài liệu',
+    href: '/files',
+    icon: <FileBox className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Tài sản',
+    href: '/assets',
+    icon: <Boxes className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Đề xuất',
+    href: '/requests',
+    icon: <Mail className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Điểm danh',
+    href: '/attendance',
+    icon: <Clock className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Cơ sở dữ liệu',
+    href: '/database-schema',
+    icon: <Database className="h-4 w-4" />,
+    section: 'admin'
+  },
+  {
+    title: 'Cài đặt',
+    href: '/settings',
+    icon: <Settings className="h-4 w-4" />,
+    section: 'admin'
+  },
+];
 
 export const primaryLinks = [
   { name: 'Học sinh', href: '/students', icon: <Users className="w-5 h-5" /> },

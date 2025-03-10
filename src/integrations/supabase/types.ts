@@ -45,6 +45,83 @@ export type Database = {
         }
         Relationships: []
       }
+      admissions: {
+        Row: {
+          created_at: string | null
+          dia_chi: string | null
+          email: string | null
+          email_phu_huynh: string | null
+          ghi_chu: string | null
+          gioi_tinh: string | null
+          id: string
+          mieu_ta_hoc_sinh: string | null
+          ngay_cap_nhat: string | null
+          ngay_lien_he_dau: string | null
+          ngay_sinh: string | null
+          nguoi_phu_trach: string | null
+          nguon_gioi_thieu: string | null
+          so_dien_thoai: string | null
+          so_dien_thoai_phu_huynh: string | null
+          ten_hoc_sinh: string
+          ten_phu_huynh: string | null
+          trang_thai: string
+          updated_at: string | null
+          zalo: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dia_chi?: string | null
+          email?: string | null
+          email_phu_huynh?: string | null
+          ghi_chu?: string | null
+          gioi_tinh?: string | null
+          id?: string
+          mieu_ta_hoc_sinh?: string | null
+          ngay_cap_nhat?: string | null
+          ngay_lien_he_dau?: string | null
+          ngay_sinh?: string | null
+          nguoi_phu_trach?: string | null
+          nguon_gioi_thieu?: string | null
+          so_dien_thoai?: string | null
+          so_dien_thoai_phu_huynh?: string | null
+          ten_hoc_sinh: string
+          ten_phu_huynh?: string | null
+          trang_thai?: string
+          updated_at?: string | null
+          zalo?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dia_chi?: string | null
+          email?: string | null
+          email_phu_huynh?: string | null
+          ghi_chu?: string | null
+          gioi_tinh?: string | null
+          id?: string
+          mieu_ta_hoc_sinh?: string | null
+          ngay_cap_nhat?: string | null
+          ngay_lien_he_dau?: string | null
+          ngay_sinh?: string | null
+          nguoi_phu_trach?: string | null
+          nguon_gioi_thieu?: string | null
+          so_dien_thoai?: string | null
+          so_dien_thoai_phu_huynh?: string | null
+          ten_hoc_sinh?: string
+          ten_phu_huynh?: string | null
+          trang_thai?: string
+          updated_at?: string | null
+          zalo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admissions_nguoi_phu_trach_fkey"
+            columns: ["nguoi_phu_trach"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_transfers: {
         Row: {
           asset_id: string
@@ -2077,6 +2154,40 @@ export type Database = {
       }
     }
     Views: {
+      admissions_with_details: {
+        Row: {
+          created_at: string | null
+          dia_chi: string | null
+          email: string | null
+          email_phu_huynh: string | null
+          ghi_chu: string | null
+          gioi_tinh: string | null
+          id: string | null
+          mieu_ta_hoc_sinh: string | null
+          ngay_cap_nhat: string | null
+          ngay_lien_he_dau: string | null
+          ngay_sinh: string | null
+          nguoi_phu_trach: string | null
+          nguon_gioi_thieu: string | null
+          so_dien_thoai: string | null
+          so_dien_thoai_phu_huynh: string | null
+          ten_hoc_sinh: string | null
+          ten_nguoi_phu_trach: string | null
+          ten_phu_huynh: string | null
+          trang_thai: string | null
+          updated_at: string | null
+          zalo: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admissions_nguoi_phu_trach_fkey"
+            columns: ["nguoi_phu_trach"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_inventory_by_facility: {
         Row: {
           cau_hinh: string | null

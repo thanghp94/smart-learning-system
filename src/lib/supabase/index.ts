@@ -22,6 +22,7 @@ import { activityService } from './activity-service';
 import { schemaService } from './schema-service';
 import { attendanceService } from './attendance-service';
 import { employeeClockInService } from './employee-clock-in-service';
+import { admissionService } from './admission-service';
 
 export {
   classService,
@@ -46,5 +47,6 @@ export {
   activityService,
   schemaService,
   attendanceService,
-  employeeClockInService
+  employeeClockInService,
+  admissionService
 };

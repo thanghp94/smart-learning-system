@@ -62,6 +62,7 @@ import Settings from '@/pages/Settings';
 import EnumManager from '@/pages/Settings/EnumManager';
 import AssetTransfer from '@/pages/Assets/AssetTransfer';
 import TransferManagement from '@/pages/Assets/TransferManagement';
+import Admissions from '@/pages/Admissions';
 
 // Wrapper components to fix prop passing for routes
 const EmployeeDetailWrapper = () => <EmployeeDetail employeeId="0" />;
@@ -186,6 +187,9 @@ function App() {
               
               {/* Enum Manager Route */}
               <Route path="settings/enum-manager" element={<EnumManager />} />
+              
+              {/* Admissions Route */}
+              <Route path="admissions" element={<Admissions />} />
               
               <Route path="*" element={<NotFound />} />
             </Route>
