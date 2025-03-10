@@ -23,6 +23,7 @@ import DatabaseSchema from "@/pages/DatabaseSchema";
 import TeacherSchedule from "@/pages/TeacherSchedule";
 import Attendance from "@/pages/Attendance";
 import NotFound from "@/pages/NotFound";
+import ContractTemplateManagerPage from "@/pages/Employees/ContractTemplateManagerPage";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
           <Route path="students/add" element={<Students add={true} />} />
           <Route path="classes" element={<Classes />} />
           <Route path="employees" element={<Employees />} />
+          <Route path="employees/contracts" element={<ContractTemplateManagerPage />} />
           <Route path="facilities" element={<Facilities />} />
           <Route path="lessons" element={<Lessons />} />
           <Route path="teaching-sessions" element={<TeachingSessions />} />

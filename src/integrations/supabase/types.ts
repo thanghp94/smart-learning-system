@@ -1750,7 +1750,7 @@ export type Database = {
           ct_hoc: string | null
           dia_chi: string | null
           email_ph1: string | null
-          gioi_tinh: string | null
+          gioi_tinh: Database["public"]["Enums"]["Giới tính"] | null
           han_hoc_phi: string | null
           hinh_anh_hoc_sinh: string | null
           id: string
@@ -1773,7 +1773,7 @@ export type Database = {
           ct_hoc?: string | null
           dia_chi?: string | null
           email_ph1?: string | null
-          gioi_tinh?: string | null
+          gioi_tinh?: Database["public"]["Enums"]["Giới tính"] | null
           han_hoc_phi?: string | null
           hinh_anh_hoc_sinh?: string | null
           id?: string
@@ -1796,7 +1796,7 @@ export type Database = {
           ct_hoc?: string | null
           dia_chi?: string | null
           email_ph1?: string | null
-          gioi_tinh?: string | null
+          gioi_tinh?: Database["public"]["Enums"]["Giới tính"] | null
           han_hoc_phi?: string | null
           hinh_anh_hoc_sinh?: string | null
           id?: string
@@ -2681,7 +2681,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      "Giới tính": "Nam" | "Nữ"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, UserCheck, Clock, Filter, RotateCw } from 'lucide-react';
 import DataTable from '@/components/ui/DataTable';
 import { employeeClockInService } from '@/lib/supabase';
-import { EmployeeClockIn } from '@/lib/types';
+import { EmployeeClockInOut } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/common/PageHeader';
 import { format } from 'date-fns';
@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const AttendancePage = () => {
-  const [attendanceRecords, setAttendanceRecords] = useState<EmployeeClockIn[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<EmployeeClockInOut[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -30,10 +30,10 @@ const AttendancePage = () => {
       console.log("Attendance data received:", data);
       
       if (Array.isArray(data)) {
-        // Make sure data is properly typed as EmployeeClockIn[]
+        // Make sure data is properly typed as EmployeeClockInOut[]
         setAttendanceRecords(data);
       } else {
-        console.error("Invalid attendance data format:", data);
+        console.error("Lỗi định dạng dữ liệu chấm công:", data);
         setAttendanceRecords([]);
       }
     } catch (error) {
@@ -49,7 +49,7 @@ const AttendancePage = () => {
     }
   };
 
-  const handleRowClick = (record: EmployeeClockIn) => {
+  const handleRowClick = (record: EmployeeClockInOut) => {
     // Navigate to detail or show detail panel
     toast({
       title: "Chi tiết chấm công",
@@ -71,18 +71,18 @@ const AttendancePage = () => {
     },
     {
       title: "Ngày",
-      key: "ngay_cham_cong",
+      key: "ngay",
       sortable: true,
       render: (value: string) => value ? format(new Date(value), 'dd/MM/yyyy') : 'N/A',
     },
     {
       title: "Giờ vào",
-      key: "thoi_gian_vao",
+      key: "thoi_gian_bat_dau",
       render: (value: string) => formatTime(value),
     },
     {
       title: "Giờ ra",
-      key: "thoi_gian_ra",
+      key: "thoi_gian_ket_thuc",
       render: (value: string) => formatTime(value),
     },
     {
@@ -110,7 +110,7 @@ const AttendancePage = () => {
   
   // Responsive columns for mobile
   const mobileColumns = isMobile 
-    ? columns.filter(col => ['employee_name', 'ngay_cham_cong', 'trang_thai'].includes(col.key)) 
+    ? columns.filter(col => ['employee_name', 'ngay', 'trang_thai'].includes(col.key)) 
     : columns;
 
   return (

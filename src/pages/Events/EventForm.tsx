@@ -143,7 +143,7 @@ const EventForm = ({ initialData, onSubmit, onCancel, facilities = [], employees
             <SelectContent>
               {employees.map(employee => (
                 <SelectItem key={employee.id} value={employee.id}>
-                  {employee.ho_va_ten}
+                  {employee.ten_nhan_su}
                 </SelectItem>
               ))}
             </SelectContent>
