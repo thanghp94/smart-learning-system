@@ -185,7 +185,8 @@ export const teachingSessionService = {
       .from('teaching_sessions')
       .select('*')
       .gte('ngay_hoc', startDate)
-      .lte('ngay_hoc', endDate);
+      .lte('ngay_hoc', endDate)
+      .order('thoi_gian_bat_dau', { ascending: true });
     
     if (error) {
       console.error('Error fetching teaching sessions by date range:', error);

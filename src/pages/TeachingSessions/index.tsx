@@ -1,17 +1,19 @@
+
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter, Calendar } from "lucide-react";
+import { Plus, FileDown, Filter, Calendar, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { teachingSessionService, classService, employeeService } from "@/lib/supabase";
+import { teachingSessionService, classService, employeeService, attendanceService } from "@/lib/supabase";
 import { TeachingSession, Class, Employee } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
-import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import DetailPanel from "@/components/ui/DetailPanel";
 import SessionDetail from "./SessionDetail";
 import SessionForm from "./SessionForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { supabase } from "@/lib/supabase/client";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 const TeachingSessions = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
@@ -21,18 +23,23 @@ const TeachingSessions = () => {
   const [selectedSession, setSelectedSession] = useState<TeachingSession | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isCreatingAttendance, setIsCreatingAttendance] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedDate]);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
       
+      // Format date for database query
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+      
       const [sessionsData, classesArray, teachersData] = await Promise.all([
-        teachingSessionService.getAll(),
+        teachingSessionService.getByDateRange(formattedDate, formattedDate),
         classService.getAll(),
         employeeService.getByRole("Giáo viên")
       ]);
@@ -92,6 +99,40 @@ const TeachingSessions = () => {
 
   const handleAddSession = () => {
     setShowAddForm(true);
+  };
+
+  const handleCreateAttendanceRecords = async () => {
+    try {
+      setIsCreatingAttendance(true);
+      
+      // Call the database function to create attendance records
+      const { data, error } = await supabase.rpc('create_attendance_records_for_date', {
+        check_date: selectedDate.toISOString().split('T')[0]
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log("Created attendance records:", data);
+      
+      // Show success message with counts
+      toast({
+        title: "Điểm danh đã được tạo",
+        description: `Đã tạo ${data.created} bản ghi mới, bỏ qua ${data.skipped} bản ghi đã tồn tại.`,
+        variant: data.created > 0 ? "default" : "secondary"
+      });
+      
+    } catch (error) {
+      console.error("Error creating attendance records:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tạo bản ghi điểm danh mới",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreatingAttendance(false);
+    }
   };
 
   const handleSessionSubmit = async (sessionData: Partial<TeachingSession>) => {
@@ -172,14 +213,32 @@ const TeachingSessions = () => {
   ];
 
   const tableActions = (
-    <div className="flex items-center space-x-2">
-      <Button variant="outline" size="sm" className="h-8">
+    <div className="flex items-center gap-3 flex-wrap">
+      <DatePicker 
+        date={selectedDate} 
+        setDate={(date) => date && setSelectedDate(date)} 
+        className="w-40"
+      />
+      
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="h-9"
+        onClick={handleCreateAttendanceRecords}
+        disabled={isCreatingAttendance}
+      >
+        <CheckCircle className="h-4 w-4 mr-1" /> {isCreatingAttendance ? 'Đang tạo...' : 'Tạo điểm danh'}
+      </Button>
+      
+      <Button variant="outline" size="sm" className="h-9">
         <Filter className="h-4 w-4 mr-1" /> Lọc
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
+      
+      <Button variant="outline" size="sm" className="h-9">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
-      <Button size="sm" className="h-8" onClick={handleAddSession}>
+      
+      <Button size="sm" className="h-9" onClick={handleAddSession}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Buổi Học
       </Button>
     </div>
