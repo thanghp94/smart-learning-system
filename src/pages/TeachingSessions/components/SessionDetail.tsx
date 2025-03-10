@@ -107,8 +107,9 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           .eq('lop_chi_tiet_id', currentSession.lop_chi_tiet_id);
         
         if (!enrollmentsError && enrollmentsData) {
+          // Fixed mapping: Access student properties correctly through the students property
           const students = enrollmentsData.map(e => ({
-            id: e.hoc_sinh_id,
+            id: e.students?.id || e.hoc_sinh_id,
             name: e.students?.ten_hoc_sinh || 'Unknown',
             image: e.students?.hinh_anh_hoc_sinh || null,
             code: e.students?.ma_hoc_sinh || 'N/A'
