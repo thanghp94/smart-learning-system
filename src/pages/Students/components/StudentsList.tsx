@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Student } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import DataTable from '@/components/ui/DataTable';
-import { CalendarDays, Flag, User, UserPlus, Download } from 'lucide-react';
+import { CalendarDays, Flag, User, UserPlus } from 'lucide-react';
 import ExportButton from '@/components/ui/ExportButton';
 import DetailPanel from '@/components/ui/DetailPanel';
 import StudentDetail from './StudentDetail';
+import FilterButton, { FilterCategory } from '@/components/ui/FilterButton';
 
 interface StudentsListProps {
   data: Student[];
@@ -25,6 +26,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
 }) => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [filters, setFilters] = useState<Record<string, string>>({});
 
   const handleRowClick = (student: Student) => {
     setSelectedStudent(student);
@@ -41,6 +43,41 @@ const StudentsList: React.FC<StudentsListProps> = ({
       onRowClick(selectedStudent);
     }
   };
+
+  // Extract unique status values from data for filter options
+  const statusOptions = useMemo(() => {
+    const statuses = [...new Set(data.map(s => s.trang_thai || 'Active'))].map(status => ({
+      label: status,
+      value: status,
+      type: 'status' as const
+    }));
+    return statuses;
+  }, [data]);
+
+  // Create filter categories
+  const filterCategories: FilterCategory[] = [
+    {
+      name: 'Trạng thái',
+      type: 'status',
+      options: statusOptions
+    }
+  ];
+
+  // Apply filters to data
+  const filteredData = useMemo(() => {
+    return data.filter(student => {
+      // Check each filter
+      for (const [category, value] of Object.entries(filters)) {
+        if (value) {
+          if (category === 'Trạng thái') {
+            const studentStatus = student.trang_thai || 'Active';
+            if (studentStatus !== value) return false;
+          }
+        }
+      }
+      return true;
+    });
+  }, [data, filters]);
 
   const columns = [
     {
@@ -86,11 +123,17 @@ const StudentsList: React.FC<StudentsListProps> = ({
   return (
     <div>
       <div className="flex justify-between mb-4">
-        <ExportButton 
-          data={data}
-          filename="students_list"
-          label="Xuất dữ liệu"
-        />
+        <div className="flex space-x-2">
+          <ExportButton 
+            data={filteredData}
+            filename="students_list"
+            label="Xuất dữ liệu"
+          />
+          <FilterButton 
+            categories={filterCategories} 
+            onFilter={setFilters} 
+          />
+        </div>
         <Button onClick={onAddStudent}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add Student
@@ -98,7 +141,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
       </div>
       <DataTable
         columns={columns}
-        data={data}
+        data={filteredData}
         isLoading={loading}
         onRowClick={handleRowClick}
         searchable={true}

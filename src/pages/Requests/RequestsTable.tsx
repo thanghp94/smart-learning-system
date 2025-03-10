@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { FileSignature, Filter, Plus, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
@@ -7,6 +7,7 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import ExportButton from "@/components/ui/ExportButton";
+import FilterButton, { FilterCategory } from "@/components/ui/FilterButton";
 
 interface Request {
   id: string;
@@ -31,6 +32,58 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
   onAddRequest,
   onRefresh
 }) => {
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  
+  // Extract unique status values for filter options
+  const statusOptions = useMemo(() => {
+    const statuses = [...new Set(requests.map(r => r.status))].map(status => ({
+      label: status === "approved" ? "Đã duyệt" : 
+             status === "rejected" ? "Từ chối" : 
+             status === "pending" ? "Chờ duyệt" : status,
+      value: status,
+      type: 'status' as const
+    }));
+    return statuses;
+  }, [requests]);
+  
+  // Extract unique priority values for filter options
+  const priorityOptions = useMemo(() => {
+    const priorities = [...new Set(requests.map(r => r.priority || "Medium"))].map(priority => ({
+      label: priority,
+      value: priority,
+      type: 'other' as const
+    }));
+    return priorities;
+  }, [requests]);
+  
+  // Create filter categories
+  const filterCategories: FilterCategory[] = [
+    {
+      name: 'Trạng thái',
+      type: 'status',
+      options: statusOptions
+    },
+    {
+      name: 'Mức độ ưu tiên',
+      type: 'other',
+      options: priorityOptions
+    }
+  ];
+  
+  // Apply filters to data
+  const filteredRequests = useMemo(() => {
+    return requests.filter(request => {
+      // Check each filter
+      for (const [category, value] of Object.entries(filters)) {
+        if (value) {
+          if (category === 'Trạng thái' && request.status !== value) return false;
+          if (category === 'Mức độ ưu tiên' && (request.priority || 'Medium') !== value) return false;
+        }
+      }
+      return true;
+    });
+  }, [requests, filters]);
+
   const columns = [
     {
       title: "Tiêu đề",
@@ -88,11 +141,12 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
       <Button variant="outline" size="sm" className="h-8" onClick={onRefresh}>
         <RotateCw className="h-4 w-4 mr-1" /> Làm mới
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
+      <FilterButton 
+        categories={filterCategories} 
+        onFilter={setFilters} 
+      />
       <ExportButton 
-        data={requests} 
+        data={filteredRequests} 
         filename="Danh_sach_de_xuat" 
         label="Xuất dữ liệu"
       />
@@ -107,7 +161,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
     >
       <DataTable
         columns={columns}
-        data={requests}
+        data={filteredRequests}
         isLoading={isLoading}
         searchable={true}
         searchPlaceholder="Tìm kiếm đề xuất..."
