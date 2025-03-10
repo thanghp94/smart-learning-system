@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar, UserCheck, Clock, Filter, RotateCw } from 'lucide-react';
+import { Calendar, UserCheck, Clock, Filter, RotateCw, FileClock } from 'lucide-react';
 import DataTable from '@/components/ui/DataTable';
 import { employeeClockInService } from '@/lib/supabase';
 import { EmployeeClockInOut } from '@/lib/types';
@@ -11,8 +11,11 @@ import PageHeader from '@/components/common/PageHeader';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import MonthlyAttendanceSummary from './MonthlyAttendanceSummary';
 
 const AttendancePage = () => {
+  const [activeTab, setActiveTab] = useState('daily');
   const [attendanceRecords, setAttendanceRecords] = useState<EmployeeClockInOut[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -20,8 +23,10 @@ const AttendancePage = () => {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    fetchAttendanceRecords();
-  }, []);
+    if (activeTab === 'daily') {
+      fetchAttendanceRecords();
+    }
+  }, [activeTab]);
 
   const fetchAttendanceRecords = async () => {
     try {
@@ -128,26 +133,48 @@ const AttendancePage = () => {
         }}
       />
       
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Button variant="outline" size="sm" onClick={fetchAttendanceRecords}>
-          <RotateCw className="h-4 w-4 mr-2" /> Làm mới
-        </Button>
-        <Button variant="outline" size="sm">
-          <Calendar className="h-4 w-4 mr-2" /> Chọn ngày
-        </Button>
-        <Button variant="outline" size="sm">
-          <Filter className="h-4 w-4 mr-2" /> Lọc
-        </Button>
-      </div>
+      <Tabs 
+        defaultValue="daily" 
+        value={activeTab} 
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="daily">
+            <Clock className="h-4 w-4 mr-2" /> Chấm công hàng ngày
+          </TabsTrigger>
+          <TabsTrigger value="monthly">
+            <FileClock className="h-4 w-4 mr-2" /> Tổng hợp tháng
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="daily" className="mt-4">
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Button variant="outline" size="sm" onClick={fetchAttendanceRecords}>
+              <RotateCw className="h-4 w-4 mr-2" /> Làm mới
+            </Button>
+            <Button variant="outline" size="sm">
+              <Calendar className="h-4 w-4 mr-2" /> Chọn ngày
+            </Button>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" /> Lọc
+            </Button>
+          </div>
 
-      <DataTable
-        columns={mobileColumns}
-        data={attendanceRecords}
-        isLoading={isLoading}
-        onRowClick={handleRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm nhân viên..."
-      />
+          <DataTable
+            columns={mobileColumns}
+            data={attendanceRecords}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm nhân viên..."
+          />
+        </TabsContent>
+        
+        <TabsContent value="monthly" className="mt-4">
+          <MonthlyAttendanceSummary />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

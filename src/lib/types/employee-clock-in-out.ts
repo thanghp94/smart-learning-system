@@ -13,3 +13,14 @@ export interface EmployeeClockInOut {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface MonthlyAttendanceSummary {
+  employee_id: string;
+  employee_name: string;
+  attendance_date: string;
+  day_of_month: number;
+  status: string;
+  present_count: number;
+  absent_count: number;
+  late_count: number;
+}

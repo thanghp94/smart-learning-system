@@ -16,6 +16,17 @@ export interface EmployeeClockIn {
   updated_at?: string;
 }
 
+export interface MonthlyAttendanceSummary {
+  employee_id: string;
+  employee_name: string;
+  attendance_date: string;
+  day_of_month: number;
+  status: string;
+  present_count: number;
+  absent_count: number;
+  late_count: number;
+}
+
 class EmployeeClockInService {
   async getAll() {
     return fetchAll<EmployeeClockIn>('employee_clock_in_out');
@@ -64,6 +75,50 @@ class EmployeeClockInService {
       return data as EmployeeClockIn[];
     } catch (error) {
       console.error('Error fetching employee clock in by teaching session:', error);
+      throw error;
+    }
+  }
+  
+  async getMonthlySummary(month: number, year: number) {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_monthly_attendance_summary', {
+          p_month: month,
+          p_year: year
+        });
+      
+      if (error) throw error;
+      return data as MonthlyAttendanceSummary[];
+    } catch (error) {
+      console.error('Error fetching monthly attendance summary:', error);
+      throw error;
+    }
+  }
+  
+  async getByDateRange(startDate: string, endDate: string) {
+    try {
+      const { data, error } = await supabase
+        .from('employee_clock_in_out')
+        .select(`
+          *,
+          employees:nhan_vien_id (
+            id,
+            ten_nhan_su
+          )
+        `)
+        .gte('ngay', startDate)
+        .lte('ngay', endDate)
+        .order('ngay', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Map to add employee_name to each record
+      return data.map((record: any) => ({
+        ...record,
+        employee_name: record.employees?.ten_nhan_su || 'Unknown',
+      }));
+    } catch (error) {
+      console.error('Error fetching employee clock in records by date range:', error);
       throw error;
     }
   }

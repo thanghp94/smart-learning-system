@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, AreaChart } from '@/components/ui/chart';
+import { ResponsiveBar } from '@/components/ui/chart';
+import { ResponsiveArea } from '@/components/ui/chart';
 import { CalendarCheck, GraduationCap, Users, Book } from 'lucide-react';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import { supabase } from '@/lib/supabase/client';
@@ -23,6 +24,7 @@ const Index = () => {
     sessions: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [activities, setActivities] = useState([]);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -48,6 +50,13 @@ const Index = () => {
           .from('teaching_sessions')
           .select('*', { count: 'exact', head: true });
 
+        // Fetch recent activities
+        const { data: activitiesData, error: activitiesError } = await supabase
+          .from('activities')
+          .select('*')
+          .order('timestamp', { ascending: false })
+          .limit(10);
+
         if (studentsError || classesError || employeesError || sessionsError) {
           console.error("Error fetching counts");
         } else {
@@ -57,6 +66,7 @@ const Index = () => {
             employees: employeesCount || 0,
             sessions: sessionsCount || 0
           });
+          setActivities(activitiesData || []);
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -175,7 +185,7 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="pl-2">
-              <BarChart data={studentData} />
+              <ResponsiveBar data={studentData} xField="name" yField="total" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -189,7 +199,7 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="pl-2">
-              <AreaChart data={classesData} />
+              <ResponsiveArea data={classesData} xField="name" yField="total" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -203,7 +213,7 @@ const Index = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RecentActivity />
+          <RecentActivity activities={activities} />
         </CardContent>
       </Card>
     </div>
