@@ -4,7 +4,7 @@ import {
   Users, Briefcase, School, Calendar, BookOpen, FileText, 
   Image, Clipboard, Building2, PanelLeft, Tag, CircleDollarSign, 
   FolderOpen, Mail, Package, FileQuestion, Database, CalendarCheck,
-  Clock, UserCheck, FileSymlink
+  Clock, UserCheck, FileSymlink, Settings
 } from 'lucide-react';
 
 export const primaryLinks = [
@@ -32,4 +32,5 @@ export const secondaryLinks = [
   { name: 'Yêu cầu', href: '/requests', icon: <FileQuestion className="w-5 h-5" /> },
   { name: 'Database', href: '/database-schema', icon: <Database className="w-5 h-5" /> },
   { name: 'Hợp đồng', href: '/employees/contracts', icon: <FileSymlink className="w-5 h-5" /> },
+  { name: 'Cài đặt', href: '/settings', icon: <Settings className="w-5 h-5" /> },
 ];
