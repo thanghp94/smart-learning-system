@@ -107,13 +107,16 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
           .eq('lop_chi_tiet_id', currentSession.lop_chi_tiet_id);
         
         if (!enrollmentsError && enrollmentsData) {
-          // Fix: Access each enrollment item individually
-          const students = enrollmentsData.map(enrollment => ({
-            id: enrollment.students?.id || enrollment.hoc_sinh_id,
-            name: enrollment.students?.ten_hoc_sinh || 'Unknown',
-            image: enrollment.students?.hinh_anh_hoc_sinh || null,
-            code: enrollment.students?.ma_hoc_sinh || 'N/A'
-          }));
+          // Sửa: Truy cập đúng dữ liệu học sinh từ enrollmentsData
+          const students = enrollmentsData.map(enrollment => {
+            const studentData = enrollment.students || {};
+            return {
+              id: studentData.id || enrollment.hoc_sinh_id,
+              name: studentData.ten_hoc_sinh || 'Unknown',
+              image: studentData.hinh_anh_hoc_sinh || null,
+              code: studentData.ma_hoc_sinh || 'N/A'
+            };
+          });
           setStudentsList(students);
         }
       }
