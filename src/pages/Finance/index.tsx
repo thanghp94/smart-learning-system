@@ -4,19 +4,11 @@ import { financeService, facilityService } from "@/lib/supabase";
 import { Finance, Facility } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
-import { Badge } from "@/components/ui/badge";
 import DetailPanel from "@/components/ui/DetailPanel";
 import FinanceDetail from "./FinanceDetail";
 import FinanceForm from "./FinanceForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import PlaceholderPage from "@/components/common/PlaceholderPage";
-import { format } from "date-fns";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FinanceLedger from "./components/FinanceLedger";
-import { useIsMobile } from "@/hooks/use-mobile";
-import CommandInterface from "@/components/CommandInterface";
-import DataTable from "@/components/ui/DataTable";
-import FinanceActions from "./components/FinanceActions";
+import FinancePageContent from "./components/FinancePageContent";
 
 const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
@@ -28,7 +20,6 @@ const FinancePage = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeTab, setActiveTab] = useState("table");
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchFinances();
@@ -118,10 +109,6 @@ const FinancePage = () => {
       });
     }
   };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  };
   
   // Handle filter changes
   const handleFilter = (filters: Record<string, string>) => {
@@ -145,111 +132,24 @@ const FinancePage = () => {
     setFilteredFinances(result);
   };
 
-  const columns = [
-    {
-      title: "Ngày",
-      key: "ngay",
-      sortable: true,
-      render: (value: string) => value ? format(new Date(value), 'dd/MM/yyyy') : '',
-    },
-    {
-      title: "Loại Thu Chi",
-      key: "loai_thu_chi",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={value === "income" ? "success" : "destructive"}>
-          {value === "income" ? "Thu" : "Chi"}
-        </Badge>
-      ),
-    },
-    {
-      title: "Hạng mục",
-      key: "loai_giao_dich",
-      sortable: true,
-    },
-    {
-      title: "Diễn Giải",
-      key: "dien_giai",
-    },
-    {
-      title: "Tổng Tiền",
-      key: "tong_tien",
-      sortable: true,
-      render: (value: number) => formatCurrency(value),
-    },
-    {
-      title: "Tình Trạng",
-      key: "tinh_trang",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={
-          value === "completed" ? "success" : 
-          value === "pending" ? "secondary" : 
-          "outline"
-        }>
-          {value === "completed" ? "Hoàn thành" : 
-           value === "pending" ? "Chờ xử lý" : 
-           value || "N/A"}
-        </Badge>
-      ),
-    },
-  ];
-  
-  // Mobile columns subset for responsive design
-  const mobileColumns = isMobile ? 
-    columns.filter(col => ['ngay', 'loai_thu_chi', 'tong_tien'].includes(col.key)) : 
-    columns;
-
-  const tableActions = (
-    <FinanceActions 
-      facilities={facilities}
-      filteredFinances={filteredFinances}
-      fetchFinances={fetchFinances}
-      handleAddClick={handleAddClick}
-      handleFilter={handleFilter}
-    />
-  );
-
   return (
     <>
       <TablePageLayout
         title="Tài Chính"
         description="Quản lý thu chi và giao dịch tài chính"
-        actions={tableActions}
       >
-        <div className="hidden md:block mb-4">
-          <CommandInterface />
-        </div>
-        
-        <Tabs defaultValue="table" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="table">Bảng Dữ Liệu</TabsTrigger>
-            <TabsTrigger value="ledger">Sổ Kế Toán</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="table" className="w-full">
-            {filteredFinances.length === 0 && !isLoading ? (
-              <PlaceholderPage
-                title="Tài Chính"
-                description="Quản lý thu chi và giao dịch tài chính"
-                addButtonAction={handleAddClick}
-              />
-            ) : (
-              <DataTable
-                columns={mobileColumns}
-                data={filteredFinances}
-                isLoading={isLoading}
-                onRowClick={handleRowClick}
-                searchable={true}
-                searchPlaceholder="Tìm kiếm giao dịch..."
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="ledger">
-            <FinanceLedger />
-          </TabsContent>
-        </Tabs>
+        <FinancePageContent
+          finances={finances}
+          filteredFinances={filteredFinances}
+          facilities={facilities}
+          isLoading={isLoading}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          handleFilter={handleFilter}
+          handleRowClick={handleRowClick}
+          handleAddClick={handleAddClick}
+          fetchFinances={fetchFinances}
+        />
       </TablePageLayout>
 
       {selectedFinance && (

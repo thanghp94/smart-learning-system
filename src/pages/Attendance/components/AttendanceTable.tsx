@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Clock8, Clock4 } from 'lucide-react';
+import { Clock8, Clock4, Clock } from 'lucide-react';
 import { format, isToday, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
@@ -37,13 +36,11 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
   uniqueDates,
   isLoading
 }) => {
-  // Format time for display
   const formatTime = (time?: string) => {
     if (!time) return '';
-    return time.substring(0, 5); // Extract HH:MM
+    return time.substring(0, 5);
   };
 
-  // Get status badge for attendance record
   const getStatusBadge = (status: string, isVerified: boolean) => {
     if (!isVerified) {
       return <Badge variant="outline" className="text-xs px-1 py-0">Chưa xác nhận</Badge>;
@@ -61,7 +58,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     }
   };
 
-  // Group records for a specific employee and date by session (morning/afternoon)
   const groupRecordsBySession = (employeeId: string, date: string) => {
     if (!groupedAttendance[employeeId]) return null;
     
@@ -71,7 +67,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     
     if (recordsForDate.length === 0) return null;
     
-    // Group into morning (before 12:00) and afternoon (after 12:00)
     const result = {
       morning: [] as AttendanceRecord[],
       afternoon: [] as AttendanceRecord[],
@@ -79,7 +74,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     
     recordsForDate.forEach(record => {
       if (record.thoi_gian_bat_dau) {
-        // Parse time to determine if it's morning or afternoon
         const hour = parseInt(record.thoi_gian_bat_dau.split(':')[0], 10);
         if (hour < 12) {
           result.morning.push(record);
@@ -92,7 +86,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     return result;
   };
 
-  // Render attendance record for a specific employee and date
   const renderEmployeeAttendanceForDate = (employeeId: string, date: string) => {
     const groupedRecords = groupRecordsBySession(employeeId, date);
     
@@ -106,7 +99,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     
     return (
       <div className="space-y-1 p-1">
-        {/* Morning records */}
         {groupedRecords.morning.length > 0 && (
           <div className="text-xs">
             <div className="flex justify-between items-center">
@@ -128,7 +120,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
           </div>
         )}
         
-        {/* Afternoon records */}
         {groupedRecords.afternoon.length > 0 && (
           <div className={`text-xs ${groupedRecords.morning.length > 0 ? 'pt-1 border-t' : ''}`}>
             <div className="flex justify-between items-center">
