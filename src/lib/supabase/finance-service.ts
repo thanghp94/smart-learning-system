@@ -1,9 +1,12 @@
 
 import { supabase } from './client';
+import { Finance } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
-import { Finance } from '@/lib/types';
 
 class FinanceService {
+  /**
+   * Get all finances
+   */
   async getAll() {
     try {
       const { data, error } = await supabase
@@ -19,91 +22,37 @@ class FinanceService {
     }
   }
 
+  /**
+   * Get a finance by ID
+   */
   async getById(id: string) {
     return fetchById<Finance>('finances', id);
   }
 
-  async create(data: Partial<Finance>) {
-    return insert<Finance>('finances', data);
+  /**
+   * Create a new finance
+   */
+  async create(financeData: Partial<Finance>) {
+    return insert<Finance>('finances', financeData);
   }
 
-  async update(id: string, data: Partial<Finance>) {
-    return update<Finance>('finances', id, data);
+  /**
+   * Update a finance
+   */
+  async update(id: string, updates: Partial<Finance>) {
+    return update<Finance>('finances', id, updates);
   }
 
+  /**
+   * Delete a finance
+   */
   async delete(id: string) {
     return remove('finances', id);
   }
 
-  async getByEmployee(employeeId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('finances')
-        .select('*')
-        .eq('doi_tuong_id', employeeId)
-        .eq('loai_doi_tuong', 'employee')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Finance[];
-    } catch (error) {
-      console.error('Error fetching employee finances:', error);
-      throw error;
-    }
-  }
-
-  async getByStudent(studentId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('finances')
-        .select('*')
-        .eq('doi_tuong_id', studentId)
-        .eq('loai_doi_tuong', 'student')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Finance[];
-    } catch (error) {
-      console.error('Error fetching student finances:', error);
-      throw error;
-    }
-  }
-
-  async getByFacility(facilityId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('finances')
-        .select('*')
-        .eq('doi_tuong_id', facilityId)
-        .eq('loai_doi_tuong', 'facility')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Finance[];
-    } catch (error) {
-      console.error('Error fetching facility finances:', error);
-      throw error;
-    }
-  }
-
-  async getByClass(classId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('finances')
-        .select('*')
-        .eq('doi_tuong_id', classId)
-        .eq('loai_doi_tuong', 'class')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Finance[];
-    } catch (error) {
-      console.error('Error fetching class finances:', error);
-      throw error;
-    }
-  }
-
-  // Adding the missing method getByEntity that's used in FacilityDetail.tsx
+  /**
+   * Get finances by entity type and ID
+   */
   async getByEntity(entityType: string, entityId: string) {
     try {
       const { data, error } = await supabase
@@ -116,30 +65,33 @@ class FinanceService {
       if (error) throw error;
       return data as Finance[];
     } catch (error) {
-      console.error(`Error fetching finances for entity ${entityType} with ID ${entityId}:`, error);
+      console.error(`Error fetching finances for ${entityType} ${entityId}:`, error);
       throw error;
     }
   }
 
-  // Add the getFinancesByEntityType method
-  async getFinancesByEntityType(entityType: string, entityId: string) {
+  /**
+   * Get finances by entity type
+   */
+  async getFinancesByEntityType(entityType: string) {
     try {
       const { data, error } = await supabase
         .from('finances')
         .select('*')
         .eq('loai_doi_tuong', entityType)
-        .eq('doi_tuong_id', entityId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return { data, error: null };
+      return data as Finance[];
     } catch (error) {
-      console.error(`Error fetching finances for ${entityType} with ID ${entityId}:`, error);
-      return { data: null, error };
+      console.error(`Error fetching finances for entity type ${entityType}:`, error);
+      throw error;
     }
   }
 
-  // Add the getAllFinances method
+  /**
+   * Get all finances with details
+   */
   async getAllFinances() {
     try {
       const { data, error } = await supabase
@@ -148,10 +100,90 @@ class FinanceService {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return { data, error: null };
+      return data as Finance[];
     } catch (error) {
       console.error('Error fetching all finances:', error);
-      return { data: null, error };
+      throw error;
+    }
+  }
+
+  // Receipt template methods
+  async getReceiptTemplates() {
+    try {
+      const { data, error } = await supabase
+        .from('receipt_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching receipt templates:', error);
+      throw error;
+    }
+  }
+
+  async getReceiptTemplateById(id: string) {
+    try {
+      const { data, error } = await supabase
+        .from('receipt_templates')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching receipt template ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async createReceiptTemplate(template: any) {
+    try {
+      const { data, error } = await supabase
+        .from('receipt_templates')
+        .insert(template)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating receipt template:', error);
+      throw error;
+    }
+  }
+
+  async updateReceiptTemplate(id: string, updates: any) {
+    try {
+      const { data, error } = await supabase
+        .from('receipt_templates')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error updating receipt template ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteReceiptTemplate(id: string) {
+    try {
+      const { error } = await supabase
+        .from('receipt_templates')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error(`Error deleting receipt template ${id}:`, error);
+      throw error;
     }
   }
 }

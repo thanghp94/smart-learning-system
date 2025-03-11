@@ -2,8 +2,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, RotateCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { RotateCw } from 'lucide-react';
 import { Student } from '@/lib/types';
 import EnrollStudentButton from './EnrollStudentButton';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +18,6 @@ const StudentActionsSection: React.FC<StudentActionsSectionProps> = ({
   studentId, 
   refreshEnrollments 
 }) => {
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   return (
@@ -43,14 +41,6 @@ const StudentActionsSection: React.FC<StudentActionsSectionProps> = ({
             await refreshEnrollments();
           }}
         />
-        
-        <Button 
-          variant="outline" 
-          onClick={() => navigate(`/finance/entity/student/${student.id}`)}
-        >
-          <CreditCard className="h-4 w-4 mr-2" />
-          Xem thu chi
-        </Button>
       </CardContent>
     </Card>
   );

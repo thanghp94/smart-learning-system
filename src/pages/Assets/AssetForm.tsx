@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import ImageUpload from '@/components/common/ImageUpload';
 
 interface AssetFormProps {
   initialData?: any;
@@ -41,9 +42,24 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
       cau_hinh: initialData?.cau_hinh || '',
       so_seri: initialData?.so_seri || '',
       ngay_mua: initialData?.ngay_mua || '',
-      noi_mua: initialData?.noi_mua || ''
+      noi_mua: initialData?.noi_mua || '',
+      hinh_anh: initialData?.hinh_anh || '',
+      hinh_anh_2: initialData?.hinh_anh_2 || ''
     }
   });
+
+  // Watch image values
+  const image1 = watch('hinh_anh');
+  const image2 = watch('hinh_anh_2');
+
+  // Handle image uploads
+  const handleImageUpload = (field: string) => (url: string) => {
+    setValue(field, url);
+  };
+
+  const handleImageRemove = (field: string) => () => {
+    setValue(field, '');
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -194,6 +210,28 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
           <Input
             id="trang_thai_so_huu"
             {...register('trang_thai_so_huu')}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="hinh_anh" className="mb-2 block">Hình ảnh 1</Label>
+          <input type="hidden" {...register('hinh_anh')} />
+          <ImageUpload
+            value={image1}
+            onChange={handleImageUpload('hinh_anh')}
+            onRemove={handleImageRemove('hinh_anh')}
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="hinh_anh_2" className="mb-2 block">Hình ảnh 2</Label>
+          <input type="hidden" {...register('hinh_anh_2')} />
+          <ImageUpload
+            value={image2}
+            onChange={handleImageUpload('hinh_anh_2')}
+            onRemove={handleImageRemove('hinh_anh_2')}
           />
         </div>
       </div>

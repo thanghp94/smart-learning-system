@@ -2,118 +2,120 @@
 import React, { useState, useEffect } from 'react';
 import { financeService } from '@/lib/supabase';
 import { Finance } from '@/lib/types';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import FinanceList from './FinanceList';
-import FinanceStats from './FinanceStats';
 import { useToast } from '@/hooks/use-toast';
-import FinanceLedger from './FinanceLedger';
+import FinanceList from './FinanceList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface EntityFinancesViewProps {
   entityType: string;
   entityId: string;
-  entityName?: string;
 }
 
-const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({
-  entityType,
-  entityId,
-  entityName,
-}) => {
+const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, entityId }) => {
   const [finances, setFinances] = useState<Finance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('list');
-
+  
   useEffect(() => {
-    const fetchFinances = async () => {
-      setIsLoading(true);
-      try {
-        let data: Finance[] = [];
-        
-        if (entityType && entityId) {
-          // Use the appropriate method from FinanceService
-          data = await financeService.getByEntity(entityType, entityId);
-        } else {
-          // If no entity is specified, fetch all finances
-          data = await financeService.getAll();
-        }
-        
-        setFinances(data || []);
-      } catch (error) {
-        console.error('Error fetching finances:', error);
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải dữ liệu tài chính. Vui lòng thử lại sau.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchFinances();
-  }, [entityType, entityId, toast]);
+  }, [entityType, entityId]);
 
-  // Tính toán các tổng số
-  const totalIncome = finances
+  const fetchFinances = async () => {
+    setIsLoading(true);
+    try {
+      let data: Finance[] = [];
+      
+      if (entityId) {
+        data = await financeService.getByEntity(entityType, entityId);
+      } else if (entityType) {
+        data = await financeService.getFinancesByEntityType(entityType);
+      } else {
+        data = await financeService.getAllFinances();
+      }
+      
+      setFinances(data);
+    } catch (error) {
+      console.error('Error fetching finances:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải dữ liệu tài chính. Vui lòng thử lại sau.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteFinance = (finance: Finance) => {
+    setFinances(prev => prev.filter(f => f.id !== finance.id));
+  };
+
+  // Calculate financial summary
+  const incomeTotal = finances
     .filter(finance => finance.loai_thu_chi === 'income')
     .reduce((sum, finance) => sum + finance.tong_tien, 0);
-
-  const totalExpense = finances
+  
+  const expenseTotal = finances
     .filter(finance => finance.loai_thu_chi === 'expense')
     .reduce((sum, finance) => sum + finance.tong_tien, 0);
+  
+  const balance = incomeTotal - expenseTotal;
 
-  const balance = totalIncome - totalExpense;
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
 
   return (
-    <Card className="shadow-sm">
-      <CardContent className="p-4 md:p-6">
-        {entityName && (
-          <h3 className="text-lg font-semibold mb-4">
-            {entityType === 'student' 
-              ? `Tài Chính Học Sinh: ${entityName}` 
-              : entityType === 'employee' 
-                ? `Tài Chính Nhân Viên: ${entityName}`
-                : entityType === 'facility' 
-                  ? `Tài Chính Cơ Sở: ${entityName}`
-                  : 'Tài Chính'}
-          </h3>
-        )}
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Tổng thu</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-green-600">{formatCurrency(incomeTotal)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Tổng chi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-red-600">{formatCurrency(expenseTotal)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Số dư</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className={`text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatCurrency(balance)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="list">Danh sách</TabsTrigger>
-            <TabsTrigger value="stats">Thống kê</TabsTrigger>
-            <TabsTrigger value="ledger">Sổ cái</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="list" className="mt-0">
-            <FinanceList 
-              finances={finances} 
-              isLoading={isLoading} 
-              onDelete={(finance) => {
-                setFinances(prevFinances => 
-                  prevFinances.filter(f => f.id !== finance.id)
-                );
-              }}
-            />
-          </TabsContent>
-          
-          <TabsContent value="stats" className="mt-0">
-            <FinanceStats 
-              totalIncome={totalIncome}
-              totalExpense={totalExpense}
-              balance={balance}
-            />
-          </TabsContent>
-          
-          <TabsContent value="ledger" className="mt-0">
-            <FinanceLedger finances={finances} isLoading={isLoading} />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Danh sách giao dịch</CardTitle>
+          <CardDescription>
+            {entityType === 'student' ? 'Giao dịch tài chính của học sinh' : 
+             entityType === 'employee' ? 'Giao dịch tài chính của nhân viên' :
+             entityType === 'facility' ? 'Giao dịch tài chính của cơ sở' :
+             'Tất cả giao dịch tài chính'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FinanceList 
+            finances={finances} 
+            isLoading={isLoading} 
+            onDelete={handleDeleteFinance}
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

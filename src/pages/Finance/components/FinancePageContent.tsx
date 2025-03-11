@@ -15,16 +15,6 @@ import ExportButton from '@/components/ui/ExportButton';
 
 interface FinancePageContentProps {
   // We don't need these props as we'll manage them internally
-  // finances?: Finance[];
-  // filteredFinances?: Finance[];
-  // facilities?: Facility[];
-  // isLoading?: boolean;
-  // activeTab?: string;
-  // setActiveTab?: React.Dispatch<React.SetStateAction<string>>;
-  // handleFilter?: (filters: Record<string, string>) => void;
-  // handleRowClick?: (finance: Finance) => void;
-  // handleAddClick?: () => void;
-  // fetchFinances?: () => Promise<void>;
 }
 
 const FinancePageContent: React.FC<FinancePageContentProps> = () => {
@@ -145,7 +135,10 @@ const FinancePageContent: React.FC<FinancePageContentProps> = () => {
         </TabsContent>
         
         <TabsContent value="ledger">
-          <FinanceLedger finances={filteredFinances} isLoading={isLoading} />
+          <FinanceLedger 
+            finances={filteredFinances} 
+            isLoading={isLoading} 
+          />
         </TabsContent>
       </Tabs>
     </>

@@ -1,14 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
   Form,
@@ -26,7 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { fileSchema, FileFormValues } from './schemas/fileSchema';
-import { File } from '@/lib/types';
+import { File, Student, Employee, Facility, Asset } from '@/lib/types';
+import { studentService, employeeService, facilityService, assetService } from '@/lib/supabase';
 
 interface FileFormProps {
   initialData?: Partial<File>;
@@ -35,6 +33,13 @@ interface FileFormProps {
 }
 
 const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
+  // State for entity lists
+  const [students, setStudents] = useState<Student[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [selectedEntityType, setSelectedEntityType] = useState<string>(initialData?.doi_tuong_lien_quan || '');
+
   // Process date values from initialData
   const defaultValues = {
     ten_tai_lieu: initialData?.ten_tai_lieu || '',
@@ -44,12 +49,52 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
     han_tai_lieu: initialData?.han_tai_lieu || '',
     ghi_chu: initialData?.ghi_chu || '',
     trang_thai: initialData?.trang_thai || 'active',
+    nhan_vien_id: initialData?.nhan_vien_id || '',
+    co_so_id: initialData?.co_so_id || '',
+    lien_he_id: initialData?.lien_he_id || '',
+    csvc_id: initialData?.csvc_id || '',
+    hoc_sinh_id: initialData?.hoc_sinh_id || '',
   };
 
   const form = useForm<FileFormValues>({
     resolver: zodResolver(fileSchema),
     defaultValues
   });
+
+  // Load entities when entity type changes
+  useEffect(() => {
+    const entityType = form.watch('doi_tuong_lien_quan');
+    setSelectedEntityType(entityType);
+    
+    const loadEntities = async () => {
+      try {
+        switch (entityType) {
+          case 'nhan_vien':
+            const employeeData = await employeeService.getAll();
+            setEmployees(employeeData);
+            break;
+          case 'hoc_sinh':
+            const studentData = await studentService.getAll();
+            setStudents(studentData);
+            break;
+          case 'co_so':
+            const facilityData = await facilityService.getAll();
+            setFacilities(facilityData);
+            break;
+          case 'CSVC':
+            const assetData = await assetService.getAll();
+            setAssets(assetData);
+            break;
+        }
+      } catch (error) {
+        console.error(`Error loading ${entityType} data:`, error);
+      }
+    };
+
+    if (entityType) {
+      loadEntities();
+    }
+  }, [form.watch('doi_tuong_lien_quan')]);
 
   const handleFormSubmit = (values: FileFormValues) => {
     onSubmit(values);
@@ -79,7 +124,15 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
             <FormItem>
               <FormLabel>Đối tượng liên quan*</FormLabel>
               <Select 
-                onValueChange={field.onChange} 
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  // Reset related entity IDs when type changes
+                  form.setValue('nhan_vien_id', '');
+                  form.setValue('hoc_sinh_id', '');
+                  form.setValue('co_so_id', '');
+                  form.setValue('csvc_id', '');
+                  form.setValue('lien_he_id', '');
+                }}
                 defaultValue={field.value}
               >
                 <FormControl>
@@ -99,6 +152,126 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
             </FormItem>
           )}
         />
+
+        {selectedEntityType === 'nhan_vien' && (
+          <FormField
+            control={form.control}
+            name="nhan_vien_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Chọn nhân viên*</FormLabel>
+                <Select 
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn nhân viên" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {employees.map(employee => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.ten_nhan_su}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {selectedEntityType === 'hoc_sinh' && (
+          <FormField
+            control={form.control}
+            name="hoc_sinh_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Chọn học sinh*</FormLabel>
+                <Select 
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn học sinh" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {students.map(student => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.ten_hoc_sinh}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {selectedEntityType === 'co_so' && (
+          <FormField
+            control={form.control}
+            name="co_so_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Chọn cơ sở*</FormLabel>
+                <Select 
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn cơ sở" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {facilities.map(facility => (
+                      <SelectItem key={facility.id} value={facility.id}>
+                        {facility.ten_co_so}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {selectedEntityType === 'CSVC' && (
+          <FormField
+            control={form.control}
+            name="csvc_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Chọn tài sản*</FormLabel>
+                <Select 
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn tài sản" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {assets.map(asset => (
+                      <SelectItem key={asset.id} value={asset.id}>
+                        {asset.ten_CSVC}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
