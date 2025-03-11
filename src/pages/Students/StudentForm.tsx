@@ -95,7 +95,8 @@ const StudentForm: React.FC<StudentFormProps> = ({
   const handleSubmit = async (values: StudentFormValues) => {
     const submissionData = {
       ...values,
-      anh_minh_hoc: studentImage
+      anh_minh_hoc: studentImage,
+      hinh_anh_hoc_sinh: studentImage // set both fields for compatibility
     };
     
     console.log("Form values submitted:", submissionData);

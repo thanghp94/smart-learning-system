@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Student } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { CalendarDays, MapPin, Book, School, Phone, Mail, FileText, User, CreditCard, Layers } from 'lucide-react';
+import { CalendarDays, MapPin, Book, School, Phone, Mail, FileText, User, Layers } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -50,8 +50,6 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, facilities = {} 
     <Tabs defaultValue="info">
       <TabsList className="mb-4 w-full">
         <TabsTrigger value="info">Thông tin chung</TabsTrigger>
-        <TabsTrigger value="contact">Liên hệ</TabsTrigger>
-        <TabsTrigger value="education">Học tập</TabsTrigger>
         <TabsTrigger value="finance">Thu chi</TabsTrigger>
         <TabsTrigger value="enrollments">Ghi danh</TabsTrigger>
       </TabsList>
@@ -144,100 +142,88 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, facilities = {} 
                   </p>
                 </div>
               </div>
-
-              <div className="mt-4 border-t pt-4">
-                <Link to={`/finance/entity/student/${student.id}`}>
-                  <Button variant="outline" className="w-full">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Xem thu chi
-                  </Button>
-                </Link>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="pt-4">
+              <h3 className="text-lg font-medium mb-3 flex items-center">
+                <User className="mr-2 h-5 w-5" />
+                Thông tin liên hệ
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Tên phụ huynh</p>
+                  <p className="font-medium">{student.ten_ph || student.ten_PH || 'Chưa có thông tin'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Số điện thoại</p>
+                  <p className="flex items-center">
+                    <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
+                    {student.sdt_ph1 || student.so_dien_thoai || 'Chưa có thông tin'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="flex items-center">
+                    <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+                    {student.email_ph1 || 'Chưa có thông tin'}
+                  </p>
+                </div>
+                {student.email_ph2 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email phụ</p>
+                    <p className="flex items-center">
+                      <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {student.email_ph2}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-4">
+              <h3 className="text-lg font-medium mb-3 flex items-center">
+                <School className="mr-2 h-5 w-5" />
+                Thông tin học tập
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Trường</p>
+                  <p>{student.truong || 'Chưa có thông tin'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Lớp</p>
+                  <p>{student.lop || 'Chưa có thông tin'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Mô tả tính cách</p>
+                  <p className="whitespace-pre-wrap">{student.mo_ta_tinh_cach || 'Chưa có thông tin'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Điểm mạnh</p>
+                  <p className="whitespace-pre-wrap">{student.diem_manh || 'Chưa có thông tin'}</p>
+                </div>
+                {student.ghi_chu && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Ghi chú</p>
+                    <p className="whitespace-pre-wrap">{student.ghi_chu}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
       </TabsContent>
 
-      <TabsContent value="contact" className="space-y-4">
-        <Card>
-          <CardContent className="pt-4">
-            <h3 className="text-lg font-medium mb-3 flex items-center">
-              <User className="mr-2 h-5 w-5" />
-              Thông tin phụ huynh
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-muted-foreground">Tên phụ huynh</p>
-                <p className="font-medium">{student.ten_ph || student.ten_PH || 'Chưa có thông tin'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Số điện thoại</p>
-                <p className="flex items-center">
-                  <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {student.sdt_ph1 || student.so_dien_thoai || 'Chưa có thông tin'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="flex items-center">
-                  <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {student.email_ph1 || 'Chưa có thông tin'}
-                </p>
-              </div>
-              {student.email_ph2 && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Email phụ</p>
-                  <p className="flex items-center">
-                    <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {student.email_ph2}
-                  </p>
-                </div>
-              )}
-              {student.ghi_chu && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Ghi chú</p>
-                  <p className="whitespace-pre-wrap">{student.ghi_chu}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="education" className="space-y-4">
-        <Card>
-          <CardContent className="pt-4">
-            <h3 className="text-lg font-medium mb-3 flex items-center">
-              <School className="mr-2 h-5 w-5" />
-              Thông tin học tập
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Trường</p>
-                <p>{student.truong || 'Chưa có thông tin'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Lớp</p>
-                <p>{student.lop || 'Chưa có thông tin'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Mô tả tính cách</p>
-                <p className="whitespace-pre-wrap">{student.mo_ta_tinh_cach || 'Chưa có thông tin'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Điểm mạnh</p>
-                <p className="whitespace-pre-wrap">{student.diem_manh || 'Chưa có thông tin'}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
       <TabsContent value="finance" className="space-y-4">
         <div className="flex justify-center">
           <Link to={`/finance/entity/student/${student.id}`}>
             <Button>
-              <CreditCard className="h-4 w-4 mr-2" />
               Xem thu chi của học sinh
             </Button>
           </Link>

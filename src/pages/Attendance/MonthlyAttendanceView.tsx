@@ -19,13 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types/employee-clock-in-out';
 import AddAttendanceForm from './AddAttendanceForm';
-import { format } from 'date-fns';
 
 const MonthlyAttendanceView = () => {
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
@@ -225,11 +224,11 @@ const MonthlyAttendanceView = () => {
         <div className="overflow-x-auto">
           <Table className="min-w-full border-collapse">
             <TableHeader className="sticky top-0 bg-background">
-              <TableRow>
+              <TableRow className="border-b">
                 <TableHead className="sticky left-0 bg-background z-10 min-w-[200px]">Nhân viên</TableHead>
                 <TableHead className="text-center min-w-[150px]">Tổng số</TableHead>
                 {daysInMonth.map(day => (
-                  <TableHead key={day} className="text-center min-w-[60px]">
+                  <TableHead key={day} className="text-center p-1 min-w-[40px]">
                     {day}
                   </TableHead>
                 ))}
@@ -237,15 +236,15 @@ const MonthlyAttendanceView = () => {
             </TableHeader>
             <TableBody>
               {attendanceData.map(employee => (
-                <TableRow key={employee.employee_id}>
-                  <TableCell className="font-medium sticky left-0 bg-background z-10">
+                <TableRow key={employee.employee_id} className="border-b">
+                  <TableCell className="font-medium sticky left-0 bg-background z-10 py-2">
                     {employee.employee_name}
                   </TableCell>
-                  <TableCell className="text-center min-w-[150px]">
-                    <div className="text-xs flex gap-2 justify-center items-center">
-                      <span className="text-green-600">Có mặt: {employee.summary.present}</span>
-                      <span className="text-yellow-600">Muộn: {employee.summary.late}</span>
-                      <span className="text-red-600">Vắng: {employee.summary.absent}</span>
+                  <TableCell className="text-center min-w-[150px] py-2">
+                    <div className="text-xs flex gap-1 justify-center items-center">
+                      <span className="text-green-600">CM: {employee.summary.present}</span>
+                      <span className="text-yellow-600">M: {employee.summary.late}</span>
+                      <span className="text-red-600">V: {employee.summary.absent}</span>
                     </div>
                   </TableCell>
                   {daysInMonth.map(day => {

@@ -4,7 +4,7 @@ import { ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ImageUploadProps {
-  value?: string;
+  value: string;
   onChange: (url: string) => void;
   onRemove?: () => void;
   disabled?: boolean;

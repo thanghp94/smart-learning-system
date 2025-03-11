@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee, Task, Asset, Finance } from '@/lib/types';
@@ -28,6 +29,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [finances, setFinances] = useState<Finance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -35,38 +37,48 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
     const fetchEmployeeData = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         // Fetch employee details
         const empData = await employeeService.getById(employeeId);
+        if (!empData) {
+          throw new Error('Không tìm thấy thông tin nhân viên');
+        }
+        
         setEmployee(empData);
         
         // Fetch related tasks - handle error if "nguoi_thuc_hien" column doesn't exist
         try {
           const tasksData = await taskService.getByEmployeeId(employeeId);
           setTasks(tasksData);
-        } catch (error) {
-          console.error('Error fetching employee tasks:', error);
+        } catch (taskError) {
+          console.error('Error fetching employee tasks:', taskError);
           setTasks([]);
         }
         
         // Fetch attendance records
-        const attendanceData = await employeeClockInService.getByEmployee(employeeId);
-        // Set default values for any missing required properties
-        const formattedAttendance = attendanceData.map(item => ({
-          ...item,
-          xac_nhan: item.xac_nhan ?? false,
-          trang_thai: item.trang_thai || 'pending'
-        })) as EmployeeClockInOut[];
-        
-        setAttendance(formattedAttendance);
+        try {
+          const attendanceData = await employeeClockInService.getByEmployee(employeeId);
+          // Set default values for any missing required properties
+          const formattedAttendance = attendanceData.map(item => ({
+            ...item,
+            xac_nhan: item.xac_nhan ?? false,
+            trang_thai: item.trang_thai || 'pending'
+          })) as EmployeeClockInOut[];
+          
+          setAttendance(formattedAttendance);
+        } catch (attendanceError) {
+          console.error('Error fetching attendance data:', attendanceError);
+          setAttendance([]);
+        }
 
         // Fetch assets
         try {
           // Use getByOwner instead of getByEmployeeId
           const assetsData = await assetService.getByOwner('employee', employeeId);
           setAssets(assetsData || []);
-        } catch (error) {
-          console.error('Error fetching employee assets:', error);
+        } catch (assetError) {
+          console.error('Error fetching employee assets:', assetError);
           setAssets([]);
         }
 
@@ -75,15 +87,16 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
           // Use getByEmployee instead of getByEmployeeId
           const financesData = await financeService.getByEmployee(employeeId);
           setFinances(financesData || []);
-        } catch (error) {
-          console.error('Error fetching employee finances:', error);
+        } catch (financeError) {
+          console.error('Error fetching employee finances:', financeError);
           setFinances([]);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching employee data:', error);
+        setError(error.message || 'Không thể tải dữ liệu nhân viên');
         toast({
           title: 'Lỗi',
-          description: 'Không thể tải dữ liệu nhân viên',
+          description: error.message || 'Không thể tải dữ liệu nhân viên',
           variant: 'destructive',
         });
       } finally {
@@ -244,6 +257,20 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
       <div className="flex items-center justify-center h-64">
         <Spinner />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-medium">Có lỗi xảy ra</h2>
+          <p className="text-muted-foreground mt-2">{error}</p>
+          <Button className="mt-4" onClick={() => navigate('/employees')}>
+            Quay lại danh sách
+          </Button>
+        </div>
+      </Card>
     );
   }
 
