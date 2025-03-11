@@ -1,29 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { User, Clock, AlertCircle } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
-import { useToast } from '@/hooks/use-toast';
-import { attendanceService } from '@/lib/supabase/attendance-service';
-import { supabase } from '@/lib/supabase/client';
-import { Attendance, TeachingSession } from '@/lib/types';
-import { ProcessedStudent } from '../types/student';
-
-interface AttendanceDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  sessionId: string;
-  classId?: string;
-}
-
-interface ExtendedProcessedStudent extends ProcessedStudent {
-  enrollmentId: string;
-}
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useToast } from "@/hooks/use-toast";
+import { attendanceService, enrollmentService } from '@/lib/supabase';
 
 interface StudentDetails {
   id: string;
@@ -32,312 +21,145 @@ interface StudentDetails {
   ma_hoc_sinh?: string;
 }
 
-const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, sessionId, classId }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [students, setStudents] = useState<ExtendedProcessedStudent[]>([]);
-  const [attendanceData, setAttendanceData] = useState<Record<string, { status: string; notes: string; lateMinutes?: number }>>({});
-  const [isSaving, setIsSaving] = useState(false);
+interface ProcessedStudent {
+  id: string;
+  ten_hoc_sinh: string;
+  hinh_anh_hoc_sinh?: string;
+  ma_hoc_sinh?: string;
+  enrollmentId?: string;
+  // Add other properties as needed
+}
+
+interface AttendanceDialogProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  sessionId: string;
+  onAttendanceUpdated: () => void;
+}
+
+const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ open, setOpen, sessionId, onAttendanceUpdated }) => {
+  const [studentsData, setStudentsData] = useState<any[]>([]);
+  const [attendanceData, setAttendanceData] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen && sessionId) {
-      fetchStudentsAndAttendance();
-    }
-  }, [isOpen, sessionId, classId]);
+    const fetchEnrollments = async () => {
+      try {
+        const enrollments = await enrollmentService.getEnrollmentsBySessionId(sessionId);
+        if (enrollments && enrollments.length > 0) {
+          // Fetch student details for each enrollment
+          const studentDetails = enrollments.map(enrollment => ({
+            id: enrollment.hoc_sinh_id,
+            ten_hoc_sinh: enrollment.students[0].ten_hoc_sinh,
+            hinh_anh_hoc_sinh: enrollment.students[0].hinh_anh_hoc_sinh,
+            ma_hoc_sinh: enrollment.students[0].ma_hoc_sinh,
+          }));
+          setStudentsData(studentDetails);
 
-  const fetchStudentsAndAttendance = async () => {
-    try {
-      setIsLoading(true);
-      
-      let classDetailId = classId;
-      if (!classDetailId) {
-        const { data: sessionData } = await supabase
-          .from('teaching_sessions')
-          .select('lop_chi_tiet_id')
-          .eq('id', sessionId)
-          .single();
-        
-        if (sessionData) {
-          classDetailId = sessionData.lop_chi_tiet_id;
-        }
-      }
-
-      if (!classDetailId) {
-        throw new Error('Class ID not found');
-      }
-
-      const { data: enrollmentsData, error: enrollmentsError } = await supabase
-        .from('enrollments')
-        .select(`
-          id,
-          hoc_sinh_id,
-          students:hoc_sinh_id (
-            id,
-            ten_hoc_sinh,
-            hinh_anh_hoc_sinh,
-            ma_hoc_sinh
-          )
-        `)
-        .eq('lop_chi_tiet_id', classDetailId);
-
-      if (enrollmentsError) throw enrollmentsError;
-
-      const attendanceRecords = await attendanceService.getByTeachingSession(sessionId);
-
-      const processedStudents: ExtendedProcessedStudent[] = enrollmentsData ? enrollmentsData.map(enrollment => {
-        const student = enrollment.students as StudentDetails;
-        return {
-          id: student.id,
-          name: student.ten_hoc_sinh,
-          image: student.hinh_anh_hoc_sinh,
-          code: student.ma_hoc_sinh || '',
-          enrollmentId: enrollment.id
-        };
-      }) : [];
-
-      const initialAttendanceData: Record<string, { status: string; notes: string; lateMinutes?: number }> = {};
-      
-      processedStudents.forEach(student => {
-        const existingRecord = attendanceRecords.find(record => 
-          record.enrollment_id === student.enrollmentId);
-        
-        if (existingRecord) {
-          initialAttendanceData[student.enrollmentId] = {
-            status: existingRecord.status,
-            notes: existingRecord.ghi_chu || '',
-            lateMinutes: existingRecord.thoi_gian_tre || 0
-          };
+          // Initialize attendance data based on fetched enrollments
+          const initialAttendance: Record<string, boolean> = {};
+          studentDetails.forEach(student => {
+            initialAttendance[student.id] = false; // Default to absent
+          });
+          setAttendanceData(initialAttendance);
         } else {
-          initialAttendanceData[student.enrollmentId] = {
-            status: 'present',
-            notes: '',
-            lateMinutes: 0
-          };
+          setStudentsData([]);
+          setAttendanceData({});
         }
-      });
+      } catch (error) {
+        console.error("Error fetching enrollments:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách học sinh đã đăng ký.",
+          variant: "destructive",
+        });
+        setStudentsData([]);
+        setAttendanceData({});
+      }
+    };
 
-      setStudents(processedStudents);
-      setAttendanceData(initialAttendanceData);
-    } catch (error) {
-      console.error('Error fetching students and attendance:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải danh sách học sinh',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
+    if (open) {
+      fetchEnrollments();
     }
-  };
+  }, [open, sessionId, toast]);
 
-  const handleStatusChange = (enrollmentId: string, status: string) => {
-    setAttendanceData(prev => ({
-      ...prev,
-      [enrollmentId]: { 
-        ...prev[enrollmentId], 
-        status 
-      }
+  const handleAttendanceChange = (studentId: string, isPresent: boolean) => {
+    setAttendanceData(prevData => ({
+      ...prevData,
+      [studentId]: isPresent,
     }));
   };
 
-  const handleNotesChange = (enrollmentId: string, notes: string) => {
-    setAttendanceData(prev => ({
-      ...prev,
-      [enrollmentId]: { 
-        ...prev[enrollmentId], 
-        notes 
-      }
-    }));
-  };
-
-  const handleLateMinutesChange = (enrollmentId: string, minutes: string) => {
-    const lateMinutes = parseInt(minutes) || 0;
-    setAttendanceData(prev => ({
-      ...prev,
-      [enrollmentId]: { 
-        ...prev[enrollmentId], 
-        lateMinutes 
-      }
-    }));
-  };
-
-  const saveAttendance = async () => {
+  const handleSubmit = async () => {
     try {
-      setIsSaving(true);
-      
-      const attendancePromises = students.map(async (student) => {
-        const data = attendanceData[student.enrollmentId];
-        
-        if (!data) return null;
-        
-        const attendanceRecord: Partial<Attendance> = {
-          teaching_session_id: sessionId,
-          enrollment_id: student.enrollmentId,
-          status: data.status,
-          ghi_chu: data.notes,
-          thoi_gian_tre: data.status === 'late' ? data.lateMinutes : 0
-        };
-        
-        const existingRecords = await attendanceService.getByTeachingSession(sessionId);
-        const existingRecord = existingRecords.find(record => record.enrollment_id === student.enrollmentId);
-        
-        if (existingRecord) {
-          return attendanceService.update(existingRecord.id, attendanceRecord);
-        } else {
-          return attendanceService.create(attendanceRecord);
-        }
-      });
-      
-      await Promise.all(attendancePromises.filter(Boolean));
-      
+      // Prepare attendance records to be saved
+      const attendanceRecords = Object.keys(attendanceData).map(studentId => ({
+        session_id: sessionId,
+        student_id: studentId,
+        is_present: attendanceData[studentId],
+      }));
+
+      // Save attendance records
+      await attendanceService.saveAttendance(attendanceRecords);
+
       toast({
-        title: 'Thành công',
-        description: 'Đã lưu điểm danh thành công',
+        title: "Thành công",
+        description: "Điểm danh thành công!",
       });
-      
-      onClose();
+
+      setOpen(false);
+      onAttendanceUpdated();
     } catch (error) {
-      console.error('Error saving attendance:', error);
+      console.error("Error saving attendance:", error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể lưu thông tin điểm danh',
-        variant: 'destructive'
+        title: "Lỗi",
+        description: "Không thể lưu điểm danh. Vui lòng thử lại.",
+        variant: "destructive",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'present':
-        return <Badge variant="success">Có mặt</Badge>;
-      case 'absent':
-        return <Badge variant="destructive">Vắng mặt</Badge>;
-      case 'late':
-        return <Badge variant="warning">Đi trễ</Badge>;
-      default:
-        return <Badge variant="outline">Chưa điểm danh</Badge>;
+  const processStudentData = (studentsData: any[]): ProcessedStudent[] => {
+    if (!studentsData || !Array.isArray(studentsData)) {
+      return [];
     }
+    
+    return studentsData.map(student => ({
+      id: student.id,
+      ten_hoc_sinh: student.ten_hoc_sinh,
+      hinh_anh_hoc_sinh: student.hinh_anh_hoc_sinh,
+      ma_hoc_sinh: student.ma_hoc_sinh
+    }));
   };
+
+  const processedStudents = processStudentData(studentsData);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[900px] max-h-[80vh] overflow-auto">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Điểm Danh Học Sinh</DialogTitle>
+          <DialogTitle>Điểm danh</DialogTitle>
           <DialogDescription>
-            Ghi nhận trạng thái điểm danh của học sinh trong buổi học
+            Chọn học sinh có mặt trong buổi học.
           </DialogDescription>
         </DialogHeader>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <Spinner size="lg" />
-          </div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[250px]">Học sinh</TableHead>
-                  <TableHead className="w-[200px]">Trạng thái</TableHead>
-                  <TableHead className="w-[100px]">Đi trễ (phút)</TableHead>
-                  <TableHead>Ghi chú</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student) => (
-                  <TableRow key={student.enrollmentId}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {student.image ? (
-                          <img 
-                            src={student.image} 
-                            alt={student.name} 
-                            className="h-8 w-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <User className="h-8 w-8 p-1 rounded-full bg-muted" />
-                        )}
-                        <div>
-                          <p className="font-medium">{student.name}</p>
-                          {student.code && <p className="text-xs text-muted-foreground">{student.code}</p>}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant={attendanceData[student.enrollmentId]?.status === 'present' ? 'default' : 'outline'}
-                          onClick={() => handleStatusChange(student.enrollmentId, 'present')}
-                          className="w-20"
-                        >
-                          Có mặt
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={attendanceData[student.enrollmentId]?.status === 'late' ? 'default' : 'outline'}
-                          onClick={() => handleStatusChange(student.enrollmentId, 'late')}
-                          className="w-20"
-                        >
-                          Đi trễ
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={attendanceData[student.enrollmentId]?.status === 'absent' ? 'default' : 'outline'}
-                          onClick={() => handleStatusChange(student.enrollmentId, 'absent')}
-                          className="w-20"
-                        >
-                          Vắng
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        disabled={attendanceData[student.enrollmentId]?.status !== 'late'}
-                        value={attendanceData[student.enrollmentId]?.lateMinutes || 0}
-                        onChange={(e) => handleLateMinutesChange(student.enrollmentId, e.target.value)}
-                        className="w-20"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Textarea
-                        placeholder="Ghi chú điểm danh"
-                        value={attendanceData[student.enrollmentId]?.notes || ''}
-                        onChange={(e) => handleNotesChange(student.enrollmentId, e.target.value)}
-                        className="min-h-9 h-9"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {students.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <AlertCircle className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p>Chưa có học sinh ghi danh vào lớp này</p>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={onClose}>
-                Hủy
-              </Button>
-              <Button 
-                onClick={saveAttendance} 
-                disabled={isSaving || students.length === 0}
-              >
-                {isSaving && <Spinner className="mr-2 h-4 w-4" />}
-                Lưu điểm danh
-              </Button>
+        <div className="grid gap-4 py-4">
+          {processedStudents.map((student) => (
+            <div key={student.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={`student-${student.id}`}
+                checked={attendanceData[student.id] || false}
+                onCheckedChange={(checked) => handleAttendanceChange(student.id, checked || false)}
+              />
+              <Label htmlFor={`student-${student.id}`}>{student.ten_hoc_sinh}</Label>
             </div>
-          </>
-        )}
+          ))}
+        </div>
+        <DialogFooter>
+          <Button type="button" onClick={handleSubmit}>
+            Lưu điểm danh
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

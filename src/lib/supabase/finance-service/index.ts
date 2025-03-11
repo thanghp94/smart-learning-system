@@ -1,4 +1,3 @@
-
 import { financeService as baseFinanceService } from '../finance-service';
 import { receiptTemplateService } from './receipt-template-service';
 import { Finance } from '@/lib/types';
@@ -116,11 +115,23 @@ const extendedFinanceService = {
   }
 };
 
-// Create a combined finance service with receipt template methods and base methods
+// Create a combined finance service with ALL methods including base methods
 export const financeService = {
   ...baseFinanceService,
   ...receiptTemplateService,
-  ...extendedFinanceService
+  ...extendedFinanceService,
+  
+  // Explicitly add the base methods to avoid TypeScript errors
+  getAll: baseFinanceService.getAll,
+  getById: baseFinanceService.getById,
+  create: baseFinanceService.create,
+  update: baseFinanceService.update,
+  delete: baseFinanceService.delete,
+  getByEmployee: baseFinanceService.getByEmployee,
+  getByStudent: baseFinanceService.getByStudent, 
+  getByFacility: baseFinanceService.getByFacility,
+  getByClass: baseFinanceService.getByClass,
+  getByEntity: baseFinanceService.getByEntity
 };
 
 export default financeService;

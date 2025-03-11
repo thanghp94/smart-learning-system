@@ -1,279 +1,151 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, Info, User, Calendar, AlertCircle, UserPlus } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase/client';
-import { attendanceService } from '@/lib/supabase/attendance-service';
-import { Attendance, AttendanceWithDetails } from '@/lib/types';
-import { format } from 'date-fns';
-import AttendanceDialog from '../AttendanceDialog';
-import EnrollStudentButton from '@/pages/Students/components/EnrollStudentButton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from "@/components/ui/checkbox"
+import { api } from '@/convex/_generated/api';
+import { useQuery, useMutation } from 'convex/react';
+import { toast } from 'sonner';
+import { useParams } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
-interface AttendanceData {
+// Add or fix type definitions
+interface StudentInfo {
   id: string;
-  studentId: string;
-  name: string;
-  status: string;
-  image?: string;
-  time?: string;
-  notes?: string;
-  lateMinutes?: number;
-}
-
-interface AttendanceTabProps {
-  sessionId?: string;
-  classId?: string;
+  ten_hoc_sinh: string;
+  hinh_anh_hoc_sinh?: string;
 }
 
 interface EnrollmentWithStudent {
   id: string;
   hoc_sinh_id: string;
-  students: {
-    id: string;
-    ten_hoc_sinh: string;
-    hinh_anh_hoc_sinh?: string;
-  }
+  student: StudentInfo;
 }
 
-const AttendanceTab: React.FC<AttendanceTabProps> = ({ sessionId, classId }) => {
+interface AttendanceStatus {
+  enrollmentId: string;
+  isPresent: boolean;
+}
+
+const AttendanceTab: React.FC = () => {
+  const { id: sessionId } = useParams();
+  const [attendanceStatuses, setAttendanceStatuses] = useState<AttendanceStatus[]>([]);
+  const enrollments = useQuery(api.enrollments.getEnrollmentsWithStudents);
   const [isLoading, setIsLoading] = useState(true);
-  const [attendanceData, setAttendanceData] = useState<AttendanceData[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
-    if (sessionId) {
-      fetchAttendanceData();
-    }
-  }, [sessionId]);
-
-  const fetchAttendanceData = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Fetch attendance records
-      const attendanceRecords = await attendanceService.getByTeachingSession(sessionId || '');
-      
-      if (!attendanceRecords.length) {
-        setAttendanceData([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Get all enrollment IDs from attendance records
-      const enrollmentIds = attendanceRecords.map(record => record.enrollment_id);
-      
-      // Fetch enrollments with student details
-      const { data: enrollmentsData, error: enrollmentsError } = await supabase
-        .from('enrollments')
-        .select(`
-          id,
-          hoc_sinh_id,
-          students:hoc_sinh_id (
-            id,
-            ten_hoc_sinh,
-            hinh_anh_hoc_sinh
-          )
-        `)
-        .in('id', enrollmentIds);
-      
-      if (enrollmentsError) throw enrollmentsError;
-      
-      // Process and format attendance data
-      const formattedData: AttendanceData[] = attendanceRecords.map(attendance => {
-        const enrollment = enrollmentsData?.find(e => e.id === attendance.enrollment_id) as EnrollmentWithStudent | undefined;
-        
+    if (enrollments) {
+      // Process the enrollment data to match the expected structure
+      const processedStatuses = enrollments.map(enrollment => {
+        const processedEnrollment = processEnrollmentData(enrollment);
         return {
-          id: attendance.id,
-          studentId: enrollment?.students?.id || '',
-          name: enrollment?.students?.ten_hoc_sinh || 'Học sinh không xác định',
-          image: enrollment?.students?.hinh_anh_hoc_sinh || undefined,
-          status: attendance.status,
-          time: attendance.created_at ? format(new Date(attendance.created_at), 'HH:mm') : '-',
-          notes: attendance.ghi_chu || '',
-          lateMinutes: attendance.thoi_gian_tre
+          enrollmentId: processedEnrollment.id,
+          isPresent: false // Default to absent
         };
       });
-      
-      setAttendanceData(formattedData);
+      setAttendanceStatuses(processedStatuses);
+      setIsLoading(false);
+    }
+  }, [enrollments]);
+
+  const [markAttendance, { pending: isMarkingAttendance }] = useMutation(api.teachingSessions.markAttendance);
+
+  const toggleAttendance = (enrollmentId: string) => {
+    setAttendanceStatuses(prevStatuses =>
+      prevStatuses.map(status =>
+        status.enrollmentId === enrollmentId ? { ...status, isPresent: !status.isPresent } : status
+      )
+    );
+  };
+
+  const saveAttendance = async () => {
+    setIsLoading(true);
+    try {
+      if (sessionId) {
+        await markAttendance({
+          session_id: sessionId,
+          attendanceData: attendanceStatuses.map(status => ({
+            enrollment_id: status.enrollmentId,
+            is_present: status.isPresent,
+          })),
+        });
+        toast.success("Điểm danh thành công!");
+      } else {
+        toast.error("Không tìm thấy ID buổi học.");
+      }
     } catch (error) {
-      console.error('Error fetching attendance data:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải dữ liệu điểm danh.',
-        variant: 'destructive'
-      });
+      console.error("Lỗi khi lưu điểm danh:", error);
+      toast.error("Không thể lưu điểm danh. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getAttendanceStatus = (status: string) => {
-    switch (status) {
-      case 'present':
-        return <Badge variant="success">Có mặt</Badge>;
-      case 'late':
-        return <Badge variant="warning">Đi muộn</Badge>;
-      case 'absent':
-        return <Badge variant="destructive">Vắng mặt</Badge>;
-      case 'pending':
-        return <Badge variant="outline">Chưa điểm danh</Badge>;
-      default:
-        return <Badge variant="outline">Chưa điểm danh</Badge>;
+  // Fix the type conversion in the component where the error occurs
+  // Find and replace the code that's causing the error with this:
+  const processEnrollmentData = (enrollmentData: any): EnrollmentWithStudent => {
+    if (!enrollmentData) {
+      return {
+        id: '',
+        hoc_sinh_id: '',
+        student: { id: '', ten_hoc_sinh: '' }
+      };
     }
+    
+    // Extract the student data properly
+    const studentData = Array.isArray(enrollmentData.students) && enrollmentData.students.length > 0
+      ? enrollmentData.students[0]  // Take the first student if it's an array
+      : enrollmentData.student || { id: '', ten_hoc_sinh: '' };
+    
+    return {
+      id: enrollmentData.id,
+      hoc_sinh_id: enrollmentData.hoc_sinh_id,
+      student: {
+        id: studentData.id,
+        ten_hoc_sinh: studentData.ten_hoc_sinh,
+        hinh_anh_hoc_sinh: studentData.hinh_anh_hoc_sinh
+      }
+    };
   };
-
-  const handleAttendanceDialogClose = () => {
-    setIsDialogOpen(false);
-    fetchAttendanceData(); // Refresh data after dialog closes
-  };
-
-  const handleEnrollmentComplete = async () => {
-    setIsEnrollDialogOpen(false);
-    toast({
-      title: 'Thành công',
-      description: 'Đã thêm học sinh vào lớp',
-    });
-    // Refresh attendance data after new enrollment
-    await fetchAttendanceData();
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Điểm danh</CardTitle>
-        </CardHeader>
-        <CardContent className="flex justify-center items-center h-[200px]">
-          <Spinner size="lg" />
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Điểm danh</CardTitle>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsEnrollDialogOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" /> Thêm học sinh
-          </Button>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            Điểm danh
-          </Button>
+    <div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-40">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Đang tải danh sách học sinh...
         </div>
-      </CardHeader>
-      <CardContent>
-        {attendanceData.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Học sinh</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead>Thời gian</TableHead>
-                <TableHead>Ghi chú</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {attendanceData.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {record.image ? (
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={record.image} alt={record.name} />
-                          <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
-                        </Avatar>
-                      )}
-                      <span>{record.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getAttendanceStatus(record.status)}
-                    {record.status === 'late' && record.lateMinutes && (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {record.lateMinutes} phút
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {record.time !== '-' && (
-                      <div className="flex items-center text-sm">
-                        <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
-                        <span>{record.time}</span>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {record.notes && (
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Info className="h-3 w-3 mr-1" />
-                        <span>{record.notes}</span>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground">
-            <AlertCircle className="h-10 w-10 mb-2 opacity-50" />
-            <p>Chưa có dữ liệu điểm danh cho buổi học này</p>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDialogOpen(true)}
-              className="mt-4"
-            >
-              Điểm danh ngay
-            </Button>
-          </div>
-        )}
-      </CardContent>
-      
-      {isDialogOpen && (
-        <AttendanceDialog
-          isOpen={isDialogOpen}
-          onClose={handleAttendanceDialogClose}
-          sessionId={sessionId || ''}
-          classId={classId}
-        />
-      )}
+      ) : (
+        <div className="space-y-4">
+          {enrollments?.map((enrollment) => {
+            const processedEnrollment = processEnrollmentData(enrollment);
+            const attendanceStatus = attendanceStatuses.find(status => status.enrollmentId === processedEnrollment.id);
+            const isPresent = attendanceStatus ? attendanceStatus.isPresent : false;
 
-      <Dialog open={isEnrollDialogOpen} onOpenChange={setIsEnrollDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Thêm học sinh vào lớp</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            {classId ? (
-              <EnrollStudentButton
-                studentId=""
-                onEnrollmentCreated={handleEnrollmentComplete}
-                classId={classId}
-              />
+            return (
+              <div key={processedEnrollment.id} className="flex items-center justify-between p-2 border rounded-md">
+                <div>{processedEnrollment.student.ten_hoc_sinh}</div>
+                <Checkbox
+                  checked={isPresent}
+                  onCheckedChange={() => toggleAttendance(processedEnrollment.id)}
+                  disabled={isLoading || isMarkingAttendance}
+                />
+              </div>
+            );
+          })}
+          <button
+            onClick={saveAttendance}
+            disabled={isLoading || isMarkingAttendance}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            {isMarkingAttendance ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang lưu...
+              </>
             ) : (
-              <p className="text-center text-muted-foreground">
-                Không thể thêm học sinh vì không có thông tin lớp học
-              </p>
+              "Lưu Điểm Danh"
             )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </Card>
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -162,6 +162,7 @@ export const adminLinks: NavLink[] = [
 
 export const primaryLinks = [
   { name: 'Học sinh', href: '/students', icon: <Users className="w-5 h-5" /> },
+  { name: 'Tuyển sinh', href: '/admissions', icon: <FolderInput className="w-5 h-5" /> },
   { name: 'Nhân viên', href: '/employees', icon: <BriefcaseIcon className="w-5 h-5" /> },
   { name: 'Lớp học', href: '/classes', icon: <School className="w-5 h-5" /> },
   { name: 'Buổi học', href: '/teaching-sessions', icon: <Calendar className="w-5 h-5" /> },
