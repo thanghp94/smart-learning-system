@@ -242,16 +242,16 @@ const MonthlyAttendanceView = () => {
                     {employee.employee_name}
                   </TableCell>
                   <TableCell className="text-center min-w-[150px]">
-                    <div className="text-xs space-y-1">
-                      <div className="text-green-600">Có mặt: {employee.summary.present}</div>
-                      <div className="text-yellow-600">Muộn: {employee.summary.late}</div>
-                      <div className="text-red-600">Vắng: {employee.summary.absent}</div>
+                    <div className="text-xs flex gap-2 justify-center items-center">
+                      <span className="text-green-600">Có mặt: {employee.summary.present}</span>
+                      <span className="text-yellow-600">Muộn: {employee.summary.late}</span>
+                      <span className="text-red-600">Vắng: {employee.summary.absent}</span>
                     </div>
                   </TableCell>
                   {daysInMonth.map(day => {
                     const record = employee.records[day];
                     return (
-                      <TableCell key={day} className="text-center p-2">
+                      <TableCell key={day} className="text-center p-1">
                         {record ? getStatusBadge(record.status) : <span className="text-gray-300">-</span>}
                       </TableCell>
                     );

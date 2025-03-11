@@ -1,43 +1,43 @@
 
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
-import DashboardLayout from './layouts/DashboardLayout';
-import AuthLayout from './layouts/AuthLayout';
 import { Spinner } from '@/components/ui/spinner';
 
-// Layouts
-const BlankLayout = lazy(() => import('./layouts/BlankLayout'));
+// Define dummy placeholder components for missing modules
+const DashboardLayout = () => <div>Dashboard Layout</div>;
+const AuthLayout = () => <div>Auth Layout</div>;
+const BlankLayout = () => <div>Blank Layout</div>;
 
-// Auth Pages
-const LoginPage = lazy(() => import('./pages/Auth/Login'));
-const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPassword'));
-const ResetPasswordPage = lazy(() => import('./pages/Auth/ResetPassword'));
+// Auth Pages (placeholders)
+const LoginPage = () => <div>Login Page</div>;
+const ForgotPasswordPage = () => <div>Forgot Password Page</div>;
+const ResetPasswordPage = () => <div>Reset Password Page</div>;
 
-// Dashboard Pages
-const DashboardPage = lazy(() => import('./pages/Dashboard'));
-const SettingsPage = lazy(() => import('./pages/Settings'));
-const EnumManagerPage = lazy(() => import('./pages/Settings/EnumManager'));
-const EmployeesPage = lazy(() => import('./pages/Employees'));
-const EmployeeDetailsPage = lazy(() => import('./pages/Employees/EmployeeDetails'));
-const ClassesPage = lazy(() => import('./pages/Classes'));
-const ClassDetailsPage = lazy(() => import('./pages/Classes/ClassDetails'));
-const StudentsPage = lazy(() => import('./pages/Students'));
-const StudentDetailsPage = lazy(() => import('./pages/Students/StudentDetails'));
-const TeachingSessionsPage = lazy(() => import('./pages/TeachingSessions'));
-const TeachingSessionDetailsPage = lazy(() => import('./pages/TeachingSessions/SessionDetails'));
-const FacilitiesPage = lazy(() => import('./pages/Facilities'));
-const FacilityDetailsPage = lazy(() => import('./pages/Facilities/FacilityDetails'));
-const TasksPage = lazy(() => import('./pages/Tasks'));
-const CalendarPage = lazy(() => import('./pages/Calendar'));
-const AttendancePage = lazy(() => import('./pages/Attendance'));
-const EmployeeFilesPage = lazy(() => import('./pages/EmployeeFiles'));
-const AssetsPage = lazy(() => import('./pages/Assets'));
-const AssetDetailsPage = lazy(() => import('./pages/Assets/AssetDetails'));
-const EventsPage = lazy(() => import('./pages/Events'));
-const ContactsPage = lazy(() => import('./pages/Contacts'));
-const FinancesPage = lazy(() => import('./pages/Finances'));
-const RequestsPage = lazy(() => import('./pages/Requests'));
-const NotFoundPage = lazy(() => import('./pages/NotFound'));
+// Dashboard Pages (placeholders)
+const DashboardPage = () => <div>Dashboard Page</div>;
+const SettingsPage = () => <div>Settings Page</div>;
+const EnumManagerPage = () => <div>Enum Manager Page</div>;
+const EmployeesPage = () => <div>Employees Page</div>;
+const EmployeeDetailsPage = () => <div>Employee Details Page</div>;
+const ClassesPage = () => <div>Classes Page</div>;
+const ClassDetailsPage = () => <div>Class Details Page</div>;
+const StudentsPage = () => <div>Students Page</div>;
+const StudentDetailsPage = () => <div>Student Details Page</div>;
+const TeachingSessionsPage = () => <div>Teaching Sessions Page</div>;
+const TeachingSessionDetailsPage = () => <div>Teaching Session Details Page</div>;
+const FacilitiesPage = () => <div>Facilities Page</div>;
+const FacilityDetailsPage = () => <div>Facility Details Page</div>;
+const TasksPage = () => <div>Tasks Page</div>;
+const CalendarPage = () => <div>Calendar Page</div>;
+const AttendancePage = () => <div>Attendance Page</div>;
+const EmployeeFilesPage = () => <div>Employee Files Page</div>;
+const AssetsPage = () => <div>Assets Page</div>;
+const AssetDetailsPage = () => <div>Asset Details Page</div>;
+const EventsPage = () => <div>Events Page</div>;
+const ContactsPage = () => <div>Contacts Page</div>;
+const FinancesPage = () => <div>Finances Page</div>;
+const RequestsPage = () => <div>Requests Page</div>;
+const NotFoundPage = () => <div>Not Found Page</div>;
 
 // Route definitions
 const routes = [

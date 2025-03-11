@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
+import { Spinner } from '@/components/ui/spinner';
 
 interface EmployeeDetailProps {
   employeeId: string;
@@ -39,9 +40,14 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         const empData = await employeeService.getById(employeeId);
         setEmployee(empData);
         
-        // Fetch related tasks
-        const tasksData = await taskService.getByEmployeeId(employeeId);
-        setTasks(tasksData);
+        // Fetch related tasks - handle error if "nguoi_thuc_hien" column doesn't exist
+        try {
+          const tasksData = await taskService.getByEmployeeId(employeeId);
+          setTasks(tasksData);
+        } catch (error) {
+          console.error('Error fetching employee tasks:', error);
+          setTasks([]);
+        }
         
         // Fetch attendance records
         const attendanceData = await employeeClockInService.getByEmployee(employeeId);
@@ -234,11 +240,25 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
   ];
 
   if (loading) {
-    return <div>Đang tải...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Spinner />
+      </div>
+    );
   }
 
   if (!employee) {
-    return <div>Không tìm thấy thông tin nhân viên</div>;
+    return (
+      <Card className="p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-medium">Không tìm thấy thông tin nhân viên</h2>
+          <p className="text-muted-foreground mt-2">ID không tồn tại hoặc đã bị xóa</p>
+          <Button className="mt-4" onClick={() => navigate('/employees')}>
+            Quay lại danh sách
+          </Button>
+        </div>
+      </Card>
+    );
   }
 
   return (
