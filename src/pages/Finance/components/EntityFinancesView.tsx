@@ -28,7 +28,7 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, ent
       if (entityId && entityType) {
         data = await financeService.getByEntity(entityType, entityId);
       } else if (entityType) {
-        data = await financeService.getByEntityType(entityType);
+        data = await financeService.getByEntity(entityType, '');
       } else {
         data = await financeService.getAll();
       }

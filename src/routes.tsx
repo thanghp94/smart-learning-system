@@ -1,144 +1,62 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-
-// Placeholder components cho các layout
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-const AuthLayout = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-const BlankLayout = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-
-// Placeholder components cho các trang
-const Login = () => <div>Login Page</div>;
-const ForgotPassword = () => <div>Forgot Password Page</div>;
-const ResetPassword = () => <div>Reset Password Page</div>;
-const Dashboard = () => <div>Dashboard Page</div>;
-const EmployeeDetails = () => <div>Employee Details Page</div>;
-const ClassDetails = () => <div>Class Details Page</div>;
-const StudentDetails = () => <div>Student Details Page</div>;
-const SessionDetails = () => <div>Session Details Page</div>;
-const FacilityDetails = () => <div>Facility Details Page</div>;
-const Calendar = () => <div>Calendar Page</div>;
-const EmployeeFiles = () => <div>Employee Files Page</div>;
-const AssetDetails = () => <div>Asset Details Page</div>;
-const Finances = () => <div>Finances Page</div>;
-
-// Nhập các trang thực tế từ codebase
-import Students from './pages/Students';
-import Employees from './pages/Employees';
-import Classes from './pages/Classes';
-import Facilities from './pages/Facilities';
-import AITools from './pages/AITools';
-import AICommands from './pages/AICommands';
-import DatabaseSchema from './pages/DatabaseSchema';
-import NotFound from './pages/NotFound';
+import { Home } from './pages/Home';
+import { About } from './pages/About';
+import { Contact } from './pages/Contact';
+import { Pricing } from './pages/Pricing';
+import { Terms } from './pages/Terms';
+import { Privacy } from './pages/Privacy';
+import { Classes } from './pages/Classes';
+import { ClassDetail } from './pages/Classes/ClassDetail';
+import { Admissions } from './pages/Admissions';
+import { Tasks } from './pages/Tasks';
+import { Files } from './pages/Files';
+import { Finance } from './pages/Finance';
+import { Employee } from './pages/Employee';
+import { ContactList } from './pages/ContactList';
+import { EmployeeDetail } from './pages/Employee/EmployeeDetail';
+import { TeachingSchedules } from './pages/TeachingSchedules';
+import { TeachingScheduleDetail } from './pages/TeachingSchedules/TeachingScheduleDetail';
+import { TeachingSession } from './pages/TeachingSessions';
+import { TeachingSessionDetail } from './pages/TeachingSessions/TeachingSessionDetail';
+import { Student } from './pages/Student';
+import { StudentDetail } from './pages/Student/StudentDetail';
+import { Facility } from './pages/Facility';
+import { FacilityDetail } from './pages/Facility/FacilityDetail';
+import { NotFound } from './pages/NotFound';
+import { Redirect } from './pages/Redirect';
+import { Calendar } from './pages/Calendar';
+import { EmployeeDashboard } from '@/pages/EmployeeDashboard';
 
 const routes = [
-  // Auth routes
+  { path: '/', element: <Home />, key: 1 },
+  { path: '/redirect', element: <Redirect />, key: 2 },
+  { path: '/about', element: <About />, key: 3 },
+  { path: '/contact', element: <Contact />, key: 4 },
+  { path: '/pricing', element: <Pricing />, key: 5 },
+  { path: '/terms', element: <Terms />, key: 6 },
+  { path: '/privacy', element: <Privacy />, key: 7 },
+  { path: '/classes', element: <Classes />, key: 8 },
+  { path: '/classes/:id', element: <ClassDetail />, key: 9 },
+  { path: '/admissions', element: <Admissions />, key: 10 },
+  { path: '/tasks', element: <Tasks />, key: 11 },
+  { path: '/files', element: <Files />, key: 12 },
+  { path: '/finance', element: <Finance />, key: 13 },
+  { path: '/employees', element: <Employee />, key: 14 },
+  { path: '/employees/:id', element: <EmployeeDetail />, key: 15 },
+  { path: '/teaching-schedules', element: <TeachingSchedules />, key: 16 },
+  { path: '/teaching-schedules/:id', element: <TeachingScheduleDetail />, key: 17 },
+  { path: '/teaching-sessions', element: <TeachingSession />, key: 18 },
+  { path: '/teaching-sessions/:id', element: <TeachingSessionDetail />, key: 19 },
+  { path: '/students', element: <Student />, key: 20 },
+  { path: '/students/:id', element: <StudentDetail />, key: 21 },
+  { path: '/facilities', element: <Facility />, key: 22 },
+  { path: '/facilities/:id', element: <FacilityDetail />, key: 23 },
+  { path: '/contacts', element: <ContactList />, key: 24 },
+  { path: '/calendar', element: <Calendar />, key: 25 },
   {
-    path: "/login",
-    element: <Login />,
+    path: '/employee-dashboard',
+    element: <EmployeeDashboard />,
   },
-  {
-    path: "/forgot-password",
-    element: <ForgotPassword />,
-  },
-  {
-    path: "/reset-password",
-    element: <ResetPassword />,
-  },
-
-  // Dashboard routes
-  {
-    path: "/",
-    element: <DashboardLayout><div /></DashboardLayout>,
-    children: [
-      {
-        index: true,
-        element: <Dashboard />,
-      },
-      {
-        path: "employees",
-        element: <Employees />,
-      },
-      {
-        path: "employees/:id",
-        element: <EmployeeDetails />,
-      },
-      {
-        path: "classes",
-        element: <Classes />,
-      },
-      {
-        path: "classes/:id",
-        element: <ClassDetails />,
-      },
-      {
-        path: "students",
-        element: <Students />,
-      },
-      {
-        path: "students/:id",
-        element: <StudentDetails />,
-      },
-      {
-        path: "teaching-sessions/:id",
-        element: <SessionDetails />,
-      },
-      {
-        path: "facilities",
-        element: <Facilities />,
-      },
-      {
-        path: "facilities/:id",
-        element: <FacilityDetails />,
-      },
-      {
-        path: "calendar",
-        element: <Calendar />,
-      },
-      {
-        path: "employee-files",
-        element: <EmployeeFiles />,
-      },
-      {
-        path: "assets/:id",
-        element: <AssetDetails />,
-      },
-      {
-        path: "finances",
-        element: <Finances />,
-      },
-      {
-        path: "ai-tools",
-        element: <AITools />,
-      },
-      {
-        path: "ai-commands",
-        element: <AICommands />,
-      },
-      {
-        path: "database-schema",
-        element: <DatabaseSchema />,
-      },
-      {
-        path: "/employee-dashboard",
-        element: <EmployeeDashboard />,
-      },
-    ],
-  },
-
-  // Error routes
-  {
-    path: "*",
-    element: <BlankLayout><NotFound /></BlankLayout>,
-  },
+  { path: '*', element: <NotFound />, key: 26 },
 ];
 
-export default function AppRoutes() {
-  return (
-    <Routes>
-      {routes.map((route, index) => (
-        <Route key={index} {...route} />
-      ))}
-    </Routes>
-  );
-}
+export default routes;

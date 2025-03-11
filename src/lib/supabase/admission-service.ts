@@ -1,5 +1,5 @@
 import { supabase } from './client';
-import { Admission } from '@/lib/types';
+import { Admission } from '../types/admission';
 
 export const admissionService = {
   getAll: async () => {
