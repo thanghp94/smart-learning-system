@@ -1,263 +1,174 @@
 
-import { TeachingSession } from '../types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
+import { TeachingSession } from '../types';
 
 export const teachingSessionService = {
-  getAll: () => fetchAll<TeachingSession>('teaching_sessions'),
-  getById: (id: string) => fetchById<TeachingSession>('teaching_sessions', id),
-  
-  create: async (session: Partial<TeachingSession>) => {
-    try {
-      console.log("Creating teaching session with data:", session);
-      
-      // Validate required fields
-      if (!session.lop_chi_tiet_id || !session.session_id || !session.giao_vien || !session.ngay_hoc) {
-        throw new Error("Missing required fields for teaching session");
-      }
-      
-      // Remove trung_binh field as it's a generated column
-      const { trung_binh, ...sessionData } = session;
-      
-      // Handle session_id
-      let finalSessionId = sessionData.session_id;
-      
-      // Check if session_id is a valid UUID
-      if (typeof finalSessionId === 'string' && 
-          !finalSessionId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        console.log("Converting non-UUID session_id to UUID");
-        try {
-          // Try to fetch the session by buoi_hoc_so from sessions table
-          const { data: sessionResult } = await supabase
-            .from('sessions')
-            .select('id')
-            .eq('buoi_hoc_so', finalSessionId)
-            .single();
-            
-          if (sessionResult && sessionResult.id) {
-            // If found, use the existing session ID
-            finalSessionId = sessionResult.id;
-          } else {
-            // If not found, generate a new session
-            const { data: newSession } = await supabase
-              .from('sessions')
-              .insert({
-                buoi_hoc_so: finalSessionId.toString(),
-                noi_dung_bai_hoc: 'Auto-generated session',
-                unit_id: 'AUTO'
-              })
-              .select()
-              .single();
-              
-            if (newSession) {
-              finalSessionId = newSession.id;
-            } else {
-              throw new Error("Could not create a new session");
-            }
-          }
-        } catch (error) {
-          console.error("Error handling session_id:", error);
-          throw new Error("Invalid session_id format and could not generate a new one");
-        }
-      }
-      
-      // Convert numeric values to strings before saving to match the database schema
-      const formattedSession: Partial<TeachingSession> = {
-        ...sessionData,
-        session_id: finalSessionId,
-        loai_bai_hoc: sessionData.loai_bai_hoc || 'Standard',
-        nhan_xet_1: sessionData.nhan_xet_1 !== undefined && sessionData.nhan_xet_1 !== null ? 
-          String(sessionData.nhan_xet_1) : null,
-        nhan_xet_2: sessionData.nhan_xet_2 !== undefined && sessionData.nhan_xet_2 !== null ? 
-          String(sessionData.nhan_xet_2) : null,
-        nhan_xet_3: sessionData.nhan_xet_3 !== undefined && sessionData.nhan_xet_3 !== null ? 
-          String(sessionData.nhan_xet_3) : null,
-        nhan_xet_4: sessionData.nhan_xet_4 !== undefined && sessionData.nhan_xet_4 !== null ? 
-          String(sessionData.nhan_xet_4) : null,
-        nhan_xet_5: sessionData.nhan_xet_5 !== undefined && sessionData.nhan_xet_5 !== null ? 
-          String(sessionData.nhan_xet_5) : null,
-        nhan_xet_6: sessionData.nhan_xet_6 !== undefined && sessionData.nhan_xet_6 !== null ? 
-          String(sessionData.nhan_xet_6) : null,
-      };
-      
-      // Make a direct insert to get better error visibility
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .insert(formattedSession)
-        .select();
-      
-      if (error) {
-        console.error("Error in teachingSessionService.create:", error);
-        throw error;
-      }
-      
-      console.log("Successfully created teaching session:", data);
-      return data[0] as TeachingSession;
-    } catch (error) {
-      console.error("Exception in teachingSessionService.create:", error);
+  getAll: async (): Promise<TeachingSession[]> => {
+    const { data, error } = await supabase
+      .from('teaching_sessions')
+      .select('*')
+      .order('ngay_hoc', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching teaching sessions:', error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  getById: async (id: string): Promise<TeachingSession> => {
+    const { data, error } = await supabase
+      .from('teaching_sessions')
+      .select(`
+        *,
+        classes:lop_chi_tiet_id (
+          ten_lop,
+          ten_lop_full
+        ),
+        teachers:giao_vien (
+          ten_nhan_su
+        ),
+        assistants:tro_giang (
+          ten_nhan_su
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching teaching session:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  create: async (session: Partial<TeachingSession>): Promise<TeachingSession> => {
+    const { data, error } = await supabase
+      .from('teaching_sessions')
+      .insert(session)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating teaching session:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  update: async (id: string, updates: Partial<TeachingSession>): Promise<TeachingSession> => {
+    const { data, error } = await supabase
+      .from('teaching_sessions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating teaching session:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('teaching_sessions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting teaching session:', error);
       throw error;
     }
   },
-  
-  update: (id: string, updates: Partial<TeachingSession>) => {
-    try {
-      console.log("Updating teaching session with data:", updates);
-      
-      // Remove trung_binh field as it's a generated column
-      const { trung_binh, ...updateData } = updates;
-      
-      // Similar conversion for updates
-      const formattedUpdates: Partial<TeachingSession> = {
-        ...updateData,
-        // Ensure the field name matches the database column
-        loai_bai_hoc: updateData.loai_bai_hoc, // Using lowercase field name
-        nhan_xet_1: updateData.nhan_xet_1 !== undefined && updateData.nhan_xet_1 !== null ? 
-          String(updateData.nhan_xet_1) : updateData.nhan_xet_1,
-        nhan_xet_2: updateData.nhan_xet_2 !== undefined && updateData.nhan_xet_2 !== null ? 
-          String(updateData.nhan_xet_2) : updateData.nhan_xet_2,
-        nhan_xet_3: updateData.nhan_xet_3 !== undefined && updateData.nhan_xet_3 !== null ? 
-          String(updateData.nhan_xet_3) : updateData.nhan_xet_3,
-        nhan_xet_4: updateData.nhan_xet_4 !== undefined && updateData.nhan_xet_4 !== null ? 
-          String(updateData.nhan_xet_4) : updateData.nhan_xet_4,
-        nhan_xet_5: updateData.nhan_xet_5 !== undefined && updateData.nhan_xet_5 !== null ? 
-          String(updateData.nhan_xet_5) : updateData.nhan_xet_5,
-        nhan_xet_6: updateData.nhan_xet_6 !== undefined && updateData.nhan_xet_6 !== null ? 
-          String(updateData.nhan_xet_6) : updateData.nhan_xet_6,
-      };
-      
-      return update<TeachingSession>('teaching_sessions', id, formattedUpdates);
-    } catch (error) {
-      console.error("Error updating teaching session:", error);
-      throw error;
-    }
-  },
-  
-  delete: (id: string) => remove('teaching_sessions', id),
-  
+
   getByClass: async (classId: string): Promise<TeachingSession[]> => {
     const { data, error } = await supabase
       .from('teaching_sessions')
       .select('*')
-      .eq('lop_chi_tiet_id', classId);
-    
+      .eq('lop_chi_tiet_id', classId)
+      .order('ngay_hoc', { ascending: false });
+
     if (error) {
       console.error('Error fetching teaching sessions by class:', error);
       throw error;
     }
-    
-    return data as TeachingSession[];
+
+    return data || [];
   },
-  
-  getWithAvgScore: async (): Promise<(TeachingSession & { avg_score: number })[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('teaching_sessions_with_avg_score')
-        .select('*');
-      
-      if (error) {
-        console.error('Error fetching sessions with average score:', error);
-        throw error;
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error('Exception in getWithAvgScore:', error);
-      throw error;
-    }
-  },
-  
+
   getByTeacher: async (teacherId: string): Promise<TeachingSession[]> => {
     const { data, error } = await supabase
       .from('teaching_sessions')
       .select('*')
-      .eq('giao_vien', teacherId);
-    
+      .eq('giao_vien', teacherId)
+      .order('ngay_hoc', { ascending: false });
+
     if (error) {
       console.error('Error fetching teaching sessions by teacher:', error);
       throw error;
     }
-    
-    return data as TeachingSession[];
+
+    return data || [];
   },
   
+  getByTeacherAndDate: async (teacherId: string, date: string): Promise<TeachingSession[]> => {
+    const { data, error } = await supabase
+      .from('teaching_sessions_with_details')
+      .select('*')
+      .eq('giao_vien', teacherId)
+      .eq('ngay_hoc', date)
+      .order('thoi_gian_bat_dau', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching teaching sessions by teacher and date:', error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
   getByDate: async (date: string): Promise<TeachingSession[]> => {
     const { data, error } = await supabase
       .from('teaching_sessions')
       .select('*')
       .eq('ngay_hoc', date)
       .order('thoi_gian_bat_dau', { ascending: true });
-    
+
     if (error) {
       console.error('Error fetching teaching sessions by date:', error);
       throw error;
     }
-    
-    return data as TeachingSession[];
+
+    return data || [];
   },
-  
-  getByFacility: async (facilityId: string): Promise<TeachingSession[]> => {
-    const { data, error } = await supabase
-      .from('teaching_sessions')
-      .select('*')
-      .eq('co_so_id', facilityId);
-    
-    if (error) {
-      console.error('Error fetching teaching sessions by facility:', error);
-      throw error;
-    }
-    
-    return data as TeachingSession[];
-  },
-  
-  getByDateAndFacility: async (date: string, facilityId: string): Promise<TeachingSession[]> => {
-    const { data, error } = await supabase
-      .from('teaching_sessions')
-      .select('*')
-      .eq('ngay_hoc', date)
-      .eq('co_so_id', facilityId)
-      .order('thoi_gian_bat_dau', { ascending: true });
-    
-    if (error) {
-      console.error('Error fetching teaching sessions by date and facility:', error);
-      throw error;
-    }
-    
-    return data as TeachingSession[];
-  },
-  
+
   getByDateRange: async (startDate: string, endDate: string): Promise<TeachingSession[]> => {
     const { data, error } = await supabase
       .from('teaching_sessions')
       .select('*')
       .gte('ngay_hoc', startDate)
       .lte('ngay_hoc', endDate)
-      .order('thoi_gian_bat_dau', { ascending: true });
-    
+      .order('ngay_hoc', { ascending: true });
+
     if (error) {
       console.error('Error fetching teaching sessions by date range:', error);
       throw error;
     }
-    
-    return data as TeachingSession[];
+
+    return data || [];
   },
-  
-  calculateAverageScore: (session: TeachingSession): number => {
-    const scores = [
-      session.nhan_xet_1, 
-      session.nhan_xet_2, 
-      session.nhan_xet_3,
-      session.nhan_xet_4,
-      session.nhan_xet_5,
-      session.nhan_xet_6
-    ].filter(score => score !== null && score !== undefined && !isNaN(Number(score)));
-    
-    if (scores.length === 0) return 0;
-    
-    const sum = scores.reduce((acc, score) => acc + Number(score), 0);
-    return sum / scores.length;
-  },
-  
-  complete: async (id: string): Promise<void> => {
-    await update<TeachingSession>('teaching_sessions', id, { trang_thai: 'completed' });
+
+  complete: async (id: string): Promise<TeachingSession> => {
+    return teachingSessionService.update(id, { 
+      updated_at: new Date().toISOString()
+    });
   }
 };
+
+export default teachingSessionService;

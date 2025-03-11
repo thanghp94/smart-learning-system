@@ -118,6 +118,80 @@ export const employeeClockInService = {
     }
 
     return data || [];
+  },
+  
+  // Get attendance records by employee
+  getByEmployee: async (employeeId: string): Promise<EmployeeClockInOut[]> => {
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select('*')
+      .eq('nhan_vien_id', employeeId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching employee attendance:', error);
+      throw error;
+    }
+
+    return data || [];
+  },
+  
+  // Get monthly attendance for an employee
+  getMonthlyAttendance: async (month: number, year: number): Promise<EmployeeClockInOut[]> => {
+    // Create the date range for the month
+    const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+    const endMonth = month === 12 ? 1 : month + 1;
+    const endYear = month === 12 ? year + 1 : year;
+    const endDate = `${endYear}-${endMonth.toString().padStart(2, '0')}-01`;
+    
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select('*, employees!inner(ten_nhan_su)')
+      .gte('ngay', startDate)
+      .lt('ngay', endDate)
+      .order('ngay', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching monthly attendance:', error);
+      throw error;
+    }
+
+    return data || [];
+  },
+  
+  // Get daily report
+  getDailyReport: async (date: string): Promise<any[]> => {
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select(`
+        *,
+        employees!inner(
+          id,
+          ten_nhan_su,
+          hinh_anh,
+          chuc_danh,
+          bo_phan
+        )
+      `)
+      .eq('ngay', date)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching daily attendance report:', error);
+      throw error;
+    }
+
+    // Transform data to include employee details
+    const formattedData = data.map(record => ({
+      ...record,
+      employee_id: record.nhan_vien_id,
+      employee_name: record.employees?.ten_nhan_su || 'Unknown',
+      employee_image: record.employees?.hinh_anh || null,
+      position: record.employees?.chuc_danh || 'N/A',
+      department: record.employees?.bo_phan || 'N/A',
+    }));
+
+    return formattedData || [];
   }
 };
 

@@ -1,114 +1,130 @@
 
-import { Task } from '../types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
+import { Task } from '../types';
 
-class TaskService {
-  getAll = () => fetchAll<Task>('tasks');
-  getById = (id: string) => fetchById<Task>('tasks', id);
-  create = (task: Partial<Task>) => insert<Task>('tasks', task);
-  update = (id: string, updates: Partial<Task>) => update<Task>('tasks', id, updates);
-  delete = (id: string) => remove('tasks', id);
-  
-  // Method for setting a task as complete
-  complete = async (id: string) => {
-    return this.update(id, {
-      trang_thai: 'completed',
-      ngay_hoan_thanh: new Date().toISOString().split('T')[0]
-    });
-  };
+export const taskService = {
+  getAll: async (): Promise<Task[]> => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        employees:nguoi_phu_trach (
+          ten_nhan_su
+        )
+      `)
+      .order('created_at', { ascending: false });
 
-  // Get tasks by assignee
-  getByAssignee = async (employeeId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('nguoi_phu_trach', employeeId)
-        .order('ngay_den_han', { ascending: true });
-      
-      if (error) throw error;
-      return data as Task[];
-    } catch (error) {
+    if (error) {
+      console.error('Error fetching tasks:', error);
+      throw error;
+    }
+
+    // Transform data to include employee name
+    return (data || []).map(task => ({
+      ...task,
+      ten_nguoi_phu_trach: task.employees?.ten_nhan_su || null
+    }));
+  },
+
+  getById: async (id: string): Promise<Task> => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        employees:nguoi_phu_trach (
+          ten_nhan_su
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching task:', error);
+      throw error;
+    }
+
+    return {
+      ...data,
+      ten_nguoi_phu_trach: data.employees?.ten_nhan_su || null
+    };
+  },
+
+  getByAssignee: async (employeeId: string): Promise<Task[]> => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        employees:nguoi_phu_trach (
+          ten_nhan_su
+        )
+      `)
+      .eq('nguoi_phu_trach', employeeId)
+      .order('ngay_den_han', { ascending: true });
+
+    if (error) {
       console.error('Error fetching tasks by assignee:', error);
       throw error;
     }
-  };
 
-  // Get tasks by entity type and ID (e.g., for a specific student, class, etc.)
-  getByEntityType = async (entityType: string, entityId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('doi_tuong', entityType)
-        .eq('doi_tuong_id', entityId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Task[];
-    } catch (error) {
-      console.error('Error fetching tasks by entity:', error);
+    // Transform data to include employee name
+    return (data || []).map(task => ({
+      ...task,
+      ten_nguoi_phu_trach: task.employees?.ten_nhan_su || null
+    }));
+  },
+
+  create: async (task: Partial<Task>): Promise<Task> => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        ...task,
+        tg_tao: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating task:', error);
       throw error;
     }
-  };
 
-  // Get overdue tasks
-  getOverdueTasks = async () => {
-    const today = new Date().toISOString().split('T')[0];
-    
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .lt('ngay_den_han', today)
-        .not('trang_thai', 'eq', 'completed')
-        .order('ngay_den_han', { ascending: true });
-      
-      if (error) throw error;
-      return data as Task[];
-    } catch (error) {
-      console.error('Error fetching overdue tasks:', error);
+    return data;
+  },
+
+  update: async (id: string, updates: Partial<Task>): Promise<Task> => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating task:', error);
       throw error;
     }
-  };
 
-  // Get tasks due today
-  getTasksDueToday = async () => {
-    const today = new Date().toISOString().split('T')[0];
-    
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('ngay_den_han', today)
-        .not('trang_thai', 'eq', 'completed')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Task[];
-    } catch (error) {
-      console.error('Error fetching tasks due today:', error);
+    return data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting task:', error);
       throw error;
     }
-  };
-  
-  // Get tasks by employee
-  getByEmployeeId = async (employeeId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('nguoi_phu_trach', employeeId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Task[];
-    } catch (error) {
-      console.error('Error fetching tasks by employee:', error);
-      throw error;
-    }
-  };
-}
+  },
 
-export const taskService = new TaskService();
+  complete: async (id: string): Promise<Task> => {
+    return taskService.update(id, {
+      trang_thai: 'completed',
+      ngay_hoan_thanh: new Date().toISOString().split('T')[0]
+    });
+  }
+};
+
+export default taskService;
