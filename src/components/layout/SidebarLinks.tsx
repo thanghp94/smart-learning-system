@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -230,15 +231,15 @@ export default function SidebarLinks() {
             <span>Trợ lý ra lệnh</span>
           </Link>
           <Link 
-            to="/ai-tools" 
+            to="/ai-tools/image-generator" 
             className={
               cn(
                 'flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
-                { 'bg-gray-100': useLocation().pathname === '/ai-tools' }
+                { 'bg-gray-100': useLocation().pathname === '/ai-tools/image-generator' }
               )
             }
           >
-            <Image className="mr-2 h-4 w-4" />
+            <ImageIcon className="mr-2 h-4 w-4" />
             <span>Tạo hình ảnh AI</span>
           </Link>
         </div>

@@ -1,110 +1,69 @@
-import { lazy } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Spinner } from '@/components/ui/spinner';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-// Define dummy placeholder components for missing modules
-const DashboardLayout = () => <div>Dashboard Layout</div>;
-const AuthLayout = () => <div>Auth Layout</div>;
-const BlankLayout = () => <div>Blank Layout</div>;
+// Placeholder components cho các layout
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+const AuthLayout = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+const BlankLayout = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
 
-// Auth Pages (placeholders)
-const LoginPage = () => <div>Login Page</div>;
-const ForgotPasswordPage = () => <div>Forgot Password Page</div>;
-const ResetPasswordPage = () => <div>Reset Password Page</div>;
+// Placeholder components cho các trang
+const Login = () => <div>Login Page</div>;
+const ForgotPassword = () => <div>Forgot Password Page</div>;
+const ResetPassword = () => <div>Reset Password Page</div>;
+const Dashboard = () => <div>Dashboard Page</div>;
+const EmployeeDetails = () => <div>Employee Details Page</div>;
+const ClassDetails = () => <div>Class Details Page</div>;
+const StudentDetails = () => <div>Student Details Page</div>;
+const SessionDetails = () => <div>Session Details Page</div>;
+const FacilityDetails = () => <div>Facility Details Page</div>;
+const Calendar = () => <div>Calendar Page</div>;
+const EmployeeFiles = () => <div>Employee Files Page</div>;
+const AssetDetails = () => <div>Asset Details Page</div>;
+const Finances = () => <div>Finances Page</div>;
 
-// Dashboard Pages (placeholders)
-const DashboardPage = () => <div>Dashboard Page</div>;
-const SettingsPage = () => <div>Settings Page</div>;
-const EnumManagerPage = () => <div>Enum Manager Page</div>;
-const EmployeesPage = () => <div>Employees Page</div>;
-const EmployeeDetailsPage = () => <div>Employee Details Page</div>;
-const ClassesPage = () => <div>Classes Page</div>;
-const ClassDetailsPage = () => <div>Class Details Page</div>;
-const StudentsPage = () => <div>Students Page</div>;
-const StudentDetailsPage = () => <div>Student Details Page</div>;
-const TeachingSessionsPage = () => <div>Teaching Sessions Page</div>;
-const TeachingSessionDetailsPage = () => <div>Teaching Session Details Page</div>;
-const FacilitiesPage = () => <div>Facilities Page</div>;
-const FacilityDetailsPage = () => <div>Facility Details Page</div>;
-const TasksPage = () => <div>Tasks Page</div>;
-const CalendarPage = () => <div>Calendar Page</div>;
-const AttendancePage = () => <div>Attendance Page</div>;
-const EmployeeFilesPage = () => <div>Employee Files Page</div>;
-const AssetsPage = () => <div>Assets Page</div>;
-const AssetDetailsPage = () => <div>Asset Details Page</div>;
-const EventsPage = () => <div>Events Page</div>;
-const ContactsPage = () => <div>Contacts Page</div>;
-const FinancesPage = () => <div>Finances Page</div>;
-const RequestsPage = () => <div>Requests Page</div>;
-const NotFoundPage = () => <div>Not Found Page</div>;
+// Nhập các trang thực tế từ codebase
+import Students from './pages/Students';
+import Employees from './pages/Employees';
+import Classes from './pages/Classes';
+import Facilities from './pages/Facilities';
+import AITools from './pages/AITools';
+import AICommands from './pages/AICommands';
+import DatabaseSchema from './pages/DatabaseSchema';
+import NotFound from './pages/NotFound';
 
-// Thêm component AICommandsPage
-const AICommandsPage = () => <div>AI Commands Page</div>;
-
-// Route definitions
-const routes = [
-  {
-    path: '/',
-    element: <DashboardLayout />,
-    children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: 'dashboard', element: <DashboardPage /> },
-      { path: 'settings', element: <SettingsPage /> },
-      { path: 'settings/enum-manager', element: <EnumManagerPage /> },
-      { path: 'employees', element: <EmployeesPage /> },
-      { path: 'employees/:id', element: <EmployeeDetailsPage /> },
-      { path: 'classes', element: <ClassesPage /> },
-      { path: 'classes/:id', element: <ClassDetailsPage /> },
-      { path: 'students', element: <StudentsPage /> },
-      { path: 'students/:id', element: <StudentDetailsPage /> },
-      { path: 'teaching-sessions', element: <TeachingSessionsPage /> },
-      { path: 'teaching-sessions/:id', element: <TeachingSessionDetailsPage /> },
-      { path: 'facilities', element: <FacilitiesPage /> },
-      { path: 'facilities/:id', element: <FacilityDetailsPage /> },
-      { path: 'tasks', element: <TasksPage /> },
-      { path: 'calendar', element: <CalendarPage /> },
-      { path: 'attendance', element: <AttendancePage /> },
-      { path: 'employee-files', element: <EmployeeFilesPage /> },
-      { path: 'assets', element: <AssetsPage /> },
-      { path: 'assets/:id', element: <AssetDetailsPage /> },
-      { path: 'events', element: <EventsPage /> },
-      { path: 'contacts', element: <ContactsPage /> },
-      { path: 'finances', element: <FinancesPage /> },
-      { path: 'requests', element: <RequestsPage /> },
-    ],
-  },
-  {
-    path: '/auth',
-    element: <AuthLayout />,
-    children: [
-      { path: 'login', element: <LoginPage /> },
-      { path: 'forgot-password', element: <ForgotPasswordPage /> },
-      { path: 'reset-password', element: <ResetPasswordPage /> },
-    ],
-  },
-  {
-    path: "/ai-commands",
-    element: (
-      <DashboardLayout>
-        <AICommandsPage />
-      </DashboardLayout>
-    ),
-  },
-  {
-    path: '*',
-    element: <BlankLayout />,
-    children: [
-      { path: '*', element: <NotFoundPage /> },
-    ],
-  },
-];
-
-export const getLoadingFallback = () => {
+export default function AppRoutes() {
   return (
-    <div className="h-screen w-screen flex items-center justify-center">
-      <Spinner size="lg" />
-    </div>
-  );
-};
+    <Routes>
+      {/* Auth routes */}
+      <Route element={<AuthLayout><div /></AuthLayout>}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+      </Route>
 
-export default routes;
+      {/* Dashboard routes */}
+      <Route path="/" element={<DashboardLayout><div /></DashboardLayout>}>
+        <Route index element={<Dashboard />} />
+        <Route path="employees" element={<Employees />} />
+        <Route path="employees/:id" element={<EmployeeDetails />} />
+        <Route path="classes" element={<Classes />} />
+        <Route path="classes/:id" element={<ClassDetails />} />
+        <Route path="students" element={<Students />} />
+        <Route path="students/:id" element={<StudentDetails />} />
+        <Route path="teaching-sessions/:id" element={<SessionDetails />} />
+        <Route path="facilities" element={<Facilities />} />
+        <Route path="facilities/:id" element={<FacilityDetails />} />
+        <Route path="calendar" element={<Calendar />} />
+        <Route path="employee-files" element={<EmployeeFiles />} />
+        <Route path="assets/:id" element={<AssetDetails />} />
+        <Route path="finances" element={<Finances />} />
+        <Route path="ai-tools" element={<AITools />} />
+        <Route path="ai-commands" element={<AICommands />} />
+        <Route path="database-schema" element={<DatabaseSchema />} />
+      </Route>
+
+      {/* Error routes */}
+      <Route path="*" element={<BlankLayout><NotFound /></BlankLayout>} />
+    </Routes>
+  );
+}
