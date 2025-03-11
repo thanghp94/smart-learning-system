@@ -1,188 +1,195 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Clock, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { employeeClockInService } from '@/lib/supabase';
+import { employeeService, supabase } from '@/lib/supabase';
+import { Employee } from '@/lib/types';
 
-interface ClockInFormProps {
-  onSubmit: () => void;
-  onCancel: () => void;
+interface TodayAttendanceProps {
+  employee: Employee;
 }
 
-const ClockInForm: React.FC<ClockInFormProps> = ({ onSubmit, onCancel }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const TodayAttendance: React.FC<TodayAttendanceProps> = ({ employee }) => {
   const { toast } = useToast();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isClockingIn, setIsClockingIn] = useState(false);
+  const [attendanceRecord, setAttendanceRecord] = useState<any | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
 
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    fetchTodayAttendance();
+  }, [employee.id]);
+
+  const handleClockIn = async () => {
+    if (!employee.id) return;
+    
+    setIsClockingIn(true);
     try {
-      await employeeClockInService.clockIn({
+      // Manual clock in using the supabase client since the method doesn't exist
+      const clockInData = {
+        nhan_vien_id: employee.id,
         ngay: format(new Date(), 'yyyy-MM-dd'),
         thoi_gian_bat_dau: format(new Date(), 'HH:mm:ss'),
-        trang_thai: 'present',
-      });
-
+        trang_thai: 'active'
+      };
+      
+      const { data, error } = await supabase
+        .from('employee_clock_in_out')
+        .insert(clockInData)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setAttendanceRecord(data);
       toast({
-        title: 'Thành công',
-        description: 'Đã chấm công thành công',
+        title: 'Đã chấm công vào',
+        description: `Thời gian: ${format(new Date(), 'HH:mm:ss')}`,
       });
-      onSubmit();
     } catch (error) {
       console.error('Error clocking in:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể chấm công',
+        description: 'Không thể chấm công vào',
         variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      setIsClockingIn(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <p>Bạn có muốn chấm công cho hôm nay ({format(new Date(), 'dd/MM/yyyy')}) không?</p>
+  const handleClockOut = async () => {
+    if (!attendanceRecord?.id) return;
+    
+    setIsClockingIn(true);
+    try {
+      // Update the record with clock out time
+      const { data, error } = await supabase
+        .from('employee_clock_in_out')
+        .update({
+          thoi_gian_ket_thuc: format(new Date(), 'HH:mm:ss'),
+          trang_thai: 'completed'
+        })
+        .eq('id', attendanceRecord.id)
+        .select()
+        .single();
       
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-          Hủy
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Đang chấm công...' : 'Chấm công'}
-        </Button>
-      </div>
-    </form>
-  );
-};
-
-const TodayAttendance: React.FC = () => {
-  const [attendance, setAttendance] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showClockInForm, setShowClockInForm] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchTodayAttendance = async () => {
-      try {
-        setIsLoading(true);
-        const today = format(new Date(), 'yyyy-MM-dd');
-        const data = await employeeClockInService.getByDate(today);
-        setAttendance(data.length > 0 ? data[0] : null);
-      } catch (error) {
-        console.error('Error fetching today attendance:', error);
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải thông tin chấm công',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTodayAttendance();
-  }, [toast]);
-
-  const handleClockInSubmit = () => {
-    setShowClockInForm(false);
-    fetchTodayAttendance();
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'present':
-        return <Badge variant="success">Có mặt</Badge>;
-      case 'absent':
-        return <Badge variant="destructive">Vắng mặt</Badge>;
-      case 'late':
-        return <Badge variant="warning">Đi muộn</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
+      if (error) throw error;
+      
+      setAttendanceRecord(data);
+      toast({
+        title: 'Đã chấm công ra',
+        description: `Thời gian: ${format(new Date(), 'HH:mm:ss')}`,
+      });
+    } catch (error) {
+      console.error('Error clocking out:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể chấm công ra',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsClockingIn(false);
     }
   };
 
+  const fetchTodayAttendance = async () => {
+    if (!employee.id) return;
+    
+    try {
+      // Get today's date in YYYY-MM-DD format
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      // Query the employee_clock_in_out table for today's record
+      const { data, error } = await supabase
+        .from('employee_clock_in_out')
+        .select('*')
+        .eq('nhan_vien_id', employee.id)
+        .eq('ngay', today)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 is code for "no rows returned"
+        console.error('Error fetching attendance:', error);
+        return;
+      }
+      
+      if (data) {
+        setAttendanceRecord(data);
+      }
+    } catch (error) {
+      console.error('Error fetching today attendance:', error);
+    }
+  };
+
+  const formatTimeForDisplay = (time: Date) => {
+    return format(time, 'HH:mm:ss', { locale: vi });
+  };
+
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg flex items-center">
-          <Clock className="mr-2 h-5 w-5" />
-          Chấm công hôm nay
-        </CardTitle>
-        {!attendance && !isLoading && (
-          <Button size="sm" onClick={() => setShowClockInForm(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Chấm công
-          </Button>
-        )}
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Chấm công hôm nay</CardTitle>
       </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-        ) : attendance ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Ngày</p>
-                <p>{format(new Date(attendance.ngay), 'dd/MM/yyyy')}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Trạng thái</p>
-                <p>{getStatusBadge(attendance.trang_thai)}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Giờ vào</p>
-                <p>
-                  {attendance.thoi_gian_bat_dau
-                    ? format(
-                        new Date(`2000-01-01T${attendance.thoi_gian_bat_dau}`),
-                        'HH:mm'
-                      )
-                    : '--'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Giờ ra</p>
-                <p>
-                  {attendance.thoi_gian_ket_thuc
-                    ? format(
-                        new Date(`2000-01-01T${attendance.thoi_gian_ket_thuc}`),
-                        'HH:mm'
-                      )
-                    : '--'}
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-center py-4 text-muted-foreground">
-            Bạn chưa chấm công hôm nay
+      <CardContent className="space-y-4">
+        <div className="text-center">
+          <p className="text-2xl font-bold">{formatTimeForDisplay(currentTime)}</p>
+          <p className="text-sm text-muted-foreground">
+            {format(currentTime, 'EEEE, dd/MM/yyyy', { locale: vi })}
           </p>
+        </div>
+        
+        <div className="space-y-2">
+          {!attendanceRecord || attendanceRecord.trang_thai !== 'active' ? (
+            <Button 
+              className="w-full" 
+              onClick={handleClockIn} 
+              disabled={isClockingIn || (attendanceRecord && attendanceRecord.trang_thai === 'completed')}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Chấm công vào
+            </Button>
+          ) : (
+            <Button 
+              className="w-full" 
+              onClick={handleClockOut} 
+              disabled={isClockingIn}
+              variant="outline"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Chấm công ra
+            </Button>
+          )}
+        </div>
+        
+        {attendanceRecord && (
+          <div className="text-sm space-y-1 border rounded p-2">
+            <p className="font-medium">Trạng thái: 
+              <span className={attendanceRecord.trang_thai === 'completed' ? 'text-green-500' : 'text-blue-500'} style={{marginLeft: '5px'}}>
+                {attendanceRecord.trang_thai === 'completed' ? 'Đã hoàn thành' : 'Đang làm việc'}
+              </span>
+            </p>
+            {attendanceRecord.thoi_gian_bat_dau && (
+              <p>Giờ vào: {attendanceRecord.thoi_gian_bat_dau}</p>
+            )}
+            {attendanceRecord.thoi_gian_ket_thuc && (
+              <p>Giờ ra: {attendanceRecord.thoi_gian_ket_thuc}</p>
+            )}
+          </div>
         )}
       </CardContent>
-
-      <Dialog open={showClockInForm} onOpenChange={setShowClockInForm}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Chấm công</DialogTitle>
-          </DialogHeader>
-          <ClockInForm
-            onSubmit={handleClockInSubmit}
-            onCancel={() => setShowClockInForm(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 };

@@ -19,45 +19,37 @@ const AdmissionCard: React.FC<AdmissionCardProps> = ({ admission, onClick, onDra
       draggable
       onDragStart={(e) => onDragStart(e, admission)}
     >
-      <CardContent className="p-3">
-        <div className="space-y-2">
+      <CardContent className="p-2 text-xs">
+        <div className="space-y-1">
           {/* Status badge */}
-          <div className={`text-xs px-2 py-1 rounded-full inline-block mb-1 ${ADMISSION_STATUS_COLORS[admission.trang_thai]}`}>
+          <div className={`px-1.5 py-0.5 rounded-full inline-block mb-0.5 text-[10px] ${ADMISSION_STATUS_COLORS[admission.trang_thai]}`}>
             {getStatusLabel(admission.trang_thai)}
           </div>
           
           {/* Student name */}
-          <h3 className="font-medium line-clamp-1">{admission.ten_hoc_sinh}</h3>
+          <h3 className="font-medium text-xs line-clamp-1">{admission.ten_hoc_sinh}</h3>
           
-          {/* Contact info */}
-          <div className="text-xs text-muted-foreground space-y-1">
+          {/* Contact info - more compact */}
+          <div className="text-[10px] text-muted-foreground">
             {admission.so_dien_thoai && (
-              <p className="line-clamp-1">
+              <p className="line-clamp-1 truncate">
                 SĐT: {admission.so_dien_thoai}
               </p>
             )}
             
-            {admission.email && (
-              <p className="line-clamp-1">
-                Email: {admission.email}
-              </p>
-            )}
-            
             {admission.ten_phu_huynh && (
-              <p className="line-clamp-1">
-                Phụ huynh: {admission.ten_phu_huynh}
+              <p className="line-clamp-1 truncate">
+                PH: {admission.ten_phu_huynh}
               </p>
             )}
           </div>
           
-          {/* Timestamps */}
-          <div className="text-xs text-muted-foreground pt-2 border-t border-gray-100 mt-2 flex justify-between">
+          {/* Updated timestamp */}
+          <div className="text-[10px] text-muted-foreground pt-1 border-t border-gray-100 mt-1">
             <span>
               {admission.updated_at 
-                ? `Cập nhật: ${formatDate(admission.updated_at)}`
-                : admission.created_at 
-                  ? `Tạo: ${formatDate(admission.created_at)}`
-                  : ''}
+                ? formatDate(admission.updated_at)
+                : formatDate(admission.created_at || '')}
             </span>
           </div>
         </div>

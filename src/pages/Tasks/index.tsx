@@ -54,7 +54,8 @@ const Tasks = () => {
 
   const handleTaskComplete = async (taskId: string) => {
     try {
-      await taskService.complete(taskId);
+      // Use update instead of complete
+      await taskService.update(taskId, { trang_thai: 'completed' });
       toast({
         title: 'Thành công',
         description: 'Đã hoàn thành công việc',

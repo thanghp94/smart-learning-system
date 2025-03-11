@@ -1,5 +1,4 @@
-
-import { Finance, FinanceReceipt, FinanceReceiptTemplate } from '../types';
+import { Finance } from '../types';
 import { fetchAll, fetchById, remove } from './base-service';
 import { supabase } from './client';
 
@@ -89,7 +88,7 @@ export const financeService = {
     }
   },
   
-  getReceipts: async (): Promise<FinanceReceipt[]> => {
+  getReceipts: async (): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('finance_receipts')
@@ -103,7 +102,7 @@ export const financeService = {
     }
   },
   
-  getReceiptById: async (id: string): Promise<FinanceReceipt> => {
+  getReceiptById: async (id: string): Promise<any> => {
     try {
       const { data, error } = await supabase
         .from('finance_receipts')
@@ -119,7 +118,7 @@ export const financeService = {
     }
   },
   
-  createReceipt: async (receipt: Partial<FinanceReceipt>): Promise<FinanceReceipt> => {
+  createReceipt: async (receipt: any): Promise<any> => {
     try {
       const { data, error } = await supabase
         .from('finance_receipts')
@@ -135,7 +134,7 @@ export const financeService = {
     }
   },
   
-  updateReceipt: async (id: string, updates: Partial<FinanceReceipt>): Promise<FinanceReceipt> => {
+  updateReceipt: async (id: string, updates: any): Promise<any> => {
     try {
       const { data, error } = await supabase
         .from('finance_receipts')
@@ -166,7 +165,7 @@ export const financeService = {
     }
   },
   
-  getReceiptTemplates: async (): Promise<FinanceReceiptTemplate[]> => {
+  getReceiptTemplates: async (): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('finance_receipt_templates')
@@ -180,7 +179,7 @@ export const financeService = {
     }
   },
   
-  getReceiptTemplateById: async (id: string): Promise<FinanceReceiptTemplate> => {
+  getReceiptTemplateById: async (id: string): Promise<any> => {
     try {
       const { data, error } = await supabase
         .from('finance_receipt_templates')
@@ -196,7 +195,7 @@ export const financeService = {
     }
   },
   
-  createReceiptTemplate: async (template: Partial<FinanceReceiptTemplate>): Promise<FinanceReceiptTemplate> => {
+  createReceiptTemplate: async (template: any): Promise<any> => {
     try {
       const { data, error } = await supabase
         .from('finance_receipt_templates')
@@ -212,7 +211,7 @@ export const financeService = {
     }
   },
   
-  updateReceiptTemplate: async (id: string, updates: Partial<FinanceReceiptTemplate>): Promise<FinanceReceiptTemplate> => {
+  updateReceiptTemplate: async (id: string, updates: any): Promise<any> => {
     try {
       const { data, error } = await supabase
         .from('finance_receipt_templates')
@@ -243,7 +242,6 @@ export const financeService = {
     }
   },
   
-  // Add missing methods
   create: async (finance: Partial<Finance>): Promise<Finance> => {
     try {
       const { data, error } = await supabase

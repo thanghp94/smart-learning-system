@@ -101,5 +101,10 @@ export const taskService = {
     }
     
     return data as Task[];
+  },
+  
+  // Add a method for getting tasks by employee ID (uses getByUser)
+  getByEmployeeId: async (employeeId: string): Promise<Task[]> => {
+    return taskService.getByUser(employeeId);
   }
 };

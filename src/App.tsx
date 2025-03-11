@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -84,7 +83,7 @@ const LessonDetailWrapper = () => <LessonDetail lesson={{} as any} />;
 const LessonFormWrapper = () => <LessonForm onSubmit={async () => {}} onCancel={() => {}} />;
 const EvaluationFormWrapper = () => <EvaluationForm initialData={{} as any} onSubmit={async () => {}} />;
 const FinanceDetailWrapper = () => <FinanceDetail finance={{} as any} />;
-const FinanceFormWrapper = () => <FinanceForm onSubmit={async (formData) => {}} onCancel={() => {}} facilities={[]} />;
+const FinanceFormWrapper = () => <FinanceForm onSubmit={async (formData) => {}} onCancel={() => {}} />;
 const FileFormWrapper = () => <FileForm onSubmit={async () => {}} onCancel={() => {}} />;
 const ContactDetailWrapper = () => <ContactDetail contact={{} as any} />;
 const ContactFormWrapper = () => <ContactForm onSubmit={async () => {}} onCancel={() => {}} />;

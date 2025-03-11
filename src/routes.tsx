@@ -1,60 +1,57 @@
 
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+// Import your layouts and pages
+import App from './App';
+import MainLayout from './components/layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Classes from './pages/Classes';
 import ClassDetail from './pages/Classes/ClassDetail';
-import Admissions from './pages/Admissions';
-import Tasks from './pages/Tasks';
-import Files from './pages/Files';
-import Finance from './pages/Finance';
-import Employee from './pages/Employee';
-import ContactList from './pages/ContactList';
-import EmployeeDetail from './pages/Employee/EmployeeDetail';
-import TeachingSchedule from './pages/TeachingSchedules';
-import TeachingScheduleDetail from './pages/TeachingSchedules/TeachingScheduleDetail';
+import Students from './pages/Students';
+import Employees from './pages/Employees'; 
+import Contacts from './pages/Contacts';
+import EmployeeDetail from './pages/Employees/EmployeeDetail';
+import TeachingSchedules from './pages/TeachingSchedules';
 import TeachingSessions from './pages/TeachingSessions';
-import TeachingSessionDetail from './pages/TeachingSessions/TeachingSessionDetail';
-import Student from './pages/Student';
-import StudentDetail from './pages/Student/StudentDetail';
-import Facility from './pages/Facility';
-import FacilityDetail from './pages/Facility/FacilityDetail';
+import SessionDetail from './pages/TeachingSessions/SessionDetail';
+import StudentDetail from './pages/Students/StudentDetail';
+import Facilities from './pages/Facilities';
+import FacilityDetail from './pages/Facilities/FacilityDetail';
 import NotFound from './pages/NotFound';
-import Redirect from './pages/Redirect';
-import Calendar from './pages/Calendar';
-import EmployeeDashboard from '@/pages/EmployeeDashboard';
-import Assets from './pages/Assets';
-import AssetDetail from './pages/Assets/AssetDetail';
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/classes" element={<Classes />} />
-      <Route path="/classes/:id" element={<ClassDetail />} />
-      <Route path="/admissions" element={<Admissions />} />
-      <Route path="/tasks" element={<Tasks />} />
-      <Route path="/files" element={<Files />} />
-      <Route path="/finance" element={<Finance />} />
-      <Route path="/employees" element={<Employee />} />
-      <Route path="/employees/:id" element={<EmployeeDetail />} />
-      <Route path="/contacts" element={<ContactList />} />
-      <Route path="/teaching-schedules" element={<TeachingSchedule />} />
-      <Route path="/teaching-schedules/:id" element={<TeachingScheduleDetail />} />
-      <Route path="/teaching-sessions" element={<TeachingSessions />} />
-      <Route path="/teaching-sessions/:id" element={<TeachingSessionDetail />} />
-      <Route path="/students" element={<Student />} />
-      <Route path="/students/:id" element={<StudentDetail />} />
-      <Route path="/facilities" element={<Facility />} />
-      <Route path="/facilities/:id" element={<FacilityDetail />} />
-      <Route path="/calendar" element={<Calendar />} />
-      <Route path="/assets" element={<Assets />} />
-      <Route path="/assets/:id" element={<AssetDetail />} />
-      <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
-      <Route path="/redirect" element={<Redirect />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+    errorElement: <NotFound />,
+    children: [
+      {
+        path: '/',
+        element: <MainLayout />,
+        children: [
+          { path: '/', element: <Dashboard /> },
+          { path: '/classes', element: <Classes /> },
+          { path: '/classes/:id', element: <ClassDetail classItem={{id: '', ten_lop: '', ten_lop_full: ''}} /> },
+          { path: '/students', element: <Students /> },
+          { path: '/students/:id', element: <StudentDetail /> },
+          { path: '/employees', element: <Employees /> },
+          { path: '/employees/:id', element: <EmployeeDetail employeeId="" /> },
+          { path: '/facilities', element: <Facilities /> },
+          { path: '/facilities/:id', element: <FacilityDetail facilityId="" /> },
+          { path: '/teaching-schedules', element: <TeachingSchedules /> },
+          { path: '/teaching-sessions', element: <TeachingSessions /> },
+          { path: '/teaching-sessions/:id', element: <SessionDetail session={{id: '', loai_bai_hoc: ''}} /> },
+          { path: '/contacts', element: <Contacts /> },
+          { path: '/assets/:id', element: <div>Asset Detail Page</div> }
+        ],
+      },
+    ],
+  },
+]);
+
+const Routes = () => {
+  return <RouterProvider router={router} />;
 };
 
-export default AppRoutes;
+export default Routes;

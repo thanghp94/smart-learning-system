@@ -1,100 +1,154 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, Users } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Link } from 'react-router-dom';
+import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { supabase } from '@/lib/supabase/client';
+import { teachingSessionService } from '@/lib/supabase';
 import { TeachingSession } from '@/lib/types';
-import { teachingSessionService } from '@/pages/TeachingSessions/TeachingSessionService';
+import { Employee } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 
-const TodayClassesList: React.FC = () => {
+interface TodayClassesListProps {
+  employee: Employee;
+  isFacilityManager?: boolean;
+  facilityId?: string;
+}
+
+const TodayClassesList: React.FC<TodayClassesListProps> = ({ 
+  employee, 
+  isFacilityManager = false,
+  facilityId
+}) => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTodaySessions = async () => {
-      try {
-        setIsLoading(true);
-        const today = format(new Date(), 'yyyy-MM-dd');
-        const data = await teachingSessionService.getByDate(today);
-        setSessions(data);
-      } catch (error) {
-        console.error('Error fetching today classes:', error);
-      } finally {
-        setIsLoading(false);
+    fetchTodayClasses();
+  }, [employee.id, selectedDate, isFacilityManager, facilityId]);
+
+  const fetchTodayClasses = async () => {
+    setIsLoading(true);
+    try {
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+      let data: TeachingSession[] = [];
+      
+      if (isFacilityManager && facilityId) {
+        // Get sessions for a specific facility
+        const { data: facilityData, error: facilityError } = await supabase
+          .from('teaching_sessions')
+          .select(`
+            *,
+            teachers:giao_vien(ten_nhan_su),
+            assistants:tro_giang(ten_nhan_su),
+            classes:lop_chi_tiet_id(ten_lop_full)
+          `)
+          .eq('ngay_hoc', formattedDate)
+          .eq('co_so_id', facilityId)
+          .order('thoi_gian_bat_dau', { ascending: true });
+          
+        if (facilityError) throw facilityError;
+        data = facilityData as TeachingSession[];
+      } else {
+        // Get sessions for a specific teacher
+        const { data: teacherData, error: teacherError } = await supabase
+          .from('teaching_sessions')
+          .select(`
+            *,
+            teachers:giao_vien(ten_nhan_su),
+            assistants:tro_giang(ten_nhan_su),
+            classes:lop_chi_tiet_id(ten_lop_full)
+          `)
+          .eq('ngay_hoc', formattedDate)
+          .or(`giao_vien.eq.${employee.id},tro_giang.eq.${employee.id}`)
+          .order('thoi_gian_bat_dau', { ascending: true });
+          
+        if (teacherError) throw teacherError;
+        data = teacherData as TeachingSession[];
       }
-    };
+      
+      setSessions(data);
+    } catch (error) {
+      console.error('Error fetching today classes:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchTodaySessions();
-  }, []);
+  const handleNavigateToSession = (sessionId: string) => {
+    navigate(`/teaching-sessions/${sessionId}`);
+  };
 
-  if (isLoading) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <Calendar className="mr-2 h-5 w-5" />
-            Lịch dạy hôm nay
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex flex-col space-y-2 mb-4">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
+  const formatTimeOnly = (timeString: string) => {
+    if (!timeString) return '';
+    return timeString.substring(0, 5); // Format as HH:MM
+  };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center">
-          <Calendar className="mr-2 h-5 w-5" />
-          Lịch dạy hôm nay
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">
+          {isFacilityManager ? 'Lớp học tại cơ sở hôm nay' : 'Lịch dạy hôm nay của tôi'}
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-6">
-        <div className="space-y-4">
-          {sessions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Không có lịch dạy nào hôm nay
-            </p>
-          ) : (
-            sessions.map((session) => (
-              <Link
-                to={`/teaching-sessions/${session.id}`}
-                key={session.id}
-                className="block"
-              >
-                <div className="flex flex-col p-3 border rounded-md hover:bg-accent transition-colors">
-                  <div className="font-medium">{session.class_name}</div>
-                  <div className="text-sm text-muted-foreground flex items-center mt-1">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {session.thoi_gian_bat_dau
-                      ? format(new Date(`2000-01-01T${session.thoi_gian_bat_dau}`), 'HH:mm')
-                      : ''}
-                    {session.thoi_gian_ket_thuc
-                      ? ` - ${format(
-                          new Date(`2000-01-01T${session.thoi_gian_ket_thuc}`),
-                          'HH:mm'
-                        )}`
-                      : ''}
-                  </div>
-                  <div className="text-sm text-muted-foreground flex items-center mt-1">
-                    <Users className="h-3 w-3 mr-1" />
-                    {session.teacher_name}
-                    {session.assistant_name && `, ${session.assistant_name}`}
+      <CardContent className="space-y-4">
+        <div className="text-sm text-muted-foreground flex items-center">
+          <Calendar className="h-4 w-4 mr-1" />
+          {format(selectedDate, 'EEEE, dd/MM/yyyy', { locale: vi })}
+        </div>
+
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Đang tải...</p>
+        ) : sessions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Không có lớp học nào</p>
+        ) : (
+          <div className="space-y-2">
+            {sessions.map((session) => {
+              // Extract nested data
+              const teacherName = session.teachers?.ten_nhan_su || '';
+              const assistantName = session.assistants?.ten_nhan_su || '';
+              const className = session.classes?.ten_lop_full || '';
+              
+              return (
+                <div 
+                  key={session.id} 
+                  className="p-2 border rounded hover:bg-muted/50 cursor-pointer"
+                  onClick={() => handleNavigateToSession(session.id)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium">{className}</p>
+                      <div className="text-xs text-muted-foreground space-y-1 mt-1">
+                        <div className="flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {formatTimeOnly(session.thoi_gian_bat_dau)} - {formatTimeOnly(session.thoi_gian_ket_thuc)}
+                        </div>
+                        <div className="flex items-center">
+                          <Users className="h-3 w-3 mr-1" />
+                          GV: {teacherName}
+                          {assistantName && ` | TG: ${assistantName}`}
+                        </div>
+                        {session.phong_hoc_id && (
+                          <div className="flex items-center">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            Phòng: {session.phong_hoc_id}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {session.loai_bai_hoc || "Học mới"}
+                    </Badge>
                   </div>
                 </div>
-              </Link>
-            ))
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
