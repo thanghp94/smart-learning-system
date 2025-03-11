@@ -102,6 +102,24 @@ class FinanceService {
       throw error;
     }
   }
+
+  // Add the missing getByEntity method
+  async getByEntity(entityType: string, entityId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('doi_tuong_id', entityId)
+        .eq('loai_doi_tuong', entityType)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Finance[];
+    } catch (error) {
+      console.error(`Error fetching ${entityType} finances:`, error);
+      throw error;
+    }
+  }
 }
 
 export const financeService = new FinanceService();

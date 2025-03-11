@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { employeeClockInService } from '@/lib/supabase';
 import { format, isToday, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
 
 interface EmployeeAttendanceProps {
   // Add props if needed
@@ -50,7 +52,21 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
     try {
       setIsLoading(true);
       const data = await employeeClockInService.getMonthlyAttendance(parseInt(month), parseInt(year));
-      setAttendance(data);
+      
+      // Convert EmployeeClockInOut[] to AttendanceRecord[]
+      const convertedData: AttendanceRecord[] = data.map((record: EmployeeClockInOut) => ({
+        id: record.id,
+        ngay: record.ngay,
+        nhan_vien_id: record.nhan_vien_id,
+        thoi_gian_bat_dau: record.thoi_gian_bat_dau,
+        thoi_gian_ket_thuc: record.thoi_gian_ket_thuc,
+        trang_thai: record.trang_thai || 'pending', // Set default value for required property
+        ghi_chu: record.ghi_chu,
+        xac_nhan: record.xac_nhan || false,
+        employee_name: record.employee_name,
+      }));
+      
+      setAttendance(convertedData);
     } catch (error) {
       console.error('Error fetching attendance data:', error);
       toast({

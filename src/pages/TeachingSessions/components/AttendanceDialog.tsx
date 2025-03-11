@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -22,6 +23,13 @@ interface AttendanceDialogProps {
 
 interface ExtendedProcessedStudent extends ProcessedStudent {
   enrollmentId: string;
+}
+
+interface StudentDetails {
+  id: string;
+  ten_hoc_sinh: string;
+  hinh_anh_hoc_sinh?: string;
+  ma_hoc_sinh?: string;
 }
 
 const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, sessionId, classId }) => {
@@ -76,13 +84,16 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, se
 
       const attendanceRecords = await attendanceService.getByTeachingSession(sessionId);
 
-      const processedStudents: ExtendedProcessedStudent[] = enrollmentsData?.map(enrollment => ({
-        id: enrollment.students.id,
-        name: enrollment.students.ten_hoc_sinh,
-        image: enrollment.students.hinh_anh_hoc_sinh,
-        code: enrollment.students.ma_hoc_sinh || '',
-        enrollmentId: enrollment.id
-      })) || [];
+      const processedStudents: ExtendedProcessedStudent[] = enrollmentsData ? enrollmentsData.map(enrollment => {
+        const student = enrollment.students as StudentDetails;
+        return {
+          id: student.id,
+          name: student.ten_hoc_sinh,
+          image: student.hinh_anh_hoc_sinh,
+          code: student.ma_hoc_sinh || '',
+          enrollmentId: enrollment.id
+        };
+      }) : [];
 
       const initialAttendanceData: Record<string, { status: string; notes: string; lateMinutes?: number }> = {};
       

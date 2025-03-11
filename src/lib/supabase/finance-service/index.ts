@@ -2,6 +2,7 @@
 import { financeService as baseFinanceService } from '../finance-service';
 import { receiptTemplateService } from './receipt-template-service';
 import { Finance } from '@/lib/types';
+import { supabase } from '../client';
 
 // Additional methods to extend financeService
 const extendedFinanceService = {
@@ -112,19 +113,8 @@ const extendedFinanceService = {
       console.error(`Error fetching transaction types:`, error);
       return [];
     }
-  },
-  
-  // Add the missing methods
-  getAll: baseFinanceService.getAll,
-  getById: baseFinanceService.getById,
-  create: baseFinanceService.create,
-  update: baseFinanceService.update,
-  delete: baseFinanceService.delete,
-  getByEntity: baseFinanceService.getByEntity
+  }
 };
-
-// Import supabase for extended methods
-import { supabase } from '../client';
 
 // Create a combined finance service with receipt template methods and base methods
 export const financeService = {

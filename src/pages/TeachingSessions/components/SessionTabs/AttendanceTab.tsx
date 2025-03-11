@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,16 @@ interface AttendanceData {
 interface AttendanceTabProps {
   sessionId?: string;
   classId?: string;
+}
+
+interface EnrollmentWithStudent {
+  id: string;
+  hoc_sinh_id: string;
+  students: {
+    id: string;
+    ten_hoc_sinh: string;
+    hinh_anh_hoc_sinh?: string;
+  }
 }
 
 const AttendanceTab: React.FC<AttendanceTabProps> = ({ sessionId, classId }) => {
@@ -76,16 +87,15 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({ sessionId, classId }) => 
       
       if (enrollmentsError) throw enrollmentsError;
       
-      // Process and format attendance data - properly accessing the student object for each enrollment
+      // Process and format attendance data
       const formattedData: AttendanceData[] = attendanceRecords.map(attendance => {
-        const enrollment = enrollmentsData?.find(e => e.id === attendance.enrollment_id);
-        const student = enrollment?.students;
+        const enrollment = enrollmentsData?.find(e => e.id === attendance.enrollment_id) as EnrollmentWithStudent | undefined;
         
         return {
           id: attendance.id,
-          studentId: student?.id || '',
-          name: student?.ten_hoc_sinh || 'Học sinh không xác định',
-          image: student?.hinh_anh_hoc_sinh || undefined,
+          studentId: enrollment?.students?.id || '',
+          name: enrollment?.students?.ten_hoc_sinh || 'Học sinh không xác định',
+          image: enrollment?.students?.hinh_anh_hoc_sinh || undefined,
           status: attendance.status,
           time: attendance.created_at ? format(new Date(attendance.created_at), 'HH:mm') : '-',
           notes: attendance.ghi_chu || '',
