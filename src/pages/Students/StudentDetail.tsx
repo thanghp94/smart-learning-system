@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -29,12 +30,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Student, Enrollment } from '@/lib/types';
-import { studentService, enrollmentService } from '@/lib/supabase';
+import { studentService, enrollmentService, facilityService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import ImageUpload from '@/components/common/ImageUpload';
 import EnrollStudentButton from './components/EnrollStudentButton';
-import { financeService } from '@/lib/supabase';
 import EntityFinancesView from '@/pages/Finance/components/EntityFinancesView';
 
 const StudentDetail = () => {
@@ -44,6 +44,7 @@ const StudentDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [tempStudentData, setTempStudentData] = useState<Student | null>(null);
+  const [facilityName, setFacilityName] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -58,6 +59,17 @@ const StudentDetail = () => {
           
           const studentEnrollments = await enrollmentService.getByStudent(id);
           setEnrollments(studentEnrollments || []);
+          
+          if (studentData.co_so_id) {
+            try {
+              const facilityData = await facilityService.getById(studentData.co_so_id);
+              if (facilityData) {
+                setFacilityName(facilityData.ten_co_so);
+              }
+            } catch (error) {
+              console.error('Error fetching facility:', error);
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching student data:', error);
@@ -175,86 +187,86 @@ const StudentDetail = () => {
       <Separator />
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-4">
-          <TabsTrigger value="info">Thông tin cá nhân</TabsTrigger>
-          <TabsTrigger value="classes">Lớp học đã ghi danh</TabsTrigger>
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="info">Thông tin chung</TabsTrigger>
           <TabsTrigger value="finance">Tài chính</TabsTrigger>
-          <TabsTrigger value="documents">Tài liệu</TabsTrigger>
+          <TabsTrigger value="enrollments">Ghi danh</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
               <CardHeader>
-                <CardTitle>Thông tin cá nhân</CardTitle>
+                <CardTitle className="flex items-center">
+                  <User className="mr-2 h-5 w-5" />
+                  Thông tin cá nhân
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {isEditing ? (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="ho_va_ten">Họ và tên</Label>
-                        <Input
-                          id="ho_va_ten"
-                          name="ho_va_ten"
-                          value={tempStudentData?.ho_va_ten || tempStudentData?.ten_hoc_sinh || ''}
-                          onChange={handleChange}
-                        />
-                      </div>
+                {isEditing ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="ho_va_ten">Họ và tên</Label>
+                      <Input
+                        id="ho_va_ten"
+                        name="ho_va_ten"
+                        value={tempStudentData?.ho_va_ten || tempStudentData?.ten_hoc_sinh || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="gioi_tinh">Giới tính</Label>
-                        <select
-                          id="gioi_tinh"
-                          name="gioi_tinh"
-                          value={tempStudentData?.gioi_tinh || ''}
-                          onChange={handleChange}
-                          className="w-full p-2 border rounded"
-                        >
-                          <option value="Nam">Nam</option>
-                          <option value="Nữ">Nữ</option>
-                          <option value="">Khác</option>
-                        </select>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gioi_tinh">Giới tính</Label>
+                      <select
+                        id="gioi_tinh"
+                        name="gioi_tinh"
+                        value={tempStudentData?.gioi_tinh || ''}
+                        onChange={handleChange}
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="">Khác</option>
+                      </select>
+                    </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="ngay_sinh">Ngày sinh</Label>
-                        <Input
-                          id="ngay_sinh"
-                          name="ngay_sinh"
-                          type="date"
-                          value={tempStudentData?.ngay_sinh || ''}
-                          onChange={handleChange}
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ngay_sinh">Ngày sinh</Label>
+                      <Input
+                        id="ngay_sinh"
+                        name="ngay_sinh"
+                        type="date"
+                        value={tempStudentData?.ngay_sinh || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="trang_thai">Trạng thái</Label>
-                        <select
-                          id="trang_thai"
-                          name="trang_thai"
-                          value={tempStudentData?.trang_thai || ''}
-                          onChange={handleChange}
-                          className="w-full p-2 border rounded"
-                        >
-                          <option value="active">Đang học</option>
-                          <option value="inactive">Đã nghỉ</option>
-                        </select>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="trang_thai">Trạng thái</Label>
+                      <select
+                        id="trang_thai"
+                        name="trang_thai"
+                        value={tempStudentData?.trang_thai || ''}
+                        onChange={handleChange}
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="active">Đang học</option>
+                        <option value="inactive">Đã nghỉ</option>
+                      </select>
+                    </div>
 
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="ghi_chu">Ghi chú</Label>
-                        <Textarea
-                          id="ghi_chu"
-                          name="ghi_chu"
-                          value={tempStudentData?.ghi_chu || ''}
-                          onChange={handleChange}
-                          rows={3}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
+                    <div className="space-y-2">
+                      <Label htmlFor="anh_minh_hoc">Hình ảnh</Label>
+                      <ImageUpload
+                        value={tempStudentData?.anh_minh_hoc || ''}
+                        onChange={handleImageUpload}
+                        onRemove={() => setTempStudentData((prev) => ({ ...prev, anh_minh_hoc: '' }))}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <span className="text-sm text-muted-foreground">Họ và tên</span>
                         <p className="font-medium">{student.ho_va_ten || student.ten_hoc_sinh}</p>
@@ -267,7 +279,8 @@ const StudentDetail = () => {
 
                       <div className="space-y-1">
                         <span className="text-sm text-muted-foreground">Ngày sinh</span>
-                        <p className="font-medium">
+                        <p className="font-medium flex items-center">
+                          <Calendar className="w-3 h-3 mr-1 text-muted-foreground" />
                           {student.ngay_sinh ? format(new Date(student.ngay_sinh), 'dd/MM/yyyy') : 'Chưa cập nhật'}
                         </p>
                       </div>
@@ -280,22 +293,128 @@ const StudentDetail = () => {
                           </Badge>
                         </p>
                       </div>
-
-                      <div className="space-y-1 md:col-span-2">
-                        <span className="text-sm text-muted-foreground">Ghi chú</span>
-                        <p className="font-medium">{student.ghi_chu || 'Chưa cập nhật'}</p>
+                      
+                      <div className="space-y-1">
+                        <span className="text-sm text-muted-foreground">Cơ sở</span>
+                        <p className="font-medium flex items-center">
+                          <School className="w-3 h-3 mr-1 text-muted-foreground" />
+                          {facilityName || 'Chưa xác định'}
+                        </p>
                       </div>
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Thông tin liên hệ</CardTitle>
+                <CardTitle className="flex items-center">
+                  <Book className="mr-2 h-5 w-5" />
+                  Thông tin học tập
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
+                {isEditing ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="ct_hoc">Chương trình học</Label>
+                      <Input
+                        id="ct_hoc"
+                        name="ct_hoc"
+                        value={tempStudentData?.ct_hoc || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="truong">Trường</Label>
+                      <Input
+                        id="truong"
+                        name="truong"
+                        value={tempStudentData?.truong || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="lop">Lớp</Label>
+                      <Input
+                        id="lop"
+                        name="lop"
+                        value={tempStudentData?.lop || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="nguon_den">Nguồn đến</Label>
+                      <Input
+                        id="nguon_den"
+                        name="nguon_den"
+                        value={tempStudentData?.nguon_den || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="han_hoc_phi">Hạn học phí</Label>
+                      <Input
+                        type="date"
+                        id="han_hoc_phi"
+                        name="han_hoc_phi"
+                        value={tempStudentData?.han_hoc_phi || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Chương trình học</span>
+                      <p className="font-medium flex items-center">
+                        <BookOpen className="w-3 h-3 mr-1 text-muted-foreground" />
+                        {student.ct_hoc || 'Chưa cập nhật'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Trường</span>
+                      <p className="font-medium">{student.truong || 'Chưa cập nhật'}</p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Lớp</span>
+                      <p className="font-medium">{student.lop || 'Chưa cập nhật'}</p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Nguồn đến</span>
+                      <p className="font-medium">{student.nguon_den || 'Chưa cập nhật'}</p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Hạn học phí</span>
+                      <p className="font-medium flex items-center">
+                        <Calendar className="w-3 h-3 mr-1 text-muted-foreground" />
+                        {student.han_hoc_phi ? format(new Date(student.han_hoc_phi), 'dd/MM/yyyy') : 'Chưa cập nhật'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <User className="mr-2 h-5 w-5" />
+                  Thông tin liên hệ
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 {isEditing ? (
                   <>
                     <div className="space-y-2">
@@ -339,12 +458,7 @@ const StudentDetail = () => {
                     </div>
                   </>
                 ) : (
-                  <>
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Địa chỉ</span>
-                      <p className="font-medium">{student.dia_chi || 'Chưa cập nhật'}</p>
-                    </div>
-
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <span className="text-sm text-muted-foreground">Tên phụ huynh</span>
                       <p className="font-medium">{student.ten_ph || student.ten_PH || 'Chưa cập nhật'}</p>
@@ -365,139 +479,54 @@ const StudentDetail = () => {
                         {student.email_ph1 || 'Chưa cập nhật'}
                       </p>
                     </div>
-                  </>
+                    
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Địa chỉ</span>
+                      <p className="font-medium flex items-center">
+                        <Home className="w-3 h-3 mr-1 text-muted-foreground" />
+                        {student.dia_chi || 'Chưa cập nhật'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <MessageSquare className="mr-2 h-5 w-5" />
+                  Ghi chú & Thông tin khác
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="ghi_chu">Ghi chú</Label>
+                    <Textarea
+                      id="ghi_chu"
+                      name="ghi_chu"
+                      value={tempStudentData?.ghi_chu || ''}
+                      onChange={handleChange}
+                      rows={3}
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Ghi chú</span>
+                    <p className="mt-1 whitespace-pre-wrap">{student.ghi_chu || 'Chưa có ghi chú'}</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Thông tin học vấn</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isEditing ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="truong">Trường</Label>
-                      <Input
-                        id="truong"
-                        name="truong"
-                        value={tempStudentData?.truong || ''}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="lop">Lớp</Label>
-                      <Input
-                        id="lop"
-                        name="lop"
-                        value={tempStudentData?.lop || ''}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="nguon_den">Nguồn đến</Label>
-                      <Input
-                        id="nguon_den"
-                        name="nguon_den"
-                        value={tempStudentData?.nguon_den || ''}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Trường</span>
-                      <p className="font-medium">{student.truong || 'Chưa cập nhật'}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Lớp</span>
-                      <p className="font-medium">{student.lop || 'Chưa cập nhật'}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Nguồn đến</span>
-                      <p className="font-medium">{student.nguon_den || 'Chưa cập nhật'}</p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Thông tin học phí</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isEditing ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="ct_hoc">Chương trình học</Label>
-                      <Input
-                        id="ct_hoc"
-                        name="ct_hoc"
-                        value={tempStudentData?.ct_hoc || ''}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="ngay_bat_dau_hoc_phi">Ngày bắt đầu học phí</Label>
-                      <Input
-                        type="date"
-                        id="ngay_bat_dau_hoc_phi"
-                        name="ngay_bat_dau_hoc_phi"
-                        value={tempStudentData?.ngay_bat_dau_hoc_phi || ''}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="han_hoc_phi">Hạn học phí</Label>
-                      <Input
-                        type="date"
-                        id="han_hoc_phi"
-                        name="han_hoc_phi"
-                        value={tempStudentData?.han_hoc_phi || ''}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Chương trình học</span>
-                      <p className="font-medium">{student.ct_hoc || 'Chưa cập nhật'}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Ngày bắt đầu học phí</span>
-                      <p className="font-medium">
-                        {student.ngay_bat_dau_hoc_phi ? format(new Date(student.ngay_bat_dau_hoc_phi), 'dd/MM/yyyy') : 'Chưa cập nhật'}
-                      </p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Hạn học phí</span>
-                      <p className="font-medium">
-                        {student.han_hoc_phi ? format(new Date(student.han_hoc_phi), 'dd/MM/yyyy') : 'Chưa cập nhật'}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
+          
           <Card>
             <CardHeader className="flex justify-between">
-              <CardTitle>Hành động</CardTitle>
+              <CardTitle className="flex items-center">
+                <RotateCw className="mr-2 h-5 w-5" />
+                Hành động
+              </CardTitle>
             </CardHeader>
             <CardContent className="flex justify-start gap-4">
               <EnrollStudentButton 
@@ -517,20 +546,54 @@ const StudentDetail = () => {
                   }
                 }}
               />
+              
+              <Button 
+                variant="outline" 
+                onClick={() => navigate(`/finance/entity/student/${student.id}`)}
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Xem thu chi
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="classes">
+        <TabsContent value="finance">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Lớp học đã ghi danh
+              <CardTitle className="flex items-center">
+                <CreditCard className="mr-2 h-5 w-5" />
+                Lịch sử tài chính
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {enrollments.length > 0 ? (
+              <EntityFinancesView entityType="student" entityId={id || ''} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="enrollments">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Layers className="mr-2 h-5 w-5" />
+                Lớp đã ghi danh
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {enrollments.length === 0 ? (
+                <div className="py-10 text-center text-muted-foreground">
+                  <BookOpen className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                  <p>Học sinh chưa được ghi danh vào lớp nào</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => document.querySelector('[value="info"]')?.dispatchEvent(new Event('click'))}
+                  >
+                    Đăng ký vào lớp
+                  </Button>
+                </div>
+              ) : (
                 <div className="space-y-4">
                   {enrollments.map((enrollment) => (
                     <Card key={enrollment.id} className="overflow-hidden">
@@ -566,50 +629,7 @@ const StudentDetail = () => {
                     </Card>
                   ))}
                 </div>
-              ) : (
-                <div className="py-10 text-center text-muted-foreground">
-                  <BookOpen className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p>Học sinh chưa được ghi danh vào lớp nào</p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4"
-                    onClick={() => document.querySelector('[value="info"]')?.dispatchEvent(new Event('click'))}
-                  >
-                    Đăng ký vào lớp
-                  </Button>
-                </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="finance">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Lịch sử tài chính
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EntityFinancesView entityType="student" entityId={id || ''} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="documents">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileDown className="h-5 w-5" />
-                Tài liệu
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="py-10 text-center text-muted-foreground">
-                <FileDown className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p>Chưa có tài liệu nào</p>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

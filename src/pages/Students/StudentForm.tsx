@@ -13,6 +13,9 @@ import ParentInfoFields from "./components/ParentInfoFields";
 import TuitionFeeFields from "./components/TuitionFeeFields";
 import AdditionalInfoFields from "./components/AdditionalInfoFields";
 import { Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ImageUpload from "@/components/common/ImageUpload";
+import { Label } from "@/components/ui/label";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
@@ -30,6 +33,8 @@ const StudentForm: React.FC<StudentFormProps> = ({
   const { toast } = useToast();
   const [facilities, setFacilities] = useState<any[]>([]);
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
+  const [studentImage, setStudentImage] = useState(initialData?.anh_minh_hoc || initialData?.hinh_anh_hoc_sinh || '');
+  const [activeTab, setActiveTab] = useState('personal');
 
   useEffect(() => {
     const loadFacilities = async () => {
@@ -83,43 +88,102 @@ const StudentForm: React.FC<StudentFormProps> = ({
     defaultValues
   });
 
-  console.log("Current form values:", form.getValues());
+  const handleImageChange = (url: string) => {
+    setStudentImage(url);
+  };
 
   const handleSubmit = async (values: StudentFormValues) => {
-    console.log("Form values submitted:", values);
-    await onSubmit(values);
+    const submissionData = {
+      ...values,
+      anh_minh_hoc: studentImage
+    };
+    
+    console.log("Form values submitted:", submissionData);
+    await onSubmit(submissionData);
+  };
+
+  const nextTab = () => {
+    if (activeTab === 'personal') setActiveTab('parent');
+    else if (activeTab === 'parent') setActiveTab('additional');
+  };
+
+  const prevTab = () => {
+    if (activeTab === 'additional') setActiveTab('parent');
+    else if (activeTab === 'parent') setActiveTab('personal');
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <PersonalInfoFields 
-          form={form} 
-          facilities={facilities} 
-          isLoadingFacilities={isLoadingFacilities} 
-        />
-        
-        <ParentInfoFields form={form} />
-        
-        <TuitionFeeFields form={form} />
-        
-        <AdditionalInfoFields form={form} />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="personal">Thông tin cá nhân</TabsTrigger>
+            <TabsTrigger value="parent">Thông tin phụ huynh</TabsTrigger>
+            <TabsTrigger value="additional">Thông tin bổ sung</TabsTrigger>
+          </TabsList>
 
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" type="button" onClick={onCancel} disabled={isSaving}>
-            Hủy
-          </Button>
-          <Button type="submit" disabled={isSaving}>
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Đang lưu...
-              </>
-            ) : (
-              "Lưu"
-            )}
-          </Button>
-        </div>
+          <TabsContent value="personal" className="space-y-4 pt-4">
+            <div className="mb-6">
+              <Label htmlFor="studentImage">Hình ảnh học sinh</Label>
+              <div className="mt-2">
+                <ImageUpload
+                  value={studentImage}
+                  onChange={handleImageChange}
+                  onRemove={() => setStudentImage('')}
+                />
+              </div>
+            </div>
+            
+            <PersonalInfoFields 
+              form={form} 
+              facilities={facilities} 
+              isLoadingFacilities={isLoadingFacilities} 
+            />
+            
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+                Hủy
+              </Button>
+              <Button type="button" onClick={nextTab}>
+                Tiếp theo
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="parent" className="space-y-4 pt-4">
+            <ParentInfoFields form={form} />
+            
+            <div className="flex justify-between space-x-2">
+              <Button type="button" variant="outline" onClick={prevTab}>
+                Quay lại
+              </Button>
+              <Button type="button" onClick={nextTab}>
+                Tiếp theo
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="additional" className="space-y-4 pt-4">
+            <TuitionFeeFields form={form} />
+            <AdditionalInfoFields form={form} />
+
+            <div className="flex justify-between space-x-2">
+              <Button type="button" variant="outline" onClick={prevTab}>
+                Quay lại
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  "Lưu"
+                )}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       </form>
     </Form>
   );

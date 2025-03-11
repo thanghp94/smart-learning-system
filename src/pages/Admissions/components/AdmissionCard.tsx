@@ -16,12 +16,12 @@ interface AdmissionCardProps {
 const AdmissionCard = ({ admission, onClick, onDragStart }: AdmissionCardProps) => {
   return (
     <Card 
-      className="mb-2 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+      className="mb-2 cursor-pointer shadow-sm hover:shadow-md transition-shadow max-h-48 overflow-hidden"
       onClick={() => onClick(admission)}
       draggable
       onDragStart={(e) => onDragStart(e, admission)}
     >
-      <CardContent className="p-2">
+      <CardContent className="p-2.5">
         <div className="flex items-start justify-between">
           <div className="flex items-center">
             <Avatar className="h-7 w-7 mr-2">
