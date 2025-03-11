@@ -20,7 +20,7 @@ export interface ConfirmActionDialogProps {
   onConfirm: () => Promise<void>;
   confirmText: string;
   cancelText: string;
-  isLoading: boolean;
+  isLoading?: boolean;
   destructive?: boolean;
 }
 
@@ -32,7 +32,7 @@ const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
   onConfirm,
   confirmText,
   cancelText,
-  isLoading,
+  isLoading = false,
   destructive = false,
 }) => {
   return (

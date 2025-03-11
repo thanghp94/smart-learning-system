@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { financeService } from '@/lib/supabase';
-import { Finance } from '@/lib/types';
+import { Finance, Facility } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +13,21 @@ import FinanceLedger from './FinanceLedger';
 import FilterButton from '@/components/ui/FilterButton';
 import ExportButton from '@/components/ui/ExportButton';
 
-const FinancePageContent = () => {
+interface FinancePageContentProps {
+  // We don't need these props as we'll manage them internally
+  // finances?: Finance[];
+  // filteredFinances?: Finance[];
+  // facilities?: Facility[];
+  // isLoading?: boolean;
+  // activeTab?: string;
+  // setActiveTab?: React.Dispatch<React.SetStateAction<string>>;
+  // handleFilter?: (filters: Record<string, string>) => void;
+  // handleRowClick?: (finance: Finance) => void;
+  // handleAddClick?: () => void;
+  // fetchFinances?: () => Promise<void>;
+}
+
+const FinancePageContent: React.FC<FinancePageContentProps> = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();

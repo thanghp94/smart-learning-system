@@ -20,6 +20,7 @@ const FinanceList: React.FC<FinanceListProps> = ({ finances, isLoading, onDelete
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmDelete, setConfirmDelete] = React.useState<Finance | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   if (isLoading) {
     return (
@@ -45,6 +46,7 @@ const FinanceList: React.FC<FinanceListProps> = ({ finances, isLoading, onDelete
     if (!confirmDelete) return;
     
     try {
+      setIsDeleting(true);
       await financeService.delete(confirmDelete.id);
       toast({
         title: "Thành công",
@@ -62,6 +64,7 @@ const FinanceList: React.FC<FinanceListProps> = ({ finances, isLoading, onDelete
         variant: "destructive"
       });
     } finally {
+      setIsDeleting(false);
       setConfirmDelete(null);
     }
   };
@@ -128,13 +131,15 @@ const FinanceList: React.FC<FinanceListProps> = ({ finances, isLoading, onDelete
       </Table>
 
       <ConfirmActionDialog
-        isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
-        onConfirm={handleDelete}
+        open={!!confirmDelete}
+        onOpenChange={() => setConfirmDelete(null)}
         title="Xóa giao dịch"
         description="Bạn có chắc chắn muốn xóa giao dịch này? Hành động này không thể hoàn tác."
+        onConfirm={handleDelete}
         confirmText="Xóa"
         cancelText="Hủy"
+        isLoading={isDeleting}
+        destructive={true}
       />
     </>
   );
