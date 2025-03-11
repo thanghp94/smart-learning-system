@@ -226,13 +226,13 @@ const MonthlyAttendanceView = () => {
           <Table className="min-w-full border-collapse">
             <TableHeader className="sticky top-0 bg-background">
               <TableRow>
-                <TableHead className="sticky left-0 bg-background z-10">Nhân viên</TableHead>
+                <TableHead className="sticky left-0 bg-background z-10 min-w-[200px]">Nhân viên</TableHead>
+                <TableHead className="text-center min-w-[150px]">Tổng số</TableHead>
                 {daysInMonth.map(day => (
                   <TableHead key={day} className="text-center min-w-[60px]">
                     {day}
                   </TableHead>
                 ))}
-                <TableHead className="text-center">Tổng số</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -240,6 +240,13 @@ const MonthlyAttendanceView = () => {
                 <TableRow key={employee.employee_id}>
                   <TableCell className="font-medium sticky left-0 bg-background z-10">
                     {employee.employee_name}
+                  </TableCell>
+                  <TableCell className="text-center min-w-[150px]">
+                    <div className="text-xs space-y-1">
+                      <div className="text-green-600">Có mặt: {employee.summary.present}</div>
+                      <div className="text-yellow-600">Muộn: {employee.summary.late}</div>
+                      <div className="text-red-600">Vắng: {employee.summary.absent}</div>
+                    </div>
                   </TableCell>
                   {daysInMonth.map(day => {
                     const record = employee.records[day];
@@ -249,13 +256,6 @@ const MonthlyAttendanceView = () => {
                       </TableCell>
                     );
                   })}
-                  <TableCell className="text-center">
-                    <div className="text-xs space-y-1">
-                      <div className="text-green-600">Có mặt: {employee.summary.present}</div>
-                      <div className="text-yellow-600">Muộn: {employee.summary.late}</div>
-                      <div className="text-red-600">Vắng: {employee.summary.absent}</div>
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
