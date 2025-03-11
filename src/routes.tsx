@@ -31,39 +31,114 @@ import AICommands from './pages/AICommands';
 import DatabaseSchema from './pages/DatabaseSchema';
 import NotFound from './pages/NotFound';
 
+const routes = [
+  // Auth routes
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
+  },
+
+  // Dashboard routes
+  {
+    path: "/",
+    element: <DashboardLayout><div /></DashboardLayout>,
+    children: [
+      {
+        index: true,
+        element: <Dashboard />,
+      },
+      {
+        path: "employees",
+        element: <Employees />,
+      },
+      {
+        path: "employees/:id",
+        element: <EmployeeDetails />,
+      },
+      {
+        path: "classes",
+        element: <Classes />,
+      },
+      {
+        path: "classes/:id",
+        element: <ClassDetails />,
+      },
+      {
+        path: "students",
+        element: <Students />,
+      },
+      {
+        path: "students/:id",
+        element: <StudentDetails />,
+      },
+      {
+        path: "teaching-sessions/:id",
+        element: <SessionDetails />,
+      },
+      {
+        path: "facilities",
+        element: <Facilities />,
+      },
+      {
+        path: "facilities/:id",
+        element: <FacilityDetails />,
+      },
+      {
+        path: "calendar",
+        element: <Calendar />,
+      },
+      {
+        path: "employee-files",
+        element: <EmployeeFiles />,
+      },
+      {
+        path: "assets/:id",
+        element: <AssetDetails />,
+      },
+      {
+        path: "finances",
+        element: <Finances />,
+      },
+      {
+        path: "ai-tools",
+        element: <AITools />,
+      },
+      {
+        path: "ai-commands",
+        element: <AICommands />,
+      },
+      {
+        path: "database-schema",
+        element: <DatabaseSchema />,
+      },
+      {
+        path: "/employee-dashboard",
+        element: <EmployeeDashboard />,
+      },
+    ],
+  },
+
+  // Error routes
+  {
+    path: "*",
+    element: <BlankLayout><NotFound /></BlankLayout>,
+  },
+];
+
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Auth routes */}
-      <Route element={<AuthLayout><div /></AuthLayout>}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-      </Route>
-
-      {/* Dashboard routes */}
-      <Route path="/" element={<DashboardLayout><div /></DashboardLayout>}>
-        <Route index element={<Dashboard />} />
-        <Route path="employees" element={<Employees />} />
-        <Route path="employees/:id" element={<EmployeeDetails />} />
-        <Route path="classes" element={<Classes />} />
-        <Route path="classes/:id" element={<ClassDetails />} />
-        <Route path="students" element={<Students />} />
-        <Route path="students/:id" element={<StudentDetails />} />
-        <Route path="teaching-sessions/:id" element={<SessionDetails />} />
-        <Route path="facilities" element={<Facilities />} />
-        <Route path="facilities/:id" element={<FacilityDetails />} />
-        <Route path="calendar" element={<Calendar />} />
-        <Route path="employee-files" element={<EmployeeFiles />} />
-        <Route path="assets/:id" element={<AssetDetails />} />
-        <Route path="finances" element={<Finances />} />
-        <Route path="ai-tools" element={<AITools />} />
-        <Route path="ai-commands" element={<AICommands />} />
-        <Route path="database-schema" element={<DatabaseSchema />} />
-      </Route>
-
-      {/* Error routes */}
-      <Route path="*" element={<BlankLayout><NotFound /></BlankLayout>} />
+      {routes.map((route, index) => (
+        <Route key={index} {...route} />
+      ))}
     </Routes>
   );
 }

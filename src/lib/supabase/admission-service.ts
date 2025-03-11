@@ -1,123 +1,64 @@
-
 import { supabase } from './client';
-import { Admission } from '../types/admission';
+import { Admission } from '@/lib/types';
 
 export const admissionService = {
-  async getAllAdmissions(): Promise<Admission[]> {
-    try {
-      const { data, error } = await supabase
-        .from('admissions_with_details')
-        .select('*')
-        .order('ngay_cap_nhat', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching admissions:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Exception in getAllAdmissions:', error);
-      return [];
-    }
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('admissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as Admission[];
   },
-
-  async getAdmissionById(id: string): Promise<Admission | null> {
-    try {
-      const { data, error } = await supabase
-        .from('admissions_with_details')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching admission:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Exception in getAdmissionById:', error);
-      return null;
-    }
+  getAdmissionById: async (id: string) => {
+    const { data, error } = await supabase
+      .from('admissions')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data as Admission;
   },
-
-  async createAdmission(admission: Partial<Admission>): Promise<Admission | null> {
-    try {
-      const { data, error } = await supabase
-        .from('admissions')
-        .insert(admission)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating admission:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Exception in createAdmission:', error);
-      return null;
-    }
+  createAdmission: async (admission: Partial<Admission>) => {
+    const { data, error } = await supabase
+      .from('admissions')
+      .insert(admission)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Admission;
   },
-
-  async updateAdmission(id: string, updates: Partial<Admission>): Promise<Admission | null> {
-    try {
-      const { data, error } = await supabase
-        .from('admissions')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating admission:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Exception in updateAdmission:', error);
-      return null;
-    }
+  updateAdmission: async (id: string, updates: Partial<Admission>) => {
+    const { data, error } = await supabase
+      .from('admissions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Admission;
   },
-
-  async deleteAdmission(id: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('admissions')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error deleting admission:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception in deleteAdmission:', error);
-      return false;
-    }
+  deleteAdmission: async (id: string) => {
+    const { error } = await supabase
+      .from('admissions')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
   },
-
-  async updateAdmissionStatus(id: string, status: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('admissions')
-        .update({ trang_thai: status, ngay_cap_nhat: new Date().toISOString() })
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error updating admission status:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Exception in updateAdmissionStatus:', error);
-      return false;
-    }
-  }
+  updateAdmissionStatus: async (id: string, status: string) => {
+    const { data, error } = await supabase
+      .from('admissions')
+      .update({ trang_thai: status })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Admission;
+  },
 };

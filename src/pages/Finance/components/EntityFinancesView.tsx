@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { financeService } from '@/lib/supabase';
 import { Finance } from '@/lib/types';
@@ -27,17 +26,13 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, ent
       let data: Finance[] = [];
       
       if (entityId && entityType) {
-        console.log(`Fetching finances for ${entityType} with ID ${entityId}`);
         data = await financeService.getByEntity(entityType, entityId);
       } else if (entityType) {
-        console.log(`Fetching finances by entity type: ${entityType}`);
-        data = await financeService.getFinancesByEntityType(entityType);
+        data = await financeService.getByEntityType(entityType);
       } else {
-        console.log('Fetching all finances');
-        data = await financeService.getAllFinances();
+        data = await financeService.getAll();
       }
       
-      console.log('Retrieved finances:', data);
       setFinances(data);
     } catch (error) {
       console.error('Error fetching finances:', error);
