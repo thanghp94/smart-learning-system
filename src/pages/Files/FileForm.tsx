@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +24,21 @@ import {
 import { fileSchema, FileFormValues } from './schemas/fileSchema';
 import { File, Student, Employee, Facility, Asset } from '@/lib/types';
 import { studentService, employeeService, facilityService, assetService } from '@/lib/supabase';
+
+interface FileFormData {
+  ten_tai_lieu: string;
+  doi_tuong_lien_quan: string;
+  nhom_tai_lieu?: string;
+  ngay_cap?: string | null;
+  han_tai_lieu?: string | null;
+  ghi_chu?: string;
+  trang_thai?: string;
+  nhan_vien_id?: string;
+  hoc_sinh_id?: string;
+  co_so_id?: string;
+  csvc_id?: string;
+  lien_he_id?: string;
+}
 
 interface FileFormProps {
   initialData?: Partial<File>;
@@ -97,7 +111,17 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
   }, [form.watch('doi_tuong_lien_quan')]);
 
   const handleFormSubmit = (values: FileFormValues) => {
-    onSubmit(values);
+    // Filter out empty UUID fields
+    const formData = {
+      ...values,
+      nhan_vien_id: values.nhan_vien_id || null,
+      hoc_sinh_id: values.hoc_sinh_id || null,
+      co_so_id: values.co_so_id || null,
+      csvc_id: values.csvc_id || null,
+      lien_he_id: values.lien_he_id || null,
+    };
+    
+    onSubmit(formData);
   };
 
   return (

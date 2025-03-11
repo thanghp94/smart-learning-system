@@ -1,4 +1,3 @@
-
 import { financeService as baseFinanceService } from '../finance-service';
 import { receiptTemplateService } from './receipt-template-service';
 import { Finance } from '@/lib/types';
@@ -131,7 +130,106 @@ const extendedFinanceService = {
       console.error(`Error fetching finances for entity ${entityType} with ID ${entityId}:`, error);
       throw error;
     }
-  }
+  },
+
+  async getByEmployee(employeeId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('loai_doi_tuong', 'nhan_vien')
+        .eq('doi_tuong_id', employeeId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching employee finances:', error);
+      return [];
+    }
+  },
+
+  async getByStudent(studentId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('loai_doi_tuong', 'hoc_sinh')
+        .eq('doi_tuong_id', studentId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching student finances:', error);
+      return [];
+    }
+  },
+
+  async getByFacility(facilityId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('loai_doi_tuong', 'co_so')
+        .eq('doi_tuong_id', facilityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching facility finances:', error);
+      return [];
+    }
+  },
+
+  async getByClass(classId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('loai_doi_tuong', 'lop')
+        .eq('doi_tuong_id', classId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching class finances:', error);
+      return [];
+    }
+  },
+
+  async getFinancesByEntityType(entityType: string) {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('loai_doi_tuong', entityType)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching finances by entity type:', error);
+      return [];
+    }
+  },
+
+  async getAllFinances() {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching all finances:', error);
+      return [];
+    }
+  },
 };
 
 // Create a combined finance service with ALL methods including base methods
