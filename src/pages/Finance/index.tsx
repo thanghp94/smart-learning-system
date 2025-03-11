@@ -19,6 +19,7 @@ import FinanceLedger from "./components/FinanceLedger";
 import ExportButton from "@/components/ui/ExportButton";
 import FilterButton, { FilterCategory } from "@/components/ui/FilterButton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import CommandInterface from "@/components/CommandInterface";
 
 const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
@@ -262,6 +263,10 @@ const FinancePage = () => {
         description="Quản lý thu chi và giao dịch tài chính"
         actions={tableActions}
       >
+        <div className="hidden md:block mb-4">
+          <CommandInterface />
+        </div>
+        
         <Tabs defaultValue="table" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="table">Bảng Dữ Liệu</TabsTrigger>

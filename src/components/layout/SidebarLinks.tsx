@@ -9,9 +9,6 @@ import { primaryLinks } from './navigation/primary-links';
 import { secondaryLinks } from './navigation/secondary-links';
 import { aiLinks } from './navigation/ai-links';
 
-// Re-export links for use in Sidebar.tsx
-export { primaryLinks, secondaryLinks } from './navigation/primary-links';
-
 export default function SidebarLinks() {
   const location = useLocation();
   

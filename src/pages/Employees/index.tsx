@@ -16,6 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase/client";
 import ExportButton from "@/components/ui/ExportButton";
 import FilterButton, { FilterCategory } from "@/components/ui/FilterButton";
+import CommandInterface from "@/components/CommandInterface";
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -231,6 +232,10 @@ const Employees = () => {
       actions={tableActions}
       filters={tableFilters}
     >
+      <div className="hidden md:block mb-4">
+        <CommandInterface />
+      </div>
+      
       {connectionError && (
         <Alert variant="destructive" className="mb-4">
           <AlertTitle>Lỗi kết nối cơ sở dữ liệu</AlertTitle>

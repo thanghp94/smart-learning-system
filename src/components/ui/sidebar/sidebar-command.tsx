@@ -1,9 +1,8 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { CommandInterface } from "@/components/CommandInterface"
+import CommandInterface from "@/components/CommandInterface"
 import { SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from "./sidebar-group"
-import { Textarea } from "@/components/ui/textarea"
 import { useSidebar } from "./provider"
 
 export const SidebarCommandGroup = React.forwardRef<

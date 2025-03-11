@@ -1,6 +1,7 @@
+
 import React from "react";
 import SidebarLinks from "./SidebarLinks";
-import { CommandInterface } from "@/components/CommandInterface";
+import CommandInterface from "@/components/CommandInterface";
 
 const Sidebar = () => {
   return (

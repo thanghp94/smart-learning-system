@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from './types';
 import { 
@@ -65,3 +64,5 @@ export const primaryLinks: NavLink[] = [
     icon: <Sparkles className="w-5 h-5" /> 
   },
 ];
+
+export { secondaryLinks } from './secondary-links';

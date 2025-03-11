@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import AssetDetail from "./AssetDetail";
 import AssetForm from "./AssetForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
+import CommandInterface from "@/components/ui/CommandInterface";
 
 const Assets = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -148,18 +148,22 @@ const Assets = () => {
 
   return (
     <>
-      {assets.length === 0 && !isLoading ? (
-        <PlaceholderPage
-          title="Tài Sản"
-          description="Quản lý thông tin tài sản và cơ sở vật chất"
-          addButtonAction={handleAddClick}
-        />
-      ) : (
-        <TablePageLayout
-          title="Tài Sản"
-          description="Quản lý thông tin tài sản và cơ sở vật chất"
-          actions={tableActions}
-        >
+      <TablePageLayout
+        title="Tài Sản"
+        description="Quản lý tài sản của trung tâm"
+        actions={tableActions}
+      >
+        <div className="hidden md:block">
+          <CommandInterface />
+        </div>
+        
+        {assets.length === 0 && !isLoading ? (
+          <PlaceholderPage
+            title="Tài Sản"
+            description="Quản lý thông tin tài sản và cơ sở vật chất"
+            addButtonAction={handleAddClick}
+          />
+        ) : (
           <DataTable
             columns={columns}
             data={assets}
@@ -178,8 +182,8 @@ const Assets = () => {
               <AssetDetail asset={selectedAsset} />
             </DetailPanel>
           )}
-        </TablePageLayout>
-      )}
+        )}
+      </TablePageLayout>
 
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
         <DialogContent className="sm:max-w-[600px]">
