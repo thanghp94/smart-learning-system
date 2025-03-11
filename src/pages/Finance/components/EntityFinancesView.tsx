@@ -1,17 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { financeService } from '@/lib/supabase';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { PlusCircle, ArrowUp, ArrowDown, FileText } from 'lucide-react';
+import { financeService, facilityService } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { PlusCircle } from 'lucide-react';
 import { Finance } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FinanceForm from '../FinanceForm';
 import { useToast } from '@/hooks/use-toast';
-import { facilityService } from '@/lib/supabase';
+import FinanceStats from './FinanceStats';
+import FinanceList from './FinanceList';
 
 interface EntityFinancesViewProps {
   entityType: string;
@@ -116,57 +113,13 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, ent
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  };
-
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Tổng thu</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalIncome)}</p>
-              </div>
-              <div className="p-2 bg-green-100 rounded-full">
-                <ArrowUp className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Tổng chi</p>
-                <p className="text-2xl font-bold text-red-600">{formatCurrency(stats.totalExpense)}</p>
-              </div>
-              <div className="p-2 bg-red-100 rounded-full">
-                <ArrowDown className="w-6 h-6 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Còn lại</p>
-                <p className={`text-2xl font-bold ${stats.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                  {formatCurrency(stats.balance)}
-                </p>
-              </div>
-              <div className="p-2 bg-blue-100 rounded-full">
-                <FileText className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <FinanceStats 
+        totalIncome={stats.totalIncome}
+        totalExpense={stats.totalExpense}
+        balance={stats.balance}
+      />
       
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Lịch sử tài chính</h3>
@@ -177,46 +130,10 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, ent
       </div>
       
       <div className="rounded-md border">
-        {isLoading ? (
-          <div className="py-8 text-center">
-            <p className="text-muted-foreground">Đang tải dữ liệu...</p>
-          </div>
-        ) : finances.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-muted-foreground">Chưa có giao dịch nào</p>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {finances.map((finance) => (
-              <div key={finance.id} className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={finance.loai_thu_chi === 'income' ? 'success' : 'destructive'}>
-                        {finance.loai_thu_chi === 'income' ? 'Thu' : 'Chi'}
-                      </Badge>
-                      <span className="font-medium">{finance.loai_giao_dich || 'Chưa phân loại'}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{finance.dien_giai}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-medium ${finance.loai_thu_chi === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatCurrency(finance.tong_tien)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {finance.ngay ? format(new Date(finance.ngay), 'dd/MM/yyyy') : 'Không có ngày'}
-                    </p>
-                  </div>
-                </div>
-                {finance.ghi_chu && (
-                  <div className="mt-2">
-                    <p className="text-xs text-muted-foreground">Ghi chú: {finance.ghi_chu}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <FinanceList 
+          finances={finances}
+          isLoading={isLoading}
+        />
       </div>
       
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
