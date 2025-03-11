@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Finance } from "@/lib/types";
 import { format } from "date-fns";
 
-interface FinanceLedgerProps {
+export interface FinanceLedgerProps {
   finances: Finance[];
   isLoading: boolean;
 }

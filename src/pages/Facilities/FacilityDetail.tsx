@@ -47,7 +47,7 @@ const FacilityDetail: React.FC<FacilityDetailProps> = ({ facilityId }) => {
         const eventsData = await eventService.getByEntity('facility', facilityId);
         setEvents(eventsData);
         
-        // Fetch related finances
+        // Fetch related finances - now using the correct method
         const financesData = await financeService.getByEntity('facility', facilityId);
         setFinances(financesData);
         

@@ -103,6 +103,24 @@ class FinanceService {
     }
   }
 
+  // Adding the missing method getByEntity that's used in FacilityDetail.tsx
+  async getByEntity(entityType: string, entityId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('loai_doi_tuong', entityType)
+        .eq('doi_tuong_id', entityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Finance[];
+    } catch (error) {
+      console.error(`Error fetching finances for entity ${entityType} with ID ${entityId}:`, error);
+      throw error;
+    }
+  }
+
   // Add the getFinancesByEntityType method
   async getFinancesByEntityType(entityType: string, entityId: string) {
     try {

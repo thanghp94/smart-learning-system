@@ -139,7 +139,7 @@ const FinancePageContent: React.FC<FinancePageContentProps> = ({
         </TabsContent>
         
         <TabsContent value="ledger">
-          <FinanceLedger />
+          <FinanceLedger finances={finances} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
     </>

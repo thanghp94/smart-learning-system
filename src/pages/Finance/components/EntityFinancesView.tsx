@@ -29,19 +29,17 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({
     const fetchFinances = async () => {
       setIsLoading(true);
       try {
-        let response;
+        let data: Finance[] = [];
         
         if (entityType && entityId) {
-          response = await financeService.getFinancesByEntityType(entityType, entityId);
+          // Use the appropriate method from FinanceService
+          data = await financeService.getByEntity(entityType, entityId);
         } else {
-          response = await financeService.getAllFinances();
+          // If no entity is specified, fetch all finances
+          data = await financeService.getAll();
         }
         
-        if (response.error) {
-          throw new Error(response.error.message);
-        }
-        
-        setFinances(response.data || []);
+        setFinances(data || []);
       } catch (error) {
         console.error('Error fetching finances:', error);
         toast({
@@ -73,11 +71,11 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({
       <CardContent className="p-4 md:p-6">
         {entityName && (
           <h3 className="text-lg font-semibold mb-4">
-            {entityType === 'hoc_sinh' 
+            {entityType === 'student' 
               ? `Tài Chính Học Sinh: ${entityName}` 
-              : entityType === 'nhan_vien' 
+              : entityType === 'employee' 
                 ? `Tài Chính Nhân Viên: ${entityName}`
-                : entityType === 'co_so' 
+                : entityType === 'facility' 
                   ? `Tài Chính Cơ Sở: ${entityName}`
                   : 'Tài Chính'}
           </h3>
