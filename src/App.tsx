@@ -1,8 +1,12 @@
 
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
+import ProtectedRoute from '@/components/common/ProtectedRoute';
+
+// Auth
+import AuthPage from '@/pages/Auth';
 
 // Layouts
 import MainLayout from '@/components/layout/MainLayout';
@@ -102,7 +106,18 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route path="/" element={<MainLayout />}>
+          {/* Auth Routes */}
+          <Route path="/auth" element={<AuthPage />} />
+
+          {/* Protected Routes */}
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Index />} />
             <Route path="students" element={<Students />} />
             <Route path="students/:id" element={<StudentDetail />} />
@@ -200,6 +215,9 @@ function App() {
             
             <Route path="*" element={<NotFound />} />
           </Route>
+
+          {/* Redirect root to auth if not authenticated */}
+          <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </Router>
       <Toaster />

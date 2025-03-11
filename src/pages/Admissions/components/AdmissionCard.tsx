@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Admission, ADMISSION_STATUS_COLORS } from '@/lib/types/admission';
+import { Admission } from '@/lib/types/admission';
 
 interface AdmissionCardProps {
   admission: Admission;
@@ -21,10 +21,7 @@ const AdmissionCard: React.FC<AdmissionCardProps> = ({ admission, onClick, onDra
     >
       <CardContent className="p-1.5 text-xs">
         <div className="space-y-0.5">
-          {/* Status badge */}
-          <div className={`px-1 py-0.5 rounded-full inline-block mb-0.5 text-[10px] ${ADMISSION_STATUS_COLORS[admission.trang_thai]}`}>
-            {getStatusLabel(admission.trang_thai)}
-          </div>
+          {/* Removed status badge */}
           
           {/* Student name */}
           <h3 className="font-medium text-xs line-clamp-1">{admission.ten_hoc_sinh}</h3>
@@ -58,19 +55,7 @@ const AdmissionCard: React.FC<AdmissionCardProps> = ({ admission, onClick, onDra
   );
 };
 
-// Helper functions
-const getStatusLabel = (status: string) => {
-  const statusMap: Record<string, string> = {
-    'tim_hieu': 'Tìm hiểu',
-    'tu_van': 'Tư vấn',
-    'hoc_thu': 'Học thử',
-    'chot': 'Đã chốt',
-    'huy': 'Huỷ'
-  };
-  
-  return statusMap[status] || status;
-};
-
+// Helper function
 const formatDate = (dateString: string) => {
   try {
     return format(new Date(dateString), 'dd/MM/yyyy', { locale: vi });

@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Student } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import DataTable from '@/components/ui/DataTable';
-import { CalendarDays, Flag, User, UserPlus, Phone, School, CreditCard, MapPin } from 'lucide-react';
+import { CalendarDays, Flag, User, UserPlus, Phone, School, MapPin } from 'lucide-react';
 import ExportButton from '@/components/ui/ExportButton';
 import DetailPanel from '@/components/ui/DetailPanel';
 import StudentDetail from './StudentDetail';
@@ -77,17 +77,6 @@ const StudentsList: React.FC<StudentsListProps> = ({
     return statuses;
   }, [data]);
 
-  // Extract unique gender values for filter options
-  const genderOptions = useMemo(() => {
-    const genders = [...new Set(data.map(s => s.gioi_tinh || '').filter(Boolean))].map(gender => ({
-      label: gender === 'male' ? 'Nam' : 
-             gender === 'female' ? 'Nữ' : gender,
-      value: gender,
-      type: 'other' as const
-    }));
-    return genders;
-  }, [data]);
-
   // Extract unique facility values for filter options
   const facilityOptions = useMemo(() => {
     const facilityIds = [...new Set(data.map(s => s.co_so_id || '').filter(Boolean))];
@@ -111,17 +100,12 @@ const StudentsList: React.FC<StudentsListProps> = ({
     return statuses;
   }, [data]);
 
-  // Create filter categories
+  // Create filter categories - removed gender filter
   const filterCategories: FilterCategory[] = [
     {
       name: 'Trạng thái',
       type: 'status',
       options: statusOptions
-    },
-    {
-      name: 'Giới tính',
-      type: 'other',
-      options: genderOptions
     },
     {
       name: 'Cơ sở',
@@ -144,9 +128,6 @@ const StudentsList: React.FC<StudentsListProps> = ({
           if (category === 'Trạng thái') {
             const studentStatus = student.trang_thai || 'active';
             if (studentStatus !== value) return false;
-          }
-          if (category === 'Giới tính') {
-            if (student.gioi_tinh !== value) return false;
           }
           if (category === 'Cơ sở') {
             if (student.co_so_id !== value) return false;
@@ -201,15 +182,6 @@ const StudentsList: React.FC<StudentsListProps> = ({
           <School className="h-4 w-4 text-muted-foreground" />
           {value && facilities[value] ? facilities[value] : 'Chưa xác định'}
         </div>
-      ),
-    },
-    {
-      title: 'Giới tính',
-      key: 'gioi_tinh',
-      sortable: true,
-      render: (value: string) => (
-        value === 'male' ? 'Nam' : 
-        value === 'female' ? 'Nữ' : value
       ),
     },
     {
@@ -284,12 +256,6 @@ const StudentsList: React.FC<StudentsListProps> = ({
           onClose={handleDetailClose}
           footerContent={
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" asChild>
-                <Link to={`/finance/entity/student/${selectedStudent.id}`}>
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Thu chi
-                </Link>
-              </Button>
               <Button variant="default" onClick={handleEdit}>
                 Sửa thông tin
               </Button>

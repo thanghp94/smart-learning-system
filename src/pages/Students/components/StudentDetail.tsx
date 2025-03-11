@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { facilityService, enrollmentService } from '@/lib/supabase';
 import EntityFinancesView from '@/pages/Finance/components/EntityFinancesView';
+import StudentEmailButton from './StudentEmailButton';
 
 interface StudentDetailProps {
   student: Student;
@@ -56,6 +57,13 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, facilities = {} 
       </TabsList>
 
       <TabsContent value="info" className="space-y-4">
+        <div className="flex justify-end mb-2">
+          <StudentEmailButton 
+            studentName={student.ten_hoc_sinh || student.ho_va_ten}
+            email={student.email || student.email_ph1}
+          />
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="pt-4">
@@ -157,7 +165,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, facilities = {} 
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground">Tên phụ huynh</p>
-                  <p className="font-medium">{student.ten_ph || student.ten_PH || 'Chưa có thông tin'}</p>
+                  <p className="font-medium">{student.ten_ph || student.ten_PH || student.ten_phu_huynh || 'Chưa có thông tin'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Số điện thoại</p>
@@ -170,7 +178,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, facilities = {} 
                   <p className="text-sm text-muted-foreground">Email</p>
                   <p className="flex items-center">
                     <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {student.email_ph1 || 'Chưa có thông tin'}
+                    {student.email_ph1 || student.email || 'Chưa có thông tin'}
                   </p>
                 </div>
                 {student.email_ph2 && (

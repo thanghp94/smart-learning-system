@@ -50,7 +50,7 @@ function DataTable<T>({
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const itemsPerPage = 10;
+  const itemsPerPage = 15; // Changed from 10 to 15
 
   // Use noDataMessage for backward compatibility
   const finalEmptyMessage = noDataMessage || emptyMessage;

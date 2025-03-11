@@ -29,6 +29,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
 }) => {
   const [entityOptions, setEntityOptions] = useState<any[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
   const watchEntityType = form.watch('loai_doi_tuong');
   
   useEffect(() => {
@@ -42,6 +43,9 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
   
   useEffect(() => {
     const fetchEntities = async () => {
+      if (!selectedEntityType) return;
+      
+      setIsLoading(true);
       try {
         let data: any[] = [];
         
@@ -84,6 +88,8 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
       } catch (error) {
         console.error(`Error fetching ${selectedEntityType} entities:`, error);
         setEntityOptions([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -137,11 +143,11 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                disabled={!!entityId}
+                disabled={!!entityId || isLoading}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn đối tượng" />
+                    <SelectValue placeholder={isLoading ? "Đang tải..." : "Chọn đối tượng"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
