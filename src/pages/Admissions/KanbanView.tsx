@@ -158,21 +158,22 @@ const KanbanView = () => {
   // Render the KanbanBoard
   const renderKanbanBoard = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-3">
         {Object.entries(ADMISSION_STATUS_MAP).map(([status, label]) => (
           <div 
             key={status} 
-            className="bg-gray-50 rounded-lg p-3 h-[calc(100vh-12rem)] flex flex-col"
+            className="bg-gray-50 rounded-lg p-2 flex flex-col"
+            style={{ height: 'calc(100vh - 11rem)' }}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, status as AdmissionStatus)}
           >
-            <div className="flex justify-between items-center mb-3">
+            <div className="flex justify-between items-center mb-2 sticky top-0 bg-gray-50 p-1 z-10">
               <h3 className="font-medium text-gray-800">{label}</h3>
               <span className="text-sm font-medium bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
                 {admissionsByStatus[status as AdmissionStatus]?.length || 0}
               </span>
             </div>
-            <div className="overflow-y-auto flex-grow">
+            <div className="overflow-y-auto flex-grow space-y-2">
               {admissionsByStatus[status as AdmissionStatus]?.map(admission => (
                 <AdmissionCard 
                   key={admission.id} 
@@ -182,7 +183,7 @@ const KanbanView = () => {
                 />
               ))}
               {admissionsByStatus[status as AdmissionStatus]?.length === 0 && (
-                <div className="text-center text-gray-500 py-6">
+                <div className="text-center text-gray-500 py-4">
                   <p className="text-sm">Không có học sinh nào</p>
                 </div>
               )}
@@ -194,8 +195,8 @@ const KanbanView = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto px-4 py-4">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Quản lý tuyển sinh</h1>
         <div className="flex space-x-2">
           <div className="relative w-64">
@@ -224,7 +225,7 @@ const KanbanView = () => {
         </div>
       ) : (
         <Tabs defaultValue="kanban">
-          <TabsList className="mb-4">
+          <TabsList className="mb-2">
             <TabsTrigger value="kanban">Kanban</TabsTrigger>
           </TabsList>
           <TabsContent value="kanban">

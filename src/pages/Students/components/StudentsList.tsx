@@ -3,11 +3,12 @@ import React, { useState, useMemo } from 'react';
 import { Student } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import DataTable from '@/components/ui/DataTable';
-import { CalendarDays, Flag, User, UserPlus } from 'lucide-react';
+import { CalendarDays, Flag, User, UserPlus, Phone, School, CreditCard } from 'lucide-react';
 import ExportButton from '@/components/ui/ExportButton';
 import DetailPanel from '@/components/ui/DetailPanel';
 import StudentDetail from './StudentDetail';
 import FilterButton, { FilterCategory } from '@/components/ui/FilterButton';
+import { Link } from 'react-router-dom';
 
 interface StudentsListProps {
   data: Student[];
@@ -46,7 +47,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
 
   // Extract unique status values from data for filter options
   const statusOptions = useMemo(() => {
-    const statuses = [...new Set(data.map(s => s.trang_thai || 'Active'))].map(status => ({
+    const statuses = [...new Set(data.map(s => s.trang_thai || 'active'))].map(status => ({
       label: status === 'active' ? 'Đang học' : 
              status === 'inactive' ? 'Đã nghỉ' : 
              status === 'pending' ? 'Chờ xử lý' : status,
@@ -131,6 +132,39 @@ const StudentsList: React.FC<StudentsListProps> = ({
       ),
     },
     {
+      title: 'Phụ huynh',
+      key: 'ten_ph',
+      sortable: true,
+      render: (value: string, student: Student) => (
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4 text-muted-foreground" />
+          {value || student.ten_PH || 'Chưa có thông tin'}
+        </div>
+      ),
+    },
+    {
+      title: 'Số điện thoại',
+      key: 'sdt_ph1',
+      sortable: true,
+      render: (value: string, student: Student) => (
+        <div className="flex items-center gap-2">
+          <Phone className="h-4 w-4 text-muted-foreground" />
+          {value || student.so_dien_thoai || 'Chưa có SĐT'}
+        </div>
+      ),
+    },
+    {
+      title: 'Cơ sở',
+      key: 'co_so_id',
+      sortable: true,
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <School className="h-4 w-4 text-muted-foreground" />
+          {value || 'Chưa xác định'}
+        </div>
+      ),
+    },
+    {
       title: 'Trạng thái',
       key: 'trang_thai',
       sortable: true,
@@ -180,6 +214,12 @@ const StudentsList: React.FC<StudentsListProps> = ({
           onClose={handleDetailClose}
           footerContent={
             <div className="flex justify-end space-x-2">
+              <Button variant="outline" asChild>
+                <Link to={`/finance/entity/student/${selectedStudent.id}`}>
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Thu chi
+                </Link>
+              </Button>
               <Button variant="default" onClick={handleEdit}>
                 Sửa thông tin
               </Button>

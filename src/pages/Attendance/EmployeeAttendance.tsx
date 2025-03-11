@@ -119,18 +119,18 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
   // Get status badge for attendance record
   const getStatusBadge = (status: string, isVerified: boolean) => {
     if (!isVerified) {
-      return <Badge variant="outline">Chưa xác nhận</Badge>;
+      return <Badge variant="outline" className="text-xs px-1 py-0">Chưa xác nhận</Badge>;
     }
     
     switch (status) {
       case 'present':
-        return <Badge variant="success">Có mặt</Badge>;
+        return <Badge variant="success" className="text-xs px-1 py-0">Có mặt</Badge>;
       case 'late':
-        return <Badge variant="warning">Đi muộn</Badge>;
+        return <Badge variant="warning" className="text-xs px-1 py-0">Đi muộn</Badge>;
       case 'absent':
-        return <Badge variant="destructive">Vắng mặt</Badge>;
+        return <Badge variant="destructive" className="text-xs px-1 py-0">Vắng mặt</Badge>;
       default:
-        return <Badge variant="outline">Không xác định</Badge>;
+        return <Badge variant="outline" className="text-xs px-1 py-0">Không xác định</Badge>;
     }
   };
 
@@ -140,15 +140,42 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
     return time.substring(0, 5); // Extract HH:MM
   };
 
-  // Render attendance record for a specific employee and date
-  const renderEmployeeAttendanceForDate = (employeeId: string, date: string) => {
+  // Group records for a specific employee and date by session (morning/afternoon)
+  const groupRecordsBySession = (employeeId: string, date: string) => {
     if (!groupedAttendance[employeeId]) return null;
     
     const recordsForDate = groupedAttendance[employeeId].records.filter(
       record => record.ngay === date
     );
     
-    if (recordsForDate.length === 0) {
+    if (recordsForDate.length === 0) return null;
+    
+    // Group into morning (before 12:00) and afternoon (after 12:00)
+    const result = {
+      morning: [] as AttendanceRecord[],
+      afternoon: [] as AttendanceRecord[],
+    };
+    
+    recordsForDate.forEach(record => {
+      if (record.thoi_gian_bat_dau) {
+        // Parse time to determine if it's morning or afternoon
+        const hour = parseInt(record.thoi_gian_bat_dau.split(':')[0], 10);
+        if (hour < 12) {
+          result.morning.push(record);
+        } else {
+          result.afternoon.push(record);
+        }
+      }
+    });
+    
+    return result;
+  };
+
+  // Render attendance record for a specific employee and date
+  const renderEmployeeAttendanceForDate = (employeeId: string, date: string) => {
+    const groupedRecords = groupRecordsBySession(employeeId, date);
+    
+    if (!groupedRecords) {
       return (
         <div className="text-center text-muted-foreground text-sm">
           -
@@ -156,36 +183,51 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
       );
     }
     
-    // Sort records by start time
-    recordsForDate.sort((a, b) => {
-      if (!a.thoi_gian_bat_dau) return 1;
-      if (!b.thoi_gian_bat_dau) return -1;
-      return a.thoi_gian_bat_dau.localeCompare(b.thoi_gian_bat_dau);
-    });
-    
     return (
-      <div className="space-y-1">
-        {recordsForDate.map((record, index) => (
-          <div key={record.id} className={index > 0 ? "pt-1 border-t text-sm" : "text-sm"}>
-            <div className="flex items-center justify-between">
+      <div className="space-y-1 p-1">
+        {/* Morning records */}
+        {groupedRecords.morning.length > 0 && (
+          <div className="text-xs">
+            <div className="flex justify-between items-center">
               <div className="flex items-center text-muted-foreground">
-                {index === 0 ? <Clock8 className="h-3 w-3 mr-1" /> : <Clock4 className="h-3 w-3 mr-1" />}
+                <Clock8 className="h-3 w-3 mr-1" />
                 <span>
-                  {formatTime(record.thoi_gian_bat_dau)} 
-                  {record.thoi_gian_ket_thuc ? ` - ${formatTime(record.thoi_gian_ket_thuc)}` : ''}
+                  {groupedRecords.morning.map(record => 
+                    `${formatTime(record.thoi_gian_bat_dau)} - ${formatTime(record.thoi_gian_ket_thuc)}`
+                  ).join(', ')}
                 </span>
               </div>
-              <span className="text-xs">
-                {getStatusBadge(record.trang_thai, record.xac_nhan)}
+              <span>
+                {getStatusBadge(
+                  groupedRecords.morning[0].trang_thai, 
+                  groupedRecords.morning[0].xac_nhan
+                )}
               </span>
             </div>
-            {record.session && (
-              <div className="text-xs text-muted-foreground mt-1">
-                {record.session}
-              </div>
-            )}
           </div>
-        ))}
+        )}
+        
+        {/* Afternoon records */}
+        {groupedRecords.afternoon.length > 0 && (
+          <div className={`text-xs ${groupedRecords.morning.length > 0 ? 'pt-1 border-t' : ''}`}>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center text-muted-foreground">
+                <Clock4 className="h-3 w-3 mr-1" />
+                <span>
+                  {groupedRecords.afternoon.map(record => 
+                    `${formatTime(record.thoi_gian_bat_dau)} - ${formatTime(record.thoi_gian_ket_thuc)}`
+                  ).join(', ')}
+                </span>
+              </div>
+              <span>
+                {getStatusBadge(
+                  groupedRecords.afternoon[0].trang_thai, 
+                  groupedRecords.afternoon[0].xac_nhan
+                )}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -260,7 +302,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-40 sticky left-0 bg-background">Nhân viên</TableHead>
+                    <TableHead className="min-w-40 sticky left-0 bg-background z-10">Nhân viên</TableHead>
                     {uniqueDates.map(date => (
                       <TableHead key={date} className="text-center min-w-28">
                         <div className={`flex flex-col items-center ${isToday(parseISO(date)) ? 'text-primary font-bold' : ''}`}>
@@ -276,7 +318,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
                 <TableBody>
                   {Object.entries(groupedAttendance).map(([employeeId, { name, records }]) => (
                     <TableRow key={employeeId}>
-                      <TableCell className="font-medium sticky left-0 bg-background">
+                      <TableCell className="font-medium sticky left-0 bg-background z-10">
                         <div className="flex flex-col">
                           <span>{name}</span>
                           <span className="text-xs text-muted-foreground">
@@ -285,7 +327,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
                         </div>
                       </TableCell>
                       {uniqueDates.map(date => (
-                        <TableCell key={`${employeeId}-${date}`} className="p-2">
+                        <TableCell key={`${employeeId}-${date}`} className="p-1">
                           {renderEmployeeAttendanceForDate(employeeId, date)}
                         </TableCell>
                       ))}

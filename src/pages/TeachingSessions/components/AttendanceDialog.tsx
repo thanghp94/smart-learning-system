@@ -1,171 +1,157 @@
 
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast";
-import { attendanceService, enrollmentService } from '@/lib/supabase';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { attendanceService } from '@/lib/supabase';
 
-interface StudentDetails {
-  id: string;
-  ten_hoc_sinh: string;
-  hinh_anh_hoc_sinh?: string;
-  ma_hoc_sinh?: string;
-}
-
-interface ProcessedStudent {
-  id: string;
-  ten_hoc_sinh: string;
-  hinh_anh_hoc_sinh?: string;
-  ma_hoc_sinh?: string;
-  enrollmentId?: string;
-}
-
-interface AttendanceDialogProps {
+export interface AttendanceDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  onClose: () => void;
   sessionId: string;
-  onAttendanceUpdated: () => void;
+  classId: string;
 }
 
-const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ open, setOpen, sessionId, onAttendanceUpdated }) => {
-  const [studentsData, setStudentsData] = useState<any[]>([]);
-  const [attendanceData, setAttendanceData] = useState<Record<string, boolean>>({});
+const AttendanceDialog: React.FC<AttendanceDialogProps> = ({
+  open,
+  onClose,
+  sessionId,
+  classId
+}) => {
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: boolean }>({});
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
+  // Fetch students in this class
   useEffect(() => {
-    const fetchEnrollments = async () => {
+    const fetchStudents = async () => {
+      if (!open) return;
+      setLoading(true);
       try {
-        if (!sessionId) return;
+        // Fetch students from the API
+        const enrolledStudents = await fetch(`/api/classes/${classId}/students`).then(res => res.json());
         
-        // Get enrollments for this session
-        const enrollments = await enrollmentService.getBySession(sessionId);
+        // Process data to have the format we need
+        const processedStudents = enrolledStudents.map((student: any) => ({
+          id: student.id,
+          ten_hoc_sinh: student.ten_hoc_sinh || student.name || '',
+          hinh_anh_hoc_sinh: student.hinh_anh_hoc_sinh || student.image || '',
+          ma_hoc_sinh: student.ma_hoc_sinh || student.code || ''
+        }));
         
-        if (enrollments && enrollments.length > 0) {
-          // Fetch student details for each enrollment
-          const studentDetails = enrollments.map(enrollment => ({
-            id: enrollment.hoc_sinh_id,
-            ten_hoc_sinh: enrollment.students && enrollment.students[0] ? enrollment.students[0].ten_hoc_sinh : 'Unknown',
-            hinh_anh_hoc_sinh: enrollment.students && enrollment.students[0] ? enrollment.students[0].hinh_anh_hoc_sinh : undefined,
-            ma_hoc_sinh: enrollment.students && enrollment.students[0] ? enrollment.students[0].ma_hoc_sinh : undefined,
-          }));
-          
-          setStudentsData(studentDetails);
-
-          // Initialize attendance data based on fetched enrollments
-          const initialAttendance: Record<string, boolean> = {};
-          studentDetails.forEach(student => {
-            initialAttendance[student.id] = false; // Default to absent
-          });
-          setAttendanceData(initialAttendance);
-        } else {
-          setStudentsData([]);
-          setAttendanceData({});
-        }
-      } catch (error) {
-        console.error("Error fetching enrollments:", error);
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải danh sách học sinh đã đăng ký.",
-          variant: "destructive",
+        setStudents(processedStudents);
+        
+        // Initialize all students as absent
+        const initialStatus: { [key: string]: boolean } = {};
+        processedStudents.forEach((student: any) => {
+          initialStatus[student.id] = false;
         });
-        setStudentsData([]);
-        setAttendanceData({});
+        setAttendanceStatus(initialStatus);
+      } catch (error) {
+        console.error('Failed to fetch students:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải danh sách học sinh',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (open) {
-      fetchEnrollments();
-    }
-  }, [open, sessionId, toast]);
+    fetchStudents();
+  }, [open, classId, toast]);
 
-  const handleAttendanceChange = (studentId: string, isPresent: boolean) => {
-    setAttendanceData(prevData => ({
-      ...prevData,
-      [studentId]: isPresent,
+  // Toggle attendance status for a student
+  const toggleAttendance = (studentId: string) => {
+    setAttendanceStatus(prev => ({
+      ...prev,
+      [studentId]: !prev[studentId]
     }));
   };
 
-  const handleSubmit = async () => {
+  // Save attendance
+  const saveAttendance = async () => {
+    setSaving(true);
     try {
-      // Prepare attendance records to be saved
-      const attendanceRecords = Object.keys(attendanceData).map(studentId => ({
+      // Convert attendance status to the format expected by the API
+      const attendanceRecords = Object.entries(attendanceStatus).map(([studentId, isPresent]) => ({
         teaching_session_id: sessionId,
-        enrollment_id: studentId,
-        status: attendanceData[studentId] ? 'present' : 'absent',
+        student_id: studentId,
+        status: isPresent ? 'present' : 'absent',
+        created_at: new Date().toISOString()
       }));
 
-      // Save attendance records using the create method
-      for (const record of attendanceRecords) {
-        await attendanceService.create(record);
-      }
-
+      // Send data to the API
+      await attendanceService.saveAttendance(attendanceRecords);
+      
       toast({
-        title: "Thành công",
-        description: "Điểm danh thành công!",
+        title: 'Thành công',
+        description: 'Đã lưu điểm danh'
       });
-
-      setOpen(false);
-      onAttendanceUpdated();
+      onClose();
     } catch (error) {
-      console.error("Error saving attendance:", error);
+      console.error('Failed to save attendance:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể lưu điểm danh. Vui lòng thử lại.",
-        variant: "destructive",
+        title: 'Lỗi',
+        description: 'Không thể lưu điểm danh',
+        variant: 'destructive'
       });
+    } finally {
+      setSaving(false);
     }
   };
-
-  const processStudentData = (studentsData: any[]): ProcessedStudent[] => {
-    if (!studentsData || !Array.isArray(studentsData)) {
-      return [];
-    }
-    
-    return studentsData.map(student => ({
-      id: student.id,
-      ten_hoc_sinh: student.ten_hoc_sinh,
-      hinh_anh_hoc_sinh: student.hinh_anh_hoc_sinh,
-      ma_hoc_sinh: student.ma_hoc_sinh
-    }));
-  };
-
-  const processedStudents = processStudentData(studentsData);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Điểm danh</DialogTitle>
-          <DialogDescription>
-            Chọn học sinh có mặt trong buổi học.
-          </DialogDescription>
+          <DialogTitle>Điểm danh học sinh</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {processedStudents.map((student) => (
-            <div key={student.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`student-${student.id}`}
-                checked={attendanceData[student.id] || false}
-                onCheckedChange={(checked) => handleAttendanceChange(student.id, !!checked)}
-              />
-              <Label htmlFor={`student-${student.id}`}>{student.ten_hoc_sinh}</Label>
-            </div>
-          ))}
-        </div>
-        <DialogFooter>
-          <Button type="button" onClick={handleSubmit}>
-            Lưu điểm danh
-          </Button>
-        </DialogFooter>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <span>Đang tải danh sách học sinh...</span>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {students.length === 0 ? (
+              <p className="text-center text-muted-foreground">Không có học sinh nào trong lớp này</p>
+            ) : (
+              <>
+                <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                  {students.map((student: any) => (
+                    <div key={student.id} className="flex items-center justify-between p-2 border rounded">
+                      <div className="font-medium">{student.ten_hoc_sinh}</div>
+                      <Checkbox 
+                        checked={attendanceStatus[student.id] || false}
+                        onCheckedChange={() => toggleAttendance(student.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={onClose} disabled={saving}>
+                    Hủy
+                  </Button>
+                  <Button onClick={saveAttendance} disabled={saving}>
+                    {saving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang lưu...
+                      </>
+                    ) : 'Lưu điểm danh'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

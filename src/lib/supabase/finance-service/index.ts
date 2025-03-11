@@ -113,6 +113,24 @@ const extendedFinanceService = {
       console.error(`Error fetching transaction types:`, error);
       return [];
     }
+  },
+
+  // Add this method to fetch finances by entity type and ID
+  async getByEntity(entityType: string, entityId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('loai_doi_tuong', entityType)
+        .eq('doi_tuong_id', entityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Finance[];
+    } catch (error) {
+      console.error(`Error fetching finances for entity ${entityType} with ID ${entityId}:`, error);
+      throw error;
+    }
   }
 };
 
@@ -132,7 +150,6 @@ export const financeService = {
   getByStudent: baseFinanceService.getByStudent, 
   getByFacility: baseFinanceService.getByFacility,
   getByClass: baseFinanceService.getByClass,
-  getByEntity: baseFinanceService.getByEntity
 };
 
 export default financeService;

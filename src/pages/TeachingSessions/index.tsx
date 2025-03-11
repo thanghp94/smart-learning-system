@@ -264,6 +264,10 @@ const TeachingSessions = () => {
     </div>
   );
 
+  const handleToggleAttendanceDialog = () => {
+    setShowAttendanceDialog(!showAttendanceDialog);
+  };
+
   return (
     <>
       {sessions.length === 0 && !isLoading ? (
@@ -317,10 +321,10 @@ const TeachingSessions = () => {
         </DialogContent>
       </Dialog>
 
-      {selectedSession && (
+      {showAttendanceDialog && (
         <AttendanceDialog
-          isOpen={showAttendanceDialog}
-          onClose={() => setShowAttendanceDialog(false)}
+          open={showAttendanceDialog}
+          onClose={handleToggleAttendanceDialog}
           sessionId={selectedSession.id}
           classId={selectedSession.lop_chi_tiet_id}
         />

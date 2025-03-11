@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Checkbox } from "@/components/ui/checkbox"
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from 'sonner';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { enrollmentService, attendanceService } from '@/lib/supabase';
 
 // Add or fix type definitions
@@ -80,10 +81,8 @@ const AttendanceTab: React.FC = () => {
           status: status.isPresent ? 'present' : 'absent'
         }));
 
-        // Save each attendance record
-        for (const record of attendanceRecords) {
-          await attendanceService.create(record);
-        }
+        // Save attendance records
+        await attendanceService.saveAttendance(attendanceRecords);
         
         toast.success("Điểm danh thành công!");
       } else {
@@ -109,7 +108,7 @@ const AttendanceTab: React.FC = () => {
     }
     
     // Extract the student data properly
-    const studentData = Array.isArray(enrollmentData.students) && enrollmentData.students.length > 0
+    const studentData = enrollmentData.students && Array.isArray(enrollmentData.students) && enrollmentData.students.length > 0
       ? enrollmentData.students[0]  // Take the first student if it's an array
       : enrollmentData.student || { id: '', ten_hoc_sinh: '' };
     
@@ -132,36 +131,44 @@ const AttendanceTab: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {enrollments.map((enrollment) => {
-            const processedEnrollment = processEnrollmentData(enrollment);
-            const attendanceStatus = attendanceStatuses.find(status => status.enrollmentId === processedEnrollment.id);
-            const isPresent = attendanceStatus ? attendanceStatus.isPresent : false;
+          {enrollments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Không có học sinh nào trong lớp này</p>
+            </div>
+          ) : (
+            <>
+              {enrollments.map((enrollment) => {
+                const processedEnrollment = processEnrollmentData(enrollment);
+                const attendanceStatus = attendanceStatuses.find(status => status.enrollmentId === processedEnrollment.id);
+                const isPresent = attendanceStatus ? attendanceStatus.isPresent : false;
 
-            return (
-              <div key={processedEnrollment.id} className="flex items-center justify-between p-2 border rounded-md">
-                <div>{processedEnrollment.student.ten_hoc_sinh}</div>
-                <Checkbox
-                  checked={isPresent}
-                  onCheckedChange={() => toggleAttendance(processedEnrollment.id)}
-                  disabled={isLoading || isMarkingAttendance}
-                />
-              </div>
-            );
-          })}
-          <button
-            onClick={saveAttendance}
-            disabled={isLoading || isMarkingAttendance}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            {isMarkingAttendance ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Đang lưu...
-              </>
-            ) : (
-              "Lưu Điểm Danh"
-            )}
-          </button>
+                return (
+                  <div key={processedEnrollment.id} className="flex items-center justify-between p-2 border rounded-md">
+                    <div>{processedEnrollment.student.ten_hoc_sinh}</div>
+                    <Checkbox
+                      checked={isPresent}
+                      onCheckedChange={() => toggleAttendance(processedEnrollment.id)}
+                      disabled={isLoading || isMarkingAttendance}
+                    />
+                  </div>
+                );
+              })}
+              <Button
+                onClick={saveAttendance}
+                disabled={isLoading || isMarkingAttendance}
+                className="w-full"
+              >
+                {isMarkingAttendance ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  "Lưu Điểm Danh"
+                )}
+              </Button>
+            </>
+          )}
         </div>
       )}
     </div>
