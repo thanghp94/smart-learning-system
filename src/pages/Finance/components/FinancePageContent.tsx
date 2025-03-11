@@ -1,145 +1,137 @@
 
-import React from "react";
-import { Finance, Facility } from "@/lib/types";
-import DataTable from "@/components/ui/DataTable";
-import { Badge } from "@/components/ui/badge";
-import PlaceholderPage from "@/components/common/PlaceholderPage";
-import { format } from "date-fns";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FinanceLedger from "./FinanceLedger";
-import { useIsMobile } from "@/hooks/use-mobile";
-import CommandInterface from "@/components/CommandInterface";
-import FinanceActions from "./FinanceActions";
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { financeService } from '@/lib/supabase';
+import { Finance } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import FinanceList from './FinanceList';
+import FinanceStats from './FinanceStats';
+import FinanceLedger from './FinanceLedger';
+import FilterButton from '@/components/ui/FilterButton';
+import ExportButton from '@/components/ui/ExportButton';
 
-interface FinancePageContentProps {
-  finances: Finance[];
-  filteredFinances: Finance[];
-  facilities: Facility[];
-  isLoading: boolean;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  handleFilter: (filters: Record<string, string>) => void;
-  handleRowClick: (finance: Finance) => void;
-  handleAddClick: () => void;
-  fetchFinances: () => Promise<void>;
-}
+const FinancePageContent = () => {
+  const [finances, setFinances] = useState<Finance[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [tab, setTab] = useState("list");
+  const [filters, setFilters] = useState<Record<string, string>>({});
 
-const FinancePageContent: React.FC<FinancePageContentProps> = ({
-  finances,
-  filteredFinances,
-  facilities,
-  isLoading,
-  activeTab,
-  setActiveTab,
-  handleFilter,
-  handleRowClick,
-  handleAddClick,
-  fetchFinances,
-}) => {
-  const isMobile = useIsMobile();
+  useEffect(() => {
+    fetchFinances();
+  }, []);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const fetchFinances = async () => {
+    setIsLoading(true);
+    try {
+      const data = await financeService.getAll();
+      setFinances(data);
+    } catch (error) {
+      console.error('Error fetching finances:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải dữ liệu tài chính. Vui lòng thử lại sau.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
-  const columns = [
-    {
-      title: "Ngày",
-      key: "ngay",
-      sortable: true,
-      render: (value: string) => value ? format(new Date(value), 'dd/MM/yyyy') : '',
-    },
-    {
-      title: "Loại Thu Chi",
-      key: "loai_thu_chi",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={value === "income" ? "success" : "destructive"}>
-          {value === "income" ? "Thu" : "Chi"}
-        </Badge>
-      ),
-    },
-    {
-      title: "Hạng mục",
-      key: "loai_giao_dich",
-      sortable: true,
-    },
-    {
-      title: "Diễn Giải",
-      key: "dien_giai",
-    },
-    {
-      title: "Tổng Tiền",
-      key: "tong_tien",
-      sortable: true,
-      render: (value: number) => formatCurrency(value),
-    },
-    {
-      title: "Tình Trạng",
-      key: "tinh_trang",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={
-          value === "completed" ? "success" : 
-          value === "pending" ? "secondary" : 
-          "outline"
-        }>
-          {value === "completed" ? "Hoàn thành" : 
-           value === "pending" ? "Chờ xử lý" : 
-           value || "N/A"}
-        </Badge>
-      ),
-    },
-  ];
-  
-  // Mobile columns subset for responsive design
-  const mobileColumns = isMobile ? 
-    columns.filter(col => ['ngay', 'loai_thu_chi', 'tong_tien'].includes(col.key)) : 
-    columns;
 
-  const tableActions = (
-    <FinanceActions 
-      facilities={facilities}
-      filteredFinances={filteredFinances}
-      fetchFinances={fetchFinances}
-      handleAddClick={handleAddClick}
-      handleFilter={handleFilter}
-    />
-  );
+  const handleAddFinance = () => {
+    navigate('/finance/add');
+  };
+
+  const handleDeleteFinance = (finance: Finance) => {
+    setFinances(prev => prev.filter(f => f.id !== finance.id));
+  };
+
+  // Tính toán tổng thu, tổng chi và số dư
+  const totalIncome = finances.filter(f => f.loai_thu_chi === 'income').reduce((sum, f) => sum + f.tong_tien, 0);
+  const totalExpense = finances.filter(f => f.loai_thu_chi === 'expense').reduce((sum, f) => sum + f.tong_tien, 0);
+  const balance = totalIncome - totalExpense;
+
+  // Filter categories
+  const filterCategories = [
+    {
+      name: 'Loại',
+      type: 'other' as const,
+      options: [
+        { label: 'Thu', value: 'income', type: 'other' as const },
+        { label: 'Chi', value: 'expense', type: 'other' as const }
+      ]
+    },
+    {
+      name: 'Đối tượng',
+      type: 'other' as const,
+      options: [
+        { label: 'Học sinh', value: 'student', type: 'other' as const },
+        { label: 'Nhân viên', value: 'employee', type: 'other' as const },
+        { label: 'Cơ sở', value: 'facility', type: 'other' as const },
+        { label: 'Khác', value: 'other', type: 'other' as const }
+      ]
+    }
+  ];
+
+  // Apply filters
+  const filteredFinances = finances.filter(finance => {
+    for (const [key, value] of Object.entries(filters)) {
+      if (value) {
+        if (key === 'Loại' && finance.loai_thu_chi !== value) return false;
+        if (key === 'Đối tượng' && finance.loai_doi_tuong !== value) return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <>
-      <div className="hidden md:block mb-4">
-        <CommandInterface />
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <FilterButton
+            categories={filterCategories}
+            onFilter={setFilters}
+          />
+          <ExportButton
+            data={filteredFinances}
+            filename="Danh_sach_tai_chinh"
+            label="Xuất dữ liệu"
+          />
+        </div>
+        <Button onClick={handleAddFinance}>
+          <Plus className="h-4 w-4 mr-1" /> Thêm giao dịch
+        </Button>
       </div>
-      
-      <Tabs defaultValue="table" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="table">Bảng Dữ Liệu</TabsTrigger>
-          <TabsTrigger value="ledger">Sổ Kế Toán</TabsTrigger>
+
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="list">Danh sách</TabsTrigger>
+          <TabsTrigger value="stats">Thống kê</TabsTrigger>
+          <TabsTrigger value="ledger">Sổ cái</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="table" className="w-full">
-          {filteredFinances.length === 0 && !isLoading ? (
-            <PlaceholderPage
-              title="Tài Chính"
-              description="Quản lý thu chi và giao dịch tài chính"
-              addButtonAction={handleAddClick}
-            />
-          ) : (
-            <DataTable
-              columns={mobileColumns}
-              data={filteredFinances}
-              isLoading={isLoading}
-              onRowClick={handleRowClick}
-              searchable={true}
-              searchPlaceholder="Tìm kiếm giao dịch..."
-            />
-          )}
+        <TabsContent value="list">
+          <FinanceList 
+            finances={filteredFinances} 
+            isLoading={isLoading}
+            onDelete={handleDeleteFinance}
+          />
+        </TabsContent>
+        
+        <TabsContent value="stats">
+          <FinanceStats 
+            totalIncome={totalIncome}
+            totalExpense={totalExpense}
+            balance={balance}
+          />
         </TabsContent>
         
         <TabsContent value="ledger">
-          <FinanceLedger finances={finances} isLoading={isLoading} />
+          <FinanceLedger finances={filteredFinances} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
     </>

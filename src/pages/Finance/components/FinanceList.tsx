@@ -1,8 +1,14 @@
 
-import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { Finance } from "@/lib/types";
+import React from 'react';
+import { Finance } from '@/lib/types';
+import { TableCell, TableRow, TableBody, TableHead, TableHeader, Table } from "@/components/ui/table";
+import { Button } from '@/components/ui/button';
+import { Eye, Edit, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog';
+import { financeService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 export interface FinanceListProps {
   finances: Finance[];
@@ -11,9 +17,9 @@ export interface FinanceListProps {
 }
 
 const FinanceList: React.FC<FinanceListProps> = ({ finances, isLoading, onDelete }) => {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  };
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [confirmDelete, setConfirmDelete] = React.useState<Finance | null>(null);
 
   if (isLoading) {
     return (
@@ -31,37 +37,106 @@ const FinanceList: React.FC<FinanceListProps> = ({ finances, isLoading, onDelete
     );
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    
+    try {
+      await financeService.delete(confirmDelete.id);
+      toast({
+        title: "Thành công",
+        description: "Đã xóa giao dịch"
+      });
+      
+      if (onDelete) {
+        onDelete(confirmDelete);
+      }
+    } catch (error) {
+      console.error("Error deleting finance:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể xóa giao dịch",
+        variant: "destructive"
+      });
+    } finally {
+      setConfirmDelete(null);
+    }
+  };
+
   return (
-    <div className="divide-y">
-      {finances.map((finance) => (
-        <div key={finance.id} className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="flex items-center gap-2">
-                <Badge variant={finance.loai_thu_chi === 'income' ? 'success' : 'destructive'}>
-                  {finance.loai_thu_chi === 'income' ? 'Thu' : 'Chi'}
-                </Badge>
-                <span className="font-medium">{finance.loai_giao_dich || 'Chưa phân loại'}</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{finance.dien_giai}</p>
-            </div>
-            <div className="text-right">
-              <p className={`font-medium ${finance.loai_thu_chi === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Ngày</TableHead>
+            <TableHead>Diễn giải</TableHead>
+            <TableHead>Loại</TableHead>
+            <TableHead className="text-right">Số tiền</TableHead>
+            <TableHead className="text-right">Thao tác</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {finances.map((finance) => (
+            <TableRow key={finance.id}>
+              <TableCell className="font-medium">
+                {finance.ngay ? format(new Date(finance.ngay), 'dd/MM/yyyy') : 'N/A'}
+              </TableCell>
+              <TableCell>{finance.dien_giai || 'N/A'}</TableCell>
+              <TableCell>
+                <span className={`px-2 py-1 rounded-md text-xs ${finance.loai_thu_chi === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {finance.loai_thu_chi === 'income' ? 'Thu' : 'Chi'} - {finance.loai_giao_dich || 'N/A'}
+                </span>
+              </TableCell>
+              <TableCell className={`text-right font-medium ${finance.loai_thu_chi === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(finance.tong_tien)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {finance.ngay ? format(new Date(finance.ngay), 'dd/MM/yyyy') : 'Không có ngày'}
-              </p>
-            </div>
-          </div>
-          {finance.ghi_chu && (
-            <div className="mt-2">
-              <p className="text-xs text-muted-foreground">Ghi chú: {finance.ghi_chu}</p>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate(`/finance/${finance.id}`)}
+                    title="Xem chi tiết"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate(`/finance/edit/${finance.id}`)}
+                    title="Chỉnh sửa"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="text-red-500 hover:text-red-600"
+                    onClick={() => setConfirmDelete(finance)}
+                    title="Xóa"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <ConfirmActionDialog
+        isOpen={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={handleDelete}
+        title="Xóa giao dịch"
+        description="Bạn có chắc chắn muốn xóa giao dịch này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+      />
+    </>
   );
 };
 
