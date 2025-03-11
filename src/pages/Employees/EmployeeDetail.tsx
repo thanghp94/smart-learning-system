@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee, Task, Asset, Finance } from '@/lib/types';
@@ -82,10 +81,9 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
           setAssets([]);
         }
 
-        // Fetch finances
+        // Fetch finances using financeService.getByEntity
         try {
-          // Use getByEmployee instead of getByEmployeeId
-          const financesData = await financeService.getByEmployee(employeeId);
+          const financesData = await financeService.getByEntity('nhan_vien', employeeId);
           setFinances(financesData || []);
         } catch (financeError) {
           console.error('Error fetching employee finances:', financeError);

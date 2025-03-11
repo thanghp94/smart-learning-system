@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,7 +32,7 @@ interface FileFormProps {
 }
 
 const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
-  const [selectedEntityType, setSelectedEntityType] = useState<string>(initialData?.loai_doi_tuong || 'contact');
+  const [selectedEntityType, setSelectedEntityType] = useState<string>(initialData?.doi_tuong_lien_quan || 'contact');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -41,11 +42,15 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
   const form = useForm<FileFormData>({
     resolver: zodResolver(fileSchema),
     defaultValues: {
-      ten_file: initialData?.ten_file || '',
-      loai_doi_tuong: initialData?.loai_doi_tuong || 'contact',
-      doi_tuong_id: initialData?.doi_tuong_id || '',
-      duong_dan: initialData?.duong_dan || '',
+      ten_tai_lieu: initialData?.ten_tai_lieu || '',
+      loai_doi_tuong: initialData?.doi_tuong_lien_quan || 'contact',
+      doi_tuong_id: initialData?.lien_he_id || initialData?.nhan_vien_id || initialData?.co_so_id || initialData?.csvc_id || initialData?.hoc_sinh_id || '',
+      duong_dan: initialData?.file1 || '',
       ghi_chu: initialData?.ghi_chu || '',
+      nhom_tai_lieu: initialData?.nhom_tai_lieu || '',
+      ngay_cap: initialData?.ngay_cap || null,
+      han_tai_lieu: initialData?.han_tai_lieu || null,
+      trang_thai: initialData?.trang_thai || 'active',
     },
   });
 
@@ -85,12 +90,12 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
       case 'contact':
         return contacts.map(contact => ({
           value: contact.id,
-          label: contact.ho_ten || 'Không có tên'
+          label: contact.ten_lien_he || 'Không có tên'
         }));
       case 'employee':
         return employees.map(employee => ({
           value: employee.id,
-          label: employee.ho_ten || 'Không có tên'
+          label: employee.ten_nhan_su || 'Không có tên'
         }));
       case 'facility':
         return facilities.map(facility => ({
@@ -112,10 +117,10 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="ten_file"
+          name="ten_tai_lieu"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tên file</FormLabel>
+              <FormLabel>Tên tài liệu</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>

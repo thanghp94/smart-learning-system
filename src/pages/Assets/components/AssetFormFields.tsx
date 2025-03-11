@@ -22,13 +22,16 @@ const AssetFormFields: React.FC<AssetFormFieldsProps> = ({
 }) => {
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    handleChange({
+    // Create a properly typed event object for handleChange
+    const syntheticEvent = {
       target: {
         name,
-        value: value,
+        value,
         type: 'text'
       }
-    } as React.ChangeEvent<HTMLInputElement>);
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleChange(syntheticEvent);
   };
 
   return (
@@ -172,8 +175,8 @@ const AssetFormFields: React.FC<AssetFormFieldsProps> = ({
             <FormLabel>Hình ảnh 1</FormLabel>
             <FormControl>
               <ImageUpload 
-                imageUrl={field.value || ''} 
-                onImageUpload={(url) => handleImageUpload(url, 'hinh_anh')} 
+                value={field.value || ''} 
+                onChange={(url) => handleImageUpload(url, 'hinh_anh')} 
               />
             </FormControl>
             <FormMessage />
@@ -189,8 +192,8 @@ const AssetFormFields: React.FC<AssetFormFieldsProps> = ({
             <FormLabel>Hình ảnh 2</FormLabel>
             <FormControl>
               <ImageUpload 
-                imageUrl={field.value || ''} 
-                onImageUpload={(url) => handleImageUpload(url, 'hinh_anh_2')} 
+                value={field.value || ''} 
+                onChange={(url) => handleImageUpload(url, 'hinh_anh_2')} 
               />
             </FormControl>
             <FormMessage />
