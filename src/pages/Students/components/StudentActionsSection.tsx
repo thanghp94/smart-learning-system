@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { RotateCw } from 'lucide-react';
 import { Student } from '@/lib/types';
 import EnrollStudentButton from './EnrollStudentButton';

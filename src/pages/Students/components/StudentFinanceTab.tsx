@@ -18,7 +18,7 @@ const StudentFinanceTab: React.FC<StudentFinanceTabProps> = ({ studentId }) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <EntityFinancesView entityType="student" entityId={studentId} />
+        <EntityFinancesView entityType="hoc_sinh" entityId={studentId} />
       </CardContent>
     </Card>
   );

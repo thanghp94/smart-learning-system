@@ -1,3 +1,4 @@
+
 import { financeService as baseFinanceService } from '../finance-service';
 import { receiptTemplateService } from './receipt-template-service';
 import { Finance } from '@/lib/types';
@@ -237,17 +238,6 @@ export const financeService = {
   ...baseFinanceService,
   ...receiptTemplateService,
   ...extendedFinanceService,
-  
-  // Explicitly add the base methods to ensure they're available
-  getAll: baseFinanceService.getAll,
-  getById: baseFinanceService.getById,
-  create: baseFinanceService.create,
-  update: baseFinanceService.update,
-  delete: baseFinanceService.delete,
-  getByEmployee: baseFinanceService.getByEmployee,
-  getByStudent: baseFinanceService.getByStudent, 
-  getByFacility: baseFinanceService.getByFacility,
-  getByClass: baseFinanceService.getByClass,
 };
 
 export default financeService;

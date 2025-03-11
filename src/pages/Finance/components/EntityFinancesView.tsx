@@ -26,14 +26,18 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, ent
     try {
       let data: Finance[] = [];
       
-      if (entityId) {
+      if (entityId && entityType) {
+        console.log(`Fetching finances for ${entityType} with ID ${entityId}`);
         data = await financeService.getByEntity(entityType, entityId);
       } else if (entityType) {
+        console.log(`Fetching finances by entity type: ${entityType}`);
         data = await financeService.getFinancesByEntityType(entityType);
       } else {
+        console.log('Fetching all finances');
         data = await financeService.getAllFinances();
       }
       
+      console.log('Retrieved finances:', data);
       setFinances(data);
     } catch (error) {
       console.error('Error fetching finances:', error);
@@ -101,9 +105,9 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, ent
         <CardHeader>
           <CardTitle>Danh sách giao dịch</CardTitle>
           <CardDescription>
-            {entityType === 'student' ? 'Giao dịch tài chính của học sinh' : 
-             entityType === 'employee' ? 'Giao dịch tài chính của nhân viên' :
-             entityType === 'facility' ? 'Giao dịch tài chính của cơ sở' :
+            {entityType === 'hoc_sinh' ? 'Giao dịch tài chính của học sinh' : 
+             entityType === 'nhan_vien' ? 'Giao dịch tài chính của nhân viên' :
+             entityType === 'co_so' ? 'Giao dịch tài chính của cơ sở' :
              'Tất cả giao dịch tài chính'}
           </CardDescription>
         </CardHeader>

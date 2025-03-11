@@ -9,6 +9,7 @@ import { vi } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { facilityService, enrollmentService } from '@/lib/supabase';
+import EntityFinancesView from '@/pages/Finance/components/EntityFinancesView';
 
 interface StudentDetailProps {
   student: Student;
@@ -221,13 +222,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, facilities = {} 
       </TabsContent>
 
       <TabsContent value="finance" className="space-y-4">
-        <div className="flex justify-center">
-          <Link to={`/finance/entity/student/${student.id}`}>
-            <Button>
-              Xem thu chi của học sinh
-            </Button>
-          </Link>
-        </div>
+        <EntityFinancesView entityType="hoc_sinh" entityId={student.id} />
       </TabsContent>
 
       <TabsContent value="enrollments" className="space-y-4">
@@ -253,6 +248,13 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, facilities = {} 
                     {enrollment.tong_tien && (
                       <div className="text-sm mt-1">
                         Học phí: {Number(enrollment.tong_tien).toLocaleString('vi-VN')} VNĐ
+                      </div>
+                    )}
+                    {enrollment.class_id && (
+                      <div className="mt-2">
+                        <Link to={`/classes/${enrollment.class_id}`}>
+                          <Button variant="outline" size="sm">Xem lớp</Button>
+                        </Link>
                       </div>
                     )}
                   </div>
