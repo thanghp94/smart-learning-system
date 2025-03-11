@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +76,7 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({ sessionId, classId }) => 
       
       if (enrollmentsError) throw enrollmentsError;
       
-      // Process and format attendance data
+      // Process and format attendance data - properly accessing the student object for each enrollment
       const formattedData: AttendanceData[] = attendanceRecords.map(attendance => {
         const enrollment = enrollmentsData?.find(e => e.id === attendance.enrollment_id);
         const student = enrollment?.students;

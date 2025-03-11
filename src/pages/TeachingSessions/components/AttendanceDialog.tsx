@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -21,9 +20,13 @@ interface AttendanceDialogProps {
   classId?: string;
 }
 
+interface ExtendedProcessedStudent extends ProcessedStudent {
+  enrollmentId: string;
+}
+
 const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, sessionId, classId }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [students, setStudents] = useState<ProcessedStudent[]>([]);
+  const [students, setStudents] = useState<ExtendedProcessedStudent[]>([]);
   const [attendanceData, setAttendanceData] = useState<Record<string, { status: string; notes: string; lateMinutes?: number }>>({});
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -38,7 +41,6 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, se
     try {
       setIsLoading(true);
       
-      // Fetch class details to get the lop_chi_tiet_id if not provided
       let classDetailId = classId;
       if (!classDetailId) {
         const { data: sessionData } = await supabase
@@ -56,7 +58,6 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, se
         throw new Error('Class ID not found');
       }
 
-      // Get enrollments with student details
       const { data: enrollmentsData, error: enrollmentsError } = await supabase
         .from('enrollments')
         .select(`
@@ -73,11 +74,9 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, se
 
       if (enrollmentsError) throw enrollmentsError;
 
-      // Get existing attendance records
       const attendanceRecords = await attendanceService.getByTeachingSession(sessionId);
 
-      // Process students data
-      const processedStudents: ProcessedStudent[] = enrollmentsData?.map(enrollment => ({
+      const processedStudents: ExtendedProcessedStudent[] = enrollmentsData?.map(enrollment => ({
         id: enrollment.students.id,
         name: enrollment.students.ten_hoc_sinh,
         image: enrollment.students.hinh_anh_hoc_sinh,
@@ -85,7 +84,6 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, se
         enrollmentId: enrollment.id
       })) || [];
 
-      // Initialize attendance data
       const initialAttendanceData: Record<string, { status: string; notes: string; lateMinutes?: number }> = {};
       
       processedStudents.forEach(student => {
@@ -156,7 +154,6 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, se
     try {
       setIsSaving(true);
       
-      // Convert attendance data to an array of records to save
       const attendancePromises = students.map(async (student) => {
         const data = attendanceData[student.enrollmentId];
         
@@ -170,15 +167,12 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ isOpen, onClose, se
           thoi_gian_tre: data.status === 'late' ? data.lateMinutes : 0
         };
         
-        // Check if record already exists
         const existingRecords = await attendanceService.getByTeachingSession(sessionId);
         const existingRecord = existingRecords.find(record => record.enrollment_id === student.enrollmentId);
         
         if (existingRecord) {
-          // Update existing record
           return attendanceService.update(existingRecord.id, attendanceRecord);
         } else {
-          // Create new record
           return attendanceService.create(attendanceRecord);
         }
       });

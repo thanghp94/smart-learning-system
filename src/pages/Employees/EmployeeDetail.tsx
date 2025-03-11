@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee, Task, Asset, Finance } from '@/lib/types';
@@ -57,8 +56,8 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
 
         // Fetch assets
         try {
-          // Assume asset service has a method to get assets by employee
-          const assetsData = await assetService.getByEmployeeId(employeeId);
+          // Use getByOwner instead of getByEmployeeId
+          const assetsData = await assetService.getByOwner('employee', employeeId);
           setAssets(assetsData || []);
         } catch (error) {
           console.error('Error fetching employee assets:', error);
@@ -67,8 +66,8 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
 
         // Fetch finances
         try {
-          // Assume finance service has a method to get finances by employee
-          const financesData = await financeService.getByEmployeeId(employeeId);
+          // Use getByEmployee instead of getByEmployeeId
+          const financesData = await financeService.getByEmployee(employeeId);
           setFinances(financesData || []);
         } catch (error) {
           console.error('Error fetching employee finances:', error);
@@ -323,9 +322,9 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
       <Tabs defaultValue="tasks">
         <TabsList>
           <TabsTrigger value="tasks">Công việc</TabsTrigger>
-          <TabsTrigger value="attendance">Điểm danh</TabsTrigger>
-          <TabsTrigger value="assets">Cơ sở vật chất</TabsTrigger>
-          <TabsTrigger value="finances">Tài chính</TabsTrigger>
+          <TabsTrigger value="attendance">Chấm công</TabsTrigger>
+          <TabsTrigger value="assets">Tài sản</TabsTrigger>
+          <TabsTrigger value="finances">Thu chi</TabsTrigger>
         </TabsList>
         
         <TabsContent value="tasks">
@@ -347,7 +346,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         <TabsContent value="attendance">
           <Card>
             <CardHeader>
-              <CardTitle>Điểm danh</CardTitle>
+              <CardTitle>Chấm công</CardTitle>
               <CardDescription>Lịch sử chấm công</CardDescription>
             </CardHeader>
             <CardContent>
@@ -363,7 +362,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         <TabsContent value="assets">
           <Card>
             <CardHeader>
-              <CardTitle>Cơ sở vật chất</CardTitle>
+              <CardTitle>Tài sản</CardTitle>
               <CardDescription>Tài sản được giao cho nhân viên</CardDescription>
             </CardHeader>
             <CardContent>
@@ -379,7 +378,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
         <TabsContent value="finances">
           <Card>
             <CardHeader>
-              <CardTitle>Tài chính</CardTitle>
+              <CardTitle>Thu chi</CardTitle>
               <CardDescription>Các giao dịch tài chính liên quan</CardDescription>
             </CardHeader>
             <CardContent>

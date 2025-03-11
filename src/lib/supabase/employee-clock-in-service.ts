@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types/employee-clock-in-out';
@@ -36,6 +35,22 @@ class EmployeeClockInService {
       return data as EmployeeClockInOut[];
     } catch (error) {
       console.error('Error fetching employee clock in records:', error);
+      throw error;
+    }
+  }
+
+  async getMonthlyAttendance(month: number, year: number) {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_monthly_attendance_summary', {
+          p_month: month,
+          p_year: year
+        });
+      
+      if (error) throw error;
+      return data as EmployeeClockInOut[];
+    } catch (error) {
+      console.error('Error fetching monthly attendance summary:', error);
       throw error;
     }
   }

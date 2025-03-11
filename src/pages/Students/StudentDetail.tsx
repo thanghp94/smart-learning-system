@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -53,12 +52,10 @@ const StudentDetail = () => {
       setIsLoading(true);
       try {
         if (id) {
-          // Fetch student data
           const studentData = await studentService.getById(id);
           setStudent(studentData);
           setTempStudentData({ ...studentData });
           
-          // Fetch enrollments for the student
           const studentEnrollments = await enrollmentService.getByStudent(id);
           setEnrollments(studentEnrollments || []);
         }
@@ -187,7 +184,6 @@ const StudentDetail = () => {
 
         <TabsContent value="info" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Thông tin cá nhân */}
             <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle>Thông tin cá nhân</CardTitle>
@@ -251,7 +247,7 @@ const StudentDetail = () => {
                         <Textarea
                           id="ghi_chu"
                           name="ghi_chu"
-                          value={tempStudentData?.ghi_chu || tempStudentData?.mo_ta_hs || ''}
+                          value={tempStudentData?.ghi_chu || ''}
                           onChange={handleChange}
                           rows={3}
                         />
@@ -287,7 +283,7 @@ const StudentDetail = () => {
 
                       <div className="space-y-1 md:col-span-2">
                         <span className="text-sm text-muted-foreground">Ghi chú</span>
-                        <p className="font-medium">{student.ghi_chu || student.mo_ta_hs || 'Chưa cập nhật'}</p>
+                        <p className="font-medium">{student.ghi_chu || 'Chưa cập nhật'}</p>
                       </div>
                     </>
                   )}
@@ -295,7 +291,6 @@ const StudentDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Thông tin học vấn & liên hệ */}
             <Card>
               <CardHeader>
                 <CardTitle>Thông tin liên hệ</CardTitle>
@@ -377,7 +372,6 @@ const StudentDetail = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Thông tin trường học */}
             <Card>
               <CardHeader>
                 <CardTitle>Thông tin học vấn</CardTitle>
@@ -436,7 +430,6 @@ const StudentDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Thông tin học phí */}
             <Card>
               <CardHeader>
                 <CardTitle>Thông tin học phí</CardTitle>
@@ -502,7 +495,6 @@ const StudentDetail = () => {
             </Card>
           </div>
 
-          {/* Hành động */}
           <Card>
             <CardHeader className="flex justify-between">
               <CardTitle>Hành động</CardTitle>
@@ -517,7 +509,6 @@ const StudentDetail = () => {
                     description: 'Đã ghi danh học sinh vào lớp',
                   });
                   
-                  // Refresh enrollments after successful creation
                   try {
                     const studentEnrollments = await enrollmentService.getByStudent(id || '');
                     setEnrollments(studentEnrollments || []);
