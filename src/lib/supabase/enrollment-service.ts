@@ -80,8 +80,8 @@ export const enrollmentService = {
     try {
       const { data, error } = await supabase
         .from('enrollments')
-        .select('*')
-        .eq('session_id', sessionId)
+        .select('*, students(*)')
+        .eq('buoi_day_id', sessionId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -97,14 +97,31 @@ export const enrollmentService = {
       const { data, error } = await supabase
         .from('enrollments')
         .select('*')
-        .eq('class_id', classId)
-        .eq('session_id', sessionId)
+        .eq('lop_chi_tiet_id', classId)
+        .eq('buoi_day_id', sessionId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data;
     } catch (error) {
       console.error(`Error fetching enrollments for class ${classId} and session ${sessionId}:`, error);
+      throw error;
+    }
+  },
+  
+  // Add the missing method
+  async getEnrollmentsBySessionId(sessionId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select('*, students(*)')
+        .eq('buoi_day_id', sessionId)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching enrollments for session ${sessionId}:`, error);
       throw error;
     }
   }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -7,10 +8,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { attendanceService, enrollmentService } from '@/lib/supabase';
 
@@ -27,7 +27,6 @@ interface ProcessedStudent {
   hinh_anh_hoc_sinh?: string;
   ma_hoc_sinh?: string;
   enrollmentId?: string;
-  // Add other properties as needed
 }
 
 interface AttendanceDialogProps {
@@ -45,15 +44,20 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ open, setOpen, sess
   useEffect(() => {
     const fetchEnrollments = async () => {
       try {
-        const enrollments = await enrollmentService.getEnrollmentsBySessionId(sessionId);
+        if (!sessionId) return;
+        
+        // Get enrollments for this session
+        const enrollments = await enrollmentService.getBySession(sessionId);
+        
         if (enrollments && enrollments.length > 0) {
           // Fetch student details for each enrollment
           const studentDetails = enrollments.map(enrollment => ({
             id: enrollment.hoc_sinh_id,
-            ten_hoc_sinh: enrollment.students[0].ten_hoc_sinh,
-            hinh_anh_hoc_sinh: enrollment.students[0].hinh_anh_hoc_sinh,
-            ma_hoc_sinh: enrollment.students[0].ma_hoc_sinh,
+            ten_hoc_sinh: enrollment.students && enrollment.students[0] ? enrollment.students[0].ten_hoc_sinh : 'Unknown',
+            hinh_anh_hoc_sinh: enrollment.students && enrollment.students[0] ? enrollment.students[0].hinh_anh_hoc_sinh : undefined,
+            ma_hoc_sinh: enrollment.students && enrollment.students[0] ? enrollment.students[0].ma_hoc_sinh : undefined,
           }));
+          
           setStudentsData(studentDetails);
 
           // Initialize attendance data based on fetched enrollments
@@ -94,13 +98,15 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ open, setOpen, sess
     try {
       // Prepare attendance records to be saved
       const attendanceRecords = Object.keys(attendanceData).map(studentId => ({
-        session_id: sessionId,
-        student_id: studentId,
-        is_present: attendanceData[studentId],
+        teaching_session_id: sessionId,
+        enrollment_id: studentId,
+        status: attendanceData[studentId] ? 'present' : 'absent',
       }));
 
-      // Save attendance records
-      await attendanceService.saveAttendance(attendanceRecords);
+      // Save attendance records using the create method
+      for (const record of attendanceRecords) {
+        await attendanceService.create(record);
+      }
 
       toast({
         title: "Thành công",
@@ -149,7 +155,7 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({ open, setOpen, sess
               <Checkbox
                 id={`student-${student.id}`}
                 checked={attendanceData[student.id] || false}
-                onCheckedChange={(checked) => handleAttendanceChange(student.id, checked || false)}
+                onCheckedChange={(checked) => handleAttendanceChange(student.id, !!checked)}
               />
               <Label htmlFor={`student-${student.id}`}>{student.ten_hoc_sinh}</Label>
             </div>

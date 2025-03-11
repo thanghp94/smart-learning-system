@@ -77,6 +77,35 @@ class AttendanceService {
       throw error;
     }
   }
+  
+  // Add the saveAttendance method
+  async saveAttendance(attendanceRecords: any[]) {
+    try {
+      // First delete any existing attendance records for this session to avoid duplicates
+      if (attendanceRecords.length > 0) {
+        const sessionId = attendanceRecords[0].teaching_session_id || attendanceRecords[0].session_id;
+        
+        if (sessionId) {
+          await supabase
+            .from('attendances')
+            .delete()
+            .eq('teaching_session_id', sessionId);
+        }
+      }
+      
+      // Insert all the new attendance records
+      const { data, error } = await supabase
+        .from('attendances')
+        .insert(attendanceRecords)
+        .select();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error saving attendance records:', error);
+      throw error;
+    }
+  }
 }
 
 export const attendanceService = new AttendanceService();

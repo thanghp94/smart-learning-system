@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Checkbox } from "@/components/ui/checkbox"
-import { api } from '@/convex/_generated/api';
-import { useQuery, useMutation } from 'convex/react';
 import { toast } from 'sonner';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { enrollmentService, attendanceService } from '@/lib/supabase';
 
 // Add or fix type definitions
 interface StudentInfo {
@@ -27,25 +27,38 @@ interface AttendanceStatus {
 const AttendanceTab: React.FC = () => {
   const { id: sessionId } = useParams();
   const [attendanceStatuses, setAttendanceStatuses] = useState<AttendanceStatus[]>([]);
-  const enrollments = useQuery(api.enrollments.getEnrollmentsWithStudents);
+  const [enrollments, setEnrollments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
 
   useEffect(() => {
-    if (enrollments) {
-      // Process the enrollment data to match the expected structure
-      const processedStatuses = enrollments.map(enrollment => {
-        const processedEnrollment = processEnrollmentData(enrollment);
-        return {
-          enrollmentId: processedEnrollment.id,
-          isPresent: false // Default to absent
-        };
-      });
-      setAttendanceStatuses(processedStatuses);
-      setIsLoading(false);
-    }
-  }, [enrollments]);
+    const fetchEnrollments = async () => {
+      try {
+        if (sessionId) {
+          // Fetch enrollments by session ID
+          const data = await enrollmentService.getBySession(sessionId);
+          setEnrollments(data || []);
+          
+          // Process the enrollment data to match the expected structure
+          const processedStatuses = (data || []).map(enrollment => {
+            const processedEnrollment = processEnrollmentData(enrollment);
+            return {
+              enrollmentId: processedEnrollment.id,
+              isPresent: false // Default to absent
+            };
+          });
+          setAttendanceStatuses(processedStatuses);
+        }
+      } catch (error) {
+        console.error("Error fetching enrollments:", error);
+        toast.error("Không thể tải danh sách học sinh");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const [markAttendance, { pending: isMarkingAttendance }] = useMutation(api.teachingSessions.markAttendance);
+    fetchEnrollments();
+  }, [sessionId]);
 
   const toggleAttendance = (enrollmentId: string) => {
     setAttendanceStatuses(prevStatuses =>
@@ -57,15 +70,21 @@ const AttendanceTab: React.FC = () => {
 
   const saveAttendance = async () => {
     setIsLoading(true);
+    setIsMarkingAttendance(true);
     try {
       if (sessionId) {
-        await markAttendance({
-          session_id: sessionId,
-          attendanceData: attendanceStatuses.map(status => ({
-            enrollment_id: status.enrollmentId,
-            is_present: status.isPresent,
-          })),
-        });
+        // Convert attendanceStatuses to the format expected by the API
+        const attendanceRecords = attendanceStatuses.map(status => ({
+          teaching_session_id: sessionId,
+          enrollment_id: status.enrollmentId,
+          status: status.isPresent ? 'present' : 'absent'
+        }));
+
+        // Save each attendance record
+        for (const record of attendanceRecords) {
+          await attendanceService.create(record);
+        }
+        
         toast.success("Điểm danh thành công!");
       } else {
         toast.error("Không tìm thấy ID buổi học.");
@@ -75,11 +94,11 @@ const AttendanceTab: React.FC = () => {
       toast.error("Không thể lưu điểm danh. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
+      setIsMarkingAttendance(false);
     }
   };
 
-  // Fix the type conversion in the component where the error occurs
-  // Find and replace the code that's causing the error with this:
+  // Process enrollment data to match the expected structure
   const processEnrollmentData = (enrollmentData: any): EnrollmentWithStudent => {
     if (!enrollmentData) {
       return {
@@ -95,11 +114,11 @@ const AttendanceTab: React.FC = () => {
       : enrollmentData.student || { id: '', ten_hoc_sinh: '' };
     
     return {
-      id: enrollmentData.id,
-      hoc_sinh_id: enrollmentData.hoc_sinh_id,
+      id: enrollmentData.id || '',
+      hoc_sinh_id: enrollmentData.hoc_sinh_id || '',
       student: {
-        id: studentData.id,
-        ten_hoc_sinh: studentData.ten_hoc_sinh,
+        id: studentData.id || '',
+        ten_hoc_sinh: studentData.ten_hoc_sinh || '',
         hinh_anh_hoc_sinh: studentData.hinh_anh_hoc_sinh
       }
     };
@@ -113,7 +132,7 @@ const AttendanceTab: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {enrollments?.map((enrollment) => {
+          {enrollments.map((enrollment) => {
             const processedEnrollment = processEnrollmentData(enrollment);
             const attendanceStatus = attendanceStatuses.find(status => status.enrollmentId === processedEnrollment.id);
             const isPresent = attendanceStatus ? attendanceStatus.isPresent : false;
