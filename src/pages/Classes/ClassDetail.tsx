@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, Calendar, User, Users, Book, Building, 
-  Trash2, Share2, FileEdit, ArrowLeft
+  Trash2, Share2, FileEdit, ArrowLeft, CreditCard
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,10 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Class, Student, TeachingSession, Enrollment, Evaluation } from '@/lib/types';
-import { enrollmentService, teachingSessionService, evaluationService } from '@/lib/supabase';
+import { enrollmentService, teachingSessionService, evaluationService, facilityService } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 import AddTeachingSessionButton from './AddTeachingSessionButton';
 import ViewEvaluationsButton from '../Evaluations/ViewEvaluationsButton';
 

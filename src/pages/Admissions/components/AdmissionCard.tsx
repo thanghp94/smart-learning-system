@@ -21,16 +21,16 @@ const AdmissionCard = ({ admission, onClick, onDragStart }: AdmissionCardProps) 
       draggable
       onDragStart={(e) => onDragStart(e, admission)}
     >
-      <CardContent className="p-3">
+      <CardContent className="p-2">
         <div className="flex items-start justify-between">
           <div className="flex items-center">
-            <Avatar className="h-8 w-8 mr-2">
-              <AvatarFallback className="bg-primary/10 text-primary">
+            <Avatar className="h-7 w-7 mr-2">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {admission.ten_hoc_sinh.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-medium text-sm">{admission.ten_hoc_sinh}</h3>
+              <h3 className="font-medium text-sm leading-tight">{admission.ten_hoc_sinh}</h3>
               {admission.ngay_sinh && (
                 <p className="text-xs text-muted-foreground flex items-center">
                   <CalendarIcon className="h-3 w-3 mr-1" />
@@ -41,22 +41,22 @@ const AdmissionCard = ({ admission, onClick, onDragStart }: AdmissionCardProps) 
           </div>
           
           {admission.nguon_gioi_thieu && (
-            <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
+            <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded truncate max-w-[80px]">
               {admission.nguon_gioi_thieu}
             </span>
           )}
         </div>
         
-        <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1">
+        <div className="mt-1.5 grid grid-cols-2 gap-x-1 gap-y-0.5">
           {admission.so_dien_thoai && (
-            <p className="text-xs flex items-center text-muted-foreground col-span-1">
+            <p className="text-xs flex items-center text-muted-foreground col-span-1 truncate">
               <PhoneIcon className="h-3 w-3 mr-1 flex-shrink-0" />
               <span className="truncate">{admission.so_dien_thoai}</span>
             </p>
           )}
           
           {admission.email && (
-            <p className="text-xs flex items-center text-muted-foreground col-span-1">
+            <p className="text-xs flex items-center text-muted-foreground col-span-1 truncate">
               <MailIcon className="h-3 w-3 mr-1 flex-shrink-0" />
               <span className="truncate">{admission.email}</span>
             </p>
@@ -64,19 +64,19 @@ const AdmissionCard = ({ admission, onClick, onDragStart }: AdmissionCardProps) 
         </div>
         
         {admission.dia_chi && (
-          <p className="text-xs flex items-center text-muted-foreground mt-1">
+          <p className="text-xs flex items-center text-muted-foreground mt-0.5 truncate">
             <MapPinIcon className="h-3 w-3 mr-1 flex-shrink-0" />
             <span className="truncate">{admission.dia_chi}</span>
           </p>
         )}
         
         {admission.ten_phu_huynh && (
-          <div className="mt-2 pt-1 border-t">
-            <p className="text-xs flex items-center">
-              <UserIcon className="h-3 w-3 mr-1" />
-              <span className="font-medium">PH: {admission.ten_phu_huynh}</span>
+          <div className="mt-1 pt-1 border-t border-gray-100">
+            <p className="text-xs flex items-center truncate">
+              <UserIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="font-medium truncate">PH: {admission.ten_phu_huynh}</span>
               {admission.so_dien_thoai_phu_huynh && (
-                <span className="ml-1 text-muted-foreground">
+                <span className="ml-1 text-muted-foreground truncate">
                   ({admission.so_dien_thoai_phu_huynh})
                 </span>
               )}

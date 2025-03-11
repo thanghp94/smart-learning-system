@@ -14,13 +14,20 @@ export interface AttendanceDialogProps {
   classId: string;
 }
 
+interface StudentType {
+  id: string;
+  ten_hoc_sinh: string;
+  hinh_anh_hoc_sinh?: string;
+  ma_hoc_sinh?: string;
+}
+
 const AttendanceDialog: React.FC<AttendanceDialogProps> = ({
   open,
   onClose,
   sessionId,
   classId
 }) => {
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<StudentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: boolean }>({});
   const [saving, setSaving] = useState(false);
@@ -36,7 +43,7 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({
         const enrolledStudents = await fetch(`/api/classes/${classId}/students`).then(res => res.json());
         
         // Process data to have the format we need
-        const processedStudents = enrolledStudents.map((student: any) => ({
+        const processedStudents: StudentType[] = enrolledStudents.map((student: any) => ({
           id: student.id,
           ten_hoc_sinh: student.ten_hoc_sinh || student.name || '',
           hinh_anh_hoc_sinh: student.hinh_anh_hoc_sinh || student.image || '',
@@ -47,7 +54,7 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({
         
         // Initialize all students as absent
         const initialStatus: { [key: string]: boolean } = {};
-        processedStudents.forEach((student: any) => {
+        processedStudents.forEach((student: StudentType) => {
           initialStatus[student.id] = false;
         });
         setAttendanceStatus(initialStatus);
@@ -125,7 +132,7 @@ const AttendanceDialog: React.FC<AttendanceDialogProps> = ({
             ) : (
               <>
                 <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                  {students.map((student: any) => (
+                  {students.map((student) => (
                     <div key={student.id} className="flex items-center justify-between p-2 border rounded">
                       <div className="font-medium">{student.ten_hoc_sinh}</div>
                       <Checkbox 

@@ -158,22 +158,22 @@ const KanbanView = () => {
   // Render the KanbanBoard
   const renderKanbanBoard = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-2">
         {Object.entries(ADMISSION_STATUS_MAP).map(([status, label]) => (
           <div 
             key={status} 
             className="bg-gray-50 rounded-lg p-2 flex flex-col"
-            style={{ height: 'calc(100vh - 11rem)' }}
+            style={{ maxHeight: 'calc(100vh - 13rem)', height: 'calc(100vh - 13rem)' }}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, status as AdmissionStatus)}
           >
-            <div className="flex justify-between items-center mb-2 sticky top-0 bg-gray-50 p-1 z-10">
+            <div className="flex justify-between items-center mb-2 sticky top-0 bg-gray-50 p-1 z-10 border-b">
               <h3 className="font-medium text-gray-800">{label}</h3>
-              <span className="text-sm font-medium bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+              <span className="text-sm font-medium bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
                 {admissionsByStatus[status as AdmissionStatus]?.length || 0}
               </span>
             </div>
-            <div className="overflow-y-auto flex-grow space-y-2">
+            <div className="overflow-y-auto flex-grow space-y-1.5 pr-1">
               {admissionsByStatus[status as AdmissionStatus]?.map(admission => (
                 <AdmissionCard 
                   key={admission.id} 
@@ -195,9 +195,8 @@ const KanbanView = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-4">
+    <div className="container mx-auto pb-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Quản lý tuyển sinh</h1>
         <div className="flex space-x-2">
           <div className="relative w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -208,6 +207,8 @@ const KanbanView = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+        </div>
+        <div className="flex space-x-2">
           <Button variant="outline" onClick={refresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Tải lại
@@ -228,7 +229,7 @@ const KanbanView = () => {
           <TabsList className="mb-2">
             <TabsTrigger value="kanban">Kanban</TabsTrigger>
           </TabsList>
-          <TabsContent value="kanban">
+          <TabsContent value="kanban" className="p-0">
             {renderKanbanBoard()}
           </TabsContent>
         </Tabs>

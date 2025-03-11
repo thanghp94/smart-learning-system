@@ -1,14 +1,15 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Student } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import DataTable from '@/components/ui/DataTable';
-import { CalendarDays, Flag, User, UserPlus, Phone, School, CreditCard } from 'lucide-react';
+import { CalendarDays, Flag, User, UserPlus, Phone, School, CreditCard, MapPin } from 'lucide-react';
 import ExportButton from '@/components/ui/ExportButton';
 import DetailPanel from '@/components/ui/DetailPanel';
 import StudentDetail from './StudentDetail';
 import FilterButton, { FilterCategory } from '@/components/ui/FilterButton';
 import { Link } from 'react-router-dom';
+import { facilityService } from '@/lib/supabase';
 
 interface StudentsListProps {
   data: Student[];
@@ -28,6 +29,25 @@ const StudentsList: React.FC<StudentsListProps> = ({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [facilities, setFacilities] = useState<{[key: string]: string}>({});
+
+  // Fetch facilities to map IDs to names
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const facilitiesData = await facilityService.getAll();
+        const facilitiesMap = {};
+        facilitiesData.forEach(facility => {
+          facilitiesMap[facility.id] = facility.ten_co_so;
+        });
+        setFacilities(facilitiesMap);
+      } catch (error) {
+        console.error('Failed to fetch facilities:', error);
+      }
+    };
+    
+    fetchFacilities();
+  }, []);
 
   const handleRowClick = (student: Student) => {
     setSelectedStudent(student);
@@ -112,26 +132,6 @@ const StudentsList: React.FC<StudentsListProps> = ({
       ),
     },
     {
-      title: 'Giới tính',
-      key: 'gioi_tinh',
-      sortable: true,
-      render: (value: string) => (
-        value === 'male' ? 'Nam' : 
-        value === 'female' ? 'Nữ' : value
-      ),
-    },
-    {
-      title: 'Ngày sinh',
-      key: 'ngay_sinh',
-      sortable: true,
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-muted-foreground" />
-          {value}
-        </div>
-      ),
-    },
-    {
       title: 'Phụ huynh',
       key: 'ten_ph',
       sortable: true,
@@ -160,7 +160,38 @@ const StudentsList: React.FC<StudentsListProps> = ({
       render: (value: string) => (
         <div className="flex items-center gap-2">
           <School className="h-4 w-4 text-muted-foreground" />
-          {value || 'Chưa xác định'}
+          {value && facilities[value] ? facilities[value] : 'Chưa xác định'}
+        </div>
+      ),
+    },
+    {
+      title: 'Giới tính',
+      key: 'gioi_tinh',
+      sortable: true,
+      render: (value: string) => (
+        value === 'male' ? 'Nam' : 
+        value === 'female' ? 'Nữ' : value
+      ),
+    },
+    {
+      title: 'Ngày sinh',
+      key: 'ngay_sinh',
+      sortable: true,
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          {value}
+        </div>
+      ),
+    },
+    {
+      title: 'Địa chỉ',
+      key: 'dia_chi',
+      sortable: true,
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <span className="truncate max-w-[200px]">{value || 'Chưa có thông tin'}</span>
         </div>
       ),
     },
@@ -226,7 +257,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
             </div>
           }
         >
-          <StudentDetail student={selectedStudent} />
+          <StudentDetail student={selectedStudent} facilities={facilities} />
         </DetailPanel>
       )}
     </div>

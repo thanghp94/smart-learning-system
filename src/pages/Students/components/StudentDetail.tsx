@@ -1,17 +1,42 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Student } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { CalendarDays, MapPin, Book, School, Phone, Mail, FileText, User } from 'lucide-react';
+import { CalendarDays, MapPin, Book, School, Phone, Mail, FileText, User, CreditCard, Layers } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { facilityService, enrollmentService } from '@/lib/supabase';
 
 interface StudentDetailProps {
   student: Student;
+  facilities?: {[key: string]: string};
 }
 
-const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
+const StudentDetail: React.FC<StudentDetailProps> = ({ student, facilities = {} }) => {
+  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchEnrollments = async () => {
+      if (!student?.id) return;
+      
+      setIsLoading(true);
+      try {
+        const data = await enrollmentService.getByStudent(student.id);
+        setEnrollments(data || []);
+      } catch (error) {
+        console.error('Error fetching enrollments:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEnrollments();
+  }, [student?.id]);
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Chưa có thông tin';
     try {
@@ -25,8 +50,10 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
     <Tabs defaultValue="info">
       <TabsList className="mb-4 w-full">
         <TabsTrigger value="info">Thông tin chung</TabsTrigger>
-        <TabsTrigger value="education">Học tập</TabsTrigger>
         <TabsTrigger value="contact">Liên hệ</TabsTrigger>
+        <TabsTrigger value="education">Học tập</TabsTrigger>
+        <TabsTrigger value="finance">Thu chi</TabsTrigger>
+        <TabsTrigger value="enrollments">Ghi danh</TabsTrigger>
       </TabsList>
 
       <TabsContent value="info" className="space-y-4">
@@ -54,6 +81,16 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
                   <p className="flex items-center">
                     <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />
                     {formatDate(student.ngay_sinh)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Cơ sở</p>
+                  <p className="flex items-center">
+                    <School className="mr-2 h-4 w-4 text-muted-foreground" />
+                    {student.co_so_id && facilities[student.co_so_id] 
+                      ? facilities[student.co_so_id] 
+                      : (student.co_so_id || 'Chưa xác định')}
                   </p>
                 </div>
 
@@ -86,8 +123,8 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
                     }</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Cơ sở</p>
-                    <p>{student.co_so_id || 'Chưa xác định'}</p>
+                    <p className="text-sm text-muted-foreground">Nguồn đến</p>
+                    <p>{student.nguon_den || 'Chưa xác định'}</p>
                   </div>
                 </div>
 
@@ -107,42 +144,18 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
                   </p>
                 </div>
               </div>
+
+              <div className="mt-4 border-t pt-4">
+                <Link to={`/finance/entity/student/${student.id}`}>
+                  <Button variant="outline" className="w-full">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Xem thu chi
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
-      </TabsContent>
-
-      <TabsContent value="education" className="space-y-4">
-        <Card>
-          <CardContent className="pt-4">
-            <h3 className="text-lg font-medium mb-3 flex items-center">
-              <School className="mr-2 h-5 w-5" />
-              Thông tin học tập
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Trường</p>
-                <p>{student.truong || 'Chưa có thông tin'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Lớp</p>
-                <p>{student.lop || 'Chưa có thông tin'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Mô tả tính cách</p>
-                <p className="whitespace-pre-wrap">{student.mo_ta_tinh_cach || 'Chưa có thông tin'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Điểm mạnh</p>
-                <p className="whitespace-pre-wrap">{student.diem_manh || 'Chưa có thông tin'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Nguồn đến</p>
-                <p>{student.nguon_den || 'Chưa có thông tin'}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </TabsContent>
 
       <TabsContent value="contact" className="space-y-4">
@@ -187,6 +200,79 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student }) => {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="education" className="space-y-4">
+        <Card>
+          <CardContent className="pt-4">
+            <h3 className="text-lg font-medium mb-3 flex items-center">
+              <School className="mr-2 h-5 w-5" />
+              Thông tin học tập
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Trường</p>
+                <p>{student.truong || 'Chưa có thông tin'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Lớp</p>
+                <p>{student.lop || 'Chưa có thông tin'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Mô tả tính cách</p>
+                <p className="whitespace-pre-wrap">{student.mo_ta_tinh_cach || 'Chưa có thông tin'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Điểm mạnh</p>
+                <p className="whitespace-pre-wrap">{student.diem_manh || 'Chưa có thông tin'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="finance" className="space-y-4">
+        <div className="flex justify-center">
+          <Link to={`/finance/entity/student/${student.id}`}>
+            <Button>
+              <CreditCard className="h-4 w-4 mr-2" />
+              Xem thu chi của học sinh
+            </Button>
+          </Link>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="enrollments" className="space-y-4">
+        <Card>
+          <CardContent className="pt-4">
+            <h3 className="text-lg font-medium mb-3 flex items-center">
+              <Layers className="mr-2 h-5 w-5" />
+              Lớp đã ghi danh
+            </h3>
+            {isLoading ? (
+              <p className="text-center py-4 text-muted-foreground">Đang tải dữ liệu...</p>
+            ) : enrollments.length === 0 ? (
+              <p className="text-center py-4 text-muted-foreground">Học sinh chưa ghi danh vào lớp nào</p>
+            ) : (
+              <div className="space-y-3">
+                {enrollments.map((enrollment) => (
+                  <div key={enrollment.id} className="p-3 border rounded-md">
+                    <div className="font-medium">{enrollment.ten_lop || enrollment.class_name || 'Lớp không xác định'}</div>
+                    <div className="text-sm text-muted-foreground mt-1 flex items-center">
+                      <CalendarDays className="h-3 w-3 mr-1" />
+                      {enrollment.created_at ? formatDate(enrollment.created_at) : 'Không có ngày'}
+                    </div>
+                    {enrollment.tong_tien && (
+                      <div className="text-sm mt-1">
+                        Học phí: {Number(enrollment.tong_tien).toLocaleString('vi-VN')} VNĐ
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </TabsContent>

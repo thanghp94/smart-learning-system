@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import ExportButton from '@/components/ui/ExportButton';
 const DailyAttendance = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [processedData, setProcessedData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -22,6 +24,39 @@ const DailyAttendance = () => {
       const dateString = format(date, 'yyyy-MM-dd');
       const data = await employeeClockInService.getDailyReport(dateString);
       setAttendanceData(data);
+
+      // Process data to show morning/afternoon shifts in a compact way
+      const groupedByEmployee = data.reduce((acc, item) => {
+        const employeeId = item.nhan_vien_id || item.employee_id;
+        if (!acc[employeeId]) {
+          acc[employeeId] = {
+            employee_id: employeeId,
+            employee_name: item.employee_name,
+            employee_image: item.employee_image,
+            position: item.position,
+            department: item.department,
+            shifts: [],
+            trang_thai: item.trang_thai
+          };
+        }
+        
+        const shiftTime = item.thoi_gian_bat_dau && item.thoi_gian_ket_thuc ? 
+          `${item.thoi_gian_bat_dau.substring(0, 5)}-${item.thoi_gian_ket_thuc.substring(0, 5)}` :
+          (item.thoi_gian_bat_dau ? `${item.thoi_gian_bat_dau.substring(0, 5)}-?` : 
+           (item.thoi_gian_ket_thuc ? `?-${item.thoi_gian_ket_thuc.substring(0, 5)}` : 'N/A'));
+        
+        acc[employeeId].shifts.push({
+          shift_time: shiftTime,
+          class_name: item.class_name,
+          ghi_chu: item.ghi_chu,
+          trang_thai: item.trang_thai
+        });
+        
+        return acc;
+      }, {});
+      
+      const processed = Object.values(groupedByEmployee);
+      setProcessedData(processed);
     } catch (error) {
       console.error('Error fetching daily attendance:', error);
       toast({
@@ -90,16 +125,23 @@ const DailyAttendance = () => {
       sortable: true,
     },
     {
-      title: 'Giờ vào',
-      key: 'thoi_gian_bat_dau',
-      sortable: true,
-      render: (value: string) => value ? value.substring(0, 5) : 'N/A',
-    },
-    {
-      title: 'Giờ ra',
-      key: 'thoi_gian_ket_thuc',
-      sortable: true,
-      render: (value: string) => value ? value.substring(0, 5) : 'N/A',
+      title: 'Giờ làm việc',
+      key: 'shifts',
+      render: (value: any[], record: any) => (
+        <div className="space-y-1">
+          {value.map((shift, index) => (
+            <div key={index} className="flex items-center justify-between border-b pb-1 last:border-0 last:pb-0">
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
+                <span className="text-sm">{shift.shift_time}</span>
+              </div>
+              {shift.class_name && (
+                <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded ml-2">{shift.class_name}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      ),
     },
     {
       title: 'Trạng thái',
@@ -108,14 +150,14 @@ const DailyAttendance = () => {
       render: (value: string) => getStatusBadge(value),
     },
     {
-      title: 'Lớp học (nếu có)',
-      key: 'class_name',
-      sortable: true,
-    },
-    {
       title: 'Ghi chú',
       key: 'ghi_chu',
-      render: (value: string) => value || 'Không có ghi chú',
+      render: (value: string, record: any) => {
+        const allNotes = record.shifts.map(s => s.ghi_chu).filter(Boolean);
+        return allNotes.length > 0 ? 
+          allNotes.join(', ') : 
+          'Không có ghi chú';
+      },
     },
   ];
 
@@ -150,13 +192,13 @@ const DailyAttendance = () => {
       <CardContent>
         <DataTable
           columns={columns}
-          data={attendanceData}
+          data={processedData}
           isLoading={isLoading}
           searchable
           searchPlaceholder="Tìm kiếm nhân viên..."
         />
         
-        {!isLoading && attendanceData.length === 0 && (
+        {!isLoading && processedData.length === 0 && (
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <UserCheck className="h-10 w-10 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium">Không có dữ liệu chấm công</h3>
