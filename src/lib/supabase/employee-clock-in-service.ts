@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types/employee-clock-in-out';
@@ -21,6 +22,11 @@ class EmployeeClockInService {
 
   async delete(id: string) {
     return remove('employee_clock_in_out', id);
+  }
+  
+  // New method added to fix the error
+  async clockIn(data: Partial<EmployeeClockInOut>) {
+    return this.create(data);
   }
 
   async getByEmployee(employeeId: string) {
@@ -104,6 +110,39 @@ class EmployeeClockInService {
       return data as MonthlyAttendanceSummary[];
     } catch (error) {
       console.error('Error fetching monthly attendance summary:', error);
+      throw error;
+    }
+  }
+  
+  // New method added to fix the error
+  async getByDate(date: string) {
+    try {
+      const { data, error } = await supabase
+        .from('employee_clock_in_out')
+        .select(`
+          *,
+          employees:nhan_vien_id (
+            id,
+            ten_nhan_su,
+            hinh_anh,
+            chuc_danh,
+            bo_phan
+          )
+        `)
+        .eq('ngay', date)
+        .order('thoi_gian_bat_dau', { ascending: true });
+      
+      if (error) throw error;
+      
+      return data.map((record: any) => ({
+        ...record,
+        employee_name: record.employees?.ten_nhan_su || 'Unknown',
+        employee_image: record.employees?.hinh_anh || null,
+        department: record.employees?.bo_phan || 'Unknown',
+        position: record.employees?.chuc_danh || 'Unknown'
+      }));
+    } catch (error) {
+      console.error('Error fetching employee clock in records by date:', error);
       throw error;
     }
   }

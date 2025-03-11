@@ -111,11 +111,11 @@ const StudentEmailForm: React.FC<StudentEmailFormProps> = ({ student, onClose })
     resolver: zodResolver(formSchema),
     defaultValues: {
       templateId: 'trial_invitation',
-      to: student.email || '',
+      to: student.email_ph1 || '',
       subject: EMAIL_TEMPLATES[0].subject,
       body: EMAIL_TEMPLATES[0].body
         .replace('{studentName}', student.ho_va_ten || student.ten_hoc_sinh || '')
-        .replace('{parentName}', student.ten_phu_huynh || 'Phụ huynh')
+        .replace('{parentName}', student.ten_ph || student.ten_PH || 'Phụ huynh')
     },
   });
   
@@ -155,7 +155,7 @@ const StudentEmailForm: React.FC<StudentEmailFormProps> = ({ student, onClose })
       // Replace placeholders
       body = body
         .replace('{studentName}', student.ho_va_ten || student.ten_hoc_sinh || '')
-        .replace('{parentName}', student.ten_phu_huynh || 'Phụ huynh');
+        .replace('{parentName}', student.ten_ph || student.ten_PH || 'Phụ huynh');
       
       form.setValue('subject', subject);
       form.setValue('body', body);

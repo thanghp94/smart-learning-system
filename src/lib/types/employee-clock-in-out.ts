@@ -2,16 +2,20 @@
 export interface EmployeeClockInOut {
   id: string;
   nhan_vien_id: string;
-  employee_name?: string; // Added this field to match what's being used in the component
+  employee_name?: string;
   ngay: string;
   thoi_gian_bat_dau?: string;
   thoi_gian_ket_thuc?: string;
   buoi_day_id?: string;
-  xac_nhan?: boolean; // Made optional to match EmployeeClockIn type
+  xac_nhan?: boolean;
   ghi_chu?: string;
   trang_thai?: string;
   created_at?: string;
   updated_at?: string;
+  // Add missing fields for TodayAttendance component
+  thoi_gian_vao?: string;
+  thoi_gian_ra?: string;
+  nhan_su_id?: string;
 }
 
 export interface MonthlyAttendanceSummary {

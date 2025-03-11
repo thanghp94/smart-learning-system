@@ -1,64 +1,53 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CheckCircle, Clock, LogIn, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
 import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { employeeClockInService } from '@/lib/supabase';
-import { Employee, EmployeeClockIn } from '@/lib/types';
+import { EmployeeClockInOut } from '@/lib/types';
 
 interface TodayAttendanceProps {
-  employee: Employee;
+  employeeId: string;
 }
 
-const TodayAttendance: React.FC<TodayAttendanceProps> = ({ employee }) => {
+const TodayAttendance: React.FC<TodayAttendanceProps> = ({ employeeId }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isClockedIn, setIsClockedIn] = useState(false);
-  const [todayRecord, setTodayRecord] = useState<EmployeeClockIn | null>(null);
+  const [attendanceRecord, setAttendanceRecord] = useState<EmployeeClockInOut | null>(null);
+  const [note, setNote] = useState('');
   const { toast } = useToast();
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   useEffect(() => {
     fetchTodayAttendance();
-  }, [employee]);
+  }, [employeeId]);
 
   const handleClockIn = async () => {
-    if (!employee) return;
-
+    if (!employeeId) return;
+    
     setIsLoading(true);
     try {
-      const now = new Date();
-      const clockInTime = format(now, 'HH:mm:ss');
-      const today = format(now, 'yyyy-MM-dd');
-      
-      // Check if we already have a record for today
-      if (todayRecord?.id) {
-        // Update existing record
-        await employeeClockInService.update(todayRecord.id, {
-          thoi_gian_vao: clockInTime,
-          ngay: today
-        });
-      } else {
-        // Create new record
-        await employeeClockInService.create({
-          nhan_su_id: employee.id,
-          ngay: today,
-          thoi_gian_vao: clockInTime
-        });
-      }
-      
-      toast({
-        title: 'Điểm danh thành công',
-        description: `Bạn đã điểm danh lúc ${clockInTime}`,
+      const record = await employeeClockInService.create({
+        nhan_vien_id: employeeId,
+        ngay: today,
+        thoi_gian_bat_dau: format(new Date(), 'HH:mm'),
+        ghi_chu: note,
+        trang_thai: 'present'
       });
       
-      await fetchTodayAttendance();
+      setAttendanceRecord(record);
+      toast({
+        title: 'Đã chấm công vào',
+        description: `Thời gian: ${format(new Date(), 'HH:mm')}`,
+      });
     } catch (error) {
       console.error('Error clocking in:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể điểm danh. Vui lòng thử lại sau.',
+        description: 'Không thể chấm công vào. Vui lòng thử lại.',
         variant: 'destructive',
       });
     } finally {
@@ -67,28 +56,25 @@ const TodayAttendance: React.FC<TodayAttendanceProps> = ({ employee }) => {
   };
 
   const handleClockOut = async () => {
-    if (!employee || !todayRecord?.id) return;
-
+    if (!attendanceRecord) return;
+    
     setIsLoading(true);
     try {
-      const now = new Date();
-      const clockOutTime = format(now, 'HH:mm:ss');
-      
-      await employeeClockInService.update(todayRecord.id, {
-        thoi_gian_ra: clockOutTime
+      const updatedRecord = await employeeClockInService.update(attendanceRecord.id, {
+        thoi_gian_ket_thuc: format(new Date(), 'HH:mm'),
+        ghi_chu: note || attendanceRecord.ghi_chu,
       });
       
+      setAttendanceRecord(updatedRecord);
       toast({
-        title: 'Điểm danh ra thành công',
-        description: `Bạn đã điểm danh ra lúc ${clockOutTime}`,
+        title: 'Đã chấm công ra',
+        description: `Thời gian: ${format(new Date(), 'HH:mm')}`,
       });
-      
-      await fetchTodayAttendance();
     } catch (error) {
       console.error('Error clocking out:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể điểm danh ra. Vui lòng thử lại sau.',
+        description: 'Không thể chấm công ra. Vui lòng thử lại.',
         variant: 'destructive',
       });
     } finally {
@@ -97,105 +83,91 @@ const TodayAttendance: React.FC<TodayAttendanceProps> = ({ employee }) => {
   };
 
   const fetchTodayAttendance = async () => {
-    if (!employee) return;
+    if (!employeeId) return;
     
+    setIsLoading(true);
     try {
-      // Get today's date in format yyyy-MM-dd
-      const today = format(new Date(), 'yyyy-MM-dd');
-      
-      // Use employeeClockInService to fetch records
-      const records = await employeeClockInService.getAll();
-      const todayAttendance = records.find(
-        (record) => 
-          record.nhan_su_id === employee.id && 
-          record.ngay === today
+      const records = await employeeClockInService.getByDateRange(today, today);
+      const employeeRecord = records.find(
+        (record) => record.nhan_vien_id === employeeId
       );
       
-      if (todayAttendance) {
-        setTodayRecord(todayAttendance);
-        setIsClockedIn(!!todayAttendance.thoi_gian_vao);
-      } else {
-        setTodayRecord(null);
-        setIsClockedIn(false);
+      if (employeeRecord) {
+        setAttendanceRecord(employeeRecord);
+        setNote(employeeRecord.ghi_chu || '');
       }
     } catch (error) {
-      console.error('Error fetching today attendance:', error);
+      console.error('Error fetching attendance:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="flex items-center">
+        <CardTitle className="text-xl flex items-center">
           <Clock className="mr-2 h-5 w-5" />
-          Điểm danh hôm nay
+          Chấm công hôm nay
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold">
-              {format(new Date(), 'EEEE, dd/MM/yyyy', { locale: vi })}
-            </div>
-            <div className="text-xl font-medium mt-1">
-              {format(new Date(), 'HH:mm:ss')}
-            </div>
+          <div>
+            <Label htmlFor="attendance-note">Ghi chú</Label>
+            <Input
+              id="attendance-note"
+              placeholder="Nhập ghi chú"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
           </div>
           
-          <div className="flex flex-col gap-2">
-            {todayRecord?.thoi_gian_vao && (
-              <div className="text-center text-sm text-muted-foreground">
-                Điểm danh vào: {todayRecord.thoi_gian_vao.substring(0, 5)}
-              </div>
-            )}
-            
-            {todayRecord?.thoi_gian_ra && (
-              <div className="text-center text-sm text-muted-foreground">
-                Điểm danh ra: {todayRecord.thoi_gian_ra.substring(0, 5)}
-              </div>
-            )}
-            
-            <div className="flex justify-center space-x-2 mt-2">
-              {!isClockedIn ? (
-                <Button 
-                  onClick={handleClockIn} 
-                  disabled={isLoading}
-                  className="w-full"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    'Điểm danh vào'
-                  )}
-                </Button>
-              ) : !todayRecord?.thoi_gian_ra ? (
-                <Button 
-                  onClick={handleClockOut} 
-                  disabled={isLoading}
-                  className="w-full"
-                  variant="outline"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    'Điểm danh ra'
-                  )}
-                </Button>
-              ) : (
-                <div className="text-center w-full px-4 py-2 bg-muted rounded-md">
-                  Bạn đã điểm danh đủ hôm nay
-                </div>
+          {attendanceRecord && (
+            <div className="bg-muted p-3 rounded-md space-y-1">
+              <p className="text-sm flex justify-between">
+                <span>Ngày:</span>
+                <span>{format(new Date(attendanceRecord.ngay), 'dd/MM/yyyy')}</span>
+              </p>
+              {attendanceRecord.thoi_gian_bat_dau && (
+                <p className="text-sm flex justify-between">
+                  <span>Giờ vào:</span>
+                  <span>{attendanceRecord.thoi_gian_bat_dau}</span>
+                </p>
+              )}
+              {attendanceRecord.thoi_gian_ket_thuc && (
+                <p className="text-sm flex justify-between">
+                  <span>Giờ ra:</span>
+                  <span>{attendanceRecord.thoi_gian_ket_thuc}</span>
+                </p>
               )}
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button
+          onClick={handleClockIn}
+          disabled={isLoading || !!attendanceRecord?.thoi_gian_bat_dau}
+          className="w-1/2 mr-2"
+        >
+          <LogIn className="mr-2 h-4 w-4" />
+          Chấm công vào
+        </Button>
+        <Button
+          onClick={handleClockOut}
+          disabled={
+            isLoading || 
+            !attendanceRecord || 
+            !attendanceRecord.thoi_gian_bat_dau || 
+            !!attendanceRecord.thoi_gian_ket_thuc
+          }
+          className="w-1/2"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Chấm công ra
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

@@ -35,9 +35,9 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
       loai_bai_hoc: data.loai_bai_hoc,
       phong_hoc_id: data.phong_hoc_id,
       tro_giang: data.tro_giang,
-      noi_dung: data.noi_dung,
       ghi_chu: data.ghi_chu,
       co_so_id: data.co_so_id,
+      noi_dung: data.noi_dung
     };
     
     // Submit session data through the onSubmit prop

@@ -50,10 +50,8 @@ const SessionEvaluationForm: React.FC<SessionEvaluationFormProps> = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       await teachingSessionService.update(session.id, {
-        danh_gia_buoi_hoc: values.danh_gia_buoi_hoc,
-        diem_manh: values.diem_manh,
-        diem_yeu: values.diem_yeu,
-        ghi_chu_danh_gia: values.ghi_chu_danh_gia,
+        // Use a type assertion here to help TypeScript understand these are valid properties
+        ...(values as unknown as Partial<TeachingSession>)
       });
       
       toast({

@@ -3,18 +3,20 @@ export interface Student {
   id: string;
   ma_hoc_sinh?: string;
   ho_va_ten: string;
-  ten_hoc_sinh?: string; // Added for compatibility
+  ten_hoc_sinh?: string;
   ngay_sinh?: string;
   gioi_tinh?: string;
   dia_chi?: string;
   anh_minh_hoc?: string;
-  hinh_anh_hoc_sinh?: string; // Added for compatibility
+  hinh_anh_hoc_sinh?: string;
   trang_thai?: string;
   ten_ph?: string;
-  ten_PH?: string; // Added for compatibility
+  ten_PH?: string;
+  ten_phu_huynh?: string;  // Add this field
   so_dien_thoai?: string;
-  sdt_ph1?: string; // Added for compatibility
+  sdt_ph1?: string;
   email_ph1?: string;
+  email?: string;  // Add this field
   email_ph2?: string;
   truong?: string;
   lop?: string;
@@ -22,12 +24,12 @@ export interface Student {
   mo_ta_tinh_cach?: string;
   diem_manh?: string;
   ghi_chu?: string;
-  co_so_id?: string; // Added for compatibility
-  ct_hoc?: string; // Added for compatibility
-  han_hoc_phi?: string; // Added for compatibility
-  ngay_bat_dau_hoc_phi?: string; // Added for compatibility
-  password?: string; // Added for compatibility
-  parentpassword?: string; // Added for compatibility
+  co_so_id?: string;
+  ct_hoc?: string;
+  han_hoc_phi?: string;
+  ngay_bat_dau_hoc_phi?: string;
+  password?: string;
+  parentpassword?: string;
   created_at?: string;
   updated_at?: string;
 }

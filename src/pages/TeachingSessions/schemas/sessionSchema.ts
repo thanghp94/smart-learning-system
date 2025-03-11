@@ -28,6 +28,16 @@ export const sessionSchema = z.object({
   noi_dung: z.string().optional(),
   ghi_chu: z.string().optional(),
   co_so_id: z.string().optional(),
+  // Evaluation fields are optional
+  nhan_xet_1: z.string().nullable().optional(),
+  nhan_xet_2: z.string().nullable().optional(),
+  nhan_xet_3: z.string().nullable().optional(),
+  nhan_xet_4: z.string().nullable().optional(),
+  nhan_xet_5: z.string().nullable().optional(),
+  nhan_xet_6: z.string().nullable().optional(),
+  nhan_xet_chung: z.string().nullable().optional()
 });
+
+export const teachingSessionSchema = sessionSchema;
 
 export type SessionFormData = z.infer<typeof sessionSchema>;

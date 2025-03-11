@@ -3,108 +3,112 @@ import { Task } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
 
-export const taskService = {
-  getAll: async (): Promise<Task[]> => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching tasks:', error);
-      throw error;
-    }
-    
-    return data as Task[];
-  },
+class TaskService {
+  getAll = () => fetchAll<Task>('tasks');
+  getById = (id: string) => fetchById<Task>('tasks', id);
+  create = (task: Partial<Task>) => insert<Task>('tasks', task);
+  update = (id: string, updates: Partial<Task>) => update<Task>('tasks', id, updates);
+  delete = (id: string) => remove('tasks', id);
   
-  getById: (id: string): Promise<Task> => fetchById<Task>('tasks', id),
-  
-  create: (task: Partial<Task>): Promise<Task> => insert<Task>('tasks', task),
-  
-  update: (id: string, updates: Partial<Task>): Promise<Task> => update<Task>('tasks', id, updates),
-  
-  delete: (id: string): Promise<void> => remove('tasks', id),
-  
-  getByUser: async (userId: string): Promise<Task[]> => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('nguoi_phu_trach', userId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching tasks by user:', error);
-      throw error;
-    }
-    
-    return data as Task[];
-  },
-  
-  getByStatus: async (status: string): Promise<Task[]> => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('trang_thai', status)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching tasks by status:', error);
-      throw error;
-    }
-    
-    return data as Task[];
-  },
-  
-  getByPriority: async (priority: string): Promise<Task[]> => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('cap_do', priority)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching tasks by priority:', error);
-      throw error;
-    }
-    
-    return data as Task[];
-  },
-  
-  complete: async (id: string): Promise<void> => {
+  // Method for setting a task as complete
+  complete = async (id: string) => {
+    return this.update(id, {
+      trang_thai: 'completed',
+      ngay_hoan_thanh: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  // Get tasks by assignee
+  getByAssignee = async (employeeId: string) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
-        .update({ trang_thai: 'completed' })
-        .eq('id', id);
+        .select('*')
+        .eq('nguoi_phu_trach', employeeId)
+        .order('ngay_den_han', { ascending: true });
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      return data as Task[];
     } catch (error) {
-      console.error('Error completing task:', error);
+      console.error('Error fetching tasks by assignee:', error);
       throw error;
     }
-  },
-  
-  getByEntityType: async (entityType: string, entityId: string): Promise<Task[]> => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('doi_tuong', entityType)
-      .eq('doi_tuong_id', entityId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
+  };
+
+  // Get tasks by entity type and ID (e.g., for a specific student, class, etc.)
+  getByEntityType = async (entityType: string, entityId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('doi_tuong', entityType)
+        .eq('doi_tuong_id', entityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Task[];
+    } catch (error) {
       console.error('Error fetching tasks by entity:', error);
       throw error;
     }
+  };
+
+  // Get overdue tasks
+  getOverdueTasks = async () => {
+    const today = new Date().toISOString().split('T')[0];
     
-    return data as Task[];
-  },
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .lt('ngay_den_han', today)
+        .not('trang_thai', 'eq', 'completed')
+        .order('ngay_den_han', { ascending: true });
+      
+      if (error) throw error;
+      return data as Task[];
+    } catch (error) {
+      console.error('Error fetching overdue tasks:', error);
+      throw error;
+    }
+  };
+
+  // Get tasks due today
+  getTasksDueToday = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('ngay_den_han', today)
+        .not('trang_thai', 'eq', 'completed')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Task[];
+    } catch (error) {
+      console.error('Error fetching tasks due today:', error);
+      throw error;
+    }
+  };
   
-  // Add a method for getting tasks by employee ID (uses getByUser)
-  getByEmployeeId: async (employeeId: string): Promise<Task[]> => {
-    return taskService.getByUser(employeeId);
-  }
-};
+  // Get tasks by employee
+  getByEmployeeId = async (employeeId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('nguoi_phu_trach', employeeId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Task[];
+    } catch (error) {
+      console.error('Error fetching tasks by employee:', error);
+      throw error;
+    }
+  };
+}
+
+export const taskService = new TaskService();

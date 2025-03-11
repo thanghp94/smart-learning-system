@@ -1,123 +1,114 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckSquare, Plus, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { taskService } from '@/lib/supabase';
+import React from 'react';
 import { Task } from '@/lib/types';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, Calendar, AlertCircle } from 'lucide-react';
+import { format, isPast, isToday } from 'date-fns';
+import { taskService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 interface QuickTasksProps {
-  employeeId: string;
+  tasks: Task[];
+  onTaskUpdate: () => void;
 }
 
-const QuickTasks: React.FC<QuickTasksProps> = ({ employeeId }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+const QuickTasks: React.FC<QuickTasksProps> = ({ tasks, onTaskUpdate }) => {
+  const { toast } = useToast();
 
-  useEffect(() => {
-    if (employeeId) {
-      fetchTasks();
-    }
-  }, [employeeId]);
+  if (tasks.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-6">
+          <div className="text-center text-muted-foreground">
+            <p>Không có công việc nào</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const fetchTasks = async () => {
+  const handleCompleteTask = async (taskId: string) => {
     try {
-      setIsLoading(true);
-      const employeeTasks = await taskService.getByUser(employeeId);
-      
-      // Filter for tasks that are not completed
-      const activeTasks = employeeTasks.filter(
-        (task) => task.trang_thai !== 'completed'
-      );
-      
-      // Sort by due date - closest first
-      activeTasks.sort((a, b) => {
-        if (!a.ngay_den_han) return 1;
-        if (!b.ngay_den_han) return -1;
-        return new Date(a.ngay_den_han).getTime() - new Date(b.ngay_den_han).getTime();
+      await taskService.update(taskId, {
+        trang_thai: 'completed',
+        ngay_hoan_thanh: format(new Date(), 'yyyy-MM-dd')
       });
       
-      setTasks(activeTasks.slice(0, 3)); // Show at most 3 tasks
+      toast({
+        title: 'Thành công',
+        description: 'Đã hoàn thành công việc',
+      });
+      
+      onTaskUpdate();
     } catch (error) {
-      console.error('Error fetching tasks:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error completing task:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể cập nhật trạng thái công việc',
+        variant: 'destructive'
+      });
     }
   };
 
-  const handleAddTask = () => {
-    navigate('/tasks');
-  };
-
-  const handleTaskClick = (taskId: string) => {
-    navigate(`/tasks/${taskId}`);
+  const getTaskPriorityStyles = (task: Task) => {
+    if (!task.ngay_den_han) return {};
+    
+    if (isPast(new Date(task.ngay_den_han)) && task.trang_thai !== 'completed') {
+      return { borderLeft: '4px solid #ef4444', paddingLeft: '12px' }; // Red for overdue
+    }
+    
+    if (isToday(new Date(task.ngay_den_han))) {
+      return { borderLeft: '4px solid #f97316', paddingLeft: '12px' }; // Orange for due today
+    }
+    
+    if (task.cap_do === 'Cao') {
+      return { borderLeft: '4px solid #fbbf24', paddingLeft: '12px' }; // Yellow for high priority
+    }
+    
+    return { borderLeft: '4px solid #22c55e', paddingLeft: '12px' }; // Green for normal
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center">
-          <CheckSquare className="mr-2 h-5 w-5" />
-          Công việc
-        </CardTitle>
-        <Button size="sm" variant="ghost" onClick={handleAddTask}>
-          <Plus className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : tasks.length > 0 ? (
-          <div className="space-y-3">
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className="p-3 border rounded-md hover:bg-muted cursor-pointer"
-                onClick={() => handleTaskClick(task.id)}
-              >
-                <div className="flex justify-between items-start">
-                  <h3 className="font-medium line-clamp-1">{task.ten_viec}</h3>
-                  <Badge
-                    variant={
-                      task.cap_do === 'high' ? 'destructive' : 
-                      task.cap_do === 'medium' ? 'secondary' : 'outline'
-                    }
-                    className="ml-2 shrink-0"
-                  >
-                    {task.cap_do === 'high' ? 'Cao' : 
-                     task.cap_do === 'medium' ? 'Vừa' : 'Thấp'}
-                  </Badge>
-                </div>
+    <div className="space-y-4">
+      {tasks.map((task) => (
+        <Card key={task.id} className="overflow-hidden">
+          <CardContent className="p-4">
+            <div 
+              className="flex justify-between items-start" 
+              style={getTaskPriorityStyles(task)}
+            >
+              <div className="space-y-1">
+                <div className="font-medium">{task.ten_viec}</div>
+                <div className="text-sm text-muted-foreground">{task.dien_giai}</div>
                 {task.ngay_den_han && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Hạn: {format(new Date(task.ngay_den_han), 'dd/MM/yyyy', { locale: vi })}
+                  <div className="flex items-center text-sm">
+                    <Calendar className="mr-1 h-3.5 w-3.5 text-muted-foreground" />
+                    <span className={`${isPast(new Date(task.ngay_den_han)) && task.trang_thai !== 'completed' ? 'text-destructive font-medium' : ''}`}>
+                      {format(new Date(task.ngay_den_han), 'dd/MM/yyyy')}
+                      {isToday(new Date(task.ngay_den_han)) && (
+                        <span className="ml-1 text-amber-500 font-medium">(Hôm nay)</span>
+                      )}
+                      {isPast(new Date(task.ngay_den_han)) && task.trang_thai !== 'completed' && (
+                        <span className="ml-1 text-destructive font-medium">(Quá hạn)</span>
+                      )}
+                    </span>
                   </div>
                 )}
               </div>
-            ))}
-            
-            <Button
-              variant="link"
-              className="w-full p-0 mt-2"
-              onClick={() => navigate('/tasks')}
-            >
-              Xem tất cả công việc
-            </Button>
-          </div>
-        ) : (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>Không có công việc nào</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => handleCompleteTask(task.id)}
+                className="mt-1"
+              >
+                <CheckCircle className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };
 

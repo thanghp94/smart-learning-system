@@ -15,4 +15,7 @@ export interface Employee {
   hinh_anh?: string;
   tg_tao?: string;
   ghi_chu?: string;
+  // Add required fields
+  vai_tro?: string;
+  co_so_name?: string;
 }

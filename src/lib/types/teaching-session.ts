@@ -8,7 +8,7 @@ export interface TeachingSession {
   ngay_day?: string;
   buoi_hoc_so?: string;
   
-  // Added fields based on errors
+  // Required fields
   session_id?: string;
   ngay_hoc?: string;
   loai_bai_hoc?: string;
@@ -38,4 +38,13 @@ export interface TeachingSession {
     co_so?: string;
     gv_chinh?: string;
   };
+  
+  // Added fields for evaluation
+  danh_gia_buoi_hoc?: string;
+  diem_manh?: string;
+  diem_yeu?: string;
+  ghi_chu_danh_gia?: string;
+  co_so_id?: string;
+  noi_dung?: string;
+  assistant_name?: string;
 }

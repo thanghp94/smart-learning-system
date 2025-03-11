@@ -8,14 +8,8 @@ import ImageUploadForm from './ImageUploadForm';
 import AssignmentForm from './AssignmentForm';
 import SessionHeader from './SessionHeader';
 import { useSessionData } from '../hooks/useSessionData';
-import {
-  OverviewTab,
-  MaterialsTab,
-  HomeworkTab,
-  AttendanceTab,
-  StudentsTab,
-  TeacherTab
-} from './SessionTabs';
+import OverviewTab from './SessionTabs/OverviewTab';
+import { MaterialsTab, HomeworkTab, AttendanceTab, StudentsTab, TeacherTab } from './SessionTabs';
 
 export interface SessionDetailProps {
   session?: any;
@@ -102,13 +96,11 @@ const SessionDetail: React.FC<SessionDetailProps> = ({ session, sessionId, onSav
 
         <TabsContent value="overview">
           <OverviewTab 
-            sessionData={sessionData}
-            notes={notes}
-            editingNotes={editingNotes}
-            isSaving={isSaving}
-            setNotes={setNotes}
-            setEditingNotes={setEditingNotes}
-            handleSaveNotes={handleSaveNotes}
+            session={sessionData}
+            teacherName={teacher?.ten_nhan_su || "N/A"}
+            assistantName={sessionData?.assistant_name}
+            className={classData?.ten_lop_full || "N/A"}
+            onRefresh={fetchSessionData}
           />
         </TabsContent>
 
