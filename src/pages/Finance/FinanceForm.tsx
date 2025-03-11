@@ -2,20 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -23,195 +21,237 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { Finance, Facility } from '@/lib/types';
-import EntitySelect from './components/EntitySelect';
-import TransactionTypeSelect from './components/TransactionTypeSelect';
+import { DatePicker } from '@/components/ui/DatePicker';
+import { financeService, employeeService, facilityService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { Employee, Facility } from '@/lib/types';
+import BasicEntitySelector from './components/BasicEntitySelector';
+import PaymentMethodSelector from './components/PaymentMethodSelector';
+import AmountCalculator from './components/AmountCalculator';
 
-const financeFormSchema = z.object({
-  ngay: z.date({
-    required_error: "Vui lòng chọn ngày",
-  }),
-  loai_thu_chi: z.string({
-    required_error: "Vui lòng chọn loại thu chi",
-  }),
+// Finance form schema
+const financeSchema = z.object({
+  ngay: z.date(),
+  loai_thu_chi: z.string(),
+  loai_giao_dich: z.string().optional(),
   loai_doi_tuong: z.string().optional(),
-  doi_tuong_id: z.string().optional().nullable(),
-  co_so: z.string().optional().nullable(),
-  loai_giao_dich: z.string({
-    required_error: "Vui lòng chọn loại giao dịch",
-  }),
-  dien_giai: z.string().optional(),
-  tong_tien: z.coerce.number({
-    required_error: "Vui lòng nhập tổng tiền",
-    invalid_type_error: "Vui lòng nhập số",
-  }).gte(0, {
-    message: "Tổng tiền phải lớn hơn hoặc bằng 0",
-  }),
+  doi_tuong_id: z.string().optional(),
+  co_so: z.string().optional(),
+  dien_giai: z.string(),
+  ten_phi: z.string().optional(),
+  so_luong: z.number().optional(),
+  don_vi: z.number().optional(),
+  gia_tien: z.number().optional(),
+  tong_tien: z.number(),
   kieu_thanh_toan: z.string().optional(),
-  tinh_trang: z.string().default("pending"),
+  bang_chu: z.string().optional(),
   ghi_chu: z.string().optional(),
+  nguoi_tao: z.string(),
 });
 
 interface FinanceFormProps {
-  initialData?: Partial<Finance>;
-  onSubmit: (formData: Partial<Finance>) => Promise<void>;
+  onSubmit: (data: any) => void;
   onCancel: () => void;
-  facilities: Facility[];
+  entityType?: string;
+  entityId?: string;
+  initialData?: any;
 }
 
 const FinanceForm: React.FC<FinanceFormProps> = ({
-  initialData,
   onSubmit,
   onCancel,
-  facilities,
+  entityType,
+  entityId,
+  initialData,
 }) => {
-  const [transactionCategory, setTransactionCategory] = useState<string>(initialData?.loai_thu_chi || 'income');
-  const [selectedEntityType, setSelectedEntityType] = useState<string | null>(initialData?.loai_doi_tuong || null);
-  const [selectedEntityName, setSelectedEntityName] = useState<string>('');
-  const [selectedTransactionType, setSelectedTransactionType] = useState<string>('');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [transactionTypes, setTransactionTypes] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  // Create form
-  const form = useForm<z.infer<typeof financeFormSchema>>({
-    resolver: zodResolver(financeFormSchema),
-    defaultValues: {
-      ngay: initialData?.ngay ? new Date(initialData.ngay) : new Date(),
-      loai_thu_chi: initialData?.loai_thu_chi || 'income',
-      loai_doi_tuong: initialData?.loai_doi_tuong || undefined,
-      doi_tuong_id: initialData?.doi_tuong_id || undefined,
-      co_so: initialData?.co_so || undefined,
-      loai_giao_dich: initialData?.loai_giao_dich || '',
-      dien_giai: initialData?.dien_giai || '',
-      tong_tien: initialData?.tong_tien || 0,
-      kieu_thanh_toan: initialData?.kieu_thanh_toan || 'cash',
-      tinh_trang: initialData?.tinh_trang || 'pending',
-      ghi_chu: initialData?.ghi_chu || '',
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [empData, facData, transData] = await Promise.all([
+          employeeService.getAll(),
+          facilityService.getAll(),
+          financeService.getTransactionTypes(),
+        ]);
+        
+        setEmployees(empData);
+        setFacilities(facData);
+        setTransactionTypes(transData);
+      } catch (error) {
+        console.error('Error fetching form data:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải dữ liệu',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    fetchData();
+  }, [toast]);
+
+  const form = useForm<z.infer<typeof financeSchema>>({
+    resolver: zodResolver(financeSchema),
+    defaultValues: initialData || {
+      ngay: new Date(),
+      loai_thu_chi: '',
+      loai_giao_dich: '',
+      loai_doi_tuong: entityType || '',
+      doi_tuong_id: entityId || '',
+      co_so: '',
+      dien_giai: '',
+      ten_phi: '',
+      so_luong: 1,
+      don_vi: 1,
+      gia_tien: 0,
+      tong_tien: 0,
+      kieu_thanh_toan: 'cash',
+      bang_chu: '',
+      ghi_chu: '',
+      nguoi_tao: '',
     },
   });
 
-  // Update the description when transaction type, entity type, or entity name changes
+  const watchThuChi = form.watch('loai_thu_chi');
+  const watchType = form.watch('loai_doi_tuong');
+  const watchAmount = form.watch('so_luong');
+  const watchUnit = form.watch('don_vi');
+  const watchPrice = form.watch('gia_tien');
+
+  // Update total amount when quantity, unit or price changes
   useEffect(() => {
-    if (selectedTransactionType && selectedEntityType && selectedEntityName) {
-      const action = transactionCategory === 'income' ? 'Thu' : 'Chi';
-      const description = `${action} ${selectedTransactionType} ${selectedEntityName}`;
-      form.setValue('dien_giai', description);
+    const amount = watchAmount || 0;
+    const unit = watchUnit || 0;
+    const price = watchPrice || 0;
+    const total = amount * unit * price;
+    
+    form.setValue('tong_tien', total);
+  }, [watchAmount, watchUnit, watchPrice, form]);
+
+  const handleSubmit = async (values: z.infer<typeof financeSchema>) => {
+    setIsSubmitting(true);
+    try {
+      if (initialData?.id) {
+        await financeService.update(initialData.id, {
+          ...values,
+          ngay: values.ngay.toISOString().split('T')[0],
+        });
+        toast({
+          title: 'Thành công',
+          description: 'Cập nhật thông tin thu chi thành công',
+        });
+      } else {
+        await financeService.create({
+          ...values,
+          ngay: values.ngay.toISOString().split('T')[0],
+        });
+        toast({
+          title: 'Thành công',
+          description: 'Thêm khoản thu chi mới thành công',
+        });
+      }
+      onSubmit(values);
+    } catch (error) {
+      console.error('Error saving finance record:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể lưu thông tin thu chi',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [transactionCategory, selectedTransactionType, selectedEntityType, selectedEntityName, form]);
-
-  // Handle entity type change
-  const handleEntityTypeChange = (value: string) => {
-    setSelectedEntityType(value);
-    form.setValue('loai_doi_tuong', value);
-    // Reset entity name when type changes
-    setSelectedEntityName('');
-    form.setValue('doi_tuong_id', null);
-  };
-
-  // Handle entity selection
-  const handleEntityNameChange = (entityId: string, entityName: string) => {
-    setSelectedEntityName(entityName);
-  };
-
-  // Handle transaction type change
-  const handleTransactionTypeChange = (value: string, typeName: string) => {
-    setSelectedTransactionType(typeName);
-  };
-
-  // Handle form submission
-  const handleFormSubmit = async (values: z.infer<typeof financeFormSchema>) => {
-    // Format the data for submission
-    const formattedData = {
-      ...values,
-      ngay: format(values.ngay, 'yyyy-MM-dd'),
-      // Convert empty strings to null for UUID fields
-      co_so: values.co_so === '' ? null : values.co_so,
-      doi_tuong_id: values.doi_tuong_id === '' ? null : values.doi_tuong_id,
-    };
-
-    await onSubmit(formattedData);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="ngay"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Ngày</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="ngay"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Ngày</FormLabel>
+                <DatePicker
+                  date={field.value}
+                  setDate={field.onChange}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="loai_thu_chi"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Loại thu/chi</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "dd/MM/yyyy")
-                      ) : (
-                        <span>Chọn ngày</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn loại" />
+                    </SelectTrigger>
                   </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                  <SelectContent>
+                    <SelectItem value="thu">Thu</SelectItem>
+                    <SelectItem value="chi">Chi</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-        <FormField
-          control={form.control}
-          name="loai_thu_chi"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Loại Thu Chi</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setTransactionCategory(value);
-                }}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn loại thu chi" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="income">Thu</SelectItem>
-                  <SelectItem value="expense">Chi</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {watchThuChi && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="loai_giao_dich"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Loại giao dịch</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn loại giao dịch" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {transactionTypes
+                        .filter(t => t.category === watchThuChi)
+                        .map(type => (
+                          <SelectItem key={type.id} value={type.name}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <EntitySelect
-          form={form}
-          selectedEntityType={selectedEntityType}
-          onEntityTypeChange={handleEntityTypeChange}
-          onEntityNameChange={handleEntityNameChange}
-          facilities={facilities}
-        />
+            <BasicEntitySelector 
+              form={form} 
+              entityType={entityType}
+              entityId={entityId}
+            />
+          </div>
+        )}
 
         <FormField
           control={form.control}
@@ -221,7 +261,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
               <FormLabel>Cơ sở</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value || undefined}
+                defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -241,87 +281,45 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
           )}
         />
 
-        <TransactionTypeSelect
-          form={form}
-          selectedTransactionCategory={transactionCategory}
-          selectedEntityType={selectedEntityType}
-          onTransactionTypeChange={handleTransactionTypeChange}
-        />
-
         <FormField
           control={form.control}
           name="dien_giai"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Diễn Giải</FormLabel>
+              <FormLabel>Diễn giải</FormLabel>
               <FormControl>
-                <Input placeholder="Diễn giải giao dịch" {...field} />
+                <Input placeholder="Nhập diễn giải" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="tong_tien"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tổng Tiền</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="Nhập tổng tiền" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <AmountCalculator form={form} />
+
+        <PaymentMethodSelector form={form} />
 
         <FormField
           control={form.control}
-          name="kieu_thanh_toan"
+          name="nguoi_tao"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Kiểu Thanh Toán</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value || "cash"}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn kiểu thanh toán" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="cash">Tiền mặt</SelectItem>
-                  <SelectItem value="bank_transfer">Chuyển khoản</SelectItem>
-                  <SelectItem value="credit_card">Thẻ tín dụng</SelectItem>
-                  <SelectItem value="other">Khác</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="tinh_trang"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tình Trạng</FormLabel>
+              <FormLabel>Người tạo</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn tình trạng" />
+                    <SelectValue placeholder="Chọn người tạo" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="pending">Chờ xử lý</SelectItem>
-                  <SelectItem value="completed">Hoàn thành</SelectItem>
-                  <SelectItem value="cancelled">Đã hủy</SelectItem>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.ten_nhan_su}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -334,10 +332,10 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
           name="ghi_chu"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ghi Chú</FormLabel>
+              <FormLabel>Ghi chú</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Nhập ghi chú (nếu có)"
+                  placeholder="Nhập ghi chú"
                   className="resize-none"
                   {...field}
                 />
@@ -348,10 +346,12 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
         />
 
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Hủy
           </Button>
-          <Button type="submit">Lưu</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Đang lưu...' : initialData ? 'Cập nhật' : 'Thêm mới'}
+          </Button>
         </div>
       </form>
     </Form>

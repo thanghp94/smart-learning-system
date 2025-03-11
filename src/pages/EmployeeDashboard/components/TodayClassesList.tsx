@@ -1,83 +1,100 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { teachingSessionService, employeeService } from '@/lib/supabase';
+import { Calendar, Clock, Users } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { TeachingSession } from '@/lib/types';
-import { CalendarClock, Loader2 } from 'lucide-react';
+import { teachingSessionService } from '@/pages/TeachingSessions/TeachingSessionService';
 
-const TodayClassesList = () => {
-  const [todayClasses, setTodayClasses] = useState<TeachingSession[]>([]);
-  const [loading, setLoading] = useState(true);
+const TodayClassesList: React.FC = () => {
+  const [sessions, setSessions] = useState<TeachingSession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTodayClasses = async () => {
+    const fetchTodaySessions = async () => {
       try {
-        setLoading(true);
+        setIsLoading(true);
         const today = format(new Date(), 'yyyy-MM-dd');
-        const sessions = await teachingSessionService.getByDate(today);
-        
-        // Sort by start time
-        const sortedSessions = [...sessions].sort((a, b) => {
-          if (!a.thoi_gian_bat_dau || !b.thoi_gian_bat_dau) return 0;
-          return a.thoi_gian_bat_dau.localeCompare(b.thoi_gian_bat_dau);
-        });
-        
-        // Get only next 5 classes
-        setTodayClasses(sortedSessions.slice(0, 5));
+        const data = await teachingSessionService.getByDate(today);
+        setSessions(data);
       } catch (error) {
         console.error('Error fetching today classes:', error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchTodayClasses();
+    fetchTodaySessions();
   }, []);
 
-  const formatTime = (timeString?: string) => {
-    if (!timeString) return '';
-    return timeString.substring(0, 5); // Format as HH:MM
-  };
+  if (isLoading) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center">
+            <Calendar className="mr-2 h-5 w-5" />
+            Lịch dạy hôm nay
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex flex-col space-y-2 mb-4">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="col-span-1">
-      <CardHeader className="pb-3">
+    <Card className="w-full">
+      <CardHeader>
         <CardTitle className="text-lg flex items-center">
-          <CalendarClock className="h-5 w-5 mr-2" />
-          Lớp học hôm nay
+          <Calendar className="mr-2 h-5 w-5" />
+          Lịch dạy hôm nay
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center p-4">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : todayClasses.length > 0 ? (
-          <div className="space-y-3">
-            {todayClasses.map((session) => (
-              <div key={session.id} className="border rounded-md p-3 hover:bg-muted transition-colors">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">{session.class_name || 'Lớp học'}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatTime(session.thoi_gian_bat_dau)} - {formatTime(session.thoi_gian_ket_thuc)}
-                    </p>
+      <CardContent className="px-6">
+        <div className="space-y-4">
+          {sessions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Không có lịch dạy nào hôm nay
+            </p>
+          ) : (
+            sessions.map((session) => (
+              <Link
+                to={`/teaching-sessions/${session.id}`}
+                key={session.id}
+                className="block"
+              >
+                <div className="flex flex-col p-3 border rounded-md hover:bg-accent transition-colors">
+                  <div className="font-medium">{session.class_name}</div>
+                  <div className="text-sm text-muted-foreground flex items-center mt-1">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {session.thoi_gian_bat_dau
+                      ? format(new Date(`2000-01-01T${session.thoi_gian_bat_dau}`), 'HH:mm')
+                      : ''}
+                    {session.thoi_gian_ket_thuc
+                      ? ` - ${format(
+                          new Date(`2000-01-01T${session.thoi_gian_ket_thuc}`),
+                          'HH:mm'
+                        )}`
+                      : ''}
                   </div>
-                  <div className="text-sm text-right">
-                    <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs">
-                      Buổi {session.session_id}
-                    </span>
+                  <div className="text-sm text-muted-foreground flex items-center mt-1">
+                    <Users className="h-3 w-3 mr-1" />
+                    {session.teacher_name}
+                    {session.assistant_name && `, ${session.assistant_name}`}
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            <p>Không có lớp học nào hôm nay</p>
-          </div>
-        )}
+              </Link>
+            ))
+          )}
+        </div>
       </CardContent>
     </Card>
   );

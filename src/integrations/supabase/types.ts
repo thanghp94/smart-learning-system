@@ -2845,6 +2845,13 @@ export type Database = {
           column_count: number
         }[]
       }
+      process_ai_command: {
+        Args: {
+          command_text: string
+          context?: Json
+        }
+        Returns: Json
+      }
       run_sql: {
         Args: {
           sql: string

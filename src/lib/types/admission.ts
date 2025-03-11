@@ -1,25 +1,24 @@
 
 export interface Admission {
   id: string;
-  ho_ten: string;
+  ten_hoc_sinh: string;
+  gioi_tinh?: string;
   ngay_sinh?: string;
+  dia_chi?: string;
   email?: string;
   so_dien_thoai?: string;
-  trang_thai: AdmissionStatus;
-  nguoi_phu_trach?: string;
-  created_at?: string;
-  updated_at?: string;
-  dia_chi?: string;
-  ghi_chu?: string;
-  ngay_lien_he_dau?: string;
+  ten_phu_huynh?: string;
   email_phu_huynh?: string;
   so_dien_thoai_phu_huynh?: string;
-  ten_phu_huynh?: string;
-  gioi_tinh?: string;
   nguon_gioi_thieu?: string;
-  ten_hoc_sinh: string;
-  zalo?: string;
+  trang_thai: string;
+  nguoi_phu_trach?: string;
   mieu_ta_hoc_sinh?: string;
+  ghi_chu?: string;
+  ngay_lien_he_dau?: string;
+  zalo?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type AdmissionStatus = 'tim_hieu' | 'tu_van' | 'hoc_thu' | 'chot' | 'huy';
@@ -32,7 +31,7 @@ export const ADMISSION_STATUS_MAP: Record<AdmissionStatus, string> = {
   'huy': 'Huỷ'
 };
 
-export const ADMISSION_STATUS_COLORS: Record<AdmissionStatus, string> = {
+export const ADMISSION_STATUS_COLORS: Record<string, string> = {
   'tim_hieu': 'bg-blue-100 text-blue-800',
   'tu_van': 'bg-yellow-100 text-yellow-800',
   'hoc_thu': 'bg-purple-100 text-purple-800',

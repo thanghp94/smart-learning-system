@@ -1,120 +1,168 @@
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import DataTable from '@/components/ui/DataTable';
 import { financeService } from '@/lib/supabase';
 import { Finance } from '@/lib/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import FinanceForm from '../FinanceForm';
 import { useToast } from '@/hooks/use-toast';
-import FinanceList from './FinanceList';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 interface EntityFinancesViewProps {
   entityType: string;
-  entityId: string;
+  entityId?: string;
+  entityName?: string;
+  showAddButton?: boolean;
 }
 
-const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({ entityType, entityId }) => {
+const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({
+  entityType,
+  entityId,
+  entityName,
+  showAddButton = true,
+}) => {
   const [finances, setFinances] = useState<Finance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const params = useParams();
   const { toast } = useToast();
-  
-  useEffect(() => {
-    fetchFinances();
-  }, [entityType, entityId]);
 
-  const fetchFinances = async () => {
-    setIsLoading(true);
-    try {
-      let data: Finance[] = [];
-      
-      if (entityId && entityType) {
-        data = await financeService.getByEntity(entityType, entityId);
-      } else if (entityType) {
-        data = await financeService.getByEntity(entityType, '');
-      } else {
-        data = await financeService.getAll();
+  // If entityId is not provided, try to get it from URL parameters
+  const effectiveEntityId = entityId || params.id;
+
+  useEffect(() => {
+    const fetchFinances = async () => {
+      try {
+        setIsLoading(true);
+        let data: Finance[] = [];
+        
+        if (effectiveEntityId) {
+          data = await financeService.getByEntity(entityType, effectiveEntityId);
+        } else {
+          data = await financeService.getAll();
+        }
+        
+        setFinances(data);
+      } catch (error) {
+        console.error('Error fetching finances:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải dữ liệu tài chính',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
       }
-      
+    };
+
+    fetchFinances();
+  }, [entityType, effectiveEntityId, toast]);
+
+  const handleAddFinance = () => {
+    setShowAddForm(true);
+  };
+
+  const handleFormSubmit = async (formData: any) => {
+    setShowAddForm(false);
+    // Refresh the finances list after adding a new one
+    if (effectiveEntityId) {
+      const data = await financeService.getByEntity(entityType, effectiveEntityId);
       setFinances(data);
-    } catch (error) {
-      console.error('Error fetching finances:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải dữ liệu tài chính. Vui lòng thử lại sau.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+    } else {
+      const data = await financeService.getAll();
+      setFinances(data);
     }
   };
 
-  const handleDeleteFinance = (finance: Finance) => {
-    setFinances(prev => prev.filter(f => f.id !== finance.id));
-  };
-
-  // Calculate financial summary
-  const incomeTotal = finances
-    .filter(finance => finance.loai_thu_chi === 'income')
-    .reduce((sum, finance) => sum + finance.tong_tien, 0);
-  
-  const expenseTotal = finances
-    .filter(finance => finance.loai_thu_chi === 'expense')
-    .reduce((sum, finance) => sum + finance.tong_tien, 0);
-  
-  const balance = incomeTotal - expenseTotal;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  };
+  const columns = [
+    {
+      title: 'Ngày',
+      key: 'ngay',
+      render: (value: string) => (value ? format(new Date(value), 'dd/MM/yyyy') : ''),
+    },
+    {
+      title: 'Loại',
+      key: 'loai_thu_chi',
+      render: (value: string) => (
+        <Badge variant={value === 'thu' ? 'default' : 'destructive'}>
+          {value === 'thu' ? 'Thu' : 'Chi'}
+        </Badge>
+      ),
+    },
+    {
+      title: 'Diễn giải',
+      key: 'dien_giai',
+    },
+    {
+      title: 'Số tiền',
+      key: 'tong_tien',
+      render: (value: number) => new Intl.NumberFormat('vi-VN').format(value),
+    },
+    {
+      title: 'Trạng thái',
+      key: 'tinh_trang',
+      render: (value: string) => (
+        <Badge
+          variant={
+            value === 'completed'
+              ? 'success'
+              : value === 'pending'
+              ? 'outline'
+              : 'secondary'
+          }
+        >
+          {value === 'completed'
+            ? 'Hoàn thành'
+            : value === 'pending'
+            ? 'Chờ xử lý'
+            : value}
+        </Badge>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Tổng thu</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">{formatCurrency(incomeTotal)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Tổng chi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-red-600">{formatCurrency(expenseTotal)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Số dư</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className={`text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(balance)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {showAddButton && (
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium">
+            Thông tin tài chính {entityName ? `của ${entityName}` : ''}
+          </h3>
+          <Button size="sm" onClick={handleAddFinance}>
+            <Plus className="mr-2 h-4 w-4" /> Thêm khoản thu chi
+          </Button>
+        </div>
+      )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Danh sách giao dịch</CardTitle>
-          <CardDescription>
-            {entityType === 'hoc_sinh' ? 'Giao dịch tài chính của học sinh' : 
-             entityType === 'nhan_vien' ? 'Giao dịch tài chính của nhân viên' :
-             entityType === 'co_so' ? 'Giao dịch tài chính của cơ sở' :
-             'Tất cả giao dịch tài chính'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <FinanceList 
-            finances={finances} 
-            isLoading={isLoading} 
-            onDelete={handleDeleteFinance}
-          />
-        </CardContent>
+        <DataTable
+          columns={columns}
+          data={finances}
+          isLoading={isLoading}
+          emptyMessage="Không có dữ liệu tài chính"
+          searchable={true}
+          searchPlaceholder="Tìm kiếm khoản thu chi..."
+        />
       </Card>
+
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Thêm khoản thu chi</DialogTitle>
+          </DialogHeader>
+          <FinanceForm 
+            entityType={entityType} 
+            entityId={effectiveEntityId} 
+            onSubmit={handleFormSubmit} 
+            onCancel={() => setShowAddForm(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
