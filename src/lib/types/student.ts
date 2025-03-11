@@ -12,11 +12,11 @@ export interface Student {
   trang_thai?: string;
   ten_ph?: string;
   ten_PH?: string;
-  ten_phu_huynh?: string;  // Add this field
+  ten_phu_huynh?: string;
   so_dien_thoai?: string;
   sdt_ph1?: string;
   email_ph1?: string;
-  email?: string;  // Add this field
+  email?: string;
   email_ph2?: string;
   truong?: string;
   lop?: string;
@@ -32,4 +32,5 @@ export interface Student {
   parentpassword?: string;
   created_at?: string;
   updated_at?: string;
+  trang_thai_hoc_phi?: string; // Adding field for tuition status
 }

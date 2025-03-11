@@ -107,15 +107,20 @@ const StudentEmailForm: React.FC<StudentEmailFormProps> = ({ student, onClose })
   const { toast } = useToast();
   const [isSending, setIsSending] = useState(false);
   
+  // Get the best email to use
+  const recipientEmail = student.email_ph1 || student.email || '';
+  // Get the parent name
+  const parentName = student.ten_phu_huynh || student.ten_PH || student.ten_ph || 'Phụ huynh';
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       templateId: 'trial_invitation',
-      to: student.email_ph1 || '',
+      to: recipientEmail,
       subject: EMAIL_TEMPLATES[0].subject,
       body: EMAIL_TEMPLATES[0].body
         .replace('{studentName}', student.ho_va_ten || student.ten_hoc_sinh || '')
-        .replace('{parentName}', student.ten_ph || student.ten_PH || 'Phụ huynh')
+        .replace('{parentName}', parentName)
     },
   });
   
@@ -155,7 +160,7 @@ const StudentEmailForm: React.FC<StudentEmailFormProps> = ({ student, onClose })
       // Replace placeholders
       body = body
         .replace('{studentName}', student.ho_va_ten || student.ten_hoc_sinh || '')
-        .replace('{parentName}', student.ten_ph || student.ten_PH || 'Phụ huynh');
+        .replace('{parentName}', parentName);
       
       form.setValue('subject', subject);
       form.setValue('body', body);

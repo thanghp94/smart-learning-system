@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -61,6 +62,8 @@ import EnumManager from '@/pages/Settings/EnumManager';
 import AssetTransfer from '@/pages/Assets/AssetTransfer';
 import TransferManagement from '@/pages/Assets/TransferManagement';
 import Admissions from '@/pages/Admissions';
+import EmployeeDashboard from '@/pages/EmployeeDashboard';
+import PersonalDashboard from '@/pages/PersonalDashboard';
 
 // AI Tools import
 import AITools from '@/pages/AITools';
@@ -155,6 +158,7 @@ function App() {
             <Route path="finance/:id" element={<FinanceDetailWrapper />} />
             <Route path="finance/add" element={<FinanceFormWrapper />} />
             <Route path="finance/edit/:id" element={<FinanceFormWrapper />} />
+            <Route path="finance/entity/:entityType/:entityId" element={<Finance />} />
             
             <Route path="images" element={<Images />} />
             
@@ -190,6 +194,9 @@ function App() {
             <Route path="ai-tools" element={<AITools />} />
             <Route path="ai-tools/image-generator" element={<ImageGenerator />} />
             <Route path="admissions" element={<Admissions />} />
+            
+            <Route path="employee-dashboard/:id" element={<EmployeeDashboard />} />
+            <Route path="personal-dashboard" element={<PersonalDashboard />} />
             
             <Route path="*" element={<NotFound />} />
           </Route>

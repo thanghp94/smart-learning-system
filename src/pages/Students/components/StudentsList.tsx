@@ -88,6 +88,29 @@ const StudentsList: React.FC<StudentsListProps> = ({
     return genders;
   }, [data]);
 
+  // Extract unique facility values for filter options
+  const facilityOptions = useMemo(() => {
+    const facilityIds = [...new Set(data.map(s => s.co_so_id || '').filter(Boolean))];
+    return facilityIds.map(id => ({
+      label: facilities[id] || id,
+      value: id,
+      type: 'facility' as const
+    }));
+  }, [data, facilities]);
+
+  // Extract unique tuition status for filter options
+  const tuitionStatusOptions = useMemo(() => {
+    const statuses = [...new Set(data.map(s => s.trang_thai_hoc_phi || 'unknown').filter(Boolean))].map(status => ({
+      label: status === 'paid' ? 'Đã đóng' : 
+             status === 'pending' ? 'Chưa đóng' : 
+             status === 'partial' ? 'Đóng một phần' :
+             status === 'overdue' ? 'Quá hạn' : status,
+      value: status,
+      type: 'tuition' as const
+    }));
+    return statuses;
+  }, [data]);
+
   // Create filter categories
   const filterCategories: FilterCategory[] = [
     {
@@ -99,6 +122,16 @@ const StudentsList: React.FC<StudentsListProps> = ({
       name: 'Giới tính',
       type: 'other',
       options: genderOptions
+    },
+    {
+      name: 'Cơ sở',
+      type: 'facility',
+      options: facilityOptions
+    },
+    {
+      name: 'Học phí',
+      type: 'tuition',
+      options: tuitionStatusOptions
     }
   ];
 
@@ -114,6 +147,12 @@ const StudentsList: React.FC<StudentsListProps> = ({
           }
           if (category === 'Giới tính') {
             if (student.gioi_tinh !== value) return false;
+          }
+          if (category === 'Cơ sở') {
+            if (student.co_so_id !== value) return false;
+          }
+          if (category === 'Học phí') {
+            if (student.trang_thai_hoc_phi !== value) return false;
           }
         }
       }

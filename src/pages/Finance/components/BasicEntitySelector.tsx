@@ -28,6 +28,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
   entityId
 }) => {
   const [entityOptions, setEntityOptions] = useState<any[]>([]);
+  const [selectedEntityType, setSelectedEntityType] = useState<string>('');
   const watchEntityType = form.watch('loai_doi_tuong');
   
   useEffect(() => {
@@ -36,14 +37,15 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
       form.setValue('loai_doi_tuong', entityType);
       form.setValue('doi_tuong_id', entityId);
     }
-  }, [entityType, entityId, form]);
+    setSelectedEntityType(watchEntityType || entityType || '');
+  }, [entityType, entityId, form, watchEntityType]);
   
   useEffect(() => {
     const fetchEntities = async () => {
       try {
         let data: any[] = [];
         
-        switch (watchEntityType) {
+        switch (selectedEntityType) {
           case 'nhan_vien':
             data = await employeeService.getAll();
             setEntityOptions(data.map(item => ({
@@ -56,7 +58,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
             data = await studentService.getAll();
             setEntityOptions(data.map(item => ({
               id: item.id,
-              name: item.ten_hoc_sinh
+              name: item.ten_hoc_sinh || item.ho_va_ten
             })));
             break;
           
@@ -80,15 +82,15 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
             setEntityOptions([]);
         }
       } catch (error) {
-        console.error(`Error fetching ${watchEntityType} entities:`, error);
+        console.error(`Error fetching ${selectedEntityType} entities:`, error);
         setEntityOptions([]);
       }
     };
     
-    if (watchEntityType && !entityId) {
+    if (selectedEntityType && (!entityId || !entityType)) {
       fetchEntities();
     }
-  }, [watchEntityType, entityId]);
+  }, [selectedEntityType, entityId, entityType]);
   
   return (
     <>
@@ -101,6 +103,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
             <Select
               onValueChange={(value) => {
                 field.onChange(value);
+                setSelectedEntityType(value);
                 form.setValue('doi_tuong_id', '');
               }}
               defaultValue={field.value}
@@ -124,13 +127,13 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
         )}
       />
 
-      {watchEntityType && watchEntityType !== 'chung' && (
+      {selectedEntityType && selectedEntityType !== 'chung' && (
         <FormField
           control={form.control}
           name="doi_tuong_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Đối tượng</FormLabel>
+              <FormLabel>Đối tượng chi tiết</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}

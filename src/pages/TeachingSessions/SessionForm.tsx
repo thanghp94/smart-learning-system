@@ -37,7 +37,19 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
       tro_giang: data.tro_giang,
       ghi_chu: data.ghi_chu,
       co_so_id: data.co_so_id,
-      noi_dung: data.noi_dung
+      noi_dung: data.noi_dung,
+      // Include evaluation fields if they exist
+      nhan_xet_1: data.nhan_xet_1,
+      nhan_xet_2: data.nhan_xet_2,
+      nhan_xet_3: data.nhan_xet_3,
+      nhan_xet_4: data.nhan_xet_4,
+      nhan_xet_5: data.nhan_xet_5,
+      nhan_xet_6: data.nhan_xet_6,
+      nhan_xet_chung: data.nhan_xet_chung,
+      danh_gia_buoi_hoc: data.danh_gia_buoi_hoc,
+      diem_manh: data.diem_manh,
+      diem_yeu: data.diem_yeu,
+      ghi_chu_danh_gia: data.ghi_chu_danh_gia
     };
     
     // Submit session data through the onSubmit prop

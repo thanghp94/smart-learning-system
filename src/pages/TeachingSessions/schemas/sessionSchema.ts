@@ -35,7 +35,11 @@ export const sessionSchema = z.object({
   nhan_xet_4: z.string().nullable().optional(),
   nhan_xet_5: z.string().nullable().optional(),
   nhan_xet_6: z.string().nullable().optional(),
-  nhan_xet_chung: z.string().nullable().optional()
+  nhan_xet_chung: z.string().nullable().optional(),
+  danh_gia_buoi_hoc: z.string().optional(),
+  diem_manh: z.string().optional(),
+  diem_yeu: z.string().optional(),
+  ghi_chu_danh_gia: z.string().optional()
 });
 
 export const teachingSessionSchema = sessionSchema;
