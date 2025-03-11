@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { PieChart } from 'lucide-react';
+import { PieChart, Layout, BarChart3 } from 'lucide-react';
 import { LinkGroup } from './navigation/LinkGroup';
 import { adminLinks } from './navigation/admin-links';
 import { primaryLinks } from './navigation/primary-links';
@@ -28,8 +28,21 @@ export default function SidebarLinks() {
               )
             }
           >
-            <PieChart className="mr-2 h-4 w-4" />
+            <BarChart3 className="mr-2 h-4 w-4" />
             <span>Trang chủ</span>
+          </Link>
+          
+          <Link 
+            to="/assets"
+            className={
+              cn(
+                'flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
+                { 'bg-gray-100': location.pathname === '/assets' }
+              )
+            }
+          >
+            <Layout className="mr-2 h-4 w-4" />
+            <span>Tài Sản</span>
           </Link>
         </div>
       </div>
