@@ -4,12 +4,18 @@ import { ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ImageUploadProps {
-  imageUrl?: string;
-  onUpload: (url: string) => void;
+  value?: string;
+  onChange: (url: string) => void;
+  onRemove?: () => void;
   disabled?: boolean;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ imageUrl, onUpload, disabled = false }) => {
+const ImageUpload: React.FC<ImageUploadProps> = ({ 
+  value, 
+  onChange, 
+  onRemove, 
+  disabled = false 
+}) => {
   const [isUploading, setIsUploading] = useState(false);
   
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,7 +30,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ imageUrl, onUpload, disabled 
       const fileUrl = URL.createObjectURL(file);
       
       // Notify parent component
-      onUpload(fileUrl);
+      onChange(fileUrl);
       
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -34,31 +40,39 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ imageUrl, onUpload, disabled 
   };
   
   return (
-    <div className="relative">
-      {imageUrl ? (
-        <img 
-          src={imageUrl} 
-          alt="Uploaded" 
-          className="w-full h-full object-cover"
-        />
+    <div className="relative h-40 w-full border border-dashed rounded-md overflow-hidden">
+      {value ? (
+        <div className="relative w-full h-full">
+          <img 
+            src={value} 
+            alt="Uploaded" 
+            className="w-full h-full object-cover"
+          />
+          
+          {!disabled && onRemove && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
+              <Button variant="destructive" size="sm" onClick={onRemove}>
+                Remove
+              </Button>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-          <ImagePlus size={24} />
-        </div>
-      )}
-      
-      {!disabled && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
-          <input
-            type="file"
-            accept="image/*"
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            onChange={handleImageChange}
-            disabled={isUploading || disabled}
-          />
-          <Button variant="secondary" size="sm" disabled={isUploading}>
-            {isUploading ? 'Uploading...' : 'Change'}
-          </Button>
+          <div className="text-center">
+            <ImagePlus size={24} className="mx-auto mb-2" />
+            <p className="text-xs text-gray-500">Upload an image</p>
+          </div>
+          
+          {!disabled && (
+            <input
+              type="file"
+              accept="image/*"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={handleImageChange}
+              disabled={isUploading || disabled}
+            />
+          )}
         </div>
       )}
     </div>
