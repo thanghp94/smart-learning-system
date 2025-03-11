@@ -2,12 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import TablePageLayout from '@/components/common/TablePageLayout';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, RotateCw, CheckSquare, Clock } from 'lucide-react';
+import { Plus, Filter, RotateCw, CheckSquare } from 'lucide-react';
 import { taskService } from '@/lib/supabase';
 import { Task } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TaskForm from './components/TaskForm';
 import TaskTable from './components/TaskTable';
@@ -113,7 +111,6 @@ const Tasks = () => {
     <TablePageLayout
       title="Công Việc"
       description="Quản lý các công việc và nhiệm vụ"
-      icon={<CheckSquare className="h-6 w-6" />}
       actions={tableActions}
     >
       <TaskTable 

@@ -136,31 +136,34 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   const handleSubmit = async (values: z.infer<typeof financeSchema>) => {
     setIsSubmitting(true);
     try {
+      // Prepare data to save
+      const financeData = {
+        ...values,
+        ngay: values.ngay.toISOString().split('T')[0],
+      };
+      
       if (initialData?.id) {
-        await financeService.update(initialData.id, {
-          ...values,
-          ngay: values.ngay.toISOString().split('T')[0],
-        });
+        // Update existing record
+        await financeService.update(initialData.id, financeData);
         toast({
           title: 'Thành công',
           description: 'Cập nhật thông tin thu chi thành công',
         });
       } else {
-        await financeService.create({
-          ...values,
-          ngay: values.ngay.toISOString().split('T')[0],
-        });
+        // Create new record
+        await financeService.create(financeData);
         toast({
           title: 'Thành công',
           description: 'Thêm khoản thu chi mới thành công',
         });
       }
+      
       onSubmit(values);
     } catch (error) {
       console.error('Error saving finance record:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể lưu thông tin thu chi',
+        description: 'Không thể lưu thông tin thu chi: ' + (error as Error).message,
         variant: 'destructive',
       });
     } finally {

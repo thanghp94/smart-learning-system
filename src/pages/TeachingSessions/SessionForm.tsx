@@ -7,7 +7,6 @@ import { SessionFormData } from "./schemas/sessionSchema";
 import { useSessionForm } from "./hooks/useSessionForm";
 import SessionBasicInfoFields from "./components/SessionBasicInfoFields";
 import SessionContentField from "./components/SessionContentField";
-import SessionEvaluationFields from "./components/SessionEvaluationFields";
 
 interface SessionFormProps {
   initialData?: Partial<TeachingSession>;
@@ -17,16 +16,13 @@ interface SessionFormProps {
 }
 
 const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: SessionFormProps) => {
-  const { form, classes, teachers, isLoading, calculateAverageScore } = useSessionForm({ initialData });
+  const { form, classes, teachers, isLoading } = useSessionForm({ initialData });
 
   const handleSubmit = (data: SessionFormData) => {
     // Convert session_id to string if it's a number
     if (typeof data.session_id === 'number') {
       data.session_id = String(data.session_id);
     }
-    
-    // Calculate average score if evaluation scores are provided
-    const trungBinh = calculateAverageScore(data);
     
     // Prepare the session data with all required fields for the database
     const sessionData: Partial<TeachingSession> = {
@@ -36,17 +32,11 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
       thoi_gian_bat_dau: data.thoi_gian_bat_dau,
       thoi_gian_ket_thuc: data.thoi_gian_ket_thuc,
       session_id: data.session_id,
-      loai_bai_hoc: data.loai_bai_hoc, // Changed from Loai_bai_hoc to loai_bai_hoc
-      nhan_xet_1: data.nhan_xet_1,
-      nhan_xet_2: data.nhan_xet_2,
-      nhan_xet_3: data.nhan_xet_3,
-      nhan_xet_4: data.nhan_xet_4,
-      nhan_xet_5: data.nhan_xet_5,
-      nhan_xet_6: data.nhan_xet_6,
-      trung_binh: trungBinh,
+      loai_bai_hoc: data.loai_bai_hoc,
       phong_hoc_id: data.phong_hoc_id,
       tro_giang: data.tro_giang,
-      nhan_xet_chung: data.nhan_xet_chung,
+      co_so_id: data.co_so_id,
+      noi_dung: data.noi_dung,
       ghi_chu: data.ghi_chu
     };
     
@@ -65,8 +55,6 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
         />
         
         <SessionContentField form={form} />
-        
-        <SessionEvaluationFields form={form} />
         
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>

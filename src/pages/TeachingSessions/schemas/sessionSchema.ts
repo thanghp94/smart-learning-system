@@ -18,6 +18,7 @@ export const sessionSchema = z.object({
   nhan_xet_6: z.string().nullable().optional(),
   trung_binh: z.number().nullable().optional(),
   phong_hoc_id: z.string().optional(),
+  co_so_id: z.string().optional(),
   tro_giang: z.string().optional(),
   nhan_xet_chung: z.string().optional(),
   ghi_chu: z.string().optional(),

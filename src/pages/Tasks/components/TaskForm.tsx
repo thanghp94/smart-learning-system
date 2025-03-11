@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -24,23 +24,23 @@ import {
 import { DatePicker } from '@/components/ui/DatePicker';
 import { taskService, employeeService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
 import { Employee } from '@/lib/types';
 
 const taskSchema = z.object({
-  ten_viec: z.string().min(1, { message: 'Tên công việc là bắt buộc' }),
+  ten_viec: z.string().min(1, { message: 'Vui lòng nhập tên công việc' }),
   loai_viec: z.string().optional(),
-  doi_tuong: z.string().optional(),
-  dien_giai: z.string().optional(),
   nguoi_phu_trach: z.string().optional(),
   ngay_den_han: z.date().optional(),
   cap_do: z.string().optional(),
+  trang_thai: z.string().default('pending'),
+  dien_giai: z.string().optional(),
+  doi_tuong: z.string().optional(),
   doi_tuong_id: z.string().optional(),
   ghi_chu: z.string().optional(),
 });
 
 interface TaskFormProps {
-  onSubmit: () => void;
+  onSubmit: (data: any) => void;
   onCancel: () => void;
   initialData?: any;
 }
@@ -51,7 +51,24 @@ const TaskForm: React.FC<TaskFormProps> = ({
   initialData,
 }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof taskSchema>>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: initialData || {
+      ten_viec: '',
+      loai_viec: '',
+      nguoi_phu_trach: '',
+      ngay_den_han: undefined,
+      cap_do: 'medium',
+      trang_thai: 'pending',
+      dien_giai: '',
+      doi_tuong: '',
+      doi_tuong_id: '',
+      ghi_chu: '',
+    },
+  });
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -71,44 +88,38 @@ const TaskForm: React.FC<TaskFormProps> = ({
     fetchEmployees();
   }, [toast]);
 
-  const form = useForm<z.infer<typeof taskSchema>>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: initialData || {
-      ten_viec: '',
-      loai_viec: '',
-      doi_tuong: '',
-      dien_giai: '',
-      nguoi_phu_trach: '',
-      ngay_den_han: undefined,
-      cap_do: 'medium',
-      doi_tuong_id: '',
-      ghi_chu: '',
-    },
-  });
-
   const handleSubmit = async (values: z.infer<typeof taskSchema>) => {
+    setIsSubmitting(true);
     try {
+      // Format date for database
+      const formattedValues = {
+        ...values,
+        ngay_den_han: values.ngay_den_han ? values.ngay_den_han.toISOString().split('T')[0] : undefined
+      };
+      
       if (initialData?.id) {
-        await taskService.update(initialData.id, values);
+        await taskService.update(initialData.id, formattedValues);
         toast({
           title: 'Thành công',
-          description: 'Cập nhật công việc thành công',
+          description: 'Đã cập nhật công việc',
         });
       } else {
-        await taskService.create(values);
+        await taskService.create(formattedValues);
         toast({
           title: 'Thành công',
-          description: 'Thêm công việc mới thành công',
+          description: 'Đã thêm công việc mới',
         });
       }
-      onSubmit();
+      onSubmit(values);
     } catch (error) {
-      console.error('Error submitting task:', error);
+      console.error('Error saving task:', error);
       toast({
         title: 'Lỗi',
         description: 'Không thể lưu công việc',
         variant: 'destructive',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -146,11 +157,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="tuyen_sinh">Tuyển sinh</SelectItem>
-                    <SelectItem value="giang_day">Giảng dạy</SelectItem>
-                    <SelectItem value="hanh_chinh">Hành chính</SelectItem>
+                    <SelectItem value="admin">Hành chính</SelectItem>
+                    <SelectItem value="teaching">Giảng dạy</SelectItem>
                     <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="khac">Khác</SelectItem>
+                    <SelectItem value="student">Học sinh</SelectItem>
+                    <SelectItem value="other">Khác</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -190,6 +201,21 @@ const TaskForm: React.FC<TaskFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
+            name="ngay_den_han"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Ngày đến hạn</FormLabel>
+                <DatePicker
+                  date={field.value}
+                  setDate={field.onChange}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="cap_do"
             render={({ field }) => (
               <FormItem>
@@ -214,21 +240,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="ngay_den_han"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Ngày đến hạn</FormLabel>
-                <DatePicker
-                  date={field.value}
-                  setDate={field.onChange}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
         <FormField
@@ -249,6 +260,50 @@ const TaskForm: React.FC<TaskFormProps> = ({
           )}
         />
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="doi_tuong"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Đối tượng</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn loại đối tượng" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="student">Học sinh</SelectItem>
+                    <SelectItem value="employee">Nhân viên</SelectItem>
+                    <SelectItem value="class">Lớp học</SelectItem>
+                    <SelectItem value="facility">Cơ sở</SelectItem>
+                    <SelectItem value="other">Khác</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="doi_tuong_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ID đối tượng</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nhập ID đối tượng" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
           name="ghi_chu"
@@ -268,11 +323,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
         />
 
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Hủy
           </Button>
-          <Button type="submit">
-            {initialData ? 'Cập nhật' : 'Thêm mới'}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Đang lưu...' : initialData ? 'Cập nhật' : 'Thêm mới'}
           </Button>
         </div>
       </form>

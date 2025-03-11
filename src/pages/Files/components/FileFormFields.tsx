@@ -1,11 +1,9 @@
 
-import React from 'react';
-import { FormField, FormItem, FormLabel, Select, FormControl, 
-  SelectTrigger, SelectValue, SelectContent, SelectItem, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/DatePicker';
-import ImageUpload from '@/components/common/ImageUpload';
+import React from "react";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface FileFormFieldsProps {
   form: any;
@@ -16,42 +14,27 @@ const FileFormFields: React.FC<FileFormFieldsProps> = ({ form }) => {
     <div className="space-y-4">
       <FormField
         control={form.control}
-        name="doi_tuong_lien_quan"
+        name="loai_tai_lieu"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Đối tượng liên quan</FormLabel>
+            <FormLabel>Loại tài liệu</FormLabel>
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn đối tượng liên quan" />
+                  <SelectValue placeholder="Chọn loại tài liệu" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="tai_lieu">Tài liệu</SelectItem>
-                <SelectItem value="nhan_vien">Nhân viên</SelectItem>
-                <SelectItem value="hoc_sinh">Học sinh</SelectItem>
-                <SelectItem value="co_so">Cơ sở</SelectItem>
-                <SelectItem value="csvc">CSVC</SelectItem>
+                <SelectItem value="contract">Hợp đồng</SelectItem>
+                <SelectItem value="document">Tài liệu</SelectItem>
+                <SelectItem value="image">Hình ảnh</SelectItem>
+                <SelectItem value="audio">Audio</SelectItem>
+                <SelectItem value="other">Khác</SelectItem>
               </SelectContent>
             </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="nhom_tai_lieu"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nhóm tài liệu</FormLabel>
-            <Input
-              {...field}
-              placeholder="Nhập nhóm tài liệu"
-            />
             <FormMessage />
           </FormItem>
         )}
@@ -63,10 +46,9 @@ const FileFormFields: React.FC<FileFormFieldsProps> = ({ form }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Tên tài liệu</FormLabel>
-            <Input
-              {...field}
-              placeholder="Nhập tên tài liệu"
-            />
+            <FormControl>
+              <Input {...field} placeholder="Nhập tên tài liệu" />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -74,70 +56,51 @@ const FileFormFields: React.FC<FileFormFieldsProps> = ({ form }) => {
 
       <FormField
         control={form.control}
-        name="dien_giai"
+        name="mo_ta"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Diễn giải</FormLabel>
-            <Textarea
-              {...field}
-              placeholder="Nhập diễn giải"
-              className="resize-none"
-            />
+            <FormLabel>Mô tả</FormLabel>
+            <FormControl>
+              <Textarea {...field} placeholder="Nhập mô tả" />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="ngay_cap"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Ngày cấp</FormLabel>
-              <DatePicker
-                date={field.value ? new Date(field.value) : undefined}
-                setDate={(date) => field.onChange(date)}
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="han_tai_lieu"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Hạn tài liệu</FormLabel>
-              <DatePicker
-                date={field.value ? new Date(field.value) : undefined}
-                setDate={(date) => field.onChange(date)}
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      <FormField
+        control={form.control}
+        name="tags"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tags</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Nhập tags (cách nhau bằng dấu phẩy)" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <FormField
         control={form.control}
-        name="trang_thai"
+        name="do_uu_tien"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Trạng thái</FormLabel>
+            <FormLabel>Độ ưu tiên</FormLabel>
             <Select
               onValueChange={field.onChange}
-              defaultValue={field.value || "active"}
+              defaultValue={field.value}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn trạng thái" />
+                  <SelectValue placeholder="Chọn độ ưu tiên" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="active">Hoạt động</SelectItem>
-                <SelectItem value="inactive">Không hoạt động</SelectItem>
+                <SelectItem value="low">Thấp</SelectItem>
+                <SelectItem value="medium">Trung bình</SelectItem>
+                <SelectItem value="high">Cao</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -147,15 +110,13 @@ const FileFormFields: React.FC<FileFormFieldsProps> = ({ form }) => {
 
       <FormField
         control={form.control}
-        name="file1"
+        name="doi_tuong_id"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>File tài liệu</FormLabel>
-            <ImageUpload
-              value={field.value ? [field.value] : []}
-              onChange={(url) => field.onChange(url)}
-              onRemove={() => field.onChange("")}
-            />
+            <FormLabel>ID đối tượng</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Nhập ID đối tượng" />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -163,15 +124,27 @@ const FileFormFields: React.FC<FileFormFieldsProps> = ({ form }) => {
 
       <FormField
         control={form.control}
-        name="ghi_chu"
+        name="loai_doi_tuong"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Ghi chú</FormLabel>
-            <Textarea
-              {...field}
-              placeholder="Nhập ghi chú"
-              className="resize-none"
-            />
+            <FormLabel>Loại đối tượng</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn loại đối tượng" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="student">Học sinh</SelectItem>
+                <SelectItem value="employee">Nhân viên</SelectItem>
+                <SelectItem value="class">Lớp học</SelectItem>
+                <SelectItem value="facility">Cơ sở</SelectItem>
+                <SelectItem value="other">Khác</SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
