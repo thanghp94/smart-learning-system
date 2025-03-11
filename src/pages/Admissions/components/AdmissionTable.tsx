@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { admissionService } from '@/lib/supabase';
-import { Admission } from '@/lib/types';
+import DataTable from '@/components/ui/DataTable';
 import { useToast } from '@/hooks/use-toast';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Admission } from '@/lib/types/admission';
+import { admissionService } from '@/lib/supabase/admission-service';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
-const AdmissionTable: React.FC = () => {
+const AdmissionTable = () => {
   const [admissions, setAdmissions] = useState<Admission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -34,86 +33,87 @@ const AdmissionTable: React.FC = () => {
     fetchAdmissions();
   }, [toast]);
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'inquiry':
-        return 'Yêu cầu';
-      case 'contacted':
-        return 'Đã liên hệ';
-      case 'applied':
-        return 'Đã nộp đơn';
-      case 'interviewed':
-        return 'Đã phỏng vấn';
-      case 'offered':
-        return 'Đã đề nghị';
-      case 'enrolled':
-        return 'Đã nhập học';
-      case 'rejected':
-        return 'Đã từ chối';
-      default:
-        return status;
-    }
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    return format(new Date(dateString), 'dd/MM/yyyy');
   };
 
+  const getStatusBadge = (status: string) => {
+    const statusVariants: Record<string, string> = {
+      'tim_hieu': 'bg-blue-100 text-blue-800',
+      'tu_van': 'bg-yellow-100 text-yellow-800',
+      'hoc_thu': 'bg-purple-100 text-purple-800',
+      'chot': 'bg-green-100 text-green-800',
+      'huy': 'bg-red-100 text-red-800'
+    };
+    
+    const statusLabels: Record<string, string> = {
+      'tim_hieu': 'Tìm hiểu',
+      'tu_van': 'Tư vấn',
+      'hoc_thu': 'Học thử',
+      'chot': 'Đã chốt',
+      'huy': 'Huỷ'
+    };
+    
+    return (
+      <Badge className={statusVariants[status] || 'bg-gray-100 text-gray-800'}>
+        {statusLabels[status] || status}
+      </Badge>
+    );
+  };
+
+  const columns = [
+    {
+      title: 'Tên học sinh',
+      key: 'ten_hoc_sinh',
+      sortable: true,
+    },
+    {
+      title: 'Email',
+      key: 'email',
+      sortable: true,
+      render: (value: string) => value || '--',
+    },
+    {
+      title: 'Số điện thoại',
+      key: 'so_dien_thoai',
+      sortable: true,
+      render: (value: string) => value || '--',
+    },
+    {
+      title: 'Tên phụ huynh',
+      key: 'ten_phu_huynh',
+      sortable: true,
+      render: (value: string) => value || '--',
+    },
+    {
+      title: 'Ngày sinh',
+      key: 'ngay_sinh',
+      sortable: true,
+      render: (value: string) => formatDate(value),
+    },
+    {
+      title: 'Trạng thái',
+      key: 'trang_thai',
+      sortable: true,
+      render: (value: string) => getStatusBadge(value),
+    },
+    {
+      title: 'Ngày liên hệ đầu',
+      key: 'ngay_lien_he_dau',
+      sortable: true,
+      render: (value: string) => formatDate(value),
+    },
+  ];
+
   return (
-    <div className="w-full">
-      {isLoading ? (
-        <div className="flex justify-center items-center h-40">
-          <p>Đang tải...</p>
-        </div>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Họ tên</TableHead>
-              <TableHead>Ngày sinh</TableHead>
-              <TableHead>Số điện thoại</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead>Ngày tạo</TableHead>
-              <TableHead className="text-right">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {admissions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  Không có dữ liệu
-                </TableCell>
-              </TableRow>
-            ) : (
-              admissions.map((admission) => (
-                <TableRow key={admission.id}>
-                  <TableCell>{admission.ho_ten}</TableCell>
-                  <TableCell>
-                    {admission.ngay_sinh ? format(new Date(admission.ngay_sinh), 'dd/MM/yyyy') : 'N/A'}
-                  </TableCell>
-                  <TableCell>{admission.so_dien_thoai || 'N/A'}</TableCell>
-                  <TableCell>{admission.email || 'N/A'}</TableCell>
-                  <TableCell>{getStatusLabel(admission.trang_thai || '')}</TableCell>
-                  <TableCell>
-                    {admission.created_at ? format(new Date(admission.created_at), 'dd/MM/yyyy') : 'N/A'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      )}
-    </div>
+    <DataTable
+      columns={columns}
+      data={admissions}
+      searchable={true}
+      searchPlaceholder="Tìm kiếm học sinh..."
+      isLoading={isLoading}
+    />
   );
 };
 

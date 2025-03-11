@@ -11,10 +11,12 @@ import AdmissionCard from './components/AdmissionCard';
 import AdmissionForm from './components/AdmissionForm';
 import { admissionService } from '@/lib/supabase/admission-service';
 import { Admission, AdmissionStatus, ADMISSION_STATUS_MAP } from '@/lib/types/admission';
+import { employeeService } from '@/lib/supabase';
 
 const KanbanView = () => {
   const { toast } = useToast();
   const [admissions, setAdmissions] = useState<Admission[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -27,7 +29,7 @@ const KanbanView = () => {
     const fetchAdmissions = async () => {
       setIsLoading(true);
       try {
-        const data = await admissionService.getAllAdmissions();
+        const data = await admissionService.getAll();
         setAdmissions(data);
       } catch (error) {
         console.error('Error fetching admissions:', error);
@@ -44,6 +46,19 @@ const KanbanView = () => {
     fetchAdmissions();
   }, [refreshTrigger, toast]);
 
+  // Fetch employees for the person in charge dropdown
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const data = await employeeService.getAll();
+        setEmployees(data);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
   // Filter admissions by search query
   const filteredAdmissions = admissions.filter(admission => 
     admission.ten_hoc_sinh.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -53,11 +68,12 @@ const KanbanView = () => {
   );
 
   // Group admissions by status
-  const admissionsByStatus = {
+  const admissionsByStatus: Record<AdmissionStatus, Admission[]> = {
     tim_hieu: filteredAdmissions.filter(a => a.trang_thai === 'tim_hieu'),
     tu_van: filteredAdmissions.filter(a => a.trang_thai === 'tu_van'),
     hoc_thu: filteredAdmissions.filter(a => a.trang_thai === 'hoc_thu'),
     chot: filteredAdmissions.filter(a => a.trang_thai === 'chot'),
+    huy: filteredAdmissions.filter(a => a.trang_thai === 'huy')
   };
 
   const handleOpenForm = (admission?: Admission) => {
@@ -118,24 +134,11 @@ const KanbanView = () => {
     
     // Then update in database
     try {
-      const success = await admissionService.updateAdmissionStatus(admissionId, status);
-      if (success) {
-        toast({
-          title: 'Cập nhật trạng thái',
-          description: `${admission.ten_hoc_sinh} đã được chuyển sang ${ADMISSION_STATUS_MAP[status]}`,
-        });
-      } else {
-        // Rollback UI change if API call fails
-        setAdmissions(prev => prev.map(a => 
-          a.id === admissionId ? { ...a, trang_thai: admission.trang_thai } : a
-        ));
-        
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể cập nhật trạng thái',
-          variant: 'destructive',
-        });
-      }
+      await admissionService.updateAdmissionStatus(admissionId, status);
+      toast({
+        title: 'Cập nhật trạng thái',
+        description: `${admission.ten_hoc_sinh} đã được chuyển sang ${ADMISSION_STATUS_MAP[status]}`,
+      });
     } catch (error) {
       console.error('Error updating status:', error);
       // Rollback UI change
@@ -155,10 +158,17 @@ const KanbanView = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  // Get employee name from ID
+  const getEmployeeName = (employeeId?: string) => {
+    if (!employeeId) return '';
+    const employee = employees.find(emp => emp.id === employeeId);
+    return employee ? employee.ten_nhan_su : '';
+  };
+
   // Render the KanbanBoard
   const renderKanbanBoard = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 p-2">
         {Object.entries(ADMISSION_STATUS_MAP).map(([status, label]) => (
           <div 
             key={status} 
@@ -362,10 +372,10 @@ const KanbanView = () => {
                     <p className="font-medium">{ADMISSION_STATUS_MAP[selectedAdmission.trang_thai]}</p>
                   </div>
 
-                  {selectedAdmission.ten_nguoi_phu_trach && (
+                  {selectedAdmission.nguoi_phu_trach && (
                     <div>
                       <p className="text-sm text-muted-foreground">Người phụ trách</p>
-                      <p>{selectedAdmission.ten_nguoi_phu_trach}</p>
+                      <p>{getEmployeeName(selectedAdmission.nguoi_phu_trach)}</p>
                     </div>
                   )}
 

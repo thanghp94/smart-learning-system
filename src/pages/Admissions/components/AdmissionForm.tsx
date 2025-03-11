@@ -103,7 +103,6 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
       const formattedData: Partial<Admission> = {
         ...values,
         ngay_sinh: values.ngay_sinh ? values.ngay_sinh.toISOString() : undefined,
-        ngay_cap_nhat: new Date().toISOString(),
         trang_thai: values.trang_thai as AdmissionStatus,
       };
 

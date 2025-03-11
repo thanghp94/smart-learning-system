@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Admission } from '../types/admission';
 

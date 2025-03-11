@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { financeService } from '@/lib/supabase';
 import { Finance } from '@/lib/types';

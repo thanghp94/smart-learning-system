@@ -180,6 +180,21 @@ export const teachingSessionService = {
     return data as TeachingSession[];
   },
   
+  getByDate: async (date: string): Promise<TeachingSession[]> => {
+    const { data, error } = await supabase
+      .from('teaching_sessions')
+      .select('*')
+      .eq('ngay_hoc', date)
+      .order('thoi_gian_bat_dau', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching teaching sessions by date:', error);
+      throw error;
+    }
+    
+    return data as TeachingSession[];
+  },
+  
   getByDateRange: async (startDate: string, endDate: string): Promise<TeachingSession[]> => {
     const { data, error } = await supabase
       .from('teaching_sessions')
@@ -190,6 +205,21 @@ export const teachingSessionService = {
     
     if (error) {
       console.error('Error fetching teaching sessions by date range:', error);
+      throw error;
+    }
+    
+    return data as TeachingSession[];
+  },
+  
+  getByFacility: async (facilityId: string): Promise<TeachingSession[]> => {
+    // Join with classes to filter by facility
+    const { data, error } = await supabase
+      .from('teaching_sessions')
+      .select('*, classes!inner(*)')
+      .eq('classes.co_so', facilityId);
+    
+    if (error) {
+      console.error('Error fetching teaching sessions by facility:', error);
       throw error;
     }
     

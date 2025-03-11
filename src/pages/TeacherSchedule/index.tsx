@@ -18,15 +18,19 @@ import TablePageLayout from '@/components/common/TablePageLayout';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isToday, isSameDay } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { TeachingSession } from '@/lib/types';
-import { employeeService, teachingSessionService } from '@/lib/supabase';
-import { Employee } from '@/lib/types/employee';
+import { employeeService, teachingSessionService, facilityService } from '@/lib/supabase';
+import { Employee, Facility } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const TeacherSchedule = () => {
   const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
+  const [selectedFacility, setSelectedFacility] = useState<string | null>(null);
   const [teachers, setTeachers] = useState<Employee[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filterMode, setFilterMode] = useState<'teacher' | 'facility'>('teacher');
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [calendarDate, setCalendarDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
@@ -34,13 +38,19 @@ const TeacherSchedule = () => {
 
   useEffect(() => {
     fetchTeachers();
+    fetchFacilities();
   }, []);
 
   useEffect(() => {
-    if (selectedTeacher) {
+    if (filterMode === 'teacher' && selectedTeacher) {
       fetchTeacherSessions(selectedTeacher);
+    } else if (filterMode === 'facility' && selectedFacility) {
+      fetchFacilitySessions(selectedFacility);
+    } else {
+      setSessions([]);
+      setIsLoading(false);
     }
-  }, [selectedTeacher, currentWeekStart]);
+  }, [selectedTeacher, selectedFacility, filterMode, currentWeekStart]);
 
   useEffect(() => {
     if (calendarDate) {
@@ -60,7 +70,6 @@ const TeacherSchedule = () => {
       }
       
       setTeachers(teacherList || []);
-      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching teachers:', error);
       toast({
@@ -68,7 +77,22 @@ const TeacherSchedule = () => {
         description: 'Không thể tải danh sách giáo viên',
         variant: 'destructive',
       });
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchFacilities = async () => {
+    try {
+      const facilityList = await facilityService.getAll();
+      setFacilities(facilityList || []);
+    } catch (error) {
+      console.error('Error fetching facilities:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải danh sách cơ sở',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -77,8 +101,16 @@ const TeacherSchedule = () => {
       setIsLoading(true);
       const teacherSessions = await teachingSessionService.getByTeacher(teacherId);
       console.log("Teacher sessions:", teacherSessions);
-      setSessions(teacherSessions || []);
-      setIsLoading(false);
+      
+      // Filter for current week
+      const weekStart = format(currentWeekStart, 'yyyy-MM-dd');
+      const weekEnd = format(endOfWeek(currentWeekStart, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      
+      const filteredSessions = teacherSessions.filter(session => {
+        return session.ngay_hoc >= weekStart && session.ngay_hoc <= weekEnd;
+      });
+      
+      setSessions(filteredSessions || []);
     } catch (error) {
       console.error('Error fetching teacher sessions:', error);
       toast({
@@ -86,6 +118,33 @@ const TeacherSchedule = () => {
         description: 'Không thể tải lịch dạy của giáo viên',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchFacilitySessions = async (facilityId: string) => {
+    try {
+      setIsLoading(true);
+      const facilitySessions = await teachingSessionService.getByFacility(facilityId);
+      
+      // Filter for current week
+      const weekStart = format(currentWeekStart, 'yyyy-MM-dd');
+      const weekEnd = format(endOfWeek(currentWeekStart, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      
+      const filteredSessions = facilitySessions.filter(session => {
+        return session.ngay_hoc >= weekStart && session.ngay_hoc <= weekEnd;
+      });
+      
+      setSessions(filteredSessions || []);
+    } catch (error) {
+      console.error('Error fetching facility sessions:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải lịch dạy của cơ sở',
+        variant: 'destructive',
+      });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -125,6 +184,16 @@ const TeacherSchedule = () => {
 
   const handleSessionClick = (session: TeachingSession) => {
     navigate(`/teaching-sessions`, { state: { sessionId: session.id } });
+  };
+
+  const handleFilterModeChange = (value: string) => {
+    setFilterMode(value as 'teacher' | 'facility');
+    if (value === 'teacher') {
+      setSelectedFacility(null);
+    } else {
+      setSelectedTeacher(null);
+    }
+    setSessions([]);
   };
 
   const renderWeekView = () => {
@@ -172,18 +241,45 @@ const TeacherSchedule = () => {
 
   const tableActions = (
     <div className="flex flex-wrap items-center gap-2">
-      <Select value={selectedTeacher || ''} onValueChange={setSelectedTeacher}>
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Chọn giáo viên" />
-        </SelectTrigger>
-        <SelectContent>
-          {teachers.map((teacher) => (
-            <SelectItem key={teacher.id} value={teacher.id}>
-              {teacher.ten_nhan_su}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Tabs 
+        defaultValue="teacher" 
+        value={filterMode}
+        onValueChange={handleFilterModeChange}
+        className="mr-4"
+      >
+        <TabsList>
+          <TabsTrigger value="teacher">Theo giáo viên</TabsTrigger>
+          <TabsTrigger value="facility">Theo cơ sở</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {filterMode === 'teacher' ? (
+        <Select value={selectedTeacher || ''} onValueChange={setSelectedTeacher}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Chọn giáo viên" />
+          </SelectTrigger>
+          <SelectContent>
+            {teachers.map((teacher) => (
+              <SelectItem key={teacher.id} value={teacher.id}>
+                {teacher.ten_nhan_su}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Select value={selectedFacility || ''} onValueChange={setSelectedFacility}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Chọn cơ sở" />
+          </SelectTrigger>
+          <SelectContent>
+            {facilities.map((facility) => (
+              <SelectItem key={facility.id} value={facility.id}>
+                {facility.ten_co_so}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       <div className="flex items-center gap-2 ml-4">
         <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
@@ -219,8 +315,8 @@ const TeacherSchedule = () => {
 
   return (
     <TablePageLayout
-      title="Lịch Dạy Giáo Viên"
-      description="Xem lịch dạy theo tuần của giáo viên"
+      title="Lịch Dạy"
+      description={`Xem lịch dạy theo tuần ${filterMode === 'teacher' ? 'của giáo viên' : 'tại cơ sở'}`}
       actions={tableActions}
     >
       {isLoading ? (
@@ -228,19 +324,35 @@ const TeacherSchedule = () => {
           <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
           <p className="text-muted-foreground">Đang tải dữ liệu...</p>
         </div>
-      ) : selectedTeacher ? (
+      ) : filterMode === 'teacher' && selectedTeacher ? (
+        renderWeekView()
+      ) : filterMode === 'facility' && selectedFacility ? (
         renderWeekView()
       ) : (
         <div className="flex flex-col items-center justify-center h-60">
-          <p className="text-muted-foreground">Vui lòng chọn giáo viên để xem lịch dạy</p>
+          <p className="text-muted-foreground">
+            {filterMode === 'teacher' 
+              ? 'Vui lòng chọn giáo viên để xem lịch dạy'
+              : 'Vui lòng chọn cơ sở để xem lịch dạy'}
+          </p>
           
-          {teachers.length === 0 && (
+          {(filterMode === 'teacher' && teachers.length === 0) && (
             <Button 
               variant="outline" 
               className="mt-4"
               onClick={fetchTeachers}
             >
               Tải lại danh sách giáo viên
+            </Button>
+          )}
+          
+          {(filterMode === 'facility' && facilities.length === 0) && (
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={fetchFacilities}
+            >
+              Tải lại danh sách cơ sở
             </Button>
           )}
         </div>
