@@ -1,8 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, Filter, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
 import { financeService, facilityService } from "@/lib/supabase";
 import { Finance, Facility } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -16,10 +13,10 @@ import PlaceholderPage from "@/components/common/PlaceholderPage";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FinanceLedger from "./components/FinanceLedger";
-import ExportButton from "@/components/ui/ExportButton";
-import FilterButton, { FilterCategory } from "@/components/ui/FilterButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import CommandInterface from "@/components/CommandInterface";
+import DataTable from "@/components/ui/DataTable";
+import FinanceActions from "./components/FinanceActions";
 
 const FinancePage = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
@@ -104,7 +101,7 @@ const FinancePage = () => {
   const handleAddFormSubmit = async (formData: Partial<Finance>) => {
     try {
       console.log("Submitting finance data:", formData);
-      const newFinance = await financeService.create(formData);
+      await financeService.create(formData);
       
       toast({
         title: "Thành công",
@@ -124,6 +121,28 @@ const FinancePage = () => {
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+  
+  // Handle filter changes
+  const handleFilter = (filters: Record<string, string>) => {
+    console.log("Applied filters:", filters);
+    
+    let result = [...finances];
+    
+    // Apply each filter
+    if (filters["Cơ sở"]) {
+      result = result.filter(item => item.co_so === filters["Cơ sở"]);
+    }
+    
+    if (filters["Loại thu chi"]) {
+      result = result.filter(item => item.loai_thu_chi === filters["Loại thu chi"]);
+    }
+    
+    if (filters["Tình trạng"]) {
+      result = result.filter(item => item.tinh_trang === filters["Tình trạng"]);
+    }
+    
+    setFilteredFinances(result);
   };
 
   const columns = [
@@ -180,80 +199,15 @@ const FinancePage = () => {
   const mobileColumns = isMobile ? 
     columns.filter(col => ['ngay', 'loai_thu_chi', 'tong_tien'].includes(col.key)) : 
     columns;
-    
-  // Filter categories
-  const filterCategories: FilterCategory[] = [
-    {
-      name: "Cơ sở",
-      type: "facility",
-      options: facilities.map(facility => ({
-        label: facility.ten_co_so || facility.id,
-        value: facility.id,
-        type: "facility"
-      }))
-    },
-    {
-      name: "Loại thu chi",
-      type: "other",
-      options: [
-        { label: "Thu", value: "income", type: "other" },
-        { label: "Chi", value: "expense", type: "other" }
-      ]
-    },
-    {
-      name: "Tình trạng",
-      type: "status",
-      options: [
-        { label: "Hoàn thành", value: "completed", type: "status" },
-        { label: "Chờ xử lý", value: "pending", type: "status" }
-      ]
-    }
-  ];
-  
-  // Handle filter changes
-  const handleFilter = (filters: Record<string, string>) => {
-    console.log("Applied filters:", filters);
-    
-    let result = [...finances];
-    
-    // Apply each filter
-    if (filters["Cơ sở"]) {
-      result = result.filter(item => item.co_so === filters["Cơ sở"]);
-    }
-    
-    if (filters["Loại thu chi"]) {
-      result = result.filter(item => item.loai_thu_chi === filters["Loại thu chi"]);
-    }
-    
-    if (filters["Tình trạng"]) {
-      result = result.filter(item => item.tinh_trang === filters["Tình trạng"]);
-    }
-    
-    setFilteredFinances(result);
-  };
 
   const tableActions = (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button variant="outline" size="sm" className="h-8" onClick={fetchFinances}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
-      </Button>
-      
-      <FilterButton 
-        categories={filterCategories}
-        onFilter={handleFilter}
-        label="Lọc"
-      />
-      
-      <ExportButton 
-        data={filteredFinances} 
-        filename="Danh_sach_tai_chinh" 
-        label="Xuất dữ liệu"
-      />
-      
-      <Button size="sm" className="h-8" onClick={handleAddClick}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Giao Dịch
-      </Button>
-    </div>
+    <FinanceActions 
+      facilities={facilities}
+      filteredFinances={filteredFinances}
+      fetchFinances={fetchFinances}
+      handleAddClick={handleAddClick}
+      handleFilter={handleFilter}
+    />
   );
 
   return (
