@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -189,3 +188,107 @@ export const secondaryLinks = [
   { name: 'Hợp đồng', href: '/employees/contracts', icon: <FileSymlinkIcon className="w-5 h-5" /> },
   { name: 'Cài đặt', href: '/settings', icon: <Settings className="w-5 h-5" /> },
 ];
+
+export default function SidebarLinks() {
+  return (
+    <div className="space-y-4 py-4">
+      <div className="px-3 py-2">
+        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+          Dashboard
+        </h2>
+        <div className="space-y-1">
+          <Link 
+            to="/"
+            className={
+              cn(
+                'flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
+                { 'bg-gray-100': useLocation().pathname === '/' }
+              )
+            }
+          >
+            <PieChart className="mr-2 h-4 w-4" />
+            <span>Trang chủ</span>
+          </Link>
+        </div>
+      </div>
+
+      <div className="px-3 py-2">
+        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+          AI Tools
+        </h2>
+        <div className="space-y-1">
+          <Link 
+            to="/ai-commands" 
+            className={
+              cn(
+                'flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
+                { 'bg-gray-100': useLocation().pathname === '/ai-commands' }
+              )
+            }
+          >
+            <MessageSquare className="mr-2 h-4 w-4" />
+            <span>Trợ lý ra lệnh</span>
+          </Link>
+          <Link 
+            to="/ai-tools" 
+            className={
+              cn(
+                'flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
+                { 'bg-gray-100': useLocation().pathname === '/ai-tools' }
+              )
+            }
+          >
+            <Image className="mr-2 h-4 w-4" />
+            <span>Tạo hình ảnh AI</span>
+          </Link>
+        </div>
+      </div>
+
+      <div className="px-3 py-2">
+        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+          Primary Links
+        </h2>
+        <div className="space-y-1">
+          {primaryLinks.map((link) => (
+            <Link 
+              key={link.name}
+              to={link.href}
+              className={
+                cn(
+                  'flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
+                  { 'bg-gray-100': useLocation().pathname === link.href }
+                )
+              }
+            >
+              {link.icon}
+              <span>{link.name}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-3 py-2">
+        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+          Secondary Links
+        </h2>
+        <div className="space-y-1">
+          {secondaryLinks.map((link) => (
+            <Link 
+              key={link.name}
+              to={link.href}
+              className={
+                cn(
+                  'flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
+                  { 'bg-gray-100': useLocation().pathname === link.href }
+                )
+              }
+            >
+              {link.icon}
+              <span>{link.name}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,4 +1,3 @@
-
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Spinner } from '@/components/ui/spinner';
@@ -38,6 +37,9 @@ const ContactsPage = () => <div>Contacts Page</div>;
 const FinancesPage = () => <div>Finances Page</div>;
 const RequestsPage = () => <div>Requests Page</div>;
 const NotFoundPage = () => <div>Not Found Page</div>;
+
+// Thêm component AICommandsPage
+const AICommandsPage = () => <div>AI Commands Page</div>;
 
 // Route definitions
 const routes = [
@@ -79,6 +81,14 @@ const routes = [
       { path: 'forgot-password', element: <ForgotPasswordPage /> },
       { path: 'reset-password', element: <ResetPasswordPage /> },
     ],
+  },
+  {
+    path: "/ai-commands",
+    element: (
+      <DashboardLayout>
+        <AICommandsPage />
+      </DashboardLayout>
+    ),
   },
   {
     path: '*',
