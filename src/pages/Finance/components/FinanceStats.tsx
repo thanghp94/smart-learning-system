@@ -1,31 +1,44 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Finance } from '@/lib/types';
 import ProgressBar from '@/components/ui/progress-bar';
 
-interface FinanceStatsProps {
-  finances: Finance[];
+export interface FinanceStatsProps {
+  finances?: Finance[];
+  totalIncome?: number;
+  totalExpense?: number;
+  balance?: number;
 }
 
-const FinanceStats: React.FC<FinanceStatsProps> = ({ finances }) => {
-  // Calculate total income
-  const totalIncome = finances
-    .filter(finance => finance.loai_thu_chi === 'income')
-    .reduce((sum, finance) => sum + finance.tong_tien, 0);
+import { Finance } from '@/lib/types';
 
-  // Calculate total expenses
-  const totalExpenses = finances
-    .filter(finance => finance.loai_thu_chi === 'expense')
-    .reduce((sum, finance) => sum + finance.tong_tien, 0);
+const FinanceStats: React.FC<FinanceStatsProps> = ({ 
+  finances, 
+  totalIncome: propTotalIncome,
+  totalExpense: propTotalExpense,
+  balance: propBalance
+}) => {
+  // Tính toán từ finances nếu được cung cấp, ngược lại sử dụng props trực tiếp
+  const totalIncome = propTotalIncome !== undefined 
+    ? propTotalIncome 
+    : finances
+      ?.filter(finance => finance.loai_thu_chi === 'income')
+      .reduce((sum, finance) => sum + finance.tong_tien, 0) || 0;
 
-  // Calculate balance
-  const balance = totalIncome - totalExpenses;
+  const totalExpenses = propTotalExpense !== undefined
+    ? propTotalExpense
+    : finances
+      ?.filter(finance => finance.loai_thu_chi === 'expense')
+      .reduce((sum, finance) => sum + finance.tong_tien, 0) || 0;
 
-  // Calculate expense ratio
+  const balance = propBalance !== undefined 
+    ? propBalance 
+    : totalIncome - totalExpenses;
+
+  // Tính tỷ lệ chi phí
   const expenseRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
 
-  // Format currency
+  // Format tiền tệ
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };

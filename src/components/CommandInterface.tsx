@@ -1,238 +1,139 @@
-
-import React, { useState, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Send, Mic, MicOff } from "lucide-react";
-import { supabase } from '@/lib/supabase/client';
+import React, { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const CommandInterface: React.FC = () => {
-  const [command, setCommand] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [response, setResponse] = useState<{
-    text: string;
-    success?: boolean;
-    data?: any;
-  } | null>(null);
+  const [input, setInput] = useState('');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [lastCommand, setLastCommand] = useState('');
   const { toast } = useToast();
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const supabase = useSupabaseClient();
 
-  const processCommand = async () => {
-    if (!command.trim()) {
-      toast({
-        title: "Lệnh trống",
-        description: "Vui lòng nhập lệnh để xử lý",
-        variant: "destructive",
-      });
-      return;
+  useEffect(() => {
+    // Load command history from local storage on component mount
+    const storedHistory = localStorage.getItem('commandHistory');
+    if (storedHistory) {
+      setCommandHistory(JSON.parse(storedHistory));
     }
+  }, []);
 
-    setIsProcessing(true);
-    setResponse(null);
+  useEffect(() => {
+    // Save command history to local storage whenever it changes
+    localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
+  }, [commandHistory]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  // Giảm kích thước AI bằng cách sử dụng mô hình nhỏ hơn và tối ưu hóa prompt
+  const processCommand = async (input: string) => {
+    if (!input.trim()) return;
+    
+    setLoading(true);
+    setLastCommand(input);
+    
     try {
-      const { data, error } = await supabase.functions.invoke('process-command', {
-        body: { command: command }
+      const response = await supabase.functions.invoke('generate-with-openai', {
+        body: { 
+          prompt: input,
+          model: 'gpt-4o-mini' // Sử dụng mô hình nhỏ hơn
+        }
       });
-
-      if (error) {
-        throw new Error(`Lỗi khi xử lý lệnh: ${error.message}`);
+      
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to process command');
       }
-
-      setResponse({
-        text: data.responseText || 'Đã xử lý lệnh thành công.',
-        success: data.result?.success,
-        data: data.result?.data
-      });
-
-      // Nếu thành công, xóa lệnh để người dùng có thể nhập lệnh mới
-      if (data.result?.success) {
-        setCommand('');
-      }
+      
+      setResult(response.data?.generatedText || 'Không có kết quả');
+      setCommandHistory([...commandHistory, input]);
     } catch (error) {
       console.error('Error processing command:', error);
+      setResult('Có lỗi xảy ra khi xử lý lệnh. Vui lòng thử lại sau.');
       toast({
-        title: "Lỗi",
-        description: error.message || "Không thể xử lý lệnh. Vui lòng thử lại.",
-        variant: "destructive",
-      });
-      setResponse({
-        text: 'Đã xảy ra lỗi khi xử lý lệnh của bạn. Vui lòng thử lại hoặc liên hệ với quản trị viên.',
-        success: false
+        title: 'Lỗi',
+        description: 'Không thể xử lý lệnh. Vui lòng thử lại sau.',
+        variant: 'destructive',
       });
     } finally {
-      setIsProcessing(false);
+      setLoading(false);
     }
   };
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        
-        // Convert to base64
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64Audio = reader.result?.toString().split(',')[1] || '';
-          
-          setIsProcessing(true);
-          try {
-            // Gọi edge function để chuyển đổi âm thanh thành văn bản
-            const { data, error } = await supabase.functions.invoke('generate-with-openai', {
-              body: { 
-                prompt: base64Audio, 
-                type: 'text',
-                model: 'whisper-1'
-              }
-            });
-            
-            if (error) throw new Error(error.message);
-            
-            if (data && data.generatedText) {
-              setCommand(data.generatedText);
-            } else {
-              toast({
-                title: "Không nhận dạng được",
-                description: "Không thể chuyển đổi âm thanh thành văn bản. Vui lòng thử lại.",
-                variant: "destructive",
-              });
-            }
-          } catch (error) {
-            console.error('Error transcribing audio:', error);
-            toast({
-              title: "Lỗi",
-              description: "Không thể chuyển đổi âm thanh thành văn bản. Vui lòng thử lại.",
-              variant: "destructive",
-            });
-          } finally {
-            setIsProcessing(false);
-          }
-        };
-      };
-      
-      mediaRecorder.start();
-      setIsRecording(true);
-      
-      toast({
-        title: "Đang ghi âm...",
-        description: "Hãy nói lệnh của bạn và nhấn dừng khi hoàn thành.",
-      });
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập và thử lại.",
-        variant: "destructive",
-      });
+  const handleInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      await processCommand(input);
+      setInput('');
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      
-      // Dừng tất cả các track trong stream
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      
-      toast({
-        title: "Đã dừng ghi âm",
-        description: "Đang xử lý âm thanh của bạn...",
-      });
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      processCommand();
-    }
+  const handleSubmit = async () => {
+    await processCommand(input);
+    setInput('');
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-4">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Trợ lý AI</CardTitle>
-          <CardDescription>
-            Nhập lệnh bằng ngôn ngữ tự nhiên hoặc sử dụng giọng nói để thực hiện các tác vụ trong hệ thống
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <Textarea
-              placeholder="Nhập lệnh (ví dụ: Thêm học sinh Nguyễn Văn A, điện thoại 0912345678 mẹ Nguyễn Thị B)"
-              value={command}
-              onChange={(e) => setCommand(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="min-h-[100px] resize-none"
-            />
-          </div>
-
-          {response && (
-            <Card className={`border-l-4 ${response.success ? 'border-l-green-500' : 'border-l-amber-500'}`}>
-              <CardContent className="pt-4">
-                <div className="whitespace-pre-line">{response.text}</div>
-                
-                {response.data && (
-                  <div className="mt-4 bg-slate-100 p-3 rounded text-sm">
-                    <div className="font-semibold mb-1">Chi tiết dữ liệu:</div>
-                    <pre className="overflow-auto max-h-[200px]">
-                      {JSON.stringify(response.data, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <div>
-            <Button
-              variant={isRecording ? "destructive" : "outline"}
-              size="icon"
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={isProcessing}
-            >
-              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </Button>
-          </div>
-          <Button 
-            onClick={processCommand} 
-            disabled={isProcessing || !command.trim()}
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Đang xử lý
-              </>
-            ) : (
-              <>
-                <Send className="mr-2 h-4 w-4" />
-                Thực hiện
-              </>
-            )}
+    <Card>
+      <CardContent className="flex flex-col space-y-4">
+        <div className="flex items-center space-x-2">
+          <Input
+            type="text"
+            placeholder="Nhập lệnh AI..."
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleInputKeyDown}
+            disabled={loading}
+          />
+          <Button type="submit" onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Đang xử lý...' : 'Thực hiện'}
           </Button>
-        </CardFooter>
-      </Card>
-    </div>
+        </div>
+
+        {lastCommand && (
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary">Lệnh gần nhất:</Badge>
+              <span className="text-sm text-gray-500">{lastCommand}</span>
+            </div>
+            {result && (
+              <div className="space-y-2">
+                <Badge variant="outline">Kết quả:</Badge>
+                <div className="prose prose-sm max-w-none">
+                  {result.split('\n').map((line, index) => (
+                    <React.Fragment key={index}>
+                      {line}
+                      <br />
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {commandHistory.length > 0 && (
+          <div className="space-y-2">
+            <Badge variant="default">Lịch sử lệnh:</Badge>
+            <ScrollArea className="h-40 rounded-md border p-2">
+              <div className="flex flex-col space-y-1">
+                {commandHistory.slice().reverse().map((command, index) => (
+                  <div key={index} className="text-sm text-gray-500">
+                    {command}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
