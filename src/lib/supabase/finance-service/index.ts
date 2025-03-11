@@ -1,10 +1,8 @@
-
 import { financeService as baseFinanceService } from '../finance-service';
 import { receiptTemplateService } from './receipt-template-service';
 import { Finance } from '@/lib/types';
 import { supabase } from '../client';
 
-// Additional methods to extend financeService
 const extendedFinanceService = {
   async getReceiptTemplates(type: string) {
     try {
@@ -39,7 +37,6 @@ const extendedFinanceService = {
   
   async generateReceipt(financeId: string, templateId: string) {
     try {
-      // In a real app this would generate the receipt HTML based on the template and finance data
       const dummyReceipt = {
         finance_id: financeId,
         template_id: templateId,
@@ -115,7 +112,6 @@ const extendedFinanceService = {
     }
   },
 
-  // Add this method to fetch finances by entity type and ID
   async getByEntity(entityType: string, entityId: string) {
     try {
       const { data, error } = await supabase
@@ -231,9 +227,27 @@ const extendedFinanceService = {
       return [];
     }
   },
+
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('finances')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  async getAll(): Promise<Finance[]> {
+    const { data, error } = await supabase
+      .from('finances')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  }
 };
 
-// Create a combined finance service with ALL methods including base methods
 export const financeService = {
   ...baseFinanceService,
   ...receiptTemplateService,

@@ -1,9 +1,8 @@
 
 import React from 'react';
-import KanbanView from './KanbanView';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Users } from 'lucide-react';
+import KanbanView from './KanbanView';
 
 const Admissions = () => {
   return (
@@ -18,24 +17,7 @@ const Admissions = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="kanban" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="kanban">Kanban</TabsTrigger>
-              <TabsTrigger value="list">Danh sách</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="kanban">
-              <KanbanView />
-            </TabsContent>
-            
-            <TabsContent value="list">
-              <div className="h-60 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <p>Danh sách tuyển sinh sẽ được phát triển sau.</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+          <KanbanView />
         </CardContent>
       </Card>
     </div>
