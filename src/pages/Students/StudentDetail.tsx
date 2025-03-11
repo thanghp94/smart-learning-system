@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { User, Edit, Save, X } from 'lucide-react';
@@ -13,6 +12,7 @@ import StudentInfoTab from './components/StudentInfoTab';
 import StudentFinanceTab from './components/StudentFinanceTab';
 import StudentEnrollmentsTab from './components/StudentEnrollmentsTab';
 import StudentActionsSection from './components/StudentActionsSection';
+import StudentProgressTab from './components/StudentProgressTab';
 
 const StudentDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -173,8 +173,9 @@ const StudentDetail = () => {
       <Separator />
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="info">Thông tin chung</TabsTrigger>
+          <TabsTrigger value="progress">Tiến độ</TabsTrigger>
           <TabsTrigger value="finance">Tài chính</TabsTrigger>
           <TabsTrigger value="enrollments">Ghi danh</TabsTrigger>
         </TabsList>
@@ -194,6 +195,10 @@ const StudentDetail = () => {
             studentId={id || ''}
             refreshEnrollments={refreshEnrollments}
           />
+        </TabsContent>
+
+        <TabsContent value="progress">
+          <StudentProgressTab studentId={id || ''} />
         </TabsContent>
 
         <TabsContent value="finance">
