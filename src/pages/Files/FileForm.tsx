@@ -44,7 +44,7 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
     defaultValues: {
       ten_tai_lieu: initialData?.ten_tai_lieu || '',
       loai_doi_tuong: initialData?.doi_tuong_lien_quan || 'contact',
-      doi_tuong_id: initialData?.lien_he_id || initialData?.nhan_vien_id || initialData?.co_so_id || initialData?.csvc_id || initialData?.hoc_sinh_id || '',
+      doi_tuong_id: initialData?.lien_he_id || initialData?.nhan_vien_ID || initialData?.co_so_id || initialData?.CSVC_ID || initialData?.hoc_sinh_id || '',
       duong_dan: initialData?.file1 || '',
       ghi_chu: initialData?.ghi_chu || '',
       nhom_tai_lieu: initialData?.nhom_tai_lieu || '',

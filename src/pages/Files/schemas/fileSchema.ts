@@ -14,3 +14,4 @@ export const fileSchema = z.object({
 });
 
 export type FileFormData = z.infer<typeof fileSchema>;
+export type FileFormValues = z.infer<typeof fileSchema>; // Add this for backward compatibility

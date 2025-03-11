@@ -83,7 +83,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
 
         // Fetch finances using financeService.getByEntity
         try {
-          const financesData = await financeService.getByEntity('nhan_vien', employeeId);
+          const financesData = await financeService.getByEntity('employee', employeeId);
           setFinances(financesData || []);
         } catch (financeError) {
           console.error('Error fetching employee finances:', financeError);
@@ -106,6 +106,22 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
       fetchEmployeeData();
     }
   }, [employeeId, toast]);
+
+  const fetchEmployeeFinances = async () => {
+    try {
+      if (employee?.id) {
+        const financesData = await financeService.getByEntity('employee', employee.id);
+        setFinances(financesData);
+      }
+    } catch (error) {
+      console.error('Error fetching employee finances:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải dữ liệu tài chính",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Column definitions for Tasks table
   const taskColumns = [
