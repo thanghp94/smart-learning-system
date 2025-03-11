@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from '@/lib/supabase';
 
 const CommandInterface: React.FC = () => {
   const [input, setInput] = useState('');
@@ -14,7 +15,6 @@ const CommandInterface: React.FC = () => {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [lastCommand, setLastCommand] = useState('');
   const { toast } = useToast();
-  const supabase = useSupabaseClient();
 
   useEffect(() => {
     // Load command history from local storage on component mount
@@ -80,8 +80,8 @@ const CommandInterface: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardContent className="flex flex-col space-y-4">
+    <Card className="overflow-hidden h-full">
+      <CardContent className="flex flex-col space-y-4 p-3">
         <div className="flex items-center space-x-2">
           <Input
             type="text"
@@ -90,22 +90,29 @@ const CommandInterface: React.FC = () => {
             onChange={handleInputChange}
             onKeyDown={handleInputKeyDown}
             disabled={loading}
+            className="text-sm"
           />
-          <Button type="submit" onClick={handleSubmit} disabled={loading}>
+          <Button 
+            type="submit" 
+            onClick={handleSubmit} 
+            disabled={loading}
+            size="sm"
+            className="whitespace-nowrap"
+          >
             {loading ? 'Đang xử lý...' : 'Thực hiện'}
           </Button>
         </div>
 
         {lastCommand && (
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary">Lệnh gần nhất:</Badge>
-              <span className="text-sm text-gray-500">{lastCommand}</span>
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center space-x-1">
+              <Badge variant="secondary" className="text-xs">Lệnh gần nhất:</Badge>
+              <span className="text-xs text-gray-500">{lastCommand}</span>
             </div>
             {result && (
-              <div className="space-y-2">
-                <Badge variant="outline">Kết quả:</Badge>
-                <div className="prose prose-sm max-w-none">
+              <div className="space-y-1">
+                <Badge variant="outline" className="text-xs">Kết quả:</Badge>
+                <div className="prose prose-xs max-w-none text-xs border rounded-md p-2 bg-gray-50 dark:bg-gray-900">
                   {result.split('\n').map((line, index) => (
                     <React.Fragment key={index}>
                       {line}
@@ -119,12 +126,12 @@ const CommandInterface: React.FC = () => {
         )}
 
         {commandHistory.length > 0 && (
-          <div className="space-y-2">
-            <Badge variant="default">Lịch sử lệnh:</Badge>
-            <ScrollArea className="h-40 rounded-md border p-2">
+          <div className="space-y-1">
+            <Badge variant="default" className="text-xs">Lịch sử lệnh:</Badge>
+            <ScrollArea className="h-24 rounded-md border p-2">
               <div className="flex flex-col space-y-1">
                 {commandHistory.slice().reverse().map((command, index) => (
-                  <div key={index} className="text-sm text-gray-500">
+                  <div key={index} className="text-xs text-gray-500">
                     {command}
                   </div>
                 ))}

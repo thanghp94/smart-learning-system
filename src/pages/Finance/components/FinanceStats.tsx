@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ProgressBar from '@/components/ui/progress-bar';
+import { Finance } from '@/lib/types';
 
 export interface FinanceStatsProps {
   finances?: Finance[];
@@ -9,8 +10,6 @@ export interface FinanceStatsProps {
   totalExpense?: number;
   balance?: number;
 }
-
-import { Finance } from '@/lib/types';
 
 const FinanceStats: React.FC<FinanceStatsProps> = ({ 
   finances, 
