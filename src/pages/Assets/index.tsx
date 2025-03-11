@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import AssetDetail from "./AssetDetail";
 import AssetForm from "./AssetForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
-import CommandInterface from "@/components/ui/CommandInterface";
+import CommandInterface from "@/components/CommandInterface";
 
 const Assets = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -164,24 +165,26 @@ const Assets = () => {
             addButtonAction={handleAddClick}
           />
         ) : (
-          <DataTable
-            columns={columns}
-            data={assets}
-            isLoading={isLoading}
-            onRowClick={handleRowClick}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm tài sản..."
-          />
+          <>
+            <DataTable
+              columns={columns}
+              data={assets}
+              isLoading={isLoading}
+              onRowClick={handleRowClick}
+              searchable={true}
+              searchPlaceholder="Tìm kiếm tài sản..."
+            />
 
-          {selectedAsset && (
-            <DetailPanel
-              title="Thông Tin Tài Sản"
-              isOpen={showDetail}
-              onClose={closeDetail}
-            >
-              <AssetDetail asset={selectedAsset} />
-            </DetailPanel>
-          )}
+            {selectedAsset && (
+              <DetailPanel
+                title="Thông Tin Tài Sản"
+                isOpen={showDetail}
+                onClose={closeDetail}
+              >
+                <AssetDetail asset={selectedAsset} />
+              </DetailPanel>
+            )}
+          </>
         )}
       </TablePageLayout>
 
