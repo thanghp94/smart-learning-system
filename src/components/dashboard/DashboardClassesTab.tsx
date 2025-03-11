@@ -9,7 +9,7 @@ interface DashboardClassesTabProps {
 
 const DashboardClassesTab: React.FC<DashboardClassesTabProps> = ({ classesData }) => {
   return (
-    <Card>
+    <Card className="col-span-1 md:col-span-2">
       <CardHeader>
         <CardTitle>Tăng trưởng lớp học</CardTitle>
         <CardDescription>

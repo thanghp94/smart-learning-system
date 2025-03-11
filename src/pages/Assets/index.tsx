@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -63,15 +62,13 @@ const Assets = () => {
 
   const handleAddFormSubmit = async (formData: Partial<Asset>) => {
     try {
-      console.log("Inserting record into assets:", formData);
-      const newAsset = await assetService.create(formData);
-      setAssets([...assets, newAsset]);
+      await assetService.create(formData);
       toast({
         title: "Thành công",
         description: "Thêm tài sản mới thành công",
       });
       setShowAddForm(false);
-      fetchAssets(); // Refresh the data
+      await fetchAssets();
     } catch (error) {
       console.error("Error adding asset:", error);
       toast({
@@ -84,49 +81,38 @@ const Assets = () => {
 
   const columns = [
     {
-      title: "Tên tài sản",
+      title: "Tên Tài Sản",
       key: "ten_tai_san",
       sortable: true,
     },
     {
       title: "Loại",
-      key: "loai",
-      sortable: true,
-    },
-    {
-      title: "Danh Mục",
-      key: "danh_muc",
+      key: "loai_tai_san",
       sortable: true,
     },
     {
       title: "Số Lượng",
       key: "so_luong",
       sortable: true,
-      render: (value: number) => <span>{value || 0}</span>,
     },
     {
       title: "Đơn Vị",
       key: "don_vi",
     },
     {
+      title: "Giá Trị",
+      key: "gia_tri",
+      sortable: true,
+    },
+    {
       title: "Tình Trạng",
       key: "tinh_trang",
       sortable: true,
       render: (value: string) => (
-        <Badge variant={value === "good" ? "success" : 
-                       value === "damaged" ? "destructive" : 
-                       "secondary"}>
-          {value === "good" ? "Tốt" : 
-           value === "damaged" ? "Hư hỏng" : 
-           value === "maintenance" ? "Bảo trì" : value}
+        <Badge variant={value === "active" ? "default" : "secondary"}>
+          {value === "active" ? "Đang sử dụng" : "Không khả dụng"}
         </Badge>
       ),
-    },
-    {
-      title: "Trạng Thái Sở Hữu",
-      key: "trang_thai_so_huu",
-      sortable: true,
-      render: (value: string) => <span>{value}</span>,
     },
   ];
 
@@ -134,12 +120,6 @@ const Assets = () => {
     <div className="flex items-center space-x-2">
       <Button variant="outline" size="sm" className="h-8" onClick={fetchAssets}>
         <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
       <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Tài Sản
@@ -174,19 +154,19 @@ const Assets = () => {
               searchable={true}
               searchPlaceholder="Tìm kiếm tài sản..."
             />
-
-            {selectedAsset && (
-              <DetailPanel
-                title="Thông Tin Tài Sản"
-                isOpen={showDetail}
-                onClose={closeDetail}
-              >
-                <AssetDetail asset={selectedAsset} />
-              </DetailPanel>
-            )}
           </>
         )}
       </TablePageLayout>
+
+      {selectedAsset && (
+        <DetailPanel
+          title="Thông Tin Tài Sản"
+          isOpen={showDetail}
+          onClose={closeDetail}
+        >
+          <AssetDetail asset={selectedAsset} />
+        </DetailPanel>
+      )}
 
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
         <DialogContent className="sm:max-w-[600px]">

@@ -7,6 +7,7 @@ import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import ActivitySection from '@/components/dashboard/ActivitySection';
 import useDashboardData from '@/hooks/useDashboardData';
 import useDashboardChartData from '@/hooks/useDashboardChartData';
+import CommandInterface from '@/components/CommandInterface';
 
 const Index = () => {
   const { countData, isLoading, activities } = useDashboardData();
@@ -19,6 +20,10 @@ const Index = () => {
         description="Xem thông tin tổng quan về trung tâm"
         icon={<CalendarCheck className="h-6 w-6" />}
       />
+
+      <div className="hidden md:block mb-4">
+        <CommandInterface />
+      </div>
 
       <DashboardStats countData={countData} isLoading={isLoading} />
 

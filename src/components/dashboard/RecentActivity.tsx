@@ -1,94 +1,65 @@
 
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatDate } from '@/utils/format';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Calendar, 
+  UserPlus, 
+  UserMinus, 
+  GraduationCap, 
+  DollarSign, 
+  Book 
+} from 'lucide-react';
+import { format } from 'date-fns';
 
-interface Activity {
-  id: string;
-  title?: string;
-  description?: string;
-  date?: string;
-  action?: string;
-  entity?: string;
-  timestamp?: string;
-  type?: string;
-  name?: string;
-  username?: string;
+interface ActivityProps {
+  activities: any[];
 }
 
-export interface RecentActivityProps {
-  activities: Activity[];
-  isLoading?: boolean;
-}
-
-const getActionColor = (action: string) => {
-  switch (action?.toLowerCase()) {
-    case 'thêm mới':
-    case 'enrolled':
-    case 'created':
-      return 'text-green-500';
-    case 'cập nhật':
-    case 'started':
-      return 'text-blue-500';
-    case 'xóa':
-      return 'text-red-500';
-    default:
-      return 'text-gray-500';
-  }
-};
-
-const getAvatarFallback = (type: string) => {
-  return (type || 'UN').substring(0, 2).toUpperCase();
-};
-
-const RecentActivity: React.FC<RecentActivityProps> = ({ activities, isLoading = false }) => {
-  if (isLoading) {
-    return <div className="space-y-8">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex items-center">
-          <div className="w-9 h-9 rounded-full bg-gray-200 animate-pulse mr-3" />
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-200 rounded w-64 animate-pulse" />
-            <div className="h-3 bg-gray-100 rounded w-32 animate-pulse" />
-          </div>
-        </div>
-      ))}
-    </div>;
-  }
-
+const RecentActivity: React.FC<ActivityProps> = ({ activities }) => {
   if (!activities || activities.length === 0) {
-    return <div className="text-center text-muted-foreground py-4">
-      No recent activities found
-    </div>;
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Không có hoạt động gần đây
+      </div>
+    );
   }
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'enrollment':
+        return <UserPlus className="h-5 w-5 text-green-500" />;
+      case 'student':
+        return <GraduationCap className="h-5 w-5 text-blue-500" />;
+      case 'finance':
+        return <DollarSign className="h-5 w-5 text-yellow-500" />;
+      case 'class':
+        return <Book className="h-5 w-5 text-purple-500" />;
+      case 'employee':
+        return <UserMinus className="h-5 w-5 text-red-500" />;
+      default:
+        return <Calendar className="h-5 w-5 text-gray-500" />;
+    }
+  };
 
   return (
-    <div className="space-y-8">
-      {activities.map((activity) => (
-        <div key={activity.id} className="flex items-center">
-          <Avatar className="h-9 w-9 mr-3">
-            <AvatarImage src="" alt={activity.type || activity.entity || ''} />
-            <AvatarFallback>{getAvatarFallback(activity.type || activity.entity || '')}</AvatarFallback>
-          </Avatar>
-          <div className="space-y-1">
-            <p className="text-sm">
-              <span className={getActionColor(activity.action || '')}>
-                {activity.action}
-              </span>{' '}
-              <span className="font-medium">{activity.title || activity.type || activity.entity}</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {activity.date && formatDate(activity.date)}
-              {activity.timestamp && formatDate(activity.timestamp)}
-              {activity.username && ` by ${activity.username}`}
-            </p>
-            {activity.description && (
-              <p className="text-sm">{activity.description}</p>
-            )}
+    <ScrollArea className="h-[300px]">
+      <div className="space-y-4">
+        {activities.map((activity, index) => (
+          <div key={activity.id || index} className="flex items-start gap-4 p-2 rounded-lg hover:bg-accent">
+            <div className="bg-muted p-2 rounded-full">
+              {getActivityIcon(activity.type)}
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{activity.title || 'Hoạt động không tiêu đề'}</p>
+              <p className="text-sm text-muted-foreground">{activity.description || 'Không có mô tả'}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {activity.timestamp ? format(new Date(activity.timestamp), 'dd/MM/yyyy HH:mm') : 'Không có thời gian'}
+              </p>
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </ScrollArea>
   );
 };
 
