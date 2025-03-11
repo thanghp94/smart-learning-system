@@ -6,7 +6,7 @@ import { employeeClockInService } from '@/lib/supabase';
 import { Clock } from 'lucide-react';
 import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
 import AttendanceHeader from './components/AttendanceHeader';
-import AttendanceTable from './components/AttendanceTable';
+import AttendanceTable, { GroupedAttendance as AttendanceTableGroupedAttendance } from './components/AttendanceTable';
 
 interface EmployeeAttendanceProps {
   // Add props if needed
@@ -95,6 +95,43 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
     return grouped;
   };
 
+  // Transform our GroupedAttendance to AttendanceTable's GroupedAttendance format
+  const transformGroupedAttendance = (groupedData: GroupedAttendance, dates: string[]): AttendanceTableGroupedAttendance => {
+    const transformed: AttendanceTableGroupedAttendance = {};
+    
+    Object.entries(groupedData).forEach(([employeeId, data]) => {
+      transformed[employeeId] = {
+        employee: {
+          id: employeeId,
+          name: data.name,
+        },
+        dates: {}
+      };
+      
+      // Initialize all dates with null/default values
+      dates.forEach(date => {
+        transformed[employeeId].dates[date] = {
+          id: null,
+          status: 'pending',
+          note: null
+        };
+      });
+      
+      // Fill in actual data where available
+      data.records.forEach(record => {
+        if (record.ngay && dates.includes(record.ngay)) {
+          transformed[employeeId].dates[record.ngay] = {
+            id: record.id,
+            status: record.trang_thai,
+            note: record.ghi_chu || null
+          };
+        }
+      });
+    });
+    
+    return transformed;
+  };
+
   const groupedAttendance = groupAttendanceByEmployee(attendance);
 
   // Get unique dates from all records
@@ -111,6 +148,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
   };
 
   const uniqueDates = getUniqueDates();
+  const transformedAttendance = transformGroupedAttendance(groupedAttendance, uniqueDates);
 
   return (
     <div className="space-y-4">
@@ -126,7 +164,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
         </CardHeader>
         <CardContent>
           <AttendanceTable 
-            groupedAttendance={groupedAttendance}
+            groupedAttendance={transformedAttendance}
             uniqueDates={uniqueDates}
             isLoading={isLoading}
           />

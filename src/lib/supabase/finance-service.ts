@@ -103,21 +103,37 @@ class FinanceService {
     }
   }
 
-  // Add the missing getByEntity method
-  async getByEntity(entityType: string, entityId: string) {
+  // Add the getFinancesByEntityType method
+  async getFinancesByEntityType(entityType: string, entityId: string) {
     try {
       const { data, error } = await supabase
         .from('finances')
         .select('*')
-        .eq('doi_tuong_id', entityId)
         .eq('loai_doi_tuong', entityType)
+        .eq('doi_tuong_id', entityId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Finance[];
+      return { data, error: null };
     } catch (error) {
-      console.error(`Error fetching ${entityType} finances:`, error);
-      throw error;
+      console.error(`Error fetching finances for ${entityType} with ID ${entityId}:`, error);
+      return { data: null, error };
+    }
+  }
+
+  // Add the getAllFinances method
+  async getAllFinances() {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error fetching all finances:', error);
+      return { data: null, error };
     }
   }
 }

@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Finance } from "@/lib/types";
 
-interface FinanceListProps {
+export interface FinanceListProps {
   finances: Finance[];
   isLoading: boolean;
+  onDelete?: (finance: Finance) => void;
 }
 
-const FinanceList: React.FC<FinanceListProps> = ({ finances, isLoading }) => {
+const FinanceList: React.FC<FinanceListProps> = ({ finances, isLoading, onDelete }) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };

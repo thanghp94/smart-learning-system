@@ -106,6 +106,40 @@ class AttendanceService {
       throw error;
     }
   }
+
+  // Add the missing methods for employee attendance
+  async createEmployeeAttendance(data: any) {
+    try {
+      const { data: result, error } = await supabase
+        .from('employee_clock_in_out')
+        .insert(data)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: result, error: null };
+    } catch (error) {
+      console.error('Error creating employee attendance:', error);
+      return { data: null, error };
+    }
+  }
+
+  async updateEmployeeAttendance(id: string, data: any) {
+    try {
+      const { data: result, error } = await supabase
+        .from('employee_clock_in_out')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: result, error: null };
+    } catch (error) {
+      console.error('Error updating employee attendance:', error);
+      return { data: null, error };
+    }
+  }
 }
 
 export const attendanceService = new AttendanceService();
