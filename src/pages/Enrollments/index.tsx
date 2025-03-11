@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Plus, FileDown, Filter, RotateCw, Edit, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,13 +28,8 @@ const Enrollments = () => {
     try {
       setIsLoading(true);
       
-      // Fetch enrollments with detailed information
       const enrollmentsData = await enrollmentService.getAll();
-      
-      // Fetch students
       const studentsData = await studentService.getAll();
-      
-      // Fetch classes
       const classesData = await classService.getAll();
       
       setEnrollments(enrollmentsData || []);
@@ -89,7 +83,6 @@ const Enrollments = () => {
     try {
       setIsSubmitting(true);
       
-      // Validate required fields
       if (!data.hoc_sinh_id || !data.lop_chi_tiet_id) {
         toast({
           title: "Lỗi",
@@ -106,7 +99,7 @@ const Enrollments = () => {
         description: "Thêm ghi danh mới thành công",
       });
       
-      fetchData(); // Reload data
+      fetchData();
       closeAddSheet();
     } catch (error) {
       console.error("Error in handleAddEnrollment:", error);
@@ -140,7 +133,7 @@ const Enrollments = () => {
         description: "Cập nhật ghi danh thành công",
       });
       
-      fetchData(); // Reload data
+      fetchData();
       closeEditSheet();
     } catch (error) {
       console.error("Error in handleUpdateEnrollment:", error);
@@ -235,7 +228,6 @@ const Enrollments = () => {
     </div>
   );
 
-  // Render placeholder if no data and not loading
   if (enrollments.length === 0 && !isLoading) {
     return (
       <PlaceholderPage
@@ -261,7 +253,6 @@ const Enrollments = () => {
         onRowClick={handleRowClick}
       />
 
-      {/* Add Enrollment Sheet */}
       <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
         <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
           <SheetHeader>
@@ -278,7 +269,6 @@ const Enrollments = () => {
         </SheetContent>
       </Sheet>
       
-      {/* Edit Enrollment Sheet */}
       <Sheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen}>
         <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
           <SheetHeader>
@@ -298,7 +288,6 @@ const Enrollments = () => {
         </SheetContent>
       </Sheet>
       
-      {/* Detail Panel */}
       {selectedEnrollment && (
         <DetailPanel
           title="Chi tiết ghi danh"

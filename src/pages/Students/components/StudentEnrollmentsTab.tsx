@@ -57,9 +57,13 @@ const StudentEnrollmentsTab: React.FC<StudentEnrollmentsTabProps> = ({ enrollmen
                     </div>
                     <div>
                       <p className="text-sm font-medium">Trạng thái điểm danh:</p>
-                      <Badge variant={enrollment.tinh_trang_diem_danh === 'present' ? 'success' : 
-                                    enrollment.tinh_trang_diem_danh === 'absent' ? 'destructive' : 
-                                    enrollment.tinh_trang_diem_danh === 'late' ? 'warning' : 'outline'}>
+                      <Badge 
+                        variant={
+                          enrollment.tinh_trang_diem_danh === 'present' ? 'success' : 
+                          enrollment.tinh_trang_diem_danh === 'absent' ? 'destructive' : 
+                          enrollment.tinh_trang_diem_danh === 'late' ? 'warning' : 'outline'
+                        }
+                      >
                         {enrollment.tinh_trang_diem_danh === 'present' ? 'Có mặt' : 
                          enrollment.tinh_trang_diem_danh === 'absent' ? 'Vắng mặt' : 
                          enrollment.tinh_trang_diem_danh === 'late' ? 'Đi muộn' : 'Chưa điểm danh'}
