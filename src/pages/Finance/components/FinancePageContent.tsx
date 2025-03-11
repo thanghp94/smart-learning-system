@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { financeService } from '@/lib/supabase';
-import { Finance, Facility } from '@/lib/types';
+import { Finance } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,17 +13,14 @@ import FinanceLedger from './FinanceLedger';
 import FilterButton from '@/components/ui/FilterButton';
 import ExportButton from '@/components/ui/ExportButton';
 
-interface FinancePageContentProps {
-  // We don't need these props as we'll manage them internally
-}
-
-const FinancePageContent: React.FC<FinancePageContentProps> = () => {
+const FinancePageContent: React.FC = () => {
   const [finances, setFinances] = useState<Finance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [tab, setTab] = useState("list");
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filterMode, setFilterMode] = useState<'type' | 'entity'>('type');
 
   useEffect(() => {
     fetchFinances();
@@ -83,23 +80,63 @@ const FinancePageContent: React.FC<FinancePageContentProps> = () => {
 
   // Apply filters
   const filteredFinances = finances.filter(finance => {
-    for (const [key, value] of Object.entries(filters)) {
-      if (value) {
-        if (key === 'Loại' && finance.loai_thu_chi !== value) return false;
-        if (key === 'Đối tượng' && finance.loai_doi_tuong !== value) return false;
+    if (filterMode === 'type') {
+      if (filters.loai_thu_chi && finance.loai_thu_chi !== filters.loai_thu_chi) {
+        return false;
+      }
+    } else if (filterMode === 'entity') {
+      if (filters.loai_doi_tuong && finance.loai_doi_tuong !== filters.loai_doi_tuong) {
+        return false;
       }
     }
     return true;
   });
 
+  const handleFilterModeChange = (value: string) => {
+    setFilterMode(value as 'type' | 'entity');
+    setFilters({});
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-2">
-          <FilterButton
-            categories={filterCategories}
-            onFilter={setFilters}
-          />
+          <Tabs 
+            defaultValue="type" 
+            value={filterMode}
+            onValueChange={handleFilterModeChange}
+            className="mr-4"
+          >
+            <TabsList>
+              <TabsTrigger value="type">Theo loại</TabsTrigger>
+              <TabsTrigger value="entity">Theo đối tượng</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {filterMode === 'type' ? (
+            <select 
+              className="bg-background border border-input rounded-md px-3 py-2 text-sm"
+              value={filters.loai_thu_chi || ''}
+              onChange={(e) => setFilters({ loai_thu_chi: e.target.value })}
+            >
+              <option value="">Tất cả loại</option>
+              <option value="income">Thu</option>
+              <option value="expense">Chi</option>
+            </select>
+          ) : (
+            <select 
+              className="bg-background border border-input rounded-md px-3 py-2 text-sm"
+              value={filters.loai_doi_tuong || ''}
+              onChange={(e) => setFilters({ loai_doi_tuong: e.target.value })}
+            >
+              <option value="">Tất cả đối tượng</option>
+              <option value="student">Học sinh</option>
+              <option value="employee">Nhân viên</option>
+              <option value="facility">Cơ sở</option>
+              <option value="other">Khác</option>
+            </select>
+          )}
+
           <ExportButton
             data={filteredFinances}
             filename="Danh_sach_tai_chinh"

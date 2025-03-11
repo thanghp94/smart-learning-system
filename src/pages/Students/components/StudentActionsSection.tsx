@@ -1,10 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { RotateCw } from 'lucide-react';
+import { RotateCw, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Student } from '@/lib/types';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import EnrollStudentButton from './EnrollStudentButton';
 import { useToast } from '@/hooks/use-toast';
+import StudentEmailForm from './StudentEmailForm';
 
 interface StudentActionsSectionProps {
   student: Student;
@@ -18,6 +33,7 @@ const StudentActionsSection: React.FC<StudentActionsSectionProps> = ({
   refreshEnrollments 
 }) => {
   const { toast } = useToast();
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
 
   return (
     <Card>
@@ -40,6 +56,27 @@ const StudentActionsSection: React.FC<StudentActionsSectionProps> = ({
             await refreshEnrollments();
           }}
         />
+
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          onClick={() => setShowEmailDialog(true)}
+        >
+          <Mail className="h-4 w-4" />
+          Gửi email
+        </Button>
+
+        <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Gửi email cho phụ huynh/học sinh</DialogTitle>
+            </DialogHeader>
+            <StudentEmailForm 
+              student={student} 
+              onClose={() => setShowEmailDialog(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

@@ -19,10 +19,10 @@ const AdmissionCard: React.FC<AdmissionCardProps> = ({ admission, onClick, onDra
       draggable
       onDragStart={(e) => onDragStart(e, admission)}
     >
-      <CardContent className="p-2 text-xs">
-        <div className="space-y-1">
+      <CardContent className="p-1.5 text-xs">
+        <div className="space-y-0.5">
           {/* Status badge */}
-          <div className={`px-1.5 py-0.5 rounded-full inline-block mb-0.5 text-[10px] ${ADMISSION_STATUS_COLORS[admission.trang_thai]}`}>
+          <div className={`px-1 py-0.5 rounded-full inline-block mb-0.5 text-[10px] ${ADMISSION_STATUS_COLORS[admission.trang_thai]}`}>
             {getStatusLabel(admission.trang_thai)}
           </div>
           
@@ -30,7 +30,7 @@ const AdmissionCard: React.FC<AdmissionCardProps> = ({ admission, onClick, onDra
           <h3 className="font-medium text-xs line-clamp-1">{admission.ten_hoc_sinh}</h3>
           
           {/* Contact info - more compact */}
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-[9px] text-muted-foreground">
             {admission.so_dien_thoai && (
               <p className="line-clamp-1 truncate">
                 SĐT: {admission.so_dien_thoai}
@@ -45,7 +45,7 @@ const AdmissionCard: React.FC<AdmissionCardProps> = ({ admission, onClick, onDra
           </div>
           
           {/* Updated timestamp */}
-          <div className="text-[10px] text-muted-foreground pt-1 border-t border-gray-100 mt-1">
+          <div className="text-[9px] text-muted-foreground pt-0.5 border-t border-gray-100 mt-0.5">
             <span>
               {admission.updated_at 
                 ? formatDate(admission.updated_at)
