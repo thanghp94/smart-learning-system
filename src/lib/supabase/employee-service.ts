@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Employee } from '../types';
 
@@ -113,21 +114,6 @@ export const employeeService = {
 
     if (error) {
       console.error('Error fetching active employees:', error);
-      throw error;
-    }
-
-    return data || [];
-  },
-  
-  getByFacility: async (facilityId: string): Promise<Employee[]> => {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .contains('co_so_id', [facilityId])
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error(`Error fetching employees for facility ${facilityId}:`, error);
       throw error;
     }
 

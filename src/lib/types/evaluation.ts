@@ -1,11 +1,18 @@
 
 export interface Evaluation {
   id: string;
+  ghi_danh_id?: string;
+  nhanvien_id?: string;
+  ngay_dau_dot_danh_gia?: string;
+  ngay_cuoi_dot_danh_gia?: string;
+  han_hoan_thanh?: string;
+  tg_tao?: string;
+  created_at?: string;
+  updated_at?: string;
+  email?: string;
   doi_tuong: string;
   ten_danh_gia: string;
-  email?: string;
   hinh_anh?: string;
-  ghi_danh_id?: string;
   tieu_chi_1?: string;
   tieu_chi_2?: string;
   tieu_chi_3?: string;
@@ -24,13 +31,9 @@ export interface Evaluation {
   nhan_xet_cua_cap_tren?: string;
   nhan_xet_tong_hop?: string;
   trang_thai?: string;
-  ghi_chu?: string;
   pdf_dg_hoc_sinh?: string;
-  ngay_dau_dot_danh_gia?: string;
-  ngay_cuoi_dot_danh_gia?: string;
-  han_hoan_thanh?: string;
-  nhanvien_id?: string;
-  created_at?: string;
-  updated_at?: string;
-  tg_tao?: string;
+  ghi_chu?: string;
+  
+  ten_hoc_sinh?: string;
+  ten_lop_full?: string;
 }

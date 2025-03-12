@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { employeeClockInService } from '@/lib/supabase';
 import { Clock } from 'lucide-react';
-import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types/employee-clock-in-out';
+import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
 import AttendanceHeader from './components/AttendanceHeader';
 import AttendanceTable, { GroupedAttendance as AttendanceTableGroupedAttendance } from './components/AttendanceTable';
 
@@ -39,6 +39,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Fetch attendance data when month or year changes
   useEffect(() => {
     fetchAttendanceData();
   }, [month, year]);
@@ -48,21 +49,18 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
       setIsLoading(true);
       const data = await employeeClockInService.getMonthlyAttendance(parseInt(month), parseInt(year));
       
-      const convertedData: AttendanceRecord[] = data.map((summary: MonthlyAttendanceSummary) => {
-        const record: AttendanceRecord = {
-          id: summary.employee_id,
-          nhan_vien_id: summary.employee_id,
-          ngay: summary.attendance_date || new Date().toISOString().split('T')[0],
-          employee_name: summary.employee_name,
-          trang_thai: summary.status || 'unknown',
-          thoi_gian_bat_dau: '',
-          thoi_gian_ket_thuc: '',
-          xac_nhan: false,
-          ghi_chu: ''
-        };
-        
-        return record;
-      });
+      // Convert EmployeeClockInOut[] to AttendanceRecord[]
+      const convertedData: AttendanceRecord[] = data.map((record: EmployeeClockInOut) => ({
+        id: record.id,
+        ngay: record.ngay,
+        nhan_vien_id: record.nhan_vien_id,
+        thoi_gian_bat_dau: record.thoi_gian_bat_dau,
+        thoi_gian_ket_thuc: record.thoi_gian_ket_thuc,
+        trang_thai: record.trang_thai || 'pending', // Set default value for required property
+        ghi_chu: record.ghi_chu,
+        xac_nhan: record.xac_nhan || false,
+        employee_name: record.employee_name,
+      }));
       
       setAttendance(convertedData);
     } catch (error) {
@@ -77,6 +75,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
     }
   };
 
+  // Group attendance records by employee
   const groupAttendanceByEmployee = (records: AttendanceRecord[]): GroupedAttendance => {
     const grouped: GroupedAttendance = {};
     
@@ -96,6 +95,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
     return grouped;
   };
 
+  // Transform our GroupedAttendance to AttendanceTable's GroupedAttendance format
   const transformGroupedAttendance = (groupedData: GroupedAttendance, dates: string[]): AttendanceTableGroupedAttendance => {
     const transformed: AttendanceTableGroupedAttendance = {};
     
@@ -108,6 +108,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
         dates: {}
       };
       
+      // Initialize all dates with null/default values
       dates.forEach(date => {
         transformed[employeeId].dates[date] = {
           id: null,
@@ -116,6 +117,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
         };
       });
       
+      // Fill in actual data where available
       data.records.forEach(record => {
         if (record.ngay && dates.includes(record.ngay)) {
           transformed[employeeId].dates[record.ngay] = {
@@ -132,6 +134,7 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
 
   const groupedAttendance = groupAttendanceByEmployee(attendance);
 
+  // Get unique dates from all records
   const getUniqueDates = (): string[] => {
     const dates = new Set<string>();
     

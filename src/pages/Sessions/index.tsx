@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/DataTable";
+import DataTable from "@/components/ui/DataTable";
 import { Session } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";

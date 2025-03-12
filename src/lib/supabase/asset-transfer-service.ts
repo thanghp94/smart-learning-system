@@ -23,7 +23,7 @@ export const assetTransferService = {
     
     // Check if there's enough quantity to transfer
     if (asset.so_luong < transfer.quantity) {
-      throw new Error(`Không đủ số lượng tài sản "${asset.ten_csvc}" để chuyển`);
+      throw new Error(`Không đủ số lượng tài sản "${asset.ten_CSVC}" để chuyển`);
     }
     
     // Begin transaction
@@ -48,17 +48,12 @@ export const assetTransferService = {
     await logActivity(
       'Tạo mới', 
       'Chuyển tài sản', 
-      `Chuyển ${transfer.quantity} ${asset.ten_csvc}`, 
+      `Chuyển ${transfer.quantity} ${asset.ten_CSVC}`, 
       'Hệ thống',
       transfer.status
     );
     
     return data as AssetTransfer;
-  },
-  
-  // Same method but with different name for compatibility
-  createTransfer: async (transfer: Partial<AssetTransfer>): Promise<AssetTransfer> => {
-    return assetTransferService.create(transfer);
   },
   
   update: async (id: string, updates: Partial<AssetTransfer>): Promise<AssetTransfer> => {
@@ -81,7 +76,7 @@ export const assetTransferService = {
       
       // Verify still enough quantity
       if (asset.so_luong < transfer.quantity) {
-        throw new Error(`Không đủ số lượng tài sản "${asset.ten_csvc}" để chuyển`);
+        throw new Error(`Không đủ số lượng tài sản "${asset.ten_CSVC}" để chuyển`);
       }
       
       // Update the asset with reduced quantity
@@ -93,7 +88,7 @@ export const assetTransferService = {
       await logActivity(
         'Hoàn thành', 
         'Chuyển tài sản', 
-        `Chuyển ${transfer.quantity} ${asset.ten_csvc}`, 
+        `Chuyển ${transfer.quantity} ${asset.ten_CSVC}`, 
         'Hệ thống'
       );
     }
@@ -136,11 +131,6 @@ export const assetTransferService = {
     }
     
     return data as AssetTransfer[];
-  },
-  
-  // Alternate method name for compatibility
-  getTransfersByAssetId: async (assetId: string): Promise<AssetTransfer[]> => {
-    return assetTransferService.getByAsset(assetId);
   },
   
   // Get transfers by source

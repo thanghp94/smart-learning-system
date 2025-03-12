@@ -35,8 +35,8 @@ export const fileService = {
     
     // Add the correct entity ID field based on entity type
     if (entityType === 'nhan_vien' || entityType === 'employee') {
-      dataToInsert.nhan_vien_id = file.nhan_vien_id || file.nhan_vien_ID;
-      hasEntityId = !!(file.nhan_vien_id || file.nhan_vien_ID);
+      dataToInsert.nhan_vien_ID = file.nhan_vien_ID;
+      hasEntityId = !!file.nhan_vien_ID;
     } else if (entityType === 'co_so' || entityType === 'facility') {
       dataToInsert.co_so_id = file.co_so_id;
       hasEntityId = !!file.co_so_id;
@@ -44,8 +44,8 @@ export const fileService = {
       dataToInsert.lien_he_id = file.lien_he_id;
       hasEntityId = !!file.lien_he_id;
     } else if (entityType === 'CSVC' || entityType === 'asset') {
-      dataToInsert.csvc_id = file.csvc_id || file.CSVC_ID;
-      hasEntityId = !!(file.csvc_id || file.CSVC_ID);
+      dataToInsert.CSVC_ID = file.CSVC_ID;
+      hasEntityId = !!file.CSVC_ID;
     } else if ((entityType === 'hoc_sinh' || entityType === 'student' || entityType === 'class' || entityType === 'lop')) {
       dataToInsert.hoc_sinh_id = file.hoc_sinh_id;
       hasEntityId = !!file.hoc_sinh_id;

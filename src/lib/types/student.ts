@@ -1,44 +1,36 @@
 
 export interface Student {
   id: string;
-  ten_hoc_sinh: string;
+  ma_hoc_sinh?: string;
+  ho_va_ten: string;
+  ten_hoc_sinh?: string;
+  ngay_sinh?: string;
+  gioi_tinh?: string;
+  dia_chi?: string;
+  anh_minh_hoc?: string;
+  hinh_anh_hoc_sinh?: string;
+  trang_thai?: string;
+  ten_ph?: string;
   ten_PH?: string;
+  ten_phu_huynh?: string;
+  so_dien_thoai?: string;
   sdt_ph1?: string;
   email_ph1?: string;
-  gioi_tinh?: string;
-  ngay_sinh?: string | Date;
-  dia_chi?: string;
-  co_so_id?: string;
-  trang_thai?: string;
-  password?: string;
-  ct_hoc?: string;
-  mo_ta_hs?: string;
-  userid?: string;
-  parentid?: string;
-  parentpassword?: string;
-  hinh_anh_hoc_sinh?: string;
-  created_at?: string;
-  updated_at?: string;
-  han_hoc_phi?: string | Date;
-  ngay_bat_dau_hoc_phi?: string | Date;
-  
-  // Additional fields for components
-  anh_minh_hoc?: string;
   email?: string;
-  so_dien_thoai?: string;
-  ten_phu_huynh?: string;
-  ho_va_ten?: string;
-  ma_hoc_sinh?: string;
-  nguon_den?: string;
+  email_ph2?: string;
   truong?: string;
   lop?: string;
+  nguon_den?: string;
   mo_ta_tinh_cach?: string;
   diem_manh?: string;
-  trang_thai_hp?: string;
-  trang_thai_hoc_phi?: string;
-  
-  // Alias for compatibility
-  ten_ph?: string; // Alias for ten_PH
-  email_ph2?: string; // Sometimes used in code
-  ghi_chu?: string; // Added for compatibility
+  ghi_chu?: string;
+  co_so_id?: string;
+  ct_hoc?: string;
+  han_hoc_phi?: string;
+  ngay_bat_dau_hoc_phi?: string;
+  password?: string;
+  parentpassword?: string;
+  created_at?: string;
+  updated_at?: string;
+  trang_thai_hoc_phi?: string; // Adding field for tuition status
 }

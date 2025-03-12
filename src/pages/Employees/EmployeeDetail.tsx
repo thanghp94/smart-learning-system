@@ -6,22 +6,17 @@ import { useToast } from '@/hooks/use-toast';
 import { employeeService, facilityService } from '@/lib/supabase';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-
 import EmployeeHeader from './components/EmployeeHeader';
 import EmployeeBasicInfoTab from './components/EmployeeBasicInfoTab';
 import EmployeeContractTab from './components/EmployeeContractTab';
 import EmployeeFinancesTab from './components/EmployeeFinancesTab';
 import EmployeeFilesTab from './components/EmployeeFilesTab';
+import { Button } from '@/components/ui/button';
 
-interface EmployeeDetailProps {
-  employeeId: string;
-  onFileUpload?: (file: File) => Promise<void>;
-}
-
-const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUpload }) => {
+const EmployeeDetail = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [tempEmployeeData, setTempEmployeeData] = useState<Employee | null>(null);
   const [facilities, setFacilities] = useState<any[]>([]);
@@ -32,8 +27,8 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUploa
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        if (employeeId) {
-          const employeeData = await employeeService.getById(employeeId);
+        if (id) {
+          const employeeData = await employeeService.getById(id);
           setEmployee(employeeData);
           setTempEmployeeData({...employeeData});
         }
@@ -53,12 +48,15 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUploa
     };
     
     fetchData();
-  }, [employeeId, toast]);
+  }, [id, toast]);
 
-  const handleBack = () => navigate('/employees');
+  const handleBack = () => {
+    navigate('/employees');
+  };
 
   const handleEditToggle = () => {
     if (isEditing) {
+      // Cancel edit mode
       setTempEmployeeData({...employee});
     }
     setIsEditing(!isEditing);
@@ -66,6 +64,13 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUploa
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    setTempEmployeeData(prev => {
+      if (!prev) return prev;
+      return { ...prev, [name]: value };
+    });
+  };
+
+  const handleMultiSelectChange = (name: string, value: string[]) => {
     setTempEmployeeData(prev => {
       if (!prev) return prev;
       return { ...prev, [name]: value };
@@ -86,25 +91,22 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUploa
     });
   };
 
-  const handleMultiSelectChange = (name: string, value: string[]) => {
-    setTempEmployeeData(prev => {
-      if (!prev) return prev;
-      return { ...prev, [name]: value };
-    });
-  };
-
   const handleSave = async () => {
-    if (!tempEmployeeData || !employee || !employeeId) return;
+    if (!tempEmployeeData || !employee || !id) return;
     
     try {
       setIsLoading(true);
+      
+      // Process the data for API submission
       const dataToSubmit = { ...tempEmployeeData };
       
+      // Handle date conversion if needed
       if (dataToSubmit.ngay_sinh instanceof Date) {
         dataToSubmit.ngay_sinh = dataToSubmit.ngay_sinh.toISOString();
       }
       
-      await employeeService.update(employeeId, dataToSubmit);
+      await employeeService.update(id, dataToSubmit);
+      
       setEmployee(dataToSubmit);
       setIsEditing(false);
       
@@ -124,37 +126,6 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUploa
     }
   };
 
-  const handleFileUploadImpl = async (file: File) => {
-    if (!employeeId) return;
-    
-    // Call the provided onFileUpload function if available
-    if (onFileUpload) {
-      return onFileUpload(file);
-    }
-    
-    // Default implementation if no onFileUpload was provided
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('entityType', 'employee');
-    formData.append('entityId', employeeId);
-    
-    try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to upload file');
-      }
-      
-      return;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
-    }
-  };
-
   if (isLoading) {
     return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
   }
@@ -163,14 +134,14 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUploa
     return (
       <div className="p-8 text-center">
         <p className="mb-4">Không tìm thấy thông tin nhân viên</p>
-        <button onClick={handleBack}>Quay lại</button>
+        <Button onClick={handleBack}>Quay lại</Button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-6">
-      <EmployeeHeader
+      <EmployeeHeader 
         employeeName={employee.ten_nhan_su}
         isEditing={isEditing}
         handleBack={handleBack}
@@ -189,7 +160,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUploa
         </TabsList>
 
         <TabsContent value="basic">
-          <EmployeeBasicInfoTab
+          <EmployeeBasicInfoTab 
             employee={employee}
             tempEmployeeData={tempEmployeeData}
             facilities={facilities}
@@ -202,18 +173,15 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUploa
         </TabsContent>
 
         <TabsContent value="contracts">
-          <EmployeeContractTab employeeId={employeeId} />
+          {id && <EmployeeContractTab employeeId={id} />}
         </TabsContent>
 
         <TabsContent value="finances">
-          <EmployeeFinancesTab employeeId={employeeId} />
+          {id && <EmployeeFinancesTab employeeId={id} />}
         </TabsContent>
 
         <TabsContent value="files">
-          <EmployeeFilesTab 
-            employeeId={employeeId} 
-            onFileUpload={handleFileUploadImpl} 
-          />
+          {id && <EmployeeFilesTab employeeId={id} />}
         </TabsContent>
       </Tabs>
     </div>

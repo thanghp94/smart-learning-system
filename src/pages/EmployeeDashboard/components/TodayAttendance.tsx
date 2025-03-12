@@ -1,160 +1,195 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle } from 'lucide-react';
+import { Clock, CheckCircle, XCircle } from 'lucide-react';
+import { employeeClockInService } from '@/lib/supabase';
+import { EmployeeClockInOut } from '@/lib/types';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { EmployeeClockInOut } from '@/lib/types';
-import { employeeClockInService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
-export interface TodayAttendanceProps {
+interface TodayAttendanceProps {
   employeeId: string;
-  employeeName: string;
 }
 
-const TodayAttendance: React.FC<TodayAttendanceProps> = ({ employeeId, employeeName }) => {
+const formatTime = (timeString: string | null): string => {
+  if (!timeString) return '--:--';
+  return timeString.substring(0, 5); // Get only HH:MM part
+};
+
+const TodayAttendance: React.FC<TodayAttendanceProps> = ({ employeeId }) => {
   const [attendance, setAttendance] = useState<EmployeeClockInOut | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [todayAttendances, setTodayAttendances] = useState<EmployeeClockInOut[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [isClockedOut, setIsClockedOut] = useState(false);
   const { toast } = useToast();
+  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    const fetchTodayAttendance = async () => {
+    const fetchAttendance = async () => {
+      if (!employeeId) return;
+      
       try {
-        setLoading(true);
-        const data = await employeeClockInService.getTodayAttendance(employeeId);
-        setAttendance(data);
+        setIsLoading(true);
+        const todayRecords = await employeeClockInService.getByEmployeeAndDate(employeeId, today);
+        setTodayAttendances(todayRecords);
+        
+        if (todayRecords.length > 0) {
+          // Get the latest record
+          const latestRecord = todayRecords[0];
+          setAttendance(latestRecord);
+          setIsClockedIn(!!latestRecord.thoi_gian_bat_dau);
+          setIsClockedOut(!!latestRecord.thoi_gian_ket_thuc);
+        }
       } catch (error) {
-        console.error("Error fetching today's attendance:", error);
+        console.error('Error fetching attendance:', error);
         toast({
-          title: "Lỗi",
-          description: "Không thể tải dữ liệu điểm danh hôm nay",
-          variant: "destructive"
+          title: 'Lỗi',
+          description: 'Không thể tải dữ liệu chấm công',
+          variant: 'destructive'
         });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
-    fetchTodayAttendance();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employeeId]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
+    
+    fetchAttendance();
+  }, [employeeId, today, toast]);
+  
   const handleClockIn = async () => {
     try {
-      setLoading(true);
-      const data = await employeeClockInService.clockIn(employeeId, employeeName);
-      setAttendance(data);
+      setIsLoading(true);
+      const now = new Date();
+      const timeString = format(now, 'HH:mm:ss');
+      
+      let newAttendance;
+      if (!attendance) {
+        // Create new record
+        newAttendance = await employeeClockInService.create({
+          nhan_vien_id: employeeId,
+          ngay: today,
+          thoi_gian_bat_dau: timeString,
+          trang_thai: 'present'
+        });
+      } else {
+        // Update existing record
+        newAttendance = await employeeClockInService.update(attendance.id, {
+          thoi_gian_bat_dau: timeString
+        });
+      }
+      
+      setAttendance(newAttendance);
+      setIsClockedIn(true);
+      
       toast({
-        title: "Điểm danh thành công",
-        description: `Bạn đã điểm danh vào lúc ${format(new Date(), 'HH:mm')}`,
+        title: 'Thành công',
+        description: 'Đã chấm công vào ca làm việc',
+        variant: 'default'
       });
     } catch (error) {
-      console.error("Error clocking in:", error);
+      console.error('Error clocking in:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể điểm danh vào",
-        variant: "destructive"
+        title: 'Lỗi',
+        description: 'Không thể chấm công vào ca',
+        variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
+  
   const handleClockOut = async () => {
-    if (!attendance) return;
+    if (!attendance || !attendance.id) {
+      toast({
+        title: 'Lỗi',
+        description: 'Bạn chưa chấm công vào ca',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     try {
-      setLoading(true);
-      const data = await employeeClockInService.clockOut(attendance.id);
-      setAttendance(data);
+      setIsLoading(true);
+      const now = new Date();
+      const timeString = format(now, 'HH:mm:ss');
+      
+      const updatedAttendance = await employeeClockInService.update(attendance.id, {
+        thoi_gian_ket_thuc: timeString
+      });
+      
+      setAttendance(updatedAttendance);
+      setIsClockedOut(true);
+      
       toast({
-        title: "Điểm danh ra thành công",
-        description: `Bạn đã điểm danh ra lúc ${format(new Date(), 'HH:mm')}`,
+        title: 'Thành công',
+        description: 'Đã chấm công ra ca làm việc',
+        variant: 'default'
       });
     } catch (error) {
-      console.error("Error clocking out:", error);
+      console.error('Error clocking out:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể điểm danh ra",
-        variant: "destructive"
+        title: 'Lỗi',
+        description: 'Không thể chấm công ra ca',
+        variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">Điểm danh hôm nay</CardTitle>
+        <CardTitle className="text-base font-medium flex items-center">
+          <Clock className="h-4 w-4 mr-2" />
+          Chấm công hôm nay ({format(new Date(), 'dd/MM/yyyy', { locale: vi })})
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col items-center">
-          <div className="mb-4 text-center">
-            <p className="text-xl font-bold">
-              {format(currentTime, 'HH:mm:ss', { locale: vi })}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {format(currentTime, 'EEEE, dd/MM/yyyy', { locale: vi })}
-            </p>
+        <div className="space-y-4">
+          <div className="flex flex-col space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Giờ vào:</span>
+              <span className="font-medium">{attendance?.thoi_gian_bat_dau ? formatTime(attendance.thoi_gian_bat_dau) : '--:--'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Giờ ra:</span>
+              <span className="font-medium">{attendance?.thoi_gian_ket_thuc ? formatTime(attendance.thoi_gian_ket_thuc) : '--:--'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Trạng thái:</span>
+              {attendance ? (
+                <Badge variant={attendance.trang_thai === 'present' ? 'success' : 'destructive'}>
+                  {attendance.trang_thai === 'present' ? 'Có mặt' : 'Vắng mặt'}
+                </Badge>
+              ) : (
+                <Badge variant="outline">Chưa chấm công</Badge>
+              )}
+            </div>
           </div>
-
-          <div className="w-full grid grid-cols-2 gap-4 mb-4">
-            {attendance && attendance.gio_vao && (
-              <div className="p-3 bg-muted rounded-md text-center">
-                <p className="text-sm font-medium">Giờ vào</p>
-                <p className="text-base">{attendance.gio_vao || '--:--'}</p>
-              </div>
-            )}
-            
-            {attendance && attendance.gio_ra && (
-              <div className="p-3 bg-muted rounded-md text-center">
-                <p className="text-sm font-medium">Giờ ra</p>
-                <p className="text-base">{attendance.gio_ra || '--:--'}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-2 w-full">
-            {!attendance && (
-              <Button 
-                className="w-full" 
-                onClick={handleClockIn} 
-                disabled={loading || !!attendance?.gio_ra}
-              >
-                <Clock className="mr-2 h-4 w-4" />
-                Điểm danh vào
-              </Button>
-            )}
-            
-            {attendance && !attendance.gio_ra && (
-              <Button 
-                className="w-full"
-                onClick={handleClockOut} 
-                disabled={loading || !!attendance?.gio_ra === true}
-              >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Điểm danh ra
-              </Button>
-            )}
-            
-            {attendance && attendance.gio_vao && attendance.gio_ra && (
-              <Button disabled className="w-full bg-green-500">
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Đã điểm danh đủ
-              </Button>
-            )}
+          
+          <div className="flex space-x-2">
+            <Button 
+              className="flex-1" 
+              onClick={handleClockIn} 
+              disabled={isLoading || isClockedIn}
+              variant={isClockedIn ? "outline" : "default"}
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+              {isClockedIn ? 'Đã chấm công vào' : 'Chấm công vào'}
+            </Button>
+            <Button 
+              className="flex-1" 
+              onClick={handleClockOut} 
+              disabled={isLoading || !isClockedIn || isClockedOut}
+              variant={isClockedOut ? "outline" : "default"}
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              {isClockedOut ? 'Đã chấm công ra' : 'Chấm công ra'}
+            </Button>
           </div>
         </div>
       </CardContent>

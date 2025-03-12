@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +25,6 @@ import { fileSchema, FileFormData } from './schemas/fileSchema';
 import { contactService, employeeService, facilityService, classService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '@/components/common/ImageUpload';
-import { format } from 'date-fns';
 
 interface FileFormProps {
   initialData?: Partial<FileType>;
@@ -39,7 +39,6 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string>('');
-  const [fileImageUrl, setFileImageUrl] = useState<string>('');
   const { toast } = useToast();
 
   const form = useForm<FileFormData>({
@@ -51,8 +50,8 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
       duong_dan: initialData?.file1 || '',
       ghi_chu: initialData?.ghi_chu || '',
       nhom_tai_lieu: initialData?.nhom_tai_lieu || '',
-      ngay_cap: initialData?.ngay_cap ? format(new Date(initialData.ngay_cap), 'yyyy-MM-dd') : '',
-      han_tai_lieu: initialData?.han_tai_lieu ? format(new Date(initialData.han_tai_lieu), 'yyyy-MM-dd') : '',
+      ngay_cap: initialData?.ngay_cap || null,
+      han_tai_lieu: initialData?.han_tai_lieu || null,
       trang_thai: initialData?.trang_thai || 'active',
       uploaded_file: null,
     },
@@ -117,6 +116,7 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
         break;
     }
     
+    // Use uploaded file URL if available
     if (uploadedFileUrl) {
       mappedData.file1 = uploadedFileUrl;
       mappedData.duong_dan = uploadedFileUrl;
@@ -130,11 +130,6 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
 
   const handleFileUpload = (url: string) => {
     setUploadedFileUrl(url);
-    form.setValue('duong_dan', url);
-  };
-
-  const handleImageUpload = (url: string) => {
-    setFileImageUrl(url);
     form.setValue('duong_dan', url);
   };
 
@@ -225,7 +220,7 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn đối tư��ng" />
+                    <SelectValue placeholder="Chọn đối tượng" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -250,13 +245,12 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
                 <FormLabel>Tải lên tài liệu/hình ảnh</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    currentUrl={fileImageUrl}
-                    onUpload={handleImageUpload}
-                    entityType="file"
-                    entityId={initialData?.id || 'new'}
-                    value={fileImageUrl}
-                    onChange={handleImageUpload}
-                    onRemove={() => setFileImageUrl('')}
+                    value={uploadedFileUrl || field.value}
+                    onChange={handleFileUpload}
+                    onRemove={() => {
+                      setUploadedFileUrl('');
+                      form.setValue('duong_dan', '');
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

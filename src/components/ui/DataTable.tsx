@@ -1,16 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  getFilteredRowModel,
-  ColumnFiltersState,
-} from '@tanstack/react-table';
+import React, { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -18,175 +7,172 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Search, ArrowUpDown, X } from 'lucide-react';
-import { TableColumn } from './DataTable/types';
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search, ChevronLeft, ChevronRight, Image } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[] | TableColumn[];
-  data: TData[];
-  isLoading?: boolean;
-  emptyMessage?: string;
-  searchPlaceholder?: string;
-  searchColumn?: string;
-  onRowClick?: (row: TData) => void;
-  searchable?: boolean;
+export interface TableColumn {
+  title: string;
+  key: string;
+  sortable?: boolean;
+  render?: (value: any, record?: any) => React.ReactNode;
+  header?: string; // For backward compatibility
+  thumbnail?: boolean; // New field for thumbnail support
 }
 
-export function DataTable<TData, TValue>({
+export interface DataTableProps<T> {
+  columns: TableColumn[];
+  data: T[];
+  isLoading?: boolean;
+  onRowClick?: (record: T) => void;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  emptyMessage?: string;
+  noDataMessage?: string; // For backward compatibility
+  showHeader?: boolean;
+}
+
+function DataTable<T>({
   columns,
   data,
   isLoading = false,
-  emptyMessage = 'No data available',
-  searchPlaceholder = 'Search...',
-  searchColumn,
   onRowClick,
-  searchable = true,
-}: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState<string>('');
+  searchable = false,
+  searchPlaceholder = "Search...",
+  emptyMessage = "No data available",
+  noDataMessage, // For backward compatibility
+  showHeader = true,
+}: DataTableProps<T>) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const itemsPerPage = 15; // Changed from 10 to 15
 
-  // Convert TableColumn[] to ColumnDef[] if needed
-  const processedColumns = useMemo(() => {
-    if (columns.length > 0 && 'title' in columns[0]) {
-      return (columns as TableColumn[]).map(col => ({
-        accessorKey: col.accessorKey || col.key,
-        header: ({ column }) => {
-          return col.sortable ? (
-            <Button
-              variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            >
-              {col.title}
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          ) : (
-            col.title
-          );
-        },
-        cell: col.render
-          ? ({ row }) => col.render!(row.getValue(col.accessorKey || col.key), row.original)
-          : undefined,
-      })) as ColumnDef<TData, TValue>[];
+  // Use noDataMessage for backward compatibility
+  const finalEmptyMessage = noDataMessage || emptyMessage;
+
+  // Search and sort data
+  const filteredData = useMemo(() => {
+    let filtered = [...data];
+
+    // Search
+    if (searchQuery) {
+      filtered = filtered.filter((item: any) => {
+        return columns.some((column) => {
+          const value = item[column.key];
+          if (value === null || value === undefined) return false;
+          return String(value).toLowerCase().includes(searchQuery.toLowerCase());
+        });
+      });
     }
-    return columns as ColumnDef<TData, TValue>[];
-  }, [columns]);
 
-  const table = useReactTable({
-    data,
-    columns: processedColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    state: {
-      sorting,
-      columnFilters,
-      globalFilter,
-    },
-  });
+    // Sort
+    if (sortColumn) {
+      filtered.sort((a: any, b: any) => {
+        const valueA = a[sortColumn];
+        const valueB = b[sortColumn];
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setGlobalFilter(value);
+        // Handle null/undefined values
+        if (valueA === null || valueA === undefined) return sortDirection === "asc" ? -1 : 1;
+        if (valueB === null || valueB === undefined) return sortDirection === "asc" ? 1 : -1;
+
+        // String comparison
+        if (typeof valueA === "string" && typeof valueB === "string") {
+          return sortDirection === "asc"
+            ? valueA.localeCompare(valueB)
+            : valueB.localeCompare(valueA);
+        }
+
+        // Number comparison
+        return sortDirection === "asc" ? valueA - valueB : valueB - valueA;
+      });
+    }
+
+    return filtered;
+  }, [data, searchQuery, sortColumn, sortDirection, columns]);
+
+  // Pagination
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredData, currentPage]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const handleSort = (key: string) => {
+    if (sortColumn === key) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(key);
+      setSortDirection("asc");
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Render thumbnail
+  const renderThumbnail = (imageUrl: string | undefined) => {
+    if (!imageUrl) {
+      return (
+        <Avatar className="h-8 w-8">
+          <AvatarFallback>
+            <Image className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+      );
+    }
     
-    // If a specific column is provided for search, filter on that column as well
-    if (searchColumn) {
-      table.getColumn(searchColumn)?.setFilterValue(value);
-    }
+    return (
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={imageUrl} alt="Thumbnail" />
+        <AvatarFallback>
+          <Image className="h-4 w-4" />
+        </AvatarFallback>
+      </Avatar>
+    );
   };
 
-  const clearSearch = () => {
-    setGlobalFilter('');
-    if (searchColumn) {
-      table.getColumn(searchColumn)?.setFilterValue('');
-    }
-  };
-
-  const handleRowClick = (row: any) => {
-    if (onRowClick) {
-      onRowClick(row);
-    }
-  };
-
-  // Show loading state
   if (isLoading) {
     return (
-      <div className="px-4 py-8 flex justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {searchable && (
-        <div className="flex items-center py-4 px-4">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={searchPlaceholder}
-              value={globalFilter}
-              onChange={handleSearch}
-              className="w-full pl-8 pr-8"
-            />
-            {globalFilter && (
-              <Button
-                variant="ghost"
-                onClick={clearSearch}
-                className="absolute right-0 top-0 h-full px-3"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+      <div className="w-full">
+        {searchable && (
+          <div className="flex w-full items-center space-x-2 mb-4">
+            <Skeleton className="h-10 w-full" />
           </div>
-        </div>
-      )}
-
-      {/* Show empty state if no data */}
-      {table.getRowModel().rows.length === 0 ? (
-        <div className="px-4 py-8 text-center text-muted-foreground">
-          {emptyMessage}
-        </div>
-      ) : (
+        )}
         <div className="rounded-md border">
           <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+            {showHeader && (
+              <TableHeader>
+                <TableRow>
+                  {columns.map((column, index) => (
+                    <TableHead key={index}>
+                      <Skeleton className="h-6 w-full" />
                     </TableHead>
                   ))}
                 </TableRow>
-              ))}
-            </TableHeader>
+              </TableHeader>
+            )}
             <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  onClick={() => handleRowClick(row.original)}
-                  className={onRowClick ? "cursor-pointer" : ""}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+              {Array.from({ length: 5 }).map((_, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {columns.map((_, colIndex) => (
+                    <TableCell key={colIndex}>
+                      <Skeleton className="h-6 w-full" />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -194,32 +180,123 @@ export function DataTable<TData, TValue>({
             </TableBody>
           </Table>
         </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no data
+  if (data.length === 0) {
+    return (
+      <div className="w-full py-8 text-center text-muted-foreground">
+        {finalEmptyMessage}
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full">
+      {searchable && (
+        <div className="flex w-full items-center space-x-2 mb-4">
+          <Search className="h-4 w-4 text-muted-foreground ml-2" />
+          <Input
+            placeholder={searchPlaceholder}
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
+            className="w-full h-9 pl-8 -ml-6"
+          />
+        </div>
       )}
+      <div className="rounded-md border">
+        <Table>
+          {showHeader && (
+            <TableHeader>
+              <TableRow>
+                {columns.map((column, index) => (
+                  <TableHead
+                    key={index}
+                    className={column.sortable ? "cursor-pointer select-none" : ""}
+                    onClick={() => column.sortable && handleSort(column.key)}
+                  >
+                    <div className="flex items-center">
+                      {column.title || column.header}
+                      {sortColumn === column.key && (
+                        <span className="ml-1">
+                          {sortDirection === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+          )}
+          <TableBody>
+            {paginatedData.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  {finalEmptyMessage}
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedData.map((record: any, rowIndex) => (
+                <TableRow
+                  key={rowIndex}
+                  className={onRowClick ? "cursor-pointer hover:bg-accent" : ""}
+                  onClick={() => onRowClick && onRowClick(record)}
+                >
+                  {columns.map((column, colIndex) => (
+                    <TableCell key={colIndex}>
+                      {column.thumbnail ? (
+                        <div className="flex items-center gap-2">
+                          {renderThumbnail(record[column.key])}
+                          {column.render ? column.render(record[column.key], record) : record[column.key]}
+                        </div>
+                      ) : column.render ? (
+                        column.render(record[column.key], record)
+                      ) : (
+                        record[column.key]
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between px-4 py-4">
-        <div className="text-sm text-muted-foreground">
-          Trang {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
-        </div>
-        <div className="flex items-center space-x-2">
+      {totalPages > 1 && (
+        <div className="flex items-center justify-end space-x-2 py-4">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
+
+export default DataTable;

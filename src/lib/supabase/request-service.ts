@@ -15,7 +15,7 @@ export const requestService = {
   async create(data: Partial<Request>) {
     try {
       const result = await insert<Request>('requests', data);
-      await logActivity('create', 'request', data.noi_dung || 'New request', 'system', 'completed');
+      await logActivity('create', 'request', data.title || 'New request', 'system', 'completed');
       return result;
     } catch (error) {
       console.error('Error creating request:', error);
@@ -26,7 +26,7 @@ export const requestService = {
   async update(id: string, data: Partial<Request>) {
     try {
       const result = await update<Request>('requests', id, data);
-      await logActivity('update', 'request', data.noi_dung || 'Update request', 'system', 'completed');
+      await logActivity('update', 'request', data.title || 'Update request', 'system', 'completed');
       return result;
     } catch (error) {
       console.error('Error updating request:', error);
@@ -47,7 +47,7 @@ export const requestService = {
   async updateStatus(id: string, status: string, processedDate?: string) {
     try {
       const data: Partial<Request> = { 
-        trang_thai: status,
+        status,
         processed_at: processedDate || new Date().toISOString()
       };
       

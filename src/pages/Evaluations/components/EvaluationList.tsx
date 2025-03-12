@@ -3,7 +3,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { Plus, FileDown, Filter, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/DataTable';
+import DataTable from '@/components/ui/DataTable';
 import { TeachingSession } from '@/lib/types';
 
 interface EvaluationListProps {

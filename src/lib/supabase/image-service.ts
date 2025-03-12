@@ -16,7 +16,7 @@ export const imageService = {
   async create(image: Partial<Image>) {
     try {
       const result = await insert<Image>('images', image);
-      await logActivity('create', 'image', image.ten_anh || (image as any).file_name || 'New image', 'system', 'completed');
+      await logActivity('create', 'image', image.ten_anh || image.file_name || 'New image', 'system', 'completed');
       return result;
     } catch (error) {
       console.error('Error creating image record:', error);
@@ -27,7 +27,7 @@ export const imageService = {
   async update(id: string, updates: Partial<Image>) {
     try {
       const result = await update<Image>('images', id, updates);
-      await logActivity('update', 'image', updates.ten_anh || (updates as any).file_name || 'Update image', 'system', 'completed');
+      await logActivity('update', 'image', updates.ten_anh || updates.file_name || 'Update image', 'system', 'completed');
       return result;
     } catch (error) {
       console.error('Error updating image record:', error);

@@ -1,75 +1,123 @@
+
 import React from 'react';
-import { Task } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/DataTable';
-import { Plus, FileDown, Filter, RotateCw } from 'lucide-react';
+import { CheckSquare } from 'lucide-react';
+import DataTable from "@/components/ui/DataTable";
+import { Badge } from '@/components/ui/badge';
+import { Task, Employee } from '@/lib/types';
+import PlaceholderPage from '@/components/common/PlaceholderPage';
 
 interface TasksListProps {
   tasks: Task[];
   isLoading: boolean;
+  employees: Employee[];
   onRowClick: (task: Task) => void;
   onAddClick: () => void;
-  onRefresh: () => void;
 }
 
-const TasksList: React.FC<TasksListProps> = ({
-  tasks,
-  isLoading,
+const TasksList: React.FC<TasksListProps> = ({ 
+  tasks, 
+  isLoading, 
+  employees, 
   onRowClick,
-  onAddClick,
-  onRefresh,
+  onAddClick 
 }) => {
+  const getEmployeeName = (employeeId: string) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    return employee ? employee.ten_nhan_su : 'N/A';
+  };
+
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
   const columns = [
     {
-      title: 'Tiêu đề',
-      key: 'tieu_de',
+      title: "Tên Công Việc",
+      key: "ten_viec",
       sortable: true,
     },
     {
-      title: 'Mô tả',
-      key: 'mo_ta',
-    },
-    {
-      title: 'Ngày hết hạn',
-      key: 'ngay_het_han',
+      title: "Loại Việc",
+      key: "loai_viec",
       sortable: true,
     },
     {
-      title: 'Trạng thái',
-      key: 'trang_thai',
+      title: "Người Phụ Trách",
+      key: "nguoi_phu_trach",
+      render: (value: string) => getEmployeeName(value),
+      sortable: true,
+    },
+    {
+      title: "Ngày Đến Hạn",
+      key: "ngay_den_han",
+      render: (value: string) => formatDate(value),
+      sortable: true,
+    },
+    {
+      title: "Cấp Độ",
+      key: "cap_do",
+      render: (value: string) => (
+        <Badge 
+          variant={
+            value === "urgent" ? "destructive" : 
+            value === "high" ? "destructive" :
+            value === "normal" ? "secondary" : 
+            "outline"
+          }
+        >
+          {value === "urgent" ? "Khẩn cấp" : 
+           value === "high" ? "Cao" : 
+           value === "normal" ? "Bình thường" : 
+           value === "low" ? "Thấp" : value}
+        </Badge>
+      ),
+      sortable: true,
+    },
+    {
+      title: "Trạng Thái",
+      key: "trang_thai",
+      render: (value: string) => (
+        <Badge 
+          variant={
+            value === "completed" ? "success" : 
+            value === "processing" ? "default" :
+            value === "pending" ? "secondary" : 
+            value === "overdue" ? "destructive" :
+            "outline"
+          }
+        >
+          {value === "completed" ? "Hoàn thành" : 
+           value === "processing" ? "Đang thực hiện" : 
+           value === "pending" ? "Chờ xử lý" : 
+           value === "overdue" ? "Quá hạn" :
+           value === "cancelled" ? "Đã hủy" : value}
+        </Badge>
+      ),
       sortable: true,
     },
   ];
 
-  const tableActions = (
-    <div className="flex items-center space-x-2">
-      <Button variant="outline" size="sm" className="h-8" onClick={onRefresh}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm mới
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
-      </Button>
-      <Button size="sm" className="h-8" onClick={onAddClick}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm nhiệm vụ
-      </Button>
-    </div>
-  );
+  if (tasks.length === 0 && !isLoading) {
+    return (
+      <PlaceholderPage
+        title="Công Việc"
+        description="Quản lý danh sách công việc cần làm"
+        icon={<CheckSquare className="h-16 w-16 text-muted-foreground/40" />}
+        addButtonAction={onAddClick}
+      />
+    );
+  }
 
   return (
-    <>
-      <div className="mb-4">{tableActions}</div>
-      <DataTable
-        columns={columns}
-        data={tasks}
-        isLoading={isLoading}
-        onRowClick={onRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm nhiệm vụ..."
-      />
-    </>
+    <DataTable
+      columns={columns}
+      data={tasks}
+      isLoading={isLoading}
+      onRowClick={onRowClick}
+      searchable={true}
+      searchPlaceholder="Tìm kiếm công việc..."
+    />
   );
 };
 

@@ -1,14 +1,24 @@
 
 export interface Image {
   id: string;
+  caption?: string;
   doi_tuong: string;
   doi_tuong_id: string;
-  ten_anh?: string;
+  ten_anh: string;
+  file_name?: string;
+  url?: string;
+  path?: string;
+  publicUrl?: string;
+  mime_type?: string;
+  size?: number;
+  description?: string;
+  entity_type?: string;
+  entity_id?: string;
   image?: string;
   video?: string;
-  caption?: string;
-  created_at?: string;
-  updated_at?: string;
   tg_tao?: string;
-  file_name?: string; // Add file_name property
+  created_at?: string;
+  type?: string;
+  error?: any;
+  data?: any;
 }

@@ -1,10 +1,10 @@
 
-import React from 'react';
-import { DataTable } from '@/components/ui/DataTable';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Edit } from 'lucide-react';
-import { Enrollment } from '@/lib/types';
+import React from "react";
+import DataTable from "@/components/ui/DataTable";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Edit } from "lucide-react";
+import { Enrollment } from "@/lib/types";
 
 interface EnrollmentTableProps {
   enrollments: Enrollment[];

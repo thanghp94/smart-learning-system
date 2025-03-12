@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -127,10 +128,6 @@ const StudentForm: React.FC<StudentFormProps> = ({
               <Label htmlFor="studentImage">Hình ảnh học sinh</Label>
               <div className="mt-2">
                 <ImageUpload
-                  currentUrl={studentImage}
-                  onUpload={handleImageChange}
-                  entityType="student"
-                  entityId={initialData?.id || 'new'}
                   value={studentImage}
                   onChange={handleImageChange}
                   onRemove={() => setStudentImage('')}

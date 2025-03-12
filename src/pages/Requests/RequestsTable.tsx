@@ -1,14 +1,23 @@
 
-import React, { useState, useMemo } from "react";
-import { Plus, RotateCw, Filter, FileDown } from "lucide-react";
-import { DataTable } from "@/components/ui/DataTable";
+import React, { useMemo, useState } from "react";
+import { FileSignature, Filter, Plus, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Request } from "@/lib/types";
+import DataTable from "@/components/ui/DataTable";
+import TablePageLayout from "@/components/common/TablePageLayout";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import ExportButton from "@/components/ui/ExportButton";
 import FilterButton, { FilterCategory } from "@/components/ui/FilterButton";
-import TablePageLayout from "@/components/common/TablePageLayout";
+
+interface Request {
+  id: string;
+  title: string;
+  description?: string;
+  requester: string;
+  status: string;
+  priority?: string;
+  created_at: string;
+}
 
 interface RequestsTableProps {
   requests: Request[];
@@ -25,6 +34,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
 }) => {
   const [filters, setFilters] = useState<Record<string, string>>({});
   
+  // Extract unique status values for filter options
   const statusOptions = useMemo(() => {
     const statuses = [...new Set(requests.map(r => r.status))].map(status => ({
       label: status === "approved" ? "Đã duyệt" : 
@@ -36,6 +46,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
     return statuses;
   }, [requests]);
   
+  // Extract unique priority values for filter options
   const priorityOptions = useMemo(() => {
     const priorities = [...new Set(requests.map(r => r.priority || "Medium"))].map(priority => ({
       label: priority,
@@ -45,6 +56,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
     return priorities;
   }, [requests]);
   
+  // Create filter categories
   const filterCategories: FilterCategory[] = [
     {
       name: 'Trạng thái',
@@ -58,8 +70,10 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
     }
   ];
   
+  // Apply filters to data
   const filteredRequests = useMemo(() => {
     return requests.filter(request => {
+      // Check each filter
       for (const [category, value] of Object.entries(filters)) {
         if (value) {
           if (category === 'Trạng thái' && request.status !== value) return false;

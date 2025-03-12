@@ -1,60 +1,55 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import ImageUpload from '@/components/common/ImageUpload';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
+import { AssetFormData } from '../schemas/assetSchema';
+import ImageUpload from '@/components/common/ImageUpload';
 
 interface ImageUploadFieldsProps {
-  assetData: any;
-  handleImageChange: (field: string, url: string) => void;
-  handleRemoveImage: (field: string) => void;
-  entityId: string;
-  form?: UseFormReturn<any>;
-  handleImageUpload?: (url: string, field: string) => void;
+  form: UseFormReturn<AssetFormData>;
+  handleImageUpload: (url: string, field: keyof AssetFormData) => void;
 }
 
 const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
-  assetData,
-  handleImageChange,
-  handleRemoveImage,
-  entityId,
   form,
-  handleImageUpload,
+  handleImageUpload
 }) => {
   return (
-    <div className="space-y-6">
-      <div>
-        <Label>Hình ảnh chính</Label>
-        <div className="mt-2">
-          <ImageUpload
-            currentUrl={assetData?.hinh_anh || ''}
-            onUpload={(url) => {
-              handleImageChange('hinh_anh', url);
-              if (handleImageUpload) handleImageUpload(url, 'hinh_anh');
-            }}
-            entityType="asset"
-            entityId={entityId}
-            onRemove={() => handleRemoveImage('hinh_anh')}
-          />
-        </div>
-      </div>
+    <>
+      <FormField
+        control={form.control}
+        name="hinh_anh"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Hình ảnh 1</FormLabel>
+            <FormControl>
+              <ImageUpload 
+                value={field.value || ''} 
+                onChange={(url) => handleImageUpload(url, 'hinh_anh')} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div>
-        <Label>Hình ảnh bổ sung</Label>
-        <div className="mt-2">
-          <ImageUpload
-            currentUrl={assetData?.hinh_anh_2 || ''}
-            onUpload={(url) => {
-              handleImageChange('hinh_anh_2', url);
-              if (handleImageUpload) handleImageUpload(url, 'hinh_anh_2');
-            }}
-            entityType="asset"
-            entityId={entityId}
-            onRemove={() => handleRemoveImage('hinh_anh_2')}
-          />
-        </div>
-      </div>
-    </div>
+      <FormField
+        control={form.control}
+        name="hinh_anh_2"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Hình ảnh 2</FormLabel>
+            <FormControl>
+              <ImageUpload 
+                value={field.value || ''} 
+                onChange={(url) => handleImageUpload(url, 'hinh_anh_2')} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
   );
 };
 

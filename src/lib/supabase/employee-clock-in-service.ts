@@ -1,176 +1,132 @@
 
 import { supabase } from './client';
-import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
+import { EmployeeClockInOut } from '../types';
 
-class EmployeeClockInService {
-  tableName = 'employee_clock_in_out';
-
-  async getByEmployeeId(employeeId: string): Promise<EmployeeClockInOut[]> {
+export const employeeClockInService = {
+  getAll: async (): Promise<EmployeeClockInOut[]> => {
     const { data, error } = await supabase
-      .from(this.tableName)
+      .from('employee_clock_in_out')
       .select('*')
-      .eq('nhan_vien_id', employeeId)
-      .order('ngay', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching employee clock-in records:', error);
+      console.error('Error fetching employee clock in out records:', error);
       throw error;
     }
 
     return data || [];
-  }
+  },
 
-  async getByDate(date: string): Promise<EmployeeClockInOut[]> {
+  getById: async (id: string): Promise<EmployeeClockInOut> => {
     const { data, error } = await supabase
-      .from(this.tableName)
-      .select('*, employees(ten_nhan_su, chuc_vu, phong_ban)')
+      .from('employee_clock_in_out')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching employee clock in out record:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  create: async (record: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> => {
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .insert(record)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating employee clock in out record:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  update: async (id: string, record: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> => {
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .update(record)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating employee clock in out record:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('employee_clock_in_out')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting employee clock in out record:', error);
+      throw error;
+    }
+  },
+  
+  // Add specific methods for clock in/out operations
+  clockIn: async (record: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> => {
+    return employeeClockInService.create(record);
+  },
+  
+  clockOut: async (record: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> => {
+    if (!record.id) {
+      throw new Error('ID is required for clock out');
+    }
+    return employeeClockInService.update(record.id, record);
+  },
+  
+  // Get attendance records by employee and date
+  getByEmployeeAndDate: async (employeeId: string, date: string): Promise<EmployeeClockInOut[]> => {
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select('*')
+      .eq('nhan_vien_id', employeeId)
       .eq('ngay', date)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching clock-in records by date:', error);
-      throw error;
-    }
-
-    return data?.map(record => ({
-      ...record,
-      employee_name: record.employees?.ten_nhan_su,
-      position: record.employees?.chuc_vu,
-      department: record.employees?.phong_ban
-    })) || [];
-  }
-
-  async getMonthlyAttendance(month: number, year: number): Promise<MonthlyAttendanceSummary[]> {
-    const { data, error } = await supabase
-      .rpc('get_monthly_attendance_summary', { month_param: month, year_param: year });
-
-    if (error) {
-      console.error('Error fetching monthly attendance summary:', error);
+      console.error('Error fetching employee attendance by date:', error);
       throw error;
     }
 
     return data || [];
-  }
-
-  async getTodayAttendance(employeeId: string): Promise<EmployeeClockInOut> {
-    const today = new Date().toISOString().split('T')[0];
-    
+  },
+  
+  // Get attendance records by date
+  getByDate: async (date: string): Promise<EmployeeClockInOut[]> => {
     const { data, error } = await supabase
-      .from(this.tableName)
+      .from('employee_clock_in_out')
+      .select('*')
+      .eq('ngay', date)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching attendance by date:', error);
+      throw error;
+    }
+
+    return data || [];
+  },
+  
+  // Get attendance records by employee
+  getByEmployee: async (employeeId: string): Promise<EmployeeClockInOut[]> => {
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
       .select('*')
       .eq('nhan_vien_id', employeeId)
-      .eq('ngay', today)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching today attendance:', error);
-      throw error;
-    }
-
-    return data || null;
-  }
-
-  async clockIn(employeeId: string, employeeName: string): Promise<EmployeeClockInOut> {
-    const today = new Date().toISOString().split('T')[0];
-    const now = new Date();
-    
-    const clockInRecord = {
-      nhan_vien_id: employeeId,
-      ngay: today,
-      thoi_gian_bat_dau: now.toLocaleTimeString('vi-VN'),
-      gio_vao: now.toLocaleTimeString('vi-VN'),
-      trang_thai: 'present',
-      employee_name: employeeName
-    };
-    
-    const { data, error } = await supabase
-      .from(this.tableName)
-      .insert(clockInRecord)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error clocking in:', error);
-      throw error;
-    }
-
-    return data;
-  }
-
-  async clockOut(recordId: string): Promise<EmployeeClockInOut> {
-    const now = new Date();
-    
-    const { data, error } = await supabase
-      .from(this.tableName)
-      .update({
-        thoi_gian_ket_thuc: now.toLocaleTimeString('vi-VN'),
-        gio_ra: now.toLocaleTimeString('vi-VN')
-      })
-      .eq('id', recordId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error clocking out:', error);
-      throw error;
-    }
-
-    return data;
-  }
-
-  // Additional methods needed by components
-  async create(data: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> {
-    return insert<EmployeeClockInOut>(this.tableName, data);
-  }
-
-  async getAll(): Promise<EmployeeClockInOut[]> {
-    return fetchAll<EmployeeClockInOut>(this.tableName);
-  }
-
-  async getById(id: string): Promise<EmployeeClockInOut> {
-    return fetchById<EmployeeClockInOut>(this.tableName, id);
-  }
-
-  async update(id: string, data: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> {
-    return update<EmployeeClockInOut>(this.tableName, id, data);
-  }
-
-  async delete(id: string): Promise<void> {
-    return remove(this.tableName, id);
-  }
-
-  async getDailyReport(date: string): Promise<EmployeeClockInOut[]> {
-    const { data, error } = await supabase
-      .from(this.tableName)
-      .select('*, employees(ten_nhan_su, chuc_vu, phong_ban, hinh_anh)')
-      .eq('ngay', date);
-
-    if (error) {
-      console.error('Error fetching daily report:', error);
-      throw error;
-    }
-
-    return data?.map(record => ({
-      ...record,
-      employee_name: record.employees?.ten_nhan_su,
-      position: record.employees?.chuc_vu,
-      department: record.employees?.phong_ban,
-      employee_image: record.employees?.hinh_anh
-    })) || [];
-  }
-
-  async getAttendanceForEmployee(employeeId: string, month: number, year: number): Promise<EmployeeClockInOut[]> {
-    const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
-    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
-    
-    const { data, error } = await supabase
-      .from(this.tableName)
-      .select('*')
-      .eq('nhan_vien_id', employeeId)
-      .gte('ngay', startDate)
-      .lte('ngay', endDate)
-      .order('ngay', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching employee attendance:', error);
@@ -178,7 +134,65 @@ class EmployeeClockInService {
     }
 
     return data || [];
-  }
-}
+  },
+  
+  // Get monthly attendance for an employee
+  getMonthlyAttendance: async (month: number, year: number): Promise<EmployeeClockInOut[]> => {
+    // Create the date range for the month
+    const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+    const endMonth = month === 12 ? 1 : month + 1;
+    const endYear = month === 12 ? year + 1 : year;
+    const endDate = `${endYear}-${endMonth.toString().padStart(2, '0')}-01`;
+    
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select('*, employees!inner(ten_nhan_su)')
+      .gte('ngay', startDate)
+      .lt('ngay', endDate)
+      .order('ngay', { ascending: true });
 
-export const employeeClockInService = new EmployeeClockInService();
+    if (error) {
+      console.error('Error fetching monthly attendance:', error);
+      throw error;
+    }
+
+    return data || [];
+  },
+  
+  // Get daily report
+  getDailyReport: async (date: string): Promise<any[]> => {
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select(`
+        *,
+        employees!inner(
+          id,
+          ten_nhan_su,
+          hinh_anh,
+          chuc_danh,
+          bo_phan
+        )
+      `)
+      .eq('ngay', date)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching daily attendance report:', error);
+      throw error;
+    }
+
+    // Transform data to include employee details
+    const formattedData = data.map(record => ({
+      ...record,
+      employee_id: record.nhan_vien_id,
+      employee_name: record.employees?.ten_nhan_su || 'Unknown',
+      employee_image: record.employees?.hinh_anh || null,
+      position: record.employees?.chuc_danh || 'N/A',
+      department: record.employees?.bo_phan || 'N/A',
+    }));
+
+    return formattedData || [];
+  }
+};
+
+export default employeeClockInService;

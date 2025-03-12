@@ -1,17 +1,24 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Asset } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
-import AssetFormBasic from './components/AssetFormBasic';
-import AssetFormDetails from './components/AssetFormDetails';
-import AssetFormPurchase from './components/AssetFormPurchase';
-import ImageUploadFields from './components/ImageUploadFields';
 import { assetSchema, AssetFormData } from './schemas/assetSchema';
+import BasicInfoFields from './components/BasicInfoFields';
+import StatusFields from './components/StatusFields';
+import ImageUploadFields from './components/ImageUploadFields';
+import AdditionalInfoFields from './components/AdditionalInfoFields';
 
 interface AssetFormProps {
   initialData?: Partial<Asset>;
@@ -19,16 +26,7 @@ interface AssetFormProps {
   onCancel: () => void;
 }
 
-const AssetForm: React.FC<AssetFormProps> = ({ initialData = {}, onSubmit, onCancel }) => {
-  const { toast } = useToast();
-  const [assetImages, setAssetImages] = useState<{
-    hinh_anh: string;
-    hinh_anh_2: string;
-  }>({
-    hinh_anh: initialData?.hinh_anh || '',
-    hinh_anh_2: initialData?.hinh_anh_2 || ''
-  });
-
+const AssetForm: React.FC<AssetFormProps> = ({ initialData, onSubmit, onCancel }) => {
   const form = useForm<AssetFormData>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
@@ -57,42 +55,28 @@ const AssetForm: React.FC<AssetFormProps> = ({ initialData = {}, onSubmit, onCan
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    form.setValue(name as keyof AssetFormData, value);
+    form.setValue(name as any, value);
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    form.setValue(name as keyof AssetFormData, value === '' ? 0 : Number(value));
+    form.setValue(name as any, value === '' ? 0 : Number(value));
   };
 
   const handleImageUpload = async (url: string, field: keyof AssetFormData) => {
     form.setValue(field, url);
   };
 
-  const handleImageChange = (field: keyof AssetFormData, url: string) => {
-    setAssetImages(prev => ({
-      ...prev,
-      [field]: url
-    }));
-    form.setValue(field, url);
-  };
-
-  const handleRemoveImage = (field: keyof AssetFormData) => {
-    setAssetImages(prev => ({
-      ...prev,
-      [field]: ''
-    }));
-    form.setValue(field, '');
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        {/* Two-column layout for better space utilization */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left column - Basic info and Status */}
           <div className="space-y-4">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Thông tin cơ bản</h3>
-              <AssetFormBasic 
+              <BasicInfoFields 
                 form={form} 
                 handleChange={handleChange} 
                 handleNumberChange={handleNumberChange} 
@@ -101,17 +85,18 @@ const AssetForm: React.FC<AssetFormProps> = ({ initialData = {}, onSubmit, onCan
             
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Trạng thái</h3>
-              <AssetFormDetails 
+              <StatusFields 
                 form={form} 
                 handleChange={handleChange} 
               />
             </div>
           </div>
           
+          {/* Right column - Additional info and Images */}
           <div className="space-y-4">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Thông tin bổ sung</h3>
-              <AssetFormPurchase 
+              <AdditionalInfoFields 
                 form={form} 
                 handleChange={handleChange} 
               />
@@ -119,13 +104,9 @@ const AssetForm: React.FC<AssetFormProps> = ({ initialData = {}, onSubmit, onCan
             
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Hình ảnh</h3>
-              <ImageUploadFields
-                assetData={assetImages}
-                handleImageChange={handleImageChange}
-                handleRemoveImage={handleRemoveImage}
-                entityId={initialData?.id || 'new'}
-                form={form}
-                handleImageUpload={handleImageUpload}
+              <ImageUploadFields 
+                form={form} 
+                handleImageUpload={handleImageUpload} 
               />
             </div>
           </div>

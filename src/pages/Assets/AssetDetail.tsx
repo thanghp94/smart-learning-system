@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Package, RefreshCw, ArrowRight } from "lucide-react";
-import { DataTable } from "@/components/ui/DataTable";
+import DataTable from "@/components/ui/DataTable";
 import { useToast } from "@/hooks/use-toast";
 import AssetTransferForm from "./AssetTransfer"; // Renamed the import
 

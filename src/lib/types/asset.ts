@@ -1,46 +1,36 @@
 
 export interface Asset {
   id: string;
-  ten_csvc: string;
-  doi_tuong?: string;
-  doi_tuong_id?: string;
-  doi_tuong_chi_tiet?: string;
-  facility_id?: string;
-  so_luong?: number;
+  loai: string;
+  danh_muc: string;
+  thuong_hieu?: string;
+  cau_hinh?: string;
+  chat_lieu?: string;
+  mau?: string;
+  size?: string;
   don_vi: string;
-  tinh_trang?: string;
-  trang_thai_so_huu?: string;
-  trang_thai_so_huu_moi?: string;
-  ngay_mua?: string;
-  so_tien_mua?: string;
+  ten_CSVC: string;
+  so_luong: number;
   noi_mua?: string;
   hinh_anh?: string;
   hinh_anh_2?: string;
   mo_ta_1?: string;
   so_seri?: string;
-  ghi_chu?: string;
-  qr_code?: string;
-  khu_vuc?: string;
-  created_at?: string;
-  updated_at?: string;
-  ngay_nhap?: string;
-  tg_tao?: string;
-  
-  // Additional fields
-  loai?: string;
-  danh_muc?: string;
-  thuong_hieu?: string;
-  cau_hinh?: string;
-  size?: string;
-  chat_lieu?: string;
-  mau?: string;
+  ngay_mua?: string;
+  doi_tuong?: string;
+  doi_tuong_id?: string;
+  trang_thai_so_huu: string;
+  tinh_trang: string;
+  trang_thai_so_huu_moi?: string;
+  so_luong_chuyen?: number;
   doi_tuong_chuyen?: string;
   noi_chuyen_toi?: string;
-  so_luong_chuyen?: number;
-  gia_tri?: number;
-  
-  // For backward compatibility
-  ten_CSVC?: string; // Alias for ten_csvc
+  so_tien_mua?: string;
+  khu_vuc?: string;
+  qr_code?: string;
+  ngay_nhap?: string;
+  tg_tao?: string;
+  ghi_chu?: string;
 }
 
 export interface AssetTransfer {
@@ -52,8 +42,7 @@ export interface AssetTransfer {
   destination_id: string;
   quantity: number;
   transfer_date: string;
+  status: string;
   notes?: string;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
 }
