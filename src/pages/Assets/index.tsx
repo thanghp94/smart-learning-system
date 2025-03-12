@@ -1,9 +1,5 @@
 
-import React, { useState, useEffect } from "react";
-import { Plus, FileDown, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
-import { assetService } from "@/lib/supabase";
+import React, { useState } from "react";
 import { Asset } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
@@ -13,39 +9,18 @@ import AssetDetail from "./AssetDetail";
 import AssetForm from "./AssetForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
+import DataTable from "@/components/ui/DataTable";
 import CommandInterface from "@/components/CommandInterface";
-import AssetFilters from "./components/AssetFilters";
+import { useAssetData } from "./hooks/useAssetData";
+import AssetActionsToolbar from "./components/AssetActionsToolbar";
+import { assetService } from "@/lib/supabase";
 
 const Assets = () => {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { filteredAssets, isLoading, fetchAssets, handleFilterChange, handleResetFilters } = useAssetData();
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchAssets();
-  }, []);
-
-  const fetchAssets = async () => {
-    try {
-      setIsLoading(true);
-      const data = await assetService.getAll();
-      setAssets(data);
-      setFilteredAssets(data);
-    } catch (error) {
-      console.error("Error fetching assets:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải danh sách tài sản",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleRowClick = (asset: Asset) => {
     setSelectedAsset(asset);
@@ -62,34 +37,6 @@ const Assets = () => {
 
   const handleAddFormCancel = () => {
     setShowAddForm(false);
-  };
-
-  const handleFilterChange = ({ facility, employee }: { facility?: string, employee?: string }) => {
-    if (!facility && !employee) {
-      setFilteredAssets(assets);
-      return;
-    }
-
-    const filtered = assets.filter(asset => {
-      let matchesFacility = true;
-      let matchesEmployee = true;
-
-      if (facility) {
-        matchesFacility = asset.doi_tuong === 'facility' && asset.doi_tuong_id === facility;
-      }
-
-      if (employee) {
-        matchesEmployee = asset.doi_tuong === 'employee' && asset.doi_tuong_id === employee;
-      }
-
-      return (facility ? matchesFacility : true) && (employee ? matchesEmployee : true);
-    });
-
-    setFilteredAssets(filtered);
-  };
-
-  const handleResetFilters = () => {
-    setFilteredAssets(assets);
   };
 
   const handleAddFormSubmit = async (formData: Partial<Asset>) => {
@@ -154,43 +101,33 @@ const Assets = () => {
         title="Tài Sản"
         description="Quản lý tài sản của trung tâm"
         actions={
-          <div className="flex items-center space-x-2">
-            <AssetFilters 
-              onFilterChange={handleFilterChange} 
-              onReset={handleResetFilters} 
-            />
-            
-            <Button variant="outline" size="sm" className="h-8" onClick={fetchAssets}>
-              <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
-            </Button>
-            
-            <Button size="sm" className="h-8" onClick={handleAddClick}>
-              <Plus className="h-4 w-4 mr-1" /> Thêm Tài Sản
-            </Button>
-          </div>
+          <AssetActionsToolbar
+            onAddClick={handleAddClick}
+            onRefresh={fetchAssets}
+            onFilterChange={handleFilterChange}
+            onResetFilters={handleResetFilters}
+          />
         }
       >
         <div className="hidden md:block">
           <CommandInterface />
         </div>
         
-        {assets.length === 0 && !isLoading ? (
+        {filteredAssets.length === 0 && !isLoading ? (
           <PlaceholderPage
             title="Tài Sản"
             description="Quản lý thông tin tài sản và cơ sở vật chất"
             addButtonAction={handleAddClick}
           />
         ) : (
-          <>
-            <DataTable
-              columns={columns}
-              data={filteredAssets}
-              isLoading={isLoading}
-              onRowClick={handleRowClick}
-              searchable={true}
-              searchPlaceholder="Tìm kiếm tài sản..."
-            />
-          </>
+          <DataTable
+            columns={columns}
+            data={filteredAssets}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            searchable={true}
+            searchPlaceholder="Tìm kiếm tài sản..."
+          />
         )}
       </TablePageLayout>
 

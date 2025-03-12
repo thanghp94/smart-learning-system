@@ -14,13 +14,28 @@ export function useClassData() {
     try {
       setIsLoading(true);
       console.log("Fetching classes...");
+      
+      // Using the service method to get all classes
       const data = await classService.getAll();
       console.log("Classes data received:", data);
       
       if (data && Array.isArray(data)) {
-        setClasses(data as unknown as Class[]);
-        setFilteredClasses(data as unknown as Class[]);
-        console.log("Classes set to state:", data.length);
+        // Ensure all class objects have required properties
+        const processedClasses = data.map(cls => ({
+          ...cls,
+          id: cls.id || crypto.randomUUID(),
+          ten_lop_full: cls.ten_lop_full || cls.Ten_lop_full || '',
+          ten_lop: cls.ten_lop || '',
+          ct_hoc: cls.ct_hoc || '',
+          co_so: cls.co_so || '',
+          gv_chinh: cls.gv_chinh || cls.GV_chinh || '',
+          ngay_bat_dau: cls.ngay_bat_dau || null,
+          tinh_trang: cls.tinh_trang || 'pending'
+        }));
+        
+        setClasses(processedClasses);
+        setFilteredClasses(processedClasses);
+        console.log("Classes set to state:", processedClasses.length);
       } else {
         console.error("Invalid classes data:", data);
         setClasses([]);

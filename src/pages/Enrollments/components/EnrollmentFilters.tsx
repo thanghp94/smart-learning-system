@@ -57,14 +57,14 @@ const EnrollmentFilters: React.FC<EnrollmentFiltersProps> = ({
       </Button>
       
       <Select 
-        value={filters.classId} 
-        onValueChange={(value) => onFilterChange('classId', value)}
+        value={filters.classId || "none"} 
+        onValueChange={(value) => onFilterChange('classId', value === "none" ? "" : value)}
       >
         <SelectTrigger className="h-8 w-[180px] text-xs">
           <SelectValue placeholder="Theo lớp học" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tất cả lớp học</SelectItem>
+          <SelectItem value="none">Tất cả lớp học</SelectItem>
           {classes.map(c => (
             <SelectItem key={c.id} value={c.id}>
               {c.ten_lop_full || c.ten_lop}
@@ -74,14 +74,14 @@ const EnrollmentFilters: React.FC<EnrollmentFiltersProps> = ({
       </Select>
       
       <Select 
-        value={filters.facilityId} 
-        onValueChange={(value) => onFilterChange('facilityId', value)}
+        value={filters.facilityId || "none"} 
+        onValueChange={(value) => onFilterChange('facilityId', value === "none" ? "" : value)}
       >
         <SelectTrigger className="h-8 w-[180px] text-xs">
           <SelectValue placeholder="Theo cơ sở" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tất cả cơ sở</SelectItem>
+          <SelectItem value="none">Tất cả cơ sở</SelectItem>
           {facilities.map(f => (
             <SelectItem key={f.id} value={f.id}>
               {f.ten_co_so}
