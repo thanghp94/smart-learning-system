@@ -1,189 +1,121 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Employee } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
-import { employeeService, facilityService } from '@/lib/supabase';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import EmployeeHeader from './components/EmployeeHeader';
-import EmployeeBasicInfoTab from './components/EmployeeBasicInfoTab';
-import EmployeeContractTab from './components/EmployeeContractTab';
-import EmployeeFinancesTab from './components/EmployeeFinancesTab';
-import EmployeeFilesTab from './components/EmployeeFilesTab';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/hooks/use-toast';
+import { employeeService } from '@/lib/supabase';
+import { Employee } from '@/lib/types';
+import EmployeeBasicInfo from './components/EmployeeBasicInfo';
+import EmployeeFilesTab from './components/EmployeeFilesTab';
+import EmployeeSalaryTab from './components/EmployeeSalaryTab';
+import EmployeeContractsTab from './components/EmployeeContractsTab';
 
-const EmployeeDetail = () => {
-  const { id } = useParams<{ id: string }>();
+interface EmployeeDetailProps {
+  // Making employeeId optional since we'll get it from useParams if not provided
+  employeeId?: string;
+}
+
+const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId: propEmployeeId }) => {
+  const { id: paramId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const employeeId = propEmployeeId || paramId;
+  
   const [employee, setEmployee] = useState<Employee | null>(null);
-  const [tempEmployeeData, setTempEmployeeData] = useState<Employee | null>(null);
-  const [facilities, setFacilities] = useState<any[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<string>('basic');
+  
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchEmployee = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        if (id) {
-          const employeeData = await employeeService.getById(id);
-          setEmployee(employeeData);
-          setTempEmployeeData({...employeeData});
+        if (!employeeId) {
+          toast({
+            title: 'Error',
+            description: 'Employee ID not provided',
+            variant: 'destructive',
+          });
+          navigate('/employees');
+          return;
         }
         
-        const facilitiesData = await facilityService.getAll();
-        setFacilities(facilitiesData);
+        const data = await employeeService.getById(employeeId);
+        if (!data) {
+          toast({
+            title: 'Error',
+            description: 'Employee not found',
+            variant: 'destructive',
+          });
+          navigate('/employees');
+          return;
+        }
+        setEmployee(data);
       } catch (error) {
-        console.error("Error fetching employee data:", error);
+        console.error('Error fetching employee:', error);
         toast({
-          title: "Lỗi",
-          description: "Không thể tải thông tin nhân viên",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to fetch employee data',
+          variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchData();
-  }, [id, toast]);
+    fetchEmployee();
+  }, [employeeId, navigate, toast]);
 
-  const handleBack = () => {
-    navigate('/employees');
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
   };
-
-  const handleEditToggle = () => {
-    if (isEditing) {
-      // Cancel edit mode
-      setTempEmployeeData({...employee});
-    }
-    setIsEditing(!isEditing);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setTempEmployeeData(prev => {
-      if (!prev) return prev;
-      return { ...prev, [name]: value };
-    });
-  };
-
-  const handleMultiSelectChange = (name: string, value: string[]) => {
-    setTempEmployeeData(prev => {
-      if (!prev) return prev;
-      return { ...prev, [name]: value };
-    });
-  };
-
-  const handleDateChange = (name: string, value: Date | null) => {
-    setTempEmployeeData(prev => {
-      if (!prev) return prev;
-      return { ...prev, [name]: value };
-    });
-  };
-
-  const handleImageUpload = (url: string) => {
-    setTempEmployeeData(prev => {
-      if (!prev) return prev;
-      return { ...prev, hinh_anh: url };
-    });
-  };
-
-  const handleSave = async () => {
-    if (!tempEmployeeData || !employee || !id) return;
-    
-    try {
-      setIsLoading(true);
-      
-      // Process the data for API submission
-      const dataToSubmit = { ...tempEmployeeData };
-      
-      // Handle date conversion if needed
-      if (dataToSubmit.ngay_sinh instanceof Date) {
-        dataToSubmit.ngay_sinh = dataToSubmit.ngay_sinh.toISOString();
-      }
-      
-      await employeeService.update(id, dataToSubmit);
-      
-      setEmployee(dataToSubmit);
-      setIsEditing(false);
-      
-      toast({
-        title: "Thành công",
-        description: "Đã cập nhật thông tin nhân viên"
-      });
-    } catch (error) {
-      console.error("Error updating employee:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể cập nhật thông tin nhân viên",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) {
-    return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
-  }
-
-  if (!employee) {
-    return (
-      <div className="p-8 text-center">
-        <p className="mb-4">Không tìm thấy thông tin nhân viên</p>
-        <Button onClick={handleBack}>Quay lại</Button>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-6">
-      <EmployeeHeader 
-        employeeName={employee.ten_nhan_su}
-        isEditing={isEditing}
-        handleBack={handleBack}
-        handleEditToggle={handleEditToggle}
-        handleSave={handleSave}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <Spinner size="large" />
+        </div>
+      ) : employee ? (
+        <>
+          <div className="mb-8">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold">{employee.ten_nhan_su}</h1>
+              <Button onClick={() => navigate('/employees/edit/' + employee.id)}>Edit</Button>
+            </div>
+            <p className="text-muted-foreground">{employee.chuc_danh} ({employee.bo_phan})</p>
+          </div>
 
-      <Separator className="mb-6" />
-
-      <Tabs defaultValue="basic">
-        <TabsList className="mb-6">
-          <TabsTrigger value="basic">Thông tin cơ bản</TabsTrigger>
-          <TabsTrigger value="contracts">Hợp đồng</TabsTrigger>
-          <TabsTrigger value="finances">Tài chính</TabsTrigger>
-          <TabsTrigger value="files">Tài liệu</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="basic">
-          <EmployeeBasicInfoTab 
-            employee={employee}
-            tempEmployeeData={tempEmployeeData}
-            facilities={facilities}
-            isEditing={isEditing}
-            handleChange={handleChange}
-            handleImageUpload={handleImageUpload}
-            handleDateChange={handleDateChange}
-            handleMultiSelectChange={handleMultiSelectChange}
-          />
-        </TabsContent>
-
-        <TabsContent value="contracts">
-          {id && <EmployeeContractTab employeeId={id} />}
-        </TabsContent>
-
-        <TabsContent value="finances">
-          {id && <EmployeeFinancesTab employeeId={id} />}
-        </TabsContent>
-
-        <TabsContent value="files">
-          {id && <EmployeeFilesTab employeeId={id} />}
-        </TabsContent>
-      </Tabs>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <TabsList>
+              <TabsTrigger value="basic">Thông tin cơ bản</TabsTrigger>
+              <TabsTrigger value="files">Hồ sơ</TabsTrigger>
+              <TabsTrigger value="salary">Lương</TabsTrigger>
+              <TabsTrigger value="contracts">Hợp đồng</TabsTrigger>
+            </TabsList>
+            <TabsContent value="basic">
+              <EmployeeBasicInfo employee={employee} />
+            </TabsContent>
+            <TabsContent value="files">
+              <EmployeeFilesTab employeeId={employee.id} />
+            </TabsContent>
+            <TabsContent value="salary">
+              <EmployeeSalaryTab employeeId={employee.id} />
+            </TabsContent>
+             <TabsContent value="contracts">
+              <EmployeeContractsTab employeeId={employee.id} />
+            </TabsContent>
+          </Tabs>
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-64">
+          <p className="text-xl text-muted-foreground">Employee not found</p>
+          <Button className="mt-4" onClick={() => navigate('/employees')}>
+            Back to Employees
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

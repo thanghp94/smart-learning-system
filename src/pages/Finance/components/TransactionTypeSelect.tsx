@@ -37,7 +37,14 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
       setIsLoading(true);
       try {
         // Get the category value to search for (converting from UI terms to database terms)
-        const categoryValue = transactionCategory === 'thu' ? 'income' : 'chi' ? 'expense' : transactionCategory;
+        let categoryValue = '';
+        if (transactionCategory === 'thu') {
+          categoryValue = 'income';
+        } else if (transactionCategory === 'chi') {
+          categoryValue = 'expense';
+        } else {
+          categoryValue = transactionCategory;
+        }
         
         const { data, error } = await supabase
           .from('finance_transaction_types')
@@ -95,7 +102,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="" disabled>
+                <SelectItem value="no-value" disabled>
                   {isLoading ? 'Đang tải...' : 
                    !transactionCategory ? 'Vui lòng chọn danh mục trước' : 
                    'Không có loại giao dịch'}

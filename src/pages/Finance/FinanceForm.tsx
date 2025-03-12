@@ -3,31 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/DatePicker';
-import { financeService, employeeService, facilityService } from '@/lib/supabase';
+import { Form } from '@/components/ui/form';
+import { employeeService, facilityService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Employee, Facility } from '@/lib/types';
-import BasicEntitySelector from './components/BasicEntitySelector';
-import PaymentMethodSelector from './components/PaymentMethodSelector';
+
+// Import refactored components
+import FinanceFormHeader from './components/FinanceFormHeader';
+import FinanceFacilitySelect from './components/FinanceFacilitySelect';
+import FinanceNoteField from './components/FinanceNoteField';
+import FinanceCreatorSelect from './components/FinanceCreatorSelect';
+import FinanceFormFooter from './components/FinanceFormFooter';
 import AmountCalculator from './components/AmountCalculator';
+import PaymentMethodSelector from './components/PaymentMethodSelector';
+import BasicEntitySelector from './components/BasicEntitySelector';
 import TransactionTypeSelect from './components/TransactionTypeSelect';
 
 // Finance form schema
@@ -160,53 +149,10 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="ngay"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Ngày</FormLabel>
-                <DatePicker
-                  date={field.value}
-                  setDate={field.onChange}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* Form Header with Date and Transaction Category */}
+        <FinanceFormHeader form={form} />
 
-          <FormField
-            control={form.control}
-            name="loai_thu_chi"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Loại thu/chi</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    console.log("Selected loai_thu_chi:", value);
-                    field.onChange(value);
-                    // Reset transaction type when category changes
-                    form.setValue('loai_giao_dich', '');
-                  }}
-                  value={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn loại" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="thu">Thu</SelectItem>
-                    <SelectItem value="chi">Chi</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
+        {/* Transaction Type and Entity Selector */}
         {watchThuChi && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TransactionTypeSelect 
@@ -222,106 +168,27 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
           </div>
         )}
 
-        <FormField
-          control={form.control}
-          name="co_so"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cơ sở</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn cơ sở" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {facilities.map((facility) => (
-                    <SelectItem key={facility.id} value={facility.id}>
-                      {facility.ten_co_so}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Facility Selector */}
+        <FinanceFacilitySelect form={form} facilities={facilities} />
 
-        <FormField
-          control={form.control}
-          name="dien_giai"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Diễn giải</FormLabel>
-              <FormControl>
-                <Input placeholder="Nhập diễn giải" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Note Fields */}
+        <FinanceNoteField form={form} />
 
+        {/* Amount Calculator */}
         <AmountCalculator form={form} />
 
+        {/* Payment Method Selector */}
         <PaymentMethodSelector form={form} />
 
-        <FormField
-          control={form.control}
-          name="nguoi_tao"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Người tạo</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn người tạo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.ten_nhan_su}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Creator Selector */}
+        <FinanceCreatorSelect form={form} employees={employees} />
 
-        <FormField
-          control={form.control}
-          name="ghi_chu"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Ghi chú</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Nhập ghi chú"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        {/* Form Footer */}
+        <FinanceFormFooter 
+          isSubmitting={isSubmitting} 
+          onCancel={onCancel} 
+          initialData={initialData} 
         />
-
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Hủy
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Đang lưu...' : initialData ? 'Cập nhật' : 'Thêm mới'}
-          </Button>
-        </div>
       </form>
     </Form>
   );

@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -73,7 +72,12 @@ import PersonalDashboard from '@/pages/PersonalDashboard';
 import AITools from '@/pages/AITools';
 import ImageGenerator from '@/pages/AITools/ImageGenerator';
 
-// Wrapper components to fix prop passing for routes
+// Wrapper components for route props
+const EmployeeDetailRoute = () => {
+  return <EmployeeDetail />;
+};
+
+// Other wrapper components
 const EmployeeDetailWrapper = () => <EmployeeDetail employeeId="0" />;
 const EmployeeFormWrapper = () => <EmployeeForm onSubmit={async () => {}} />;
 const ClassDetailWrapper = () => <ClassDetail classItem={{} as any} />;
@@ -125,7 +129,7 @@ function App() {
             <Route path="students/edit/:id" element={<StudentFormContainer />} />
             
             <Route path="employees" element={<Employees />} />
-            <Route path="employees/:id" element={<EmployeeDetailWrapper />} />
+            <Route path="employees/:id" element={<EmployeeDetailRoute />} />
             <Route path="employees/add" element={<EmployeeFormWrapper />} />
             <Route path="employees/edit/:id" element={<EmployeeFormWrapper />} />
             <Route path="employees/contracts" element={<ContractTemplateManagerPage />} />
@@ -170,6 +174,7 @@ function App() {
             <Route path="evaluations/edit/:id" element={<EvaluationFormWrapper />} />
             
             <Route path="finance" element={<Finance />} />
+            <Route path="finance/new" element={<Finance />} />
             <Route path="finance/:id" element={<FinanceDetailWrapper />} />
             <Route path="finance/add" element={<FinanceFormWrapper />} />
             <Route path="finance/edit/:id" element={<FinanceFormWrapper />} />
