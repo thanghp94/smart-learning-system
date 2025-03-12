@@ -1,5 +1,5 @@
 
-import { supabase } from '../supabase-client';
+import { supabase } from './client';
 import { EmployeeClockInOut } from '@/lib/types';
 
 export const employeeClockInService = {
@@ -56,7 +56,7 @@ export const employeeClockInService = {
     if (error) throw error;
   },
 
-  // Add this method which was missing
+  // Get attendance for a specific employee
   getAttendanceForEmployee: async (employeeId: string, month?: number, year?: number): Promise<EmployeeClockInOut[]> => {
     let query = supabase
       .from('employee_clock_in_out')
@@ -85,6 +85,35 @@ export const employeeClockInService = {
     const { data, error } = await supabase
       .rpc('get_daily_attendance_report', { check_date: date });
 
+    if (error) throw error;
+    return data || [];
+  },
+  
+  // Get attendance by employee and date
+  getByEmployeeAndDate: async (employeeId: string, date: string): Promise<EmployeeClockInOut | null> => {
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select('*')
+      .eq('nhan_vien_id', employeeId)
+      .eq('ngay', date)
+      .maybeSingle();
+    
+    if (error) throw error;
+    return data;
+  },
+  
+  // Get monthly attendance for reports
+  getMonthlyAttendance: async (month: number, year: number): Promise<any[]> => {
+    const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+    
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select('*')
+      .gte('ngay', startDate)
+      .lte('ngay', endDate)
+      .order('ngay', { ascending: true });
+      
     if (error) throw error;
     return data || [];
   }

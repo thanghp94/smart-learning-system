@@ -59,7 +59,7 @@ double_confirm_changes = true
 enable_confirmations = false
 
 [functions]
-# Port to use for Functions API
+# Port to use for the Functions server
 port = 9999
 
 [realtime]
