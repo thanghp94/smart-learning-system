@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ export interface ImageUploadProps {
   entityId: string;
   className?: string;
   onRemove?: () => void;
-  // Support for form usage
   value?: string;
   onChange?: (url: string) => void;
 }
@@ -25,10 +23,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   value,
   onChange,
 }) => {
-  // Use both currentUrl and value, preferring currentUrl if both are provided
   const imageUrl = currentUrl || value || '';
 
-  // Handle image upload
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -56,7 +52,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
-  // Handle remove functionality
   const handleRemove = () => {
     if (onChange) onChange('');
     if (onRemove) onRemove();

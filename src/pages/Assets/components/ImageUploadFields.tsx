@@ -1,6 +1,8 @@
+
 import React from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
 import ImageUpload from '@/components/common/ImageUpload';
+import { UseFormReturn } from 'react-hook-form';
 
 interface ImageUploadFieldsProps {
   assetData: any;
@@ -8,7 +10,7 @@ interface ImageUploadFieldsProps {
   handleRemoveImage: (field: string) => void;
   entityId: string;
   form?: UseFormReturn<any>;
-  handleImageUpload: (url: string, field: string) => void;
+  handleImageUpload?: (url: string, field: string) => void;
 }
 
 const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({

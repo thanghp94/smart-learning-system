@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -21,23 +20,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Search, ArrowUpDown, X } from 'lucide-react';
-import { TableColumn, DataTableProps } from './types';
+import type { DataTableProps, TableColumn } from './types';
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData>({
   columns,
   data,
   isLoading = false,
-  emptyMessage = 'No data available',
-  searchPlaceholder = 'Search...',
-  searchColumn,
+  searchPlaceholder = 'Tìm kiếm...',
   onRowClick,
   searchable = true,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState<string>('');
 
-  // Convert TableColumn[] to ColumnDef[] if needed
   const processedColumns = useMemo(() => {
     if (columns.length > 0 && 'title' in columns[0]) {
       return (columns as TableColumn[]).map(col => ({
@@ -58,9 +54,9 @@ export function DataTable<TData, TValue>({
         cell: col.render
           ? ({ row }) => col.render!(row.getValue(col.accessorKey || col.key), row.original)
           : undefined,
-      })) as ColumnDef<TData, TValue>[];
+      })) as any;
     }
-    return columns as ColumnDef<TData, TValue>[];
+    return columns as any;
   }, [columns]);
 
   const table = useReactTable({
@@ -81,74 +77,31 @@ export function DataTable<TData, TValue>({
   });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setGlobalFilter(value);
-    
-    // If a specific column is provided for search, filter on that column as well
-    if (searchColumn) {
-      table.getColumn(searchColumn)?.setFilterValue(value);
-    }
+    setGlobalFilter(e.target.value);
   };
-
-  const clearSearch = () => {
-    setGlobalFilter('');
-    if (searchColumn) {
-      table.getColumn(searchColumn)?.setFilterValue('');
-    }
-  };
-
-  const handleRowClick = (row: any) => {
-    if (onRowClick) {
-      onRowClick(row);
-    }
-  };
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="px-4 py-8 flex justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div>
       {searchable && (
-        <div className="flex items-center py-4 px-4">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center py-4">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
-              value={globalFilter}
-              onChange={handleSearch}
-              className="w-full pl-8 pr-8"
+              value={table.getState().globalFilter ?? ""}
+              onChange={(event) => table.setGlobalFilter(event.target.value)}
+              className="pl-8"
             />
-            {globalFilter && (
-              <Button
-                variant="ghost"
-                onClick={clearSearch}
-                className="absolute right-0 top-0 h-full px-3"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
       )}
-
-      {/* Show empty state if no data */}
-      {table.getRowModel().rows.length === 0 ? (
-        <div className="px-4 py-8 text-center text-muted-foreground">
-          {emptyMessage}
-        </div>
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
@@ -157,16 +110,18 @@ export function DataTable<TData, TValue>({
                             header.getContext()
                           )}
                     </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onClick={() => handleRowClick(row.original)}
+                  onClick={() => onRowClick && onRowClick(row.original)}
                   className={onRowClick ? "cursor-pointer" : ""}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -178,16 +133,23 @@ export function DataTable<TData, TValue>({
                     </TableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between px-4 py-4">
-        <div className="text-sm text-muted-foreground">
-          Trang {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+              ))
+            ) : (
+              <tr>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </tr>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-between px-2">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredRowModel().rows.length} of {data.length} row(s)
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -211,6 +173,3 @@ export function DataTable<TData, TValue>({
     </div>
   );
 }
-
-// Also export as default
-export default DataTable;

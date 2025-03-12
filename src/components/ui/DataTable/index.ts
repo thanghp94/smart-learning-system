@@ -1,4 +1,3 @@
 
 export { DataTable } from './DataTable';
-export type { DataTableProps } from './types';
-export default DataTable;
+export type { DataTableProps, TableColumn } from './types';

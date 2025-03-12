@@ -28,6 +28,7 @@ import { MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
 import { formatDateNode } from '@/utils/date-utils';
+import { Button } from '@/components/ui/button';
 
 const EmployeeDashboard = () => {
   const [date, setDate] = useState(new Date());

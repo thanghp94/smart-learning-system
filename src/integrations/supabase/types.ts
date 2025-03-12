@@ -526,6 +526,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          subject: string
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          subject: string
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          subject?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       employee_clock_in_out: {
         Row: {
           buoi_day_id: string | null

@@ -1,19 +1,17 @@
 
-import { ColumnDef } from '@tanstack/react-table';
-
-export interface TableColumn {
+export interface TableColumn<T = any> {
   title: string;
   key?: string;
   accessorKey?: string;
   sortable?: boolean;
-  render?: (value: any, row: any) => React.ReactNode;
+  render?: (value: any, row: T) => React.ReactNode;
 }
 
-export interface DataTableProps {
-  columns: TableColumn[];
-  data: any[];
+export interface DataTableProps<TData = any> {
+  columns: TableColumn<TData>[];
+  data: TData[];
   isLoading?: boolean;
-  onRowClick?: (row: any) => void;
+  onRowClick?: (row: TData) => void;
   searchable?: boolean;
   searchPlaceholder?: string;
 }
