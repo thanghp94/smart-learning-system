@@ -12,14 +12,39 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-interface DatePickerProps {
+export interface DatePickerProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  selected?: Date;
+  onChange?: (date: Date | undefined) => void;
+  className?: string;
 }
 
-export function DatePicker({ date, setDate, placeholder = "Chọn ngày", disabled = false }: DatePickerProps) {
+export function DatePicker({ 
+  date, 
+  setDate, 
+  placeholder = "Chọn ngày", 
+  disabled = false,
+  selected,
+  onChange,
+  className
+}: DatePickerProps) {
+  
+  // Handle both new API and legacy API
+  const handleSelect = (selectedDate: Date | undefined) => {
+    if (onChange) {
+      onChange(selectedDate);
+    }
+    if (setDate) {
+      setDate(selectedDate);
+    }
+  };
+  
+  // Use selected prop if provided, otherwise use date
+  const displayDate = selected || date;
+  
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -27,22 +52,26 @@ export function DatePicker({ date, setDate, placeholder = "Chọn ngày", disabl
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground"
+            !displayDate && "text-muted-foreground",
+            className
           )}
           disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "dd/MM/yyyy", { locale: vi }) : placeholder}
+          {displayDate ? format(displayDate, "dd/MM/yyyy", { locale: vi }) : placeholder}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
         <Calendar
           mode="single"
-          selected={date}
-          onSelect={setDate}
+          selected={displayDate}
+          onSelect={handleSelect}
           initialFocus
         />
       </PopoverContent>
     </Popover>
   );
 }
+
+// Export as default as well to support different import styles
+export default DatePicker;

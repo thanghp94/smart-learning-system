@@ -26,6 +26,7 @@ export interface Class {
   
   // Added fields to match usage in components
   ten_lop_full?: string;
+  Ten_lop_full?: string; // Some components are using capitalized version
   ct_hoc?: string;
   co_so?: string;
   gv_chinh?: string;
@@ -33,7 +34,6 @@ export interface Class {
   tinh_trang?: string;
   unit_id?: string;
   teacher_name?: string;
-  Ten_lop_full?: string; // Some components are using capitalized version
 }
 
 export interface ClassDetail extends Class {

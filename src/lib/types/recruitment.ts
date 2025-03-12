@@ -33,3 +33,9 @@ export interface Position {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface CandidateFormProps {
+  candidateId?: string;
+  onSubmit: () => void;
+  onCancel: () => void;
+}

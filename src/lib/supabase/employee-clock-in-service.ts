@@ -56,6 +56,41 @@ class EmployeeClockInService {
     }
   }
 
+  async getAttendanceForEmployee(employeeId: string): Promise<EmployeeClockInOut[]> {
+    try {
+      const { data, error } = await supabase
+        .from('employee_clock_in_out')
+        .select('*')
+        .eq('nhan_vien_id', employeeId)
+        .order('ngay', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error getting employee attendance:', error);
+      return [];
+    }
+  }
+
+  async getDailyReport(date: string): Promise<EmployeeClockInOut[]> {
+    try {
+      const { data, error } = await supabase
+        .from('employee_clock_in_out')
+        .select('*, employees(ten_nhan_su)')
+        .eq('ngay', date);
+
+      if (error) throw error;
+      
+      return data.map((record: any) => ({
+        ...record,
+        employee_name: record.employees?.ten_nhan_su || 'Unknown'
+      })) || [];
+    } catch (error) {
+      console.error('Error getting daily attendance report:', error);
+      return [];
+    }
+  }
+
   async clockIn(employeeId: string): Promise<EmployeeClockInOut | null> {
     try {
       const today = new Date().toISOString().split('T')[0];
