@@ -1,43 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import TablePageLayout from '@/components/common/TablePageLayout';
-import DataTable from '@/components/ui/DataTable';
-import DetailPanel from '@/components/ui/DetailPanel';
-import { Class, Employee, TeachingSession } from '@/lib/types';
-import { teachingSessionService } from '@/lib/supabase/teaching-session-service';
-import { sessionService } from '@/lib/supabase/session-service';
-import { classService, employeeService } from '@/lib/supabase';
-import { supabase } from '@/lib/supabase/client';
-import { format } from 'date-fns';
-import { Plus, FileDown, Filter, RotateCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import EvaluationForm from './EvaluationForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import PlaceholderPage from '@/components/common/PlaceholderPage';
-
-// Default empty session for new evaluation forms
-const DEFAULT_EMPTY_SESSION: Partial<TeachingSession> = {
-  id: '',
-  lop_chi_tiet_id: '',
-  session_id: '',
-  loai_bai_hoc: '',
-  ngay_hoc: new Date().toISOString().split('T')[0],
-  thoi_gian_bat_dau: '09:00',
-  thoi_gian_ket_thuc: '10:30',
-  giao_vien: '',
-  nhan_xet_1: null,
-  nhan_xet_2: null,
-  nhan_xet_3: null,
-  nhan_xet_4: null,
-  nhan_xet_5: null,
-  nhan_xet_6: null,
-  trung_binh: null,
-  phong_hoc_id: null,
-  tro_giang: null,
-  nhan_xet_chung: null,
-  ghi_chu: null
-};
+import EvaluationList from './components/EvaluationList';
+import EvaluationDetailPanel from './components/EvaluationDetailPanel';
+import AddEvaluationDialog from './components/AddEvaluationDialog';
+import { TeachingSession, Class, Employee } from '@/lib/types';
+import { teachingSessionService, classService, employeeService } from '@/lib/supabase';
+import { DEFAULT_EMPTY_SESSION } from './constants';
 
 const Evaluations = () => {
   const [evaluations, setEvaluations] = useState<TeachingSession[]>([]);
@@ -180,56 +152,7 @@ const Evaluations = () => {
   const getTeacherName = (teacherId: string) => {
     return teachersInfo[teacherId]?.ten_nhan_su || 'Unknown Teacher';
   };
-  
-  // Columns definition for DataTable
-  const columns = [
-    {
-      title: "Lớp",
-      key: "lop_chi_tiet_id",
-      render: (value: string) => getClassName(value),
-      sortable: true,
-    },
-    {
-      title: "Giáo viên",
-      key: "giao_vien",
-      render: (value: string) => getTeacherName(value),
-      sortable: true,
-    },
-    {
-      title: "Ngày học",
-      key: "ngay_hoc",
-      render: (value: string) => value ? format(new Date(value), 'dd/MM/yyyy') : '',
-      sortable: true,
-    },
-    {
-      title: "Loại bài học",
-      key: "loai_bai_hoc",
-    },
-    {
-      title: "Điểm trung bình",
-      key: "trung_binh",
-      render: (value: number) => value ? value.toFixed(1) : 'N/A',
-      sortable: true,
-    }
-  ];
-  
-  const tableActions = (
-    <div className="flex items-center space-x-2">
-      <Button variant="outline" size="sm" className="h-8" onClick={fetchEvaluations}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm mới
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <FileDown className="h-4 w-4 mr-1" /> Xuất
-      </Button>
-      <Button size="sm" className="h-8" onClick={handleAddClick}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm đánh giá
-      </Button>
-    </div>
-  );
-  
+
   return (
     <>
       {evaluations.length === 0 && !isLoading ? (
@@ -242,50 +165,34 @@ const Evaluations = () => {
         <TablePageLayout
           title="Đánh giá giảng dạy"
           description="Quản lý đánh giá giảng dạy của giáo viên"
-          actions={tableActions}
         >
-          <DataTable
-            columns={columns}
-            data={evaluations}
+          <EvaluationList 
+            evaluations={evaluations}
             isLoading={isLoading}
             onRowClick={handleRowClick}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm đánh giá..."
+            onAddClick={handleAddClick}
+            onRefresh={fetchEvaluations}
+            getClassName={getClassName}
+            getTeacherName={getTeacherName}
           />
         </TablePageLayout>
       )}
       
-      {selectedEvaluation && (
-        <DetailPanel
-          title="Chi tiết đánh giá"
-          isOpen={showDetail}
-          onClose={closeDetail}
-        >
-          <EvaluationForm
-            initialData={selectedEvaluation}
-            onSubmit={handleUpdateEvaluation}
-            onCancel={closeDetail}
-            classInfo={classesInfo[selectedEvaluation.lop_chi_tiet_id || '']}
-            teacherInfo={teachersInfo[selectedEvaluation.giao_vien || '']}
-          />
-        </DetailPanel>
-      )}
+      <EvaluationDetailPanel
+        evaluation={selectedEvaluation}
+        isOpen={showDetail}
+        onClose={closeDetail}
+        onSubmit={handleUpdateEvaluation}
+        classInfo={selectedEvaluation ? classesInfo[selectedEvaluation.lop_chi_tiet_id || ''] : undefined}
+        teacherInfo={selectedEvaluation ? teachersInfo[selectedEvaluation.giao_vien || ''] : undefined}
+      />
       
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>Thêm đánh giá mới</DialogTitle>
-            <DialogDescription>
-              Nhập thông tin đánh giá giảng dạy mới
-            </DialogDescription>
-          </DialogHeader>
-          <EvaluationForm
-            initialData={DEFAULT_EMPTY_SESSION as TeachingSession}
-            onSubmit={handleAddEvaluation}
-            onCancel={handleFormCancel}
-          />
-        </DialogContent>
-      </Dialog>
+      <AddEvaluationDialog
+        isOpen={showAddForm}
+        onClose={handleFormCancel}
+        onSubmit={handleAddEvaluation}
+        initialData={DEFAULT_EMPTY_SESSION as TeachingSession}
+      />
     </>
   );
 };

@@ -74,11 +74,11 @@ const Assets = () => {
       let matchesEmployee = true;
 
       if (facility) {
-        matchesFacility = asset.facility_id === facility;
+        matchesFacility = asset.doi_tuong === 'facility' && asset.doi_tuong_id === facility;
       }
 
       if (employee) {
-        matchesEmployee = asset.manager_id === employee;
+        matchesEmployee = asset.doi_tuong === 'employee' && asset.doi_tuong_id === employee;
       }
 
       return matchesFacility && matchesEmployee;

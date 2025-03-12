@@ -80,13 +80,45 @@ const teachingSessionService = {
     }
   },
 
+  // Add getByClass method
+  async getByClass(classId: string): Promise<TeachingSession[]> {
+    try {
+      const { data, error } = await supabase
+        .from('teaching_sessions')
+        .select('*')
+        .eq('lop_chi_tiet_id', classId);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching teaching sessions by class:', error);
+      throw error;
+    }
+  },
+
+  // Add getByTeacher method
+  async getByTeacher(teacherId: string): Promise<TeachingSession[]> {
+    try {
+      const { data, error } = await supabase
+        .from('teaching_sessions')
+        .select('*, classes(*)')
+        .eq('giao_vien', teacherId);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching teaching sessions by teacher:', error);
+      throw error;
+    }
+  },
+
   // Add getByTeacherAndDate method
   async getByTeacherAndDate(teacherId: string, date: string): Promise<TeachingSession[]> {
     try {
       const { data, error } = await supabase
         .from('teaching_sessions')
         .select('*, classes(*)')
-        .eq('teacher_id', teacherId)
+        .eq('giao_vien', teacherId)
         .eq('ngay_day', date);
 
       if (error) throw error;
@@ -113,16 +145,16 @@ const teachingSessionService = {
     }
   },
 
-  // Add getWithAvgScore method - Fixed the 'eval' issue by using 'evaluation' instead
+  // Add getWithAvgScore method - fixed the 'eval' issue by renaming parameter
   async getWithAvgScore(): Promise<any[]> {
     try {
       const { data, error } = await supabase
         .from('teaching_sessions')
-        .select('*, classes(*), evaluations(*)');
+        .select('*, evaluations(*)');
 
       if (error) throw error;
     
-      // Calculate average scores
+      // Calculate average scores - renamed 'eval' to 'evaluation'
       return (data || []).map(session => {
         const evaluations = session.evaluations || [];
         const avgScore = evaluations.length > 0 
@@ -144,6 +176,7 @@ const teachingSessionService = {
         .from('teaching_sessions')
         .update({
           status: 'completed'
+          // Remove invalid updated_at field
         })
         .eq('id', id)
         .select()
