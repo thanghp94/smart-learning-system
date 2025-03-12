@@ -50,24 +50,21 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
 
   // Fetch entities based on type
   useEffect(() => {
+    if (!entityTypeValue) return;
+    
     const fetchEntities = async () => {
-      if (!entityTypeValue) return;
-      
       setIsLoadingEntities(true);
       try {
         let data = [];
         
         switch (entityTypeValue) {
           case 'hoc_sinh':
-          case 'student':
             data = await studentService.getAll();
             break;
           case 'nhan_vien':
-          case 'employee':
             data = await employeeService.getAll();
             break;
           case 'co_so':
-          case 'facility':
             data = await facilityService.getAll();
             break;
           default:
@@ -94,13 +91,10 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
   const getEntityName = (entity: any) => {
     switch (entityTypeValue) {
       case 'hoc_sinh':
-      case 'student':
-        return entity.ho_ten || entity.ten_hoc_sinh || 'N/A';
+        return entity.ten_hoc_sinh || 'N/A';
       case 'nhan_vien':
-      case 'employee':
         return entity.ten_nhan_su || 'N/A';
       case 'co_so':
-      case 'facility':
         return entity.ten_co_so || 'N/A';
       default:
         return 'N/A';
@@ -109,9 +103,9 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
 
   // Handle entity type change
   const handleEntityTypeChange = (value: string) => {
-    setEntityTypeValue(value);
     form.setValue('loai_doi_tuong', value);
     form.setValue('doi_tuong_id', ''); // Reset entity ID when type changes
+    setEntityTypeValue(value);
   };
 
   return (
@@ -124,8 +118,8 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
             <FormLabel>Loại đối tượng</FormLabel>
             <Select
               onValueChange={handleEntityTypeChange}
-              value={entityTypeValue}
-              disabled={!!entityType} // Disable if entityType is provided
+              value={field.value || ''}
+              disabled={!!entityType}
             >
               <FormControl>
                 <SelectTrigger>
@@ -154,7 +148,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
               <Select
                 onValueChange={field.onChange}
                 value={field.value || ''}
-                disabled={isLoadingEntities || !!entityId} // Disable if entityId is provided
+                disabled={isLoadingEntities || !!entityId}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -162,17 +156,11 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {entities.length > 0 ? (
-                    entities.map((entity: any) => (
-                      <SelectItem key={entity.id} value={entity.id}>
-                        {getEntityName(entity)}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="" disabled>
-                      {isLoadingEntities ? 'Đang tải...' : 'Không có đối tượng'}
+                  {entities.map((entity: any) => (
+                    <SelectItem key={entity.id} value={entity.id}>
+                      {getEntityName(entity)}
                     </SelectItem>
-                  )}
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

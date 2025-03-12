@@ -189,6 +189,7 @@ export type Database = {
           created_at: string | null
           danh_muc: string | null
           doi_tuong: string | null
+          doi_tuong_chi_tiet: string | null
           doi_tuong_chuyen: string | null
           doi_tuong_id: string | null
           don_vi: string
@@ -225,6 +226,7 @@ export type Database = {
           created_at?: string | null
           danh_muc?: string | null
           doi_tuong?: string | null
+          doi_tuong_chi_tiet?: string | null
           doi_tuong_chuyen?: string | null
           doi_tuong_id?: string | null
           don_vi: string
@@ -261,6 +263,7 @@ export type Database = {
           created_at?: string | null
           danh_muc?: string | null
           doi_tuong?: string | null
+          doi_tuong_chi_tiet?: string | null
           doi_tuong_chuyen?: string | null
           doi_tuong_id?: string | null
           don_vi?: string
@@ -519,6 +522,39 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          subject: string
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          subject: string
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          subject?: string
+          title?: string
+          type?: string
           updated_at?: string | null
         }
         Relationships: []
