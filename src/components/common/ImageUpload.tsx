@@ -10,7 +10,7 @@ export interface ImageUploadProps {
   entityId: string;
   className?: string;
   onRemove?: () => void;
-  // Add additional props that are being used in the codebase
+  // Support for form usage
   value?: string;
   onChange?: (url: string) => void;
 }
@@ -22,8 +22,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   entityId,
   className,
   onRemove,
-  value, // Add value prop
-  onChange, // Add onChange prop
+  value,
+  onChange,
 }) => {
   // Use both currentUrl and value, preferring currentUrl if both are provided
   const imageUrl = currentUrl || value || '';

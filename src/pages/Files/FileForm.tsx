@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +24,7 @@ import { fileSchema, FileFormData } from './schemas/fileSchema';
 import { contactService, employeeService, facilityService, classService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '@/components/common/ImageUpload';
+import { format } from 'date-fns';
 
 interface FileFormProps {
   initialData?: Partial<FileType>;
@@ -50,8 +50,8 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
       duong_dan: initialData?.file1 || '',
       ghi_chu: initialData?.ghi_chu || '',
       nhom_tai_lieu: initialData?.nhom_tai_lieu || '',
-      ngay_cap: initialData?.ngay_cap || null,
-      han_tai_lieu: initialData?.han_tai_lieu || null,
+      ngay_cap: initialData?.ngay_cap ? format(new Date(initialData.ngay_cap), 'yyyy-MM-dd') : '',
+      han_tai_lieu: initialData?.han_tai_lieu ? format(new Date(initialData.han_tai_lieu), 'yyyy-MM-dd') : '',
       trang_thai: initialData?.trang_thai || 'active',
       uploaded_file: null,
     },
@@ -116,7 +116,6 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
         break;
     }
     
-    // Use uploaded file URL if available
     if (uploadedFileUrl) {
       mappedData.file1 = uploadedFileUrl;
       mappedData.duong_dan = uploadedFileUrl;

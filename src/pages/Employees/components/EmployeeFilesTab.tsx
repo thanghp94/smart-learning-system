@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, FileText, Download, Trash } from 'lucide-react';
 import { fileService } from '@/lib/supabase';
 import { File as FileDocument } from '@/lib/types';
@@ -11,17 +11,18 @@ import { useToast } from '@/hooks/use-toast';
 
 interface EmployeeFilesTabProps {
   employeeId: string;
+  onFileUpload: (fileId: string) => void;
 }
 
 type EmployeeFile = FileDocument;
 
-const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
+const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId, onFileUpload }) => {
   const { toast } = useToast();
   const [files, setFiles] = useState<EmployeeFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentTitle, setDocumentTitle] = useState('');
-  const [documentType, setDocumentType] = useState('');
+  const [selectedFileType, setSelectedFileType] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
   };
 
   const handleDocumentTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setDocumentType(e.target.value);
+    setSelectedFileType(e.target.value);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -98,7 +99,7 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
         ten_tai_lieu: documentTitle,
         doi_tuong_lien_quan: 'nhan_vien',
         nhan_vien_ID: employeeId,
-        nhom_tai_lieu: documentType || 'general',
+        nhom_tai_lieu: selectedFileType || 'general',
         file1: fileUrl,
         trang_thai: 'active'
       };
@@ -108,12 +109,13 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
       setFiles(prev => [...prev, newFile]);
       setSelectedFile(null);
       setDocumentTitle('');
-      setDocumentType('');
+      setSelectedFileType('');
       
       toast({
         title: 'Thành công',
         description: 'Tải lên tài liệu thành công',
       });
+      onFileUpload(newFile.id);
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
@@ -207,17 +209,20 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
               
               <div>
                 <Label htmlFor="documentType">Loại tài liệu</Label>
-                <Select value={documentType} onValueChange={(value) => handleDocumentTypeChange({ target: { value } })}>
+                <Select
+                  value={selectedFileType}
+                  onValueChange={(value) => setSelectedFileType(value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn loại tài liệu" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Chọn loại tài liệu</SelectItem>
-                    <SelectItem value="contract">Hợp đồng</SelectItem>
-                    <SelectItem value="certificate">Chứng chỉ</SelectItem>
-                    <SelectItem value="id_card">CMND/CCCD</SelectItem>
+                    <SelectItem value="hop_dong">Hợp đồng</SelectItem>
+                    <SelectItem value="chung_chi">Chứng chỉ</SelectItem>
                     <SelectItem value="cv">CV</SelectItem>
-                    <SelectItem value="other">Khác</SelectItem>
+                    <SelectItem value="bang_cap">Bằng cấp</SelectItem>
+                    <SelectItem value="cmnd">CMND/CCCD</SelectItem>
+                    <SelectItem value="khac">Khác</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EmployeeDetail } from '../EmployeeDetail';
+import EmployeeDetail from '../EmployeeDetail';
 
 interface EmployeeDetailWrapperProps {
   employeeId: string;

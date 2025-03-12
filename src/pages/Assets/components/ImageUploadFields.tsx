@@ -1,17 +1,14 @@
-
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import { UploadCloud } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import ImageUpload from '@/components/common/ImageUpload';
 import { UseFormReturn } from 'react-hook-form';
+import ImageUpload from '@/components/common/ImageUpload';
 
 interface ImageUploadFieldsProps {
   assetData: any;
   handleImageChange: (field: string, url: string) => void;
   handleRemoveImage: (field: string) => void;
   entityId: string;
-  form?: UseFormReturn<any>; // Add form prop
+  form?: UseFormReturn<any>;
+  handleImageUpload: (url: string, field: string) => void;
 }
 
 const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
@@ -19,7 +16,8 @@ const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
   handleImageChange,
   handleRemoveImage,
   entityId,
-  form, // Add form prop
+  form,
+  handleImageUpload,
 }) => {
   return (
     <div className="space-y-6">
