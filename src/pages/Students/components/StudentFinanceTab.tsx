@@ -14,7 +14,6 @@ const StudentFinanceTab: React.FC<StudentFinanceTabProps> = ({ studentId }) => {
   const navigate = useNavigate();
 
   const handleAddFinance = () => {
-    // Navigate to finance form with pre-filled entity type and ID
     navigate(`/finance/new?entityType=hoc_sinh&entityId=${studentId}`);
   };
 
@@ -31,7 +30,11 @@ const StudentFinanceTab: React.FC<StudentFinanceTabProps> = ({ studentId }) => {
         </Button>
       </CardHeader>
       <CardContent>
-        <EntityFinancesView entityType="hoc_sinh" entityId={studentId} />
+        <EntityFinancesView 
+          entityType="hoc_sinh" 
+          entityId={studentId} 
+          showAddButton={false}
+        />
       </CardContent>
     </Card>
   );

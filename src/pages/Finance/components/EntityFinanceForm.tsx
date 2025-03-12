@@ -1,11 +1,12 @@
 
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import FinanceForm from '../FinanceForm';
 import { useToast } from '@/hooks/use-toast';
 
 const EntityFinanceForm = ({ onSubmit, onCancel }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const queryParams = new URLSearchParams(location.search);
   const entityType = queryParams.get('entityType');
@@ -18,12 +19,24 @@ const EntityFinanceForm = ({ onSubmit, onCancel }) => {
         description: "Thiếu thông tin về đối tượng thu chi",
         variant: "destructive"
       });
+      navigate('/finance'); // Redirect to finance page if missing required params
     }
-  }, [entityType, entityId, toast]);
+  }, [entityType, entityId, toast, navigate]);
+
+  const handleFormSubmit = (data) => {
+    // Ensure entity data is properly set
+    const formData = {
+      ...data,
+      loai_doi_tuong: entityType,
+      doi_tuong_id: entityId
+    };
+    
+    onSubmit(formData);
+  };
 
   return (
     <FinanceForm
-      onSubmit={onSubmit}
+      onSubmit={handleFormSubmit}
       onCancel={onCancel}
       entityType={entityType || undefined}
       entityId={entityId || undefined}

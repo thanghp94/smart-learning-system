@@ -13,7 +13,10 @@ import {
 } from '@/components/ui/form';
 import { Asset } from '@/lib/types';
 import { assetSchema, AssetFormData } from './schemas/assetSchema';
-import AssetFormFields from './components/AssetFormFields';
+import BasicInfoFields from './components/BasicInfoFields';
+import StatusFields from './components/StatusFields';
+import ImageUploadFields from './components/ImageUploadFields';
+import AdditionalInfoFields from './components/AdditionalInfoFields';
 
 interface AssetFormProps {
   initialData?: Partial<Asset>;
@@ -93,6 +96,20 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
     setAssetData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    // Create a properly typed event object for handleChange
+    const syntheticEvent = {
+      target: {
+        name,
+        value: value === '' ? '' : Number(value),
+        type: 'number'
+      }
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    
+    handleChange(syntheticEvent);
+  };
+
   const handleImageUpload = async (url: string, field: keyof AssetFormData) => {
     setAssetData((prev) => ({ ...prev, [field]: url }));
     form.setValue(field, url);
@@ -101,12 +118,47 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-        <AssetFormFields
-          form={form}
-          assetData={assetData}
-          handleChange={handleChange}
-          handleImageUpload={handleImageUpload}
-        />
+        {/* Two-column layout for better space utilization */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left column - Basic info and Status */}
+          <div className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Thông tin cơ bản</h3>
+              <BasicInfoFields 
+                form={form} 
+                handleChange={handleChange} 
+                handleNumberChange={handleNumberChange} 
+              />
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Trạng thái</h3>
+              <StatusFields 
+                form={form} 
+                handleChange={handleChange} 
+              />
+            </div>
+          </div>
+          
+          {/* Right column - Additional info and Images */}
+          <div className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Thông tin bổ sung</h3>
+              <AdditionalInfoFields 
+                form={form} 
+                handleChange={handleChange} 
+              />
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Hình ảnh</h3>
+              <ImageUploadFields 
+                form={form} 
+                handleImageUpload={handleImageUpload} 
+              />
+            </div>
+          </div>
+        </div>
 
         <div className="pt-4 flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>

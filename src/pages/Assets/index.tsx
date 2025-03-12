@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import DetailPanel from "@/components/ui/DetailPanel";
 import AssetDetail from "./AssetDetail";
 import AssetForm from "./AssetForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import DataTable from "@/components/ui/DataTable";
 import CommandInterface from "@/components/CommandInterface";
@@ -142,9 +142,12 @@ const Assets = () => {
       )}
 
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>Thêm Tài Sản Mới</DialogTitle>
+            <DialogDescription>
+              Nhập thông tin chi tiết về tài sản mới
+            </DialogDescription>
           </DialogHeader>
           <AssetForm 
             onSubmit={handleAddFormSubmit}

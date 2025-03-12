@@ -4,10 +4,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import FinancePageContent from './components/FinancePageContent';
 import FinanceForm from './FinanceForm';
 import EntityFinanceForm from './components/EntityFinanceForm';
 import { financeService } from '@/lib/supabase';
+
+// Import correct component
+import FinancePageContent from './components/FinancePageContent';
 
 const Finance = () => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -62,6 +64,7 @@ const Finance = () => {
   
   return (
     <>
+      {/* Fix: Correctly pass onAddClick prop */}
       <FinancePageContent onAddClick={() => setShowAddForm(true)} />
       
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>

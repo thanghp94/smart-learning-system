@@ -68,11 +68,17 @@ const TransactionTypeSelect = ({ form, transactionCategory }) => {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {filteredTypes.map(type => (
-                <SelectItem key={type.id} value={type.name}>
-                  {type.name}
+              {filteredTypes.length > 0 ? (
+                filteredTypes.map(type => (
+                  <SelectItem key={type.id} value={type.name}>
+                    {type.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="none" disabled>
+                  {isLoading ? 'Đang tải...' : 'Không có loại giao dịch'}
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
           <FormMessage />
