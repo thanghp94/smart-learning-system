@@ -134,6 +134,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   }, [watchAmount, watchUnit, watchPrice, form]);
 
   const handleSubmit = async (values: z.infer<typeof financeSchema>) => {
+    console.log("Submitting form with values:", values);
     setIsSubmitting(true);
     try {
       // Prepare data to save
@@ -182,7 +183,12 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
               <FormItem>
                 <FormLabel>Loại thu/chi</FormLabel>
                 <Select
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    console.log("Selected loai_thu_chi:", value);
+                    field.onChange(value);
+                    // Reset transaction type when category changes
+                    form.setValue('loai_giao_dich', '');
+                  }}
                   value={field.value}
                 >
                   <FormControl>

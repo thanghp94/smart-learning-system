@@ -25,7 +25,7 @@ interface BasicEntitySelectorProps {
 
 const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityType, entityId }) => {
   const [entityTypeValue, setEntityTypeValue] = useState(entityType || '');
-  const [entities, setEntities] = useState([]);
+  const [entities, setEntities] = useState<any[]>([]);
   const [isLoadingEntities, setIsLoadingEntities] = useState(false);
   const { toast } = useToast();
 
@@ -36,8 +36,12 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
   useEffect(() => {
     if (watchEntityType && watchEntityType !== entityTypeValue) {
       setEntityTypeValue(watchEntityType);
+      // Reset entity ID when type changes
+      if (form.getValues('doi_tuong_id') && !entityId) {
+        form.setValue('doi_tuong_id', '');
+      }
     }
-  }, [watchEntityType, entityTypeValue]);
+  }, [watchEntityType, entityTypeValue, form, entityId]);
 
   // Set initial values if provided
   useEffect(() => {
@@ -71,6 +75,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
             data = [];
         }
         
+        console.log(`Fetched ${data.length} entities for type ${entityTypeValue}`);
         setEntities(data);
       } catch (error) {
         console.error('Error fetching entities:', error);
@@ -89,6 +94,8 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
 
   // Helper to get entity name based on type
   const getEntityName = (entity: any) => {
+    if (!entity) return 'N/A';
+    
     switch (entityTypeValue) {
       case 'hoc_sinh':
         return entity.ten_hoc_sinh || 'N/A';
@@ -103,8 +110,14 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
 
   // Handle entity type change
   const handleEntityTypeChange = (value: string) => {
+    console.log(`Changing entity type to: ${value}`);
     form.setValue('loai_doi_tuong', value);
-    form.setValue('doi_tuong_id', ''); // Reset entity ID when type changes
+    
+    // Only reset entity ID when type changes and not explicitly provided
+    if (!entityId || value !== entityType) {
+      form.setValue('doi_tuong_id', '');
+    }
+    
     setEntityTypeValue(value);
   };
 
@@ -156,11 +169,17 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {entities.map((entity: any) => (
-                    <SelectItem key={entity.id} value={entity.id}>
-                      {getEntityName(entity)}
+                  {entities.length > 0 ? (
+                    entities.map((entity: any) => (
+                      <SelectItem key={entity.id} value={entity.id}>
+                        {getEntityName(entity)}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      {isLoadingEntities ? 'Đang tải...' : 'Không có đối tượng'}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />

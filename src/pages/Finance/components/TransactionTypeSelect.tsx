@@ -36,10 +36,13 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
     const fetchTransactionTypes = async () => {
       setIsLoading(true);
       try {
+        // Get the category value to search for (converting from UI terms to database terms)
+        const categoryValue = transactionCategory === 'thu' ? 'income' : 'chi' ? 'expense' : transactionCategory;
+        
         const { data, error } = await supabase
           .from('finance_transaction_types')
           .select('id, name')
-          .eq('category', transactionCategory);
+          .eq('category', categoryValue);
         
         if (error) throw error;
         
