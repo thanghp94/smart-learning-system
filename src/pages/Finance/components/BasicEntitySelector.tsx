@@ -32,12 +32,10 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
   // Watch for changes to entityType from parent form
   const watchEntityType = form.watch('loai_doi_tuong');
   
-  // If entityType changes from parent component, update our local state
   useEffect(() => {
     if (watchEntityType && watchEntityType !== entityTypeValue) {
       setEntityTypeValue(watchEntityType);
-      // Reset entity ID when type changes
-      if (form.getValues('doi_tuong_id') && !entityId) {
+      if (!entityId) {
         form.setValue('doi_tuong_id', '');
       }
     }
@@ -54,9 +52,9 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
 
   // Fetch entities based on type
   useEffect(() => {
-    if (!entityTypeValue) return;
-    
     const fetchEntities = async () => {
+      if (!entityTypeValue) return;
+      
       setIsLoadingEntities(true);
       try {
         let data = [];
@@ -75,7 +73,6 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
             data = [];
         }
         
-        console.log(`Fetched ${data.length} entities for type ${entityTypeValue}`);
         setEntities(data);
       } catch (error) {
         console.error('Error fetching entities:', error);
@@ -108,19 +105,6 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
     }
   };
 
-  // Handle entity type change
-  const handleEntityTypeChange = (value: string) => {
-    console.log(`Changing entity type to: ${value}`);
-    form.setValue('loai_doi_tuong', value);
-    
-    // Only reset entity ID when type changes and not explicitly provided
-    if (!entityId || value !== entityType) {
-      form.setValue('doi_tuong_id', '');
-    }
-    
-    setEntityTypeValue(value);
-  };
-
   return (
     <div className="space-y-4">
       <FormField
@@ -130,7 +114,10 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
           <FormItem>
             <FormLabel>Loại đối tượng</FormLabel>
             <Select
-              onValueChange={handleEntityTypeChange}
+              onValueChange={(value) => {
+                setEntityTypeValue(value);
+                field.onChange(value);
+              }}
               value={field.value || ''}
               disabled={!!entityType}
             >
