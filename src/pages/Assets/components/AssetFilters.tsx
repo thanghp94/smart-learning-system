@@ -3,56 +3,55 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Filter, RotateCw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { facilityService } from "@/lib/supabase";
-import { Facility } from "@/lib/types";
+import { facilityService, employeeService } from "@/lib/supabase";
+import { Facility, Employee } from "@/lib/types";
 
-interface ClassFiltersProps {
-  onFilterChange: (filter: { facility?: string, program?: string }) => void;
+interface AssetFiltersProps {
+  onFilterChange: (filter: { facility?: string, employee?: string }) => void;
   onReset: () => void;
 }
 
-const ClassFilters: React.FC<ClassFiltersProps> = ({ onFilterChange, onReset }) => {
+const AssetFilters: React.FC<AssetFiltersProps> = ({ onFilterChange, onReset }) => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedFacility, setSelectedFacility] = useState<string>('');
-  const [selectedProgram, setSelectedProgram] = useState<string>('');
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const programs = [
-    { id: 'toeic', name: 'TOEIC' },
-    { id: 'ielts', name: 'IELTS' },
-    { id: 'general', name: 'General English' },
-    { id: 'kids', name: 'English for Kids' }
-  ];
 
   useEffect(() => {
-    const fetchFacilities = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
-        const data = await facilityService.getAll();
-        setFacilities(data || []);
+        const [facilitiesData, employeesData] = await Promise.all([
+          facilityService.getAll(),
+          employeeService.getAll()
+        ]);
+        
+        setFacilities(facilitiesData || []);
+        setEmployees(employeesData || []);
       } catch (error) {
-        console.error('Error fetching facilities:', error);
+        console.error('Error fetching filter data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchFacilities();
+    fetchData();
   }, []);
 
   const handleFacilityChange = (value: string) => {
     setSelectedFacility(value);
-    onFilterChange({ facility: value, program: selectedProgram });
+    onFilterChange({ facility: value, employee: selectedEmployee });
   };
 
-  const handleProgramChange = (value: string) => {
-    setSelectedProgram(value);
-    onFilterChange({ facility: selectedFacility, program: value });
+  const handleEmployeeChange = (value: string) => {
+    setSelectedEmployee(value);
+    onFilterChange({ facility: selectedFacility, employee: value });
   };
 
   const handleReset = () => {
     setSelectedFacility('');
-    setSelectedProgram('');
+    setSelectedEmployee('');
     onReset();
   };
 
@@ -79,22 +78,22 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({ onFilterChange, onReset }) 
             </SelectContent>
           </Select>
           
-          <Select value={selectedProgram} onValueChange={handleProgramChange}>
+          <Select value={selectedEmployee} onValueChange={handleEmployeeChange}>
             <SelectTrigger className="h-8 w-[180px] text-xs ml-1">
-              <SelectValue placeholder="Theo chương trình học" />
+              <SelectValue placeholder="Theo nhân viên" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tất cả chương trình</SelectItem>
-              {programs.map((program) => (
-                <SelectItem key={program.id} value={program.id}>
-                  {program.name}
+              <SelectItem value="">Tất cả nhân viên</SelectItem>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.ten_nhan_su}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         
-        {(selectedFacility || selectedProgram) && (
+        {(selectedFacility || selectedEmployee) && (
           <Button 
             variant="ghost" 
             size="sm" 
@@ -110,4 +109,4 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({ onFilterChange, onReset }) 
   );
 };
 
-export default ClassFilters;
+export default AssetFilters;

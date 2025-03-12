@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
@@ -48,8 +47,11 @@ import PersonalDashboard from './pages/PersonalDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import ContractTemplateManagerPage from './pages/Employees/ContractTemplateManagerPage';
 import Payroll from './pages/Payroll';
+import Login from './pages/Auth/Login';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 
-const router = createBrowserRouter([
+const routes = [
   {
     path: "/",
     element: <ProtectedRoute><MainLayout /></ProtectedRoute>,
@@ -61,19 +63,47 @@ const router = createBrowserRouter([
       { path: "employee-dashboard", element: <EmployeeDashboard /> },
       { path: "students", element: <Students /> },
       { path: "students/:id", element: <StudentDetail /> },
-      { path: "students/add", element: <StudentForm /> },
-      { path: "students/:id/edit", element: <StudentForm /> },
+      { path: "students/new", element: (
+        <ProtectedRoute>
+          <StudentForm 
+            onSubmit={async () => {}} 
+            onCancel={() => {}} 
+          />
+        </ProtectedRoute>
+      )},
+      { path: "students/:id/edit", element: (
+        <ProtectedRoute>
+          <StudentForm 
+            onSubmit={async () => {}} 
+            onCancel={() => {}} 
+          />
+        </ProtectedRoute>
+      )},
       { path: "employees", element: <Employees /> },
       { path: "employees/:employeeId", element: <EmployeeDetail employeeId="" /> },
-      { path: "employees/add", element: <EmployeeForm /> },
-      { path: "employees/:id/edit", element: <EmployeeForm /> },
+      { path: "employees/new", element: (
+        <ProtectedRoute>
+          <EmployeeForm 
+            onSubmit={async () => {}} 
+            onCancel={() => {}} 
+          />
+        </ProtectedRoute>
+      )},
+      { path: "employees/:id/edit", element: (
+        <ProtectedRoute>
+          <EmployeeForm 
+            onSubmit={async () => {}} 
+            onCancel={() => {}} 
+          />
+        </ProtectedRoute>
+      )},
       { path: "employees/templates", element: <ContractTemplateManagerPage /> },
       { path: "classes", element: <Classes /> },
       { path: "classes/:id", element: <ClassDetail classItem={{} as any} /> },
       { path: "classes/add", element: <ClassForm onSubmit={() => {}} onCancel={() => {}} /> },
       { path: "classes/:id/edit", element: <ClassForm onSubmit={() => {}} onCancel={() => {}} /> },
       { path: "enrollments", element: <Enrollments /> },
-      { path: "sessions/add", element: <TeachingSessionForm onSubmit={() => {}} onCancel={() => {}} /> },
+      { path: "sessions/add", element: <TeachingSessionForm onSubmit={() => Promise.resolve()} onCancel={() => {}} /> },
       { path: "facilities", element: <Facilities /> },
       { path: "facilities/add", element: <FacilityForm /> },
       { path: "facilities/:facilityId", element: <FacilityDetails facilityId="" /> },
@@ -104,7 +134,25 @@ const router = createBrowserRouter([
   {
     path: "/auth",
     element: <AuthLayout><Auth /></AuthLayout>,
+    children: [
+      {
+        path: 'login',
+        element: <Login />,
+      },
+      {
+        path: 'forgot-password',
+        element: <ForgotPassword />,
+      },
+      {
+        path: 'reset-password',
+        element: <ResetPassword />,
+      },
+    ],
   },
-]);
+  {
+    path: '*',
+    element: <NotFoundPage />,
+  },
+];
 
-export default router;
+export default createBrowserRouter(routes);

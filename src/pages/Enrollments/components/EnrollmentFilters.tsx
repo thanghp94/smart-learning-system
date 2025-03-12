@@ -2,7 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import { classService, facilityService } from '@/lib/supabase';
 import { Class, Facility } from '@/lib/types';
-import FilterGroups from '@/components/ui/FilterGroups';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Filter, RotateCw } from 'lucide-react';
 
 interface EnrollmentFiltersProps {
   onFilterChange: (field: string, value: string) => void;
@@ -18,6 +26,7 @@ const EnrollmentFilters: React.FC<EnrollmentFiltersProps> = ({
   const [classes, setClasses] = useState<Class[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const hasActiveFilters = Object.values(filters).some(value => value !== '');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,32 +49,63 @@ const EnrollmentFilters: React.FC<EnrollmentFiltersProps> = ({
     fetchData();
   }, []);
 
-  const filterConfig = {
-    classId: {
-      label: 'Lớp học',
-      options: classes.map(c => ({
-        label: c.ten_lop_full || c.ten_lop,
-        value: c.id,
-        type: 'class'
-      }))
-    },
-    facilityId: {
-      label: 'Cơ sở',
-      options: facilities.map(f => ({
-        label: f.ten_co_so,
-        value: f.id,
-        type: 'facility'
-      }))
-    }
-  };
-
   return (
-    <FilterGroups
-      filters={filterConfig}
-      values={filters}
-      onChange={onFilterChange}
-      onReset={onReset}
-    />
+    <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 bg-background border rounded-md p-1">
+        <div className="flex items-center">
+          <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs font-normal" disabled>
+            <Filter className="h-3.5 w-3.5" />
+            Lọc
+          </Button>
+          
+          <Select 
+            value={filters.classId} 
+            onValueChange={(value) => onFilterChange('classId', value)}
+          >
+            <SelectTrigger className="h-8 w-[180px] text-xs">
+              <SelectValue placeholder="Theo lớp học" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Tất cả lớp học</SelectItem>
+              {classes.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.ten_lop_full || c.ten_lop}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select 
+            value={filters.facilityId} 
+            onValueChange={(value) => onFilterChange('facilityId', value)}
+          >
+            <SelectTrigger className="h-8 w-[180px] text-xs ml-1">
+              <SelectValue placeholder="Theo cơ sở" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Tất cả cơ sở</SelectItem>
+              {facilities.map(f => (
+                <SelectItem key={f.id} value={f.id}>
+                  {f.ten_co_so}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {hasActiveFilters && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 text-xs"
+            onClick={onReset}
+          >
+            <RotateCw className="h-3.5 w-3.5 mr-1" />
+            Đặt lại
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Task } from '../types';
 
@@ -71,6 +70,10 @@ export const taskService = {
       ...task,
       ten_nguoi_phu_trach: task.employees?.ten_nhan_su || null
     }));
+  },
+
+  getByEmployeeId: async (employeeId: string): Promise<Task[]> => {
+    return this.getByAssignee(employeeId);
   },
 
   create: async (task: Partial<Task>): Promise<Task> => {

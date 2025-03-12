@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
+import { Plus, FileDown, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
 import { classService } from "@/lib/supabase";
@@ -13,9 +13,11 @@ import ClassForm from "./ClassForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import { useDatabase } from "@/contexts/DatabaseContext";
+import ClassFilters from "./components/ClassFilters";
 
 const Classes = () => {
   const [classes, setClasses] = useState<Class[]>([]);
+  const [filteredClasses, setFilteredClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -38,10 +40,12 @@ const Classes = () => {
       
       if (data && Array.isArray(data)) {
         setClasses(data as unknown as Class[]);
+        setFilteredClasses(data as unknown as Class[]);
         console.log("Classes set to state:", data.length);
       } else {
         console.error("Invalid classes data:", data);
         setClasses([]);
+        setFilteredClasses([]);
       }
     } catch (error) {
       console.error("Error fetching classes:", error);
@@ -51,6 +55,7 @@ const Classes = () => {
         variant: "destructive"
       });
       setClasses([]);
+      setFilteredClasses([]);
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +76,34 @@ const Classes = () => {
 
   const handleAddFormCancel = () => {
     setShowAddForm(false);
+  };
+
+  const handleFilterChange = ({ facility, program }: { facility?: string, program?: string }) => {
+    if (!facility && !program) {
+      setFilteredClasses(classes);
+      return;
+    }
+
+    const filtered = classes.filter(cls => {
+      let matchesFacility = true;
+      let matchesProgram = true;
+
+      if (facility) {
+        matchesFacility = cls.co_so === facility;
+      }
+
+      if (program) {
+        matchesProgram = cls.ct_hoc === program;
+      }
+
+      return matchesFacility && matchesProgram;
+    });
+
+    setFilteredClasses(filtered);
+  };
+
+  const handleResetFilters = () => {
+    setFilteredClasses(classes);
   };
 
   const handleAddFormSubmit = async (formData: Partial<Class>) => {
@@ -169,15 +202,19 @@ const Classes = () => {
 
   const tableActions = (
     <div className="flex items-center space-x-2">
+      <ClassFilters 
+        onFilterChange={handleFilterChange} 
+        onReset={handleResetFilters} 
+      />
+      
       <Button variant="outline" size="sm" className="h-8" onClick={fetchClasses}>
         <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
+      
       <Button variant="outline" size="sm" className="h-8">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
+      
       <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Lớp Học
       </Button>
@@ -200,7 +237,7 @@ const Classes = () => {
         >
           <DataTable
             columns={columns}
-            data={classes}
+            data={filteredClasses}
             isLoading={isLoading}
             onRowClick={handleRowClick}
             searchable={true}

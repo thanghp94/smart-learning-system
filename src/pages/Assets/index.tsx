@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
+import { Plus, FileDown, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
 import { assetService } from "@/lib/supabase";
@@ -13,9 +14,11 @@ import AssetForm from "./AssetForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import CommandInterface from "@/components/CommandInterface";
+import AssetFilters from "./components/AssetFilters";
 
 const Assets = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -31,6 +34,7 @@ const Assets = () => {
       setIsLoading(true);
       const data = await assetService.getAll();
       setAssets(data);
+      setFilteredAssets(data);
     } catch (error) {
       console.error("Error fetching assets:", error);
       toast({
@@ -58,6 +62,34 @@ const Assets = () => {
 
   const handleAddFormCancel = () => {
     setShowAddForm(false);
+  };
+
+  const handleFilterChange = ({ facility, employee }: { facility?: string, employee?: string }) => {
+    if (!facility && !employee) {
+      setFilteredAssets(assets);
+      return;
+    }
+
+    const filtered = assets.filter(asset => {
+      let matchesFacility = true;
+      let matchesEmployee = true;
+
+      if (facility) {
+        matchesFacility = asset.co_so_id === facility;
+      }
+
+      if (employee) {
+        matchesEmployee = asset.nguoi_quan_ly === employee;
+      }
+
+      return matchesFacility && matchesEmployee;
+    });
+
+    setFilteredAssets(filtered);
+  };
+
+  const handleResetFilters = () => {
+    setFilteredAssets(assets);
   };
 
   const handleAddFormSubmit = async (formData: Partial<Asset>) => {
@@ -118,9 +150,15 @@ const Assets = () => {
 
   const tableActions = (
     <div className="flex items-center space-x-2">
+      <AssetFilters 
+        onFilterChange={handleFilterChange} 
+        onReset={handleResetFilters} 
+      />
+      
       <Button variant="outline" size="sm" className="h-8" onClick={fetchAssets}>
         <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
       </Button>
+      
       <Button size="sm" className="h-8" onClick={handleAddClick}>
         <Plus className="h-4 w-4 mr-1" /> Thêm Tài Sản
       </Button>
@@ -148,7 +186,7 @@ const Assets = () => {
           <>
             <DataTable
               columns={columns}
-              data={assets}
+              data={filteredAssets}
               isLoading={isLoading}
               onRowClick={handleRowClick}
               searchable={true}
