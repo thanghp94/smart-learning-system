@@ -11,13 +11,13 @@ interface EmployeeHeaderProps {
   handleSave: () => void;
 }
 
-const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
+const EmployeeHeader = ({
   employeeName,
   isEditing,
   handleBack,
   handleEditToggle,
   handleSave,
-}) => {
+}: EmployeeHeaderProps) => {
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center">

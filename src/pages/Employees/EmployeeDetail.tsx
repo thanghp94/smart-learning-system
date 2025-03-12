@@ -6,17 +6,18 @@ import { useToast } from '@/hooks/use-toast';
 import { employeeService, facilityService } from '@/lib/supabase';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+
 import EmployeeHeader from './components/EmployeeHeader';
 import EmployeeBasicInfoTab from './components/EmployeeBasicInfoTab';
 import EmployeeContractTab from './components/EmployeeContractTab';
 import EmployeeFinancesTab from './components/EmployeeFinancesTab';
 import EmployeeFilesTab from './components/EmployeeFilesTab';
-import { Button } from '@/components/ui/button';
 
 const EmployeeDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [tempEmployeeData, setTempEmployeeData] = useState<Employee | null>(null);
   const [facilities, setFacilities] = useState<any[]>([]);
@@ -50,13 +51,10 @@ const EmployeeDetail = () => {
     fetchData();
   }, [id, toast]);
 
-  const handleBack = () => {
-    navigate('/employees');
-  };
+  const handleBack = () => navigate('/employees');
 
   const handleEditToggle = () => {
     if (isEditing) {
-      // Cancel edit mode
       setTempEmployeeData({...employee});
     }
     setIsEditing(!isEditing);
@@ -64,13 +62,6 @@ const EmployeeDetail = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setTempEmployeeData(prev => {
-      if (!prev) return prev;
-      return { ...prev, [name]: value };
-    });
-  };
-
-  const handleMultiSelectChange = (name: string, value: string[]) => {
     setTempEmployeeData(prev => {
       if (!prev) return prev;
       return { ...prev, [name]: value };
@@ -91,22 +82,25 @@ const EmployeeDetail = () => {
     });
   };
 
+  const handleMultiSelectChange = (name: string, value: string[]) => {
+    setTempEmployeeData(prev => {
+      if (!prev) return prev;
+      return { ...prev, [name]: value };
+    });
+  };
+
   const handleSave = async () => {
     if (!tempEmployeeData || !employee || !id) return;
     
     try {
       setIsLoading(true);
-      
-      // Process the data for API submission
       const dataToSubmit = { ...tempEmployeeData };
       
-      // Handle date conversion if needed
       if (dataToSubmit.ngay_sinh instanceof Date) {
         dataToSubmit.ngay_sinh = dataToSubmit.ngay_sinh.toISOString();
       }
       
       await employeeService.update(id, dataToSubmit);
-      
       setEmployee(dataToSubmit);
       setIsEditing(false);
       
@@ -134,14 +128,14 @@ const EmployeeDetail = () => {
     return (
       <div className="p-8 text-center">
         <p className="mb-4">Không tìm thấy thông tin nhân viên</p>
-        <Button onClick={handleBack}>Quay lại</Button>
+        <button onClick={handleBack}>Quay lại</button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-6">
-      <EmployeeHeader 
+      <EmployeeHeader
         employeeName={employee.ten_nhan_su}
         isEditing={isEditing}
         handleBack={handleBack}
@@ -160,7 +154,7 @@ const EmployeeDetail = () => {
         </TabsList>
 
         <TabsContent value="basic">
-          <EmployeeBasicInfoTab 
+          <EmployeeBasicInfoTab
             employee={employee}
             tempEmployeeData={tempEmployeeData}
             facilities={facilities}
@@ -173,15 +167,15 @@ const EmployeeDetail = () => {
         </TabsContent>
 
         <TabsContent value="contracts">
-          {id && <EmployeeContractTab employeeId={id} />}
+          <EmployeeContractTab employeeId={id || ''} />
         </TabsContent>
 
         <TabsContent value="finances">
-          {id && <EmployeeFinancesTab employeeId={id} />}
+          <EmployeeFinancesTab employeeId={id || ''} />
         </TabsContent>
 
         <TabsContent value="files">
-          {id && <EmployeeFilesTab employeeId={id} />}
+          <EmployeeFilesTab employeeId={id || ''} />
         </TabsContent>
       </Tabs>
     </div>
