@@ -43,10 +43,14 @@ const StudentEmailForm: React.FC<StudentEmailFormProps> = ({ student, onClose })
   const handleSubmit = async (values: EmailFormValues) => {
     setIsSending(true);
     
-    // In a real app, this would connect to an email sending service
     try {
-      // Simulate email sending with a timeout
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Sending email with data:', values);
+      
+      // In a real implementation, this would call an Edge Function
+      // that would handle the actual email sending
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
         title: 'Gửi email thành công',

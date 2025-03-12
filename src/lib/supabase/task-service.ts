@@ -4,35 +4,55 @@ import { Task } from '@/lib/types';
 
 class TaskService {
   async getAll(): Promise<Task[]> {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
-    return data || [];
+    try {
+      console.log('Fetching all tasks...');
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching all tasks:', error);
+        throw error;
+      }
+      console.log('Successfully fetched tasks:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('Error in getAll tasks:', error);
+      return [];
+    }
   }
   
   async getById(id: string): Promise<Task> {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('id', id)
-      .single();
-      
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching task with id ${id}:`, error);
+      throw error;
+    }
   }
 
   async getByAssignee(employeeId: string): Promise<Task[]> {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('nguoi_nhan', employeeId)
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('nguoi_phu_trach', employeeId)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error(`Error fetching tasks for employee ${employeeId}:`, error);
+      return [];
+    }
   }
   
   // Add this method to fix the import error
@@ -41,35 +61,50 @@ class TaskService {
   }
 
   async create(task: Partial<Task>): Promise<Task> {
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert([task])
-      .select()
-      .single();
-      
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([task])
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating task:', error);
+      throw error;
+    }
   }
 
   async update(id: string, updates: Partial<Task>): Promise<Task> {
-    const { data, error } = await supabase
-      .from('tasks')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-      
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error updating task ${id}:`, error);
+      throw error;
+    }
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', id);
-      
-    if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error(`Error deleting task ${id}:`, error);
+      throw error;
+    }
   }
 
   async complete(id: string): Promise<Task> {

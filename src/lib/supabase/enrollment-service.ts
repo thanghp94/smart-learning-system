@@ -46,13 +46,18 @@ export const enrollmentService = {
 
   async getByStudent(studentId: string) {
     try {
+      console.log('Fetching enrollments for student', studentId);
       const { data, error } = await supabase
         .from('enrollments')
         .select('*')
-        .eq('student_id', studentId)
+        .eq('hoc_sinh_id', studentId)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error(`Error fetching enrollments for student ${studentId}:`, error);
+        throw error;
+      }
+      console.log(`Successfully fetched ${data?.length || 0} enrollments for student ${studentId}`);
       return data;
     } catch (error) {
       console.error(`Error fetching enrollments for student ${studentId}:`, error);
@@ -65,7 +70,7 @@ export const enrollmentService = {
       const { data, error } = await supabase
         .from('enrollments')
         .select('*')
-        .eq('class_id', classId)
+        .eq('lop_chi_tiet_id', classId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;

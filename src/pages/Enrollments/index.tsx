@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect, useCallback } from "react";
-import { enrollmentService, classService, studentService } from "@/lib/supabase";
-import { Enrollment, Student, Class } from "@/lib/types";
+import React, { useState } from "react";
+import { Enrollment } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
@@ -10,80 +9,28 @@ import EnrollmentDetailPanel from "./components/EnrollmentDetailPanel";
 import EnrollmentActions from "./components/EnrollmentActions";
 import EnrollmentSheets from "./components/EnrollmentSheets";
 import EnrollmentFilters from "./components/EnrollmentFilters";
+import { useEnrollmentData } from "./hooks/useEnrollmentData";
+import { enrollmentService } from "@/lib/supabase";
 
 const Enrollments = () => {
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [filteredEnrollments, setFilteredEnrollments] = useState<Enrollment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { 
+    filteredEnrollments, 
+    isLoading, 
+    isSubmitting, 
+    students, 
+    classes, 
+    filters,
+    setIsSubmitting,
+    fetchData, 
+    handleFilterChange, 
+    handleResetFilters 
+  } = useEnrollmentData();
+  
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [filters, setFilters] = useState<Record<string, string>>({
-    classId: '',
-    facilityId: ''
-  });
   const { toast } = useToast();
-
-  const fetchData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      
-      const enrollmentsData = await enrollmentService.getAll();
-      const studentsData = await studentService.getAll();
-      const classesData = await classService.getAll();
-      
-      setEnrollments(enrollmentsData || []);
-      setFilteredEnrollments(enrollmentsData || []);
-      setStudents(studentsData || []);
-      setClasses(classesData || []);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải dữ liệu ghi danh",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  useEffect(() => {
-    if (!enrollments.length) return;
-    
-    let filtered = [...enrollments];
-    
-    if (filters.classId) {
-      filtered = filtered.filter(enrollment => enrollment.lop_chi_tiet_id === filters.classId);
-    }
-    
-    // For facility filter, we need to check the class facility
-    if (filters.facilityId) {
-      const classesInFacility = classes.filter(cls => cls.co_so === filters.facilityId).map(cls => cls.id);
-      filtered = filtered.filter(enrollment => classesInFacility.includes(enrollment.lop_chi_tiet_id));
-    }
-    
-    setFilteredEnrollments(filtered);
-  }, [enrollments, filters, classes]);
-
-  const handleFilterChange = (field: string, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleResetFilters = () => {
-    setFilters({
-      classId: '',
-      facilityId: ''
-    });
-  };
 
   const openAddSheet = () => {
     setIsAddSheetOpen(true);
@@ -189,7 +136,7 @@ const Enrollments = () => {
   };
 
   // Render placeholder if no data and not loading
-  if (enrollments.length === 0 && !isLoading) {
+  if (filteredEnrollments.length === 0 && !isLoading) {
     return (
       <PlaceholderPage
         title="Ghi Danh"
