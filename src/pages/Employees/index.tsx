@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -159,7 +158,7 @@ const Employees = () => {
     <TablePageLayout
       title="Quản lý nhân viên"
       description="Xem và quản lý tất cả nhân viên trong hệ thống"
-      actionButton={
+      actions={
         <Button onClick={handleAddEmployee}>
           <Plus className="h-4 w-4 mr-2" />
           Thêm nhân viên

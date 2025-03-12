@@ -1,7 +1,13 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 
-export type TableColumn = ColumnDef<any>;
+export interface TableColumn {
+  title: string;
+  key?: string;
+  accessorKey?: string;
+  sortable?: boolean;
+  render?: (value: any, row: any) => React.ReactNode;
+}
 
 export interface DataTableProps {
   columns: TableColumn[];

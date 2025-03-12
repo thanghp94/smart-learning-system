@@ -9,6 +9,7 @@ export interface ImageUploadProps {
   entityType: string;
   entityId: string;
   className?: string;
+  onRemove?: () => void;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -17,6 +18,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   entityType,
   entityId,
   className,
+  onRemove,
 }) => {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,6 +54,18 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           alt="Uploaded"
           className="w-full h-full object-cover rounded-full border border-gray-200"
         />
+        {onRemove && (
+          <button 
+            type="button"
+            onClick={onRemove}
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        )}
       </div>
       <input
         type="file"

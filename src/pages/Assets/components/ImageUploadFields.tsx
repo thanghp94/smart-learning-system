@@ -28,6 +28,7 @@ const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
             onUpload={(url) => handleImageChange('hinh_anh', url)}
             entityType="asset"
             entityId={entityId}
+            onRemove={() => handleRemoveImage('hinh_anh')}
           />
         </div>
       </div>
@@ -40,6 +41,7 @@ const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
             onUpload={(url) => handleImageChange('hinh_anh_2', url)}
             entityType="asset"
             entityId={entityId}
+            onRemove={() => handleRemoveImage('hinh_anh_2')}
           />
         </div>
       </div>

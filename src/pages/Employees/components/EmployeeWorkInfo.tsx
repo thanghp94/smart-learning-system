@@ -4,7 +4,7 @@ import { Employee } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormItem } from '@/components/ui/form';
-import { Select } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect } from '@/components/ui/MultiSelect';
 
 interface EmployeeWorkInfoProps {
@@ -13,6 +13,7 @@ interface EmployeeWorkInfoProps {
   isEditing: boolean;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleMultiSelectChange: (name: string, value: string[]) => void;
+  handleSelectChange?: (name: string, value: string) => void;
 }
 
 const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
@@ -21,6 +22,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
   isEditing,
   handleChange,
   handleMultiSelectChange,
+  handleSelectChange,
 }) => {
   if (!employee) return null;
 
@@ -36,6 +38,19 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
     value: facility.id,
     label: facility.ten_co_so
   }));
+
+  // Create a wrapper for select change to match the provided handleSelectChange or simulate it
+  const onSelectChange = (name: string) => (value: string) => {
+    if (handleSelectChange) {
+      handleSelectChange(name, value);
+    } else {
+      // Simulate a change event if no handleSelectChange provided
+      const event = {
+        target: { name, value }
+      } as React.ChangeEvent<HTMLSelectElement>;
+      handleChange(event);
+    }
+  };
 
   return (
     <div>
@@ -65,16 +80,19 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
         
         <FormItem>
           <Label htmlFor="tinh_trang_lao_dong">Tình trạng lao động</Label>
-          <Select
-            id="tinh_trang_lao_dong"
-            name="tinh_trang_lao_dong"
-            value={employee.tinh_trang_lao_dong || 'active'}
-            onChange={handleChange}
+          <Select 
+            value={employee.tinh_trang_lao_dong || 'active'} 
+            onValueChange={onSelectChange('tinh_trang_lao_dong')}
             disabled={!isEditing}
           >
-            <option value="active">Đang làm việc</option>
-            <option value="inactive">Đã nghỉ việc</option>
-            <option value="leave">Nghỉ phép</option>
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn tình trạng" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Đang làm việc</SelectItem>
+              <SelectItem value="inactive">Đã nghỉ việc</SelectItem>
+              <SelectItem value="leave">Nghỉ phép</SelectItem>
+            </SelectContent>
           </Select>
         </FormItem>
         

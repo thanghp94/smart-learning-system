@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -74,7 +73,7 @@ import AITools from '@/pages/AITools';
 import ImageGenerator from '@/pages/AITools/ImageGenerator';
 
 // Wrapper components to fix prop passing for routes
-const EmployeeDetailWrapper = () => <EmployeeDetail employeeId="0" />;
+const EmployeeDetailWrapper = () => <EmployeeDetail />;
 const EmployeeFormWrapper = () => <EmployeeForm onSubmit={async () => {}} />;
 const ClassDetailWrapper = () => <ClassDetail classItem={{} as any} />;
 const ClassFormWrapper = () => <ClassForm onSubmit={async () => {}} onCancel={() => {}} />;

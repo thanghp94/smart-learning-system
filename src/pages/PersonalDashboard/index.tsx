@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,17 @@ const PersonalDashboard = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  const formatDate = (date: string | Date | undefined | null): string => {
+    if (!date) return 'Chưa có thông tin';
+    try {
+      return date instanceof Date 
+        ? date.toLocaleDateString('vi-VN') 
+        : new Date(date).toLocaleDateString('vi-VN');
+    } catch (e) {
+      return String(date);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -126,7 +136,7 @@ const PersonalDashboard = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">Ngày sinh</p>
-                  <p>{employee.ngay_sinh || 'Chưa có thông tin'}</p>
+                  <p>{formatDate(employee.ngay_sinh)}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">Bộ phận</p>

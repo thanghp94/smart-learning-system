@@ -24,13 +24,15 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Search, ArrowUpDown, X } from 'lucide-react';
 import { TableColumn } from './DataTable/types';
 
-interface DataTableProps<TData, TValue> {
+export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[] | TableColumn[];
   data: TData[];
   isLoading?: boolean;
   emptyMessage?: string;
   searchPlaceholder?: string;
   searchColumn?: string;
+  onRowClick?: (row: TData) => void;
+  searchable?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -40,6 +42,8 @@ export function DataTable<TData, TValue>({
   emptyMessage = 'No data available',
   searchPlaceholder = 'Search...',
   searchColumn,
+  onRowClick,
+  searchable = true,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -47,11 +51,11 @@ export function DataTable<TData, TValue>({
 
   // Convert TableColumn[] to ColumnDef[] if needed
   const processedColumns = useMemo(() => {
-    if (columns.length > 0 && 'key' in columns[0]) {
+    if (columns.length > 0 && 'title' in columns[0]) {
       return (columns as TableColumn[]).map(col => ({
-        accessorKey: col.key,
+        accessorKey: col.accessorKey || col.key,
         header: ({ column }) => {
-          return (
+          return col.sortable ? (
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
@@ -59,9 +63,13 @@ export function DataTable<TData, TValue>({
               {col.title}
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
+          ) : (
+            col.title
           );
         },
-        ...col,
+        cell: col.render
+          ? ({ row }) => col.render!(row.getValue(col.accessorKey || col.key), row.original)
+          : undefined,
       })) as ColumnDef<TData, TValue>[];
     }
     return columns as ColumnDef<TData, TValue>[];
@@ -101,6 +109,12 @@ export function DataTable<TData, TValue>({
     }
   };
 
+  const handleRowClick = (row: any) => {
+    if (onRowClick) {
+      onRowClick(row);
+    }
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -112,26 +126,28 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center py-4 px-4">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={searchPlaceholder}
-            value={globalFilter}
-            onChange={handleSearch}
-            className="w-full pl-8 pr-8"
-          />
-          {globalFilter && (
-            <Button
-              variant="ghost"
-              onClick={clearSearch}
-              className="absolute right-0 top-0 h-full px-3"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+      {searchable && (
+        <div className="flex items-center py-4 px-4">
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={searchPlaceholder}
+              value={globalFilter}
+              onChange={handleSearch}
+              className="w-full pl-8 pr-8"
+            />
+            {globalFilter && (
+              <Button
+                variant="ghost"
+                onClick={clearSearch}
+                className="absolute right-0 top-0 h-full px-3"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Show empty state if no data */}
       {table.getRowModel().rows.length === 0 ? (
@@ -162,6 +178,8 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => handleRowClick(row.original)}
+                  className={onRowClick ? "cursor-pointer" : ""}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

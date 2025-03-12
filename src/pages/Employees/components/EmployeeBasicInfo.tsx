@@ -4,7 +4,7 @@ import { Employee } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormItem } from '@/components/ui/form';
-import { Select } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/DatePicker';
 import ImageUpload from '@/components/common/ImageUpload';
 
@@ -14,6 +14,7 @@ interface EmployeeBasicInfoProps {
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleImageUpload: (url: string) => void;
   handleDateChange: (name: string, value: Date | null) => void;
+  handleSelectChange?: (name: string, value: string) => void;
 }
 
 const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
@@ -22,8 +23,22 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
   handleChange,
   handleImageUpload,
   handleDateChange,
+  handleSelectChange,
 }) => {
   if (!employee) return null;
+
+  // Create a wrapper for select change to match the provided handleSelectChange or simulate it
+  const onSelectChange = (name: string) => (value: string) => {
+    if (handleSelectChange) {
+      handleSelectChange(name, value);
+    } else {
+      // Simulate a change event if no handleSelectChange provided
+      const event = {
+        target: { name, value }
+      } as React.ChangeEvent<HTMLSelectElement>;
+      handleChange(event);
+    }
+  };
 
   return (
     <div>
@@ -63,23 +78,25 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
 
         <FormItem>
           <Label htmlFor="gioi_tinh">Giới tính</Label>
-          <Select
-            id="gioi_tinh"
-            name="gioi_tinh"
-            value={employee.gioi_tinh || ''}
-            onChange={handleChange}
+          <Select 
+            value={employee.gioi_tinh || ''} 
+            onValueChange={onSelectChange('gioi_tinh')}
             disabled={!isEditing}
           >
-            <option value="">Chọn giới tính</option>
-            <option value="Nam">Nam</option>
-            <option value="Nữ">Nữ</option>
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn giới tính" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Chọn giới tính</SelectItem>
+              <SelectItem value="Nam">Nam</SelectItem>
+              <SelectItem value="Nữ">Nữ</SelectItem>
+            </SelectContent>
           </Select>
         </FormItem>
 
         <FormItem>
           <Label htmlFor="ngay_sinh">Ngày sinh</Label>
           <DatePicker
-            id="ngay_sinh"
             selected={employee.ngay_sinh instanceof Date ? employee.ngay_sinh : employee.ngay_sinh ? new Date(employee.ngay_sinh) : null}
             onChange={(date) => handleDateChange('ngay_sinh', date)}
             disabled={!isEditing}
@@ -89,18 +106,21 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
 
         <FormItem>
           <Label htmlFor="vai_tro">Vai trò</Label>
-          <Select
-            id="vai_tro"
-            name="vai_tro"
-            value={employee.vai_tro || ''}
-            onChange={handleChange}
+          <Select 
+            value={employee.vai_tro || ''} 
+            onValueChange={onSelectChange('vai_tro')}
             disabled={!isEditing}
           >
-            <option value="">Chọn vai trò</option>
-            <option value="Giáo viên">Giáo viên</option>
-            <option value="Quản lý">Quản lý</option>
-            <option value="Nhân viên">Nhân viên</option>
-            <option value="Khác">Khác</option>
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn vai trò" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Chọn vai trò</SelectItem>
+              <SelectItem value="Giáo viên">Giáo viên</SelectItem>
+              <SelectItem value="Quản lý">Quản lý</SelectItem>
+              <SelectItem value="Nhân viên">Nhân viên</SelectItem>
+              <SelectItem value="Khác">Khác</SelectItem>
+            </SelectContent>
           </Select>
         </FormItem>
       </div>
