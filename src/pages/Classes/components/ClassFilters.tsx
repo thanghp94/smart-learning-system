@@ -100,7 +100,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
             <SelectValue placeholder="Cơ sở" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tất cả cơ sở</SelectItem>
+            <SelectItem value="none">Tất cả cơ sở</SelectItem>
             {facilities.map((facility) => (
               <SelectItem key={facility.id} value={facility.id}>
                 {facility.ten_co_so}
@@ -117,7 +117,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
             <SelectValue placeholder="Trạng thái" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tất cả trạng thái</SelectItem>
+            <SelectItem value="none">Tất cả trạng thái</SelectItem>
             <SelectItem value="active">Đang hoạt động</SelectItem>
             <SelectItem value="inactive">Không hoạt động</SelectItem>
             <SelectItem value="pending">Chờ xử lý</SelectItem>

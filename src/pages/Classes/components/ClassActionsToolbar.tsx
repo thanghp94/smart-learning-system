@@ -21,7 +21,7 @@ const ClassActionsToolbar: React.FC<ClassActionsToolbarProps> = ({
     <div className="flex items-center space-x-2">
       <ClassFilters 
         onFilterChange={onFilterChange} 
-        onReset={onResetFilters} 
+        onResetFilters={onResetFilters} 
         currentFilters={{}}
       />
       
