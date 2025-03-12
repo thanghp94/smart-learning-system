@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 export interface TableColumn<T = any> {
   title: string;
   key?: string;
@@ -14,4 +16,6 @@ export interface DataTableProps<TData = any> {
   onRowClick?: (row: TData) => void;
   searchable?: boolean;
   searchPlaceholder?: string;
+  emptyMessage?: string;
+  searchColumn?: string;
 }

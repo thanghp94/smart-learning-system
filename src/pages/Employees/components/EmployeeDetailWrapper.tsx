@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EmployeeDetail } from '../EmployeeDetail';
+import EmployeeDetail from '../EmployeeDetail';
 
 interface EmployeeDetailWrapperProps {
   employeeId: string;
@@ -8,7 +8,7 @@ interface EmployeeDetailWrapperProps {
 }
 
 const EmployeeDetailWrapper: React.FC<EmployeeDetailWrapperProps> = ({ employeeId, onFileUpload }) => {
-  return <EmployeeDetail employeeId={employeeId} onFileUpload={onFileUpload} />;
+  return <EmployeeDetail employeeId={employeeId} onFileUpload={onFileUpload || (() => Promise.resolve())} />;
 };
 
 export default EmployeeDetailWrapper;

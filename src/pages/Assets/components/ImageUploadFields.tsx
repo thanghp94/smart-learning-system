@@ -27,8 +27,11 @@ const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
         <Label>Hình ảnh chính</Label>
         <div className="mt-2">
           <ImageUpload
-            currentUrl={assetData.hinh_anh || ''}
-            onUpload={(url) => handleImageChange('hinh_anh', url)}
+            currentUrl={assetData?.hinh_anh || ''}
+            onUpload={(url) => {
+              handleImageChange('hinh_anh', url);
+              if (handleImageUpload) handleImageUpload(url, 'hinh_anh');
+            }}
             entityType="asset"
             entityId={entityId}
             onRemove={() => handleRemoveImage('hinh_anh')}
@@ -40,8 +43,11 @@ const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
         <Label>Hình ảnh bổ sung</Label>
         <div className="mt-2">
           <ImageUpload
-            currentUrl={assetData.hinh_anh_2 || ''}
-            onUpload={(url) => handleImageChange('hinh_anh_2', url)}
+            currentUrl={assetData?.hinh_anh_2 || ''}
+            onUpload={(url) => {
+              handleImageChange('hinh_anh_2', url);
+              if (handleImageUpload) handleImageUpload(url, 'hinh_anh_2');
+            }}
             entityType="asset"
             entityId={entityId}
             onRemove={() => handleRemoveImage('hinh_anh_2')}
