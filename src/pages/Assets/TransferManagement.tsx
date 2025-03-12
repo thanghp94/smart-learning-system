@@ -1,239 +1,187 @@
-import React from "react";
-import { Asset, AssetTransfer } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { assetService } from "@/lib/supabase";
-import { DataTable } from "@/components/ui/DataTable";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
-import { Check, X, Filter, RotateCw } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DataTable } from '@/components/ui/DataTable';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Asset, AssetTransfer } from '@/lib/types';
+import { assetService, assetTransferService } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
-const TransferManagement = () => {
+const TransferManagement: React.FC = () => {
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [transfers, setTransfers] = useState<AssetTransfer[]>([]);
-  const [filteredTransfers, setFilteredTransfers] = useState<AssetTransfer[]>([]);
-  const [assetMap, setAssetMap] = useState<Record<string, Asset>>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [rejectionReason, setRejectionReason] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [destination, setDestination] = useState<string>('');
+  const [destinationType, setDestinationType] = useState<string>('facility');
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchTransfers();
+    fetchAssets();
   }, []);
 
-  const fetchTransfers = async () => {
+  const fetchAssets = async () => {
     try {
-      setIsLoading(true);
-      const data = await assetTransferService.getAll();
-      setTransfers(data);
-      
-      const assetIds = [...new Set(data.map(t => t.asset_id))];
-      const assets: Record<string, Asset> = {};
-      
-      for (const id of assetIds) {
-        try {
-          const asset = await assetService.getById(id);
-          assets[id] = asset;
-        } catch (error) {
-          console.error(`Error fetching asset ${id}:`, error);
-        }
-      }
-      
-      setAssetMap(assets);
+      setLoading(true);
+      const assetsData = await assetService.getAll();
+      setAssets(assetsData);
     } catch (error) {
-      console.error("Error fetching transfers:", error);
+      console.error('Error fetching assets:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể tải danh sách điều chuyển tài sản",
+        description: "Không thể tải danh sách tài sản",
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (filterStatus === "all") {
-      setFilteredTransfers(transfers);
+    if (selectedAssetId) {
+      fetchTransfers(selectedAssetId);
     } else {
-      setFilteredTransfers(transfers.filter(t => t.status === filterStatus));
+      setTransfers([]);
     }
-  }, [transfers, filterStatus]);
+  }, [selectedAssetId]);
 
-  const handleApprove = async (id: string) => {
+  const fetchTransfers = async (assetId: string) => {
     try {
-      await assetTransferService.approveTransfer(id);
-      toast({
-        title: "Thành công",
-        description: "Đã duyệt yêu cầu điều chuyển tài sản",
-      });
-      fetchTransfers();
-    } catch (error: any) {
-      console.error("Error approving transfer:", error);
+      setLoading(true);
+      const transfersData = await assetTransferService.getTransfersByAssetId(assetId);
+      setTransfers(transfersData);
+    } catch (error) {
+      console.error('Error fetching transfers:', error);
       toast({
         title: "Lỗi",
-        description: error.message || "Không thể duyệt yêu cầu điều chuyển",
+        description: "Không thể tải danh sách chuyển tài sản",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTransfer = async () => {
+    if (!selectedAssetId || !destination) {
+      toast({
+        title: "Thông tin không đầy đủ",
+        description: "Vui lòng chọn tài sản và nơi chuyển đến",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await assetTransferService.createTransfer({
+        asset_id: selectedAssetId,
+        source_type: 'facility',
+        source_id: assets.find(a => a.id === selectedAssetId)?.doi_tuong_id || '',
+        destination_type: destinationType,
+        destination_id: destination,
+        quantity: 1,
+        transfer_date: new Date().toISOString().split('T')[0],
+        status: 'pending'
+      });
+
+      toast({
+        title: "Thành công",
+        description: "Đã tạo yêu cầu chuyển tài sản",
+      });
+
+      if (selectedAssetId) {
+        fetchTransfers(selectedAssetId);
+      }
+    } catch (error) {
+      console.error('Error creating transfer:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tạo yêu cầu chuyển tài sản",
         variant: "destructive"
       });
     }
   };
 
-  const handleReject = async (id: string) => {
-    try {
-      await assetTransferService.rejectTransfer(id, rejectionReason);
-      setRejectionReason("");
-      toast({
-        title: "Thành công",
-        description: "Đã từ chối yêu cầu điều chuyển tài sản",
-      });
-      fetchTransfers();
-    } catch (error: any) {
-      console.error("Error rejecting transfer:", error);
-      toast({
-        title: "Lỗi",
-        description: error.message || "Không thể từ chối yêu cầu điều chuyển",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const transferColumns = [
+  const columns = [
     {
-      title: "Tài Sản",
-      key: "asset_id",
-      render: (value: string) => (
-        <span>{assetMap[value]?.ten_CSVC || "Không xác định"}</span>
-      ),
-    },
-    {
-      title: "Ngày Chuyển",
+      title: "Ngày chuyển",
       key: "transfer_date",
-      sortable: true,
-      render: (value: string) => <span>{formatDate(value)}</span>,
+      render: (value: string) => format(new Date(value), 'dd/MM/yyyy'),
     },
     {
-      title: "Từ",
+      title: "Nguồn",
       key: "source_type",
-      render: (value: string, record: AssetTransfer) => (
-        <span>{value} - {record.source_id}</span>
-      ),
+      render: (value: string, record: AssetTransfer) => `${value} - ${record.source_id}`,
     },
     {
-      title: "Đến",
+      title: "Đích",
       key: "destination_type",
-      render: (value: string, record: AssetTransfer) => (
-        <span>{value} - {record.destination_id}</span>
-      ),
+      render: (value: string, record: AssetTransfer) => `${value} - ${record.destination_id}`,
     },
     {
-      title: "Số Lượng",
+      title: "Số lượng",
       key: "quantity",
-      sortable: true,
     },
     {
-      title: "Trạng Thái",
+      title: "Trạng thái",
       key: "status",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={value === "completed" ? "success" : 
-                       value === "pending" ? "secondary" : 
-                       "destructive"}>
-          {value === "completed" ? "Hoàn thành" : 
-           value === "pending" ? "Đang xử lý" : 
-           value === "rejected" ? "Đã từ chối" : 
-           value === "cancelled" ? "Đã hủy" : value}
-        </Badge>
-      ),
-    },
-    {
-      title: "Thao Tác",
-      key: "actions",
-      render: (_: any, record: AssetTransfer) => (
-        record.status === "pending" ? (
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 text-green-500" 
-              onClick={() => handleApprove(record.id)}
-            >
-              <Check className="h-4 w-4" />
-            </Button>
-            
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Từ chối yêu cầu điều chuyển</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Vui lòng cung cấp lý do từ chối yêu cầu điều chuyển tài sản này.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <Textarea
-                  placeholder="Lý do từ chối"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                />
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setRejectionReason("")}>Hủy</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleReject(record.id)}>Từ chối</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        ) : (
-          <span className="text-sm text-muted-foreground">{record.notes || "Không có ghi chú"}</span>
-        )
-      ),
     },
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Quản Lý Điều Chuyển Tài Sản</h2>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={fetchTransfers}>
-            <RotateCw className="h-4 w-4 mr-1" />
-            Làm mới
-          </Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="all" onValueChange={setFilterStatus}>
+    <div>
+      <Tabs defaultValue="transfer">
         <TabsList>
-          <TabsTrigger value="all">Tất Cả</TabsTrigger>
-          <TabsTrigger value="pending">Đang Xử Lý</TabsTrigger>
-          <TabsTrigger value="completed">Đã Hoàn Thành</TabsTrigger>
-          <TabsTrigger value="rejected">Đã Từ Chối</TabsTrigger>
+          <TabsTrigger value="transfer">Chuyển tài sản</TabsTrigger>
+          <TabsTrigger value="history">Lịch sử chuyển</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value={filterStatus}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Danh Sách Điều Chuyển Tài Sản</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                columns={transferColumns}
-                data={filteredTransfers}
-                isLoading={isLoading}
-                searchable={true}
-                searchPlaceholder="Tìm kiếm điều chuyển..."
+        <TabsContent value="transfer">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Thông tin tài sản</h3>
+              <Select onValueChange={setSelectedAssetId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn tài sản" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assets.map((asset) => (
+                    <SelectItem key={asset.id} value={asset.id}>
+                      {asset.ten_CSVC}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Card>
+
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Thông tin chuyển</h3>
+              <Select onValueChange={setDestinationType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn loại đích" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="facility">Cơ sở</SelectItem>
+                  <SelectItem value="employee">Nhân viên</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="text"
+                placeholder="Nhập ID đích"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                className="mt-2"
               />
-            </CardContent>
-          </Card>
+              <Button onClick={handleTransfer} className="mt-4">
+                Chuyển tài sản
+              </Button>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="history">
+          <DataTable columns={columns} data={transfers} isLoading={loading} />
         </TabsContent>
       </Tabs>
     </div>

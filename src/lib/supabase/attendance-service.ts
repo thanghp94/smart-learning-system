@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Attendance, AttendanceWithDetails } from '@/lib/types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
@@ -77,11 +76,9 @@ class AttendanceService {
       throw error;
     }
   }
-  
-  // Add the saveAttendance method
+
   async saveAttendance(attendanceRecords: any[]) {
     try {
-      // First delete any existing attendance records for this session to avoid duplicates
       if (attendanceRecords.length > 0) {
         const sessionId = attendanceRecords[0].teaching_session_id || attendanceRecords[0].session_id;
         
@@ -93,7 +90,6 @@ class AttendanceService {
         }
       }
       
-      // Insert all the new attendance records
       const { data, error } = await supabase
         .from('attendances')
         .insert(attendanceRecords)
@@ -107,7 +103,6 @@ class AttendanceService {
     }
   }
 
-  // Add the missing methods for employee attendance
   async createEmployeeAttendance(data: any) {
     try {
       const { data: result, error } = await supabase
@@ -138,6 +133,21 @@ class AttendanceService {
     } catch (error) {
       console.error('Error updating employee attendance:', error);
       return { data: null, error };
+    }
+  }
+
+  async getDailyAttendance(date: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('attendances_with_details')
+        .select('*')
+        .eq('ngay_hoc', date);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching daily attendance:', error);
+      throw error;
     }
   }
 }

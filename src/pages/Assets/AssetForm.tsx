@@ -10,6 +10,7 @@ import AssetFormBasic from './components/AssetFormBasic';
 import AssetFormDetails from './components/AssetFormDetails';
 import AssetFormPurchase from './components/AssetFormPurchase';
 import ImageUploadFields from './components/ImageUploadFields';
+import { assetSchema, AssetFormData } from './schemas/assetSchema';
 
 interface AssetFormProps {
   initialData?: Partial<Asset>;

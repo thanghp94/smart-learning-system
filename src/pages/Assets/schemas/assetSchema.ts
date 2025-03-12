@@ -17,6 +17,9 @@ export const assetSchema = z.object({
   hinh_anh: z.string().optional(),
   hinh_anh_2: z.string().optional(),
   ghi_chu: z.string().optional(),
+  doi_tuong: z.string().optional(),
+  doi_tuong_id: z.string().optional(),
+  doi_tuong_chi_tiet: z.string().optional(),
 });
 
 export type AssetFormData = z.infer<typeof assetSchema>;

@@ -52,6 +52,23 @@ class AssetService {
     }
   }
 
+  // Add the missing method
+  async getByFacility(facilityId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('assets')
+        .select('*')
+        .eq('facility_id', facilityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Asset[];
+    } catch (error) {
+      console.error(`Error fetching assets for facility ${facilityId}:`, error);
+      throw error;
+    }
+  }
+
   async getTransfersByAssetId(assetId: string) {
     try {
       const { data, error } = await supabase

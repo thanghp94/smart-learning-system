@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import { DatePicker } from "@/components/ui/date-picker"
+import { DatePicker } from '@/components/ui/calendar';
 import ImageUpload from '@/components/common/ImageUpload';
 
 interface StudentInfoTabProps {

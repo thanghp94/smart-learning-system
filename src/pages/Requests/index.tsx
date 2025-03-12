@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { FileSignature, Plus, RotateCw } from "lucide-react";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
@@ -8,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import RequestsTable from "./RequestsTable";
 
-// Define a consistent request interface matching with RequestsTable
 interface RequestData {
   id: string;
   title: string;
@@ -23,6 +21,7 @@ interface RequestData {
   trang_thai?: string;
   ngay_de_xuat?: string;
   request_type?: string;
+  type?: string;
 }
 
 const Requests = () => {
@@ -40,27 +39,24 @@ const Requests = () => {
     try {
       setIsLoading(true);
       
-      // Fetch requests
       const { data: requestsData, error: requestsError } = await supabase
         .from('requests')
         .select('*');
       
       if (requestsError) throw requestsError;
       
-      // Fetch employees for requester names
       const { data: employeesData, error: employeesError } = await supabase
         .from('employees')
         .select('id, ten_nhan_su');
       
       if (employeesError) throw employeesError;
       
-      // Map employee names to requests
       const formattedRequests = (requestsData || []).map((req: any) => {
         const employee = employeesData?.find(e => e.id === req.nguoi_de_xuat_id);
         return {
           ...req,
           requester: employee?.ten_nhan_su || 'Unknown',
-          title: req.noi_dung || 'No title', // Map noi_dung to title for table display
+          title: req.noi_dung || 'No title',
           description: req.ly_do,
           status: req.trang_thai || 'pending',
           priority: req.priority || 'Medium',
@@ -85,7 +81,6 @@ const Requests = () => {
 
   const handleAddRequest = async (data: any) => {
     try {
-      // Prepare data for Supabase insert
       const requestData = {
         noi_dung: data.title,
         ly_do: data.description,
@@ -108,7 +103,7 @@ const Requests = () => {
       });
       
       setShowDialog(false);
-      fetchData(); // Refresh the data
+      fetchData();
     } catch (error) {
       console.error("Error adding request:", error);
       toast({

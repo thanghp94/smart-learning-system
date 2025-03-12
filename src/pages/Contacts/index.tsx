@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { DataTable } from "@/components/ui/DataTable";
 import { Plus, FileDown, Filter, RotateCw, Phone } from "lucide-react";
@@ -9,6 +10,9 @@ import ContactDetail from "./ContactDetail";
 import ContactForm from "./ContactForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
+import TablePageLayout from "@/components/common/TablePageLayout";
+import { contactService } from "@/lib/supabase";
+import { Contact } from "@/lib/types";
 
 const Contacts = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);

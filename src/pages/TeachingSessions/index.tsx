@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Plus, FileDown, Filter, RotateCw, ArrowLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/DataTable";
-import { teachingSessionService, classDetailService, employeeService } from "@/lib/supabase";
+import { teachingSessionService, classService, employeeService } from "@/lib/supabase";
 import { TeachingSession, ClassDetail, Employee } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
@@ -47,7 +47,7 @@ const TeachingSessions = () => {
 
   const fetchClasses = async () => {
     try {
-      const data = await classDetailService.getAll();
+      const data = await classService.getAll();
       setClasses(data);
     } catch (error) {
       console.error("Error fetching classes:", error);

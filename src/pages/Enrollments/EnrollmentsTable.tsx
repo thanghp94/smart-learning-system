@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Enrollment } from '@/lib/types';
 import { DataTable } from '@/components/ui/DataTable';
 import { enrollmentService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface EnrollmentsTableProps {
   classId: string;
@@ -21,10 +22,8 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({ classId, sessionId 
         let data;
         
         if (sessionId) {
-          // Get attendance for a specific session
           data = await enrollmentService.getByClassAndSession(classId, sessionId);
         } else {
-          // Get all enrollments for a class
           data = await enrollmentService.getByClass(classId);
         }
         

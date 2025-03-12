@@ -8,7 +8,7 @@ import TablePageLayout from "@/components/common/TablePageLayout";
 import { Session } from "@/lib/types";
 import { sessionService } from "@/lib/supabase/session-service";
 import { format } from "date-fns";
-import { PlaceholderPage } from "@/components/common/PlaceholderPage";
+import PlaceholderPage from "@/components/common/PlaceholderPage";
 
 const Lessons = () => {
   const [lessons, setLessons] = useState<Session[]>([]);
