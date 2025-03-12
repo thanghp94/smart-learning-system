@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ export interface ImageUploadProps {
   onUpload: (url: string) => void;
   entityType: string;
   entityId: string;
+  className?: string;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -14,6 +16,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   onUpload,
   entityType,
   entityId,
+  className,
 }) => {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,7 +45,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   return (
-    <div>
+    <div className={className}>
       <div className="relative w-32 h-32 mb-2">
         <img
           src={currentUrl || '/placeholder.svg'}
