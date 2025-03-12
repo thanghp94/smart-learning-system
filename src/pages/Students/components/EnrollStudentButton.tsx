@@ -53,20 +53,12 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({
   }, [classId, studentId]);
 
   const handleSubmit = async () => {
-    // Validation
-    if (!selectedClassId) {
+    if (!selectedClassId || !selectedStudentId) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng chọn lớp học",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!selectedStudentId) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng chọn học sinh",
+        description: !selectedClassId 
+          ? "Vui lòng chọn lớp học" 
+          : "Vui lòng chọn học sinh",
         variant: "destructive"
       });
       return;
@@ -75,13 +67,11 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({
     setIsSubmitting(true);
     
     try {
-      const enrollmentData = {
+      await enrollmentService.create({
         hoc_sinh_id: selectedStudentId,
         lop_chi_tiet_id: selectedClassId,
         tinh_trang_diem_danh: 'pending'
-      };
-
-      await enrollmentService.create(enrollmentData);
+      });
       
       toast({
         title: "Thành công",
@@ -102,15 +92,14 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({
     }
   };
 
-  // Determine which fields need to be shown
-  const isSelectingStudent = !!classId && !studentId;
-  const isSelectingClass = !classId && !!studentId;
-  const isSelectingBoth = !classId && !studentId;
+  // Determine what fields to show based on context
+  const showStudentSelect = !studentId;
+  const showClassSelect = !classId;
 
-  // Render enrollment form content
+  // Render dialog content
   const renderFormContent = () => (
     <div className="space-y-4">
-      {(isSelectingStudent || isSelectingBoth) && (
+      {showStudentSelect && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Học sinh</label>
           <Select 
@@ -132,7 +121,7 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({
         </div>
       )}
 
-      {(isSelectingClass || isSelectingBoth) && (
+      {showClassSelect && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Lớp học</label>
           <Select 
@@ -193,7 +182,7 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({
     );
   }
   
-  // If we're in the class detail view or elsewhere
+  // If we're in a different context
   return renderFormContent();
 };
 

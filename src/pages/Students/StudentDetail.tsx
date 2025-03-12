@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { User, Edit, Save, X } from 'lucide-react';
@@ -13,54 +14,25 @@ import StudentFinanceTab from './components/StudentFinanceTab';
 import StudentEnrollmentsTab from './components/StudentEnrollmentsTab';
 import StudentActionsSection from './components/StudentActionsSection';
 import StudentProgressTab from './components/StudentProgressTab';
+import { useStudentData } from './hooks/useStudentData';
 
 const StudentDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [student, setStudent] = useState<Student | null>(null);
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempStudentData, setTempStudentData] = useState<Student | null>(null);
-  const [facilityName, setFacilityName] = useState<string>('');
+  const { 
+    student, 
+    tempStudentData, 
+    enrollments, 
+    isLoading, 
+    isEditing, 
+    facilityName,
+    setIsEditing, 
+    setTempStudentData,
+    refreshEnrollments, 
+    handleChange, 
+    handleImageUpload, 
+    handleSave
+  } = useStudentData(id);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        if (id) {
-          const studentData = await studentService.getById(id);
-          setStudent(studentData);
-          setTempStudentData({ ...studentData });
-          
-          const studentEnrollments = await enrollmentService.getByStudent(id);
-          setEnrollments(studentEnrollments || []);
-          
-          if (studentData.co_so_id) {
-            try {
-              const facilityData = await facilityService.getById(studentData.co_so_id);
-              if (facilityData) {
-                setFacilityName(facilityData.ten_co_so);
-              }
-            } catch (error) {
-              console.error('Error fetching facility:', error);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching student data:', error);
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải thông tin học sinh',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [id, toast]);
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -69,49 +41,6 @@ const StudentDetail = () => {
   const handleCancelClick = () => {
     setIsEditing(false);
     setTempStudentData({ ...student });
-  };
-
-  const handleSaveClick = async () => {
-    if (!id || !tempStudentData) return;
-
-    try {
-      setIsLoading(true);
-      await studentService.update(id, tempStudentData);
-      setStudent({ ...tempStudentData });
-      setIsEditing(false);
-      toast({
-        title: 'Thành công',
-        description: 'Thông tin học sinh đã được cập nhật',
-      });
-    } catch (error) {
-      console.error('Error updating student:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể cập nhật thông tin học sinh',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setTempStudentData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageUpload = async (url: string) => {
-    setTempStudentData((prev) => ({ ...prev, anh_minh_hoc: url }));
-  };
-  
-  const refreshEnrollments = async () => {
-    if (!id) return;
-    try {
-      const studentEnrollments = await enrollmentService.getByStudent(id);
-      setEnrollments(studentEnrollments || []);
-    } catch (error) {
-      console.error('Error refreshing enrollments:', error);
-    }
   };
 
   if (isLoading) {
@@ -157,7 +86,7 @@ const StudentDetail = () => {
               <X className="w-4 h-4 mr-2" />
               Hủy
             </Button>
-            <Button onClick={handleSaveClick}>
+            <Button onClick={handleSave}>
               <Save className="w-4 h-4 mr-2" />
               Lưu
             </Button>

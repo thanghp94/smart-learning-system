@@ -101,6 +101,18 @@ const Classes = () => {
     }
   };
 
+  // Fix: Convert field and value to the format expected by handleFilterChange
+  const adaptFilterChange = (field: string, value: string) => {
+    if (field === 'facilityId') {
+      handleFilterChange({ facility: value === 'none' ? '' : value });
+    } else if (field === 'status') {
+      handleFilterChange({ program: value === 'none' ? '' : value });
+    } else {
+      // Handle other filter fields if needed
+      console.log(`Unhandled filter field: ${field}`);
+    }
+  };
+
   return (
     <>
       {(classes.length === 0 && !isLoading) ? (
@@ -117,7 +129,7 @@ const Classes = () => {
             <ClassActionsToolbar
               onAddClick={handleAddClick}
               onRefresh={fetchClasses}
-              onFilterChange={handleFilterChange}
+              onFilterChange={adaptFilterChange}
               onResetFilters={handleResetFilters}
             />
           }

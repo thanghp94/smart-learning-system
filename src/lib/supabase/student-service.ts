@@ -4,9 +4,8 @@ import { fetchById, fetchAll, insert, update, remove, logActivity } from './base
 import { Student } from '@/lib/types';
 
 class StudentService {
-  /**
-   * Fetches all students from the database
-   */
+  // Core CRUD operations
+  
   async getAll(): Promise<Student[]> {
     console.log('Fetching all students...');
     try {
@@ -21,23 +20,13 @@ class StudentService {
       }
       
       console.log(`Successfully fetched ${data?.length || 0} students`);
-      
-      // Ensure all records have required fields
-      return (data || []).map(student => ({
-        ...student,
-        id: student.id || crypto.randomUUID(), // Make sure id is present
-        // Normalize field names for consistency
-        co_so_id: student.co_so_id || '',
-      }));
+      return this.normalizeStudentData(data || []);
     } catch (error) {
       console.error('Error in fetchStudents:', error);
       throw error;
     }
   }
 
-  /**
-   * Fetches a single student by ID
-   */
   async getById(id: string): Promise<Student | null> {
     try {
       const { data, error } = await supabase
@@ -51,49 +40,21 @@ class StudentService {
         throw error;
       }
       
-      if (!data) {
-        return null;
-      }
+      if (!data) return null;
       
-      // Ensure required fields and consistent naming
-      return {
-        ...data,
-        id: data.id || id,
-        ten_hoc_sinh: data.ten_hoc_sinh || '',
-        co_so_id: data.co_so_id || '',
-      } as Student;
+      return this.normalizeStudentData([data])[0];
     } catch (error) {
       console.error('Error in getById:', error);
       throw error;
     }
   }
 
-  /**
-   * Creates a new student
-   */
   async create(studentData: Omit<Student, 'id'> & { id?: string }): Promise<Student | null> {
     try {
       console.log('Creating new student:', studentData);
       
-      // Fix case sensitivity issues and field mapping
-      // Convert camelCase/PascalCase to snake_case for database
-      const mappedData = {
-        ten_hoc_sinh: studentData.ten_hoc_sinh,
-        gioi_tinh: studentData.gioi_tinh,
-        ngay_sinh: studentData.ngay_sinh,
-        co_so_id: studentData.co_so_id,
-        ten_ph: studentData.ten_PH, // Map to correct column name
-        sdt_ph1: studentData.sdt_ph1,
-        email_ph1: studentData.email_ph1,
-        dia_chi: studentData.dia_chi,
-        password: studentData.password,
-        parentpassword: studentData.parentpassword,
-        trang_thai: studentData.trang_thai,
-        ct_hoc: studentData.ct_hoc,
-        han_hoc_phi: studentData.han_hoc_phi,
-        ngay_bat_dau_hoc_phi: studentData.ngay_bat_dau_hoc_phi,
-        mo_ta_hs: studentData.ghi_chu,
-      };
+      // Map data to correct field names
+      const mappedData = this.mapStudentDataForDB(studentData);
       
       console.log('Mapped student data for insert:', mappedData);
       
@@ -126,32 +87,12 @@ class StudentService {
     }
   }
 
-  /**
-   * Updates an existing student
-   */
   async update(id: string, updates: Partial<Student>): Promise<Student | null> {
     try {
       console.log('Updating student:', id, updates);
       
-      // Fix case sensitivity issues and field mapping
-      const mappedUpdates: Record<string, any> = {};
-      
-      // Map fields explicitly to handle case differences
-      if (updates.ten_hoc_sinh !== undefined) mappedUpdates.ten_hoc_sinh = updates.ten_hoc_sinh;
-      if (updates.gioi_tinh !== undefined) mappedUpdates.gioi_tinh = updates.gioi_tinh;
-      if (updates.ngay_sinh !== undefined) mappedUpdates.ngay_sinh = updates.ngay_sinh;
-      if (updates.co_so_id !== undefined) mappedUpdates.co_so_id = updates.co_so_id;
-      if (updates.ten_PH !== undefined) mappedUpdates.ten_ph = updates.ten_PH;
-      if (updates.sdt_ph1 !== undefined) mappedUpdates.sdt_ph1 = updates.sdt_ph1;
-      if (updates.email_ph1 !== undefined) mappedUpdates.email_ph1 = updates.email_ph1;
-      if (updates.dia_chi !== undefined) mappedUpdates.dia_chi = updates.dia_chi;
-      if (updates.password !== undefined) mappedUpdates.password = updates.password;
-      if (updates.parentpassword !== undefined) mappedUpdates.parentpassword = updates.parentpassword;
-      if (updates.trang_thai !== undefined) mappedUpdates.trang_thai = updates.trang_thai;
-      if (updates.ct_hoc !== undefined) mappedUpdates.ct_hoc = updates.ct_hoc;
-      if (updates.han_hoc_phi !== undefined) mappedUpdates.han_hoc_phi = updates.han_hoc_phi;
-      if (updates.ngay_bat_dau_hoc_phi !== undefined) mappedUpdates.ngay_bat_dau_hoc_phi = updates.ngay_bat_dau_hoc_phi;
-      if (updates.ghi_chu !== undefined) mappedUpdates.mo_ta_hs = updates.ghi_chu;
+      // Map fields explicitly
+      const mappedUpdates = this.mapStudentDataForDB(updates);
       
       console.log('Mapped student data for update:', mappedUpdates);
       
@@ -185,9 +126,6 @@ class StudentService {
     }
   }
 
-  /**
-   * Deletes a student by ID
-   */
   async delete(id: string): Promise<void> {
     try {
       // First, get the student to log their name
@@ -224,9 +162,8 @@ class StudentService {
     }
   }
 
-  /**
-   * Fetches students for a specific facility
-   */
+  // Specialized query methods
+  
   async getByFacility(facilityId: string): Promise<Student[]> {
     try {
       const { data, error } = await supabase
@@ -240,16 +177,13 @@ class StudentService {
         return [];
       }
       
-      return data || [];
+      return this.normalizeStudentData(data || []);
     } catch (error) {
       console.error('Error in fetchStudentsByFacility:', error);
       return [];
     }
   }
 
-  /**
-   * Fetches students enrolled in a specific class
-   */
   async getByClass(classId: string): Promise<Student[]> {
     try {
       const { data, error } = await supabase
@@ -279,11 +213,46 @@ class StudentService {
         return [];
       }
       
-      return students || [];
+      return this.normalizeStudentData(students || []);
     } catch (error) {
       console.error('Error in fetchStudentsByClass:', error);
       return [];
     }
+  }
+
+  // Helper methods for data normalization
+  
+  private normalizeStudentData(students: any[]): Student[] {
+    return students.map(student => ({
+      ...student,
+      id: student.id || crypto.randomUUID(),
+      co_so_id: student.co_so_id || '',
+      ten_hoc_sinh: student.ten_hoc_sinh || '',
+      email: student.email || student.email_ph1 || ''
+    }));
+  }
+
+  private mapStudentDataForDB(studentData: Partial<Student>): Record<string, any> {
+    const mappedData: Record<string, any> = {};
+    
+    // Map fields explicitly to handle case differences
+    if (studentData.ten_hoc_sinh !== undefined) mappedData.ten_hoc_sinh = studentData.ten_hoc_sinh;
+    if (studentData.gioi_tinh !== undefined) mappedData.gioi_tinh = studentData.gioi_tinh;
+    if (studentData.ngay_sinh !== undefined) mappedData.ngay_sinh = studentData.ngay_sinh;
+    if (studentData.co_so_id !== undefined) mappedData.co_so_id = studentData.co_so_id;
+    if (studentData.ten_PH !== undefined) mappedData.ten_ph = studentData.ten_PH;
+    if (studentData.sdt_ph1 !== undefined) mappedData.sdt_ph1 = studentData.sdt_ph1;
+    if (studentData.email_ph1 !== undefined) mappedData.email_ph1 = studentData.email_ph1;
+    if (studentData.dia_chi !== undefined) mappedData.dia_chi = studentData.dia_chi;
+    if (studentData.password !== undefined) mappedData.password = studentData.password;
+    if (studentData.parentpassword !== undefined) mappedData.parentpassword = studentData.parentpassword;
+    if (studentData.trang_thai !== undefined) mappedData.trang_thai = studentData.trang_thai;
+    if (studentData.ct_hoc !== undefined) mappedData.ct_hoc = studentData.ct_hoc;
+    if (studentData.han_hoc_phi !== undefined) mappedData.han_hoc_phi = studentData.han_hoc_phi;
+    if (studentData.ngay_bat_dau_hoc_phi !== undefined) mappedData.ngay_bat_dau_hoc_phi = studentData.ngay_bat_dau_hoc_phi;
+    if (studentData.ghi_chu !== undefined) mappedData.mo_ta_hs = studentData.ghi_chu;
+    
+    return mappedData;
   }
 }
 

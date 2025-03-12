@@ -50,7 +50,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
 
   // Check if any filter is active
   const hasActiveFilters = Object.values(currentFilters).some(
-    (value) => value && value.length > 0
+    (value) => value && value.length > 0 && value !== 'none'
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +93,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
         </Button>
 
         <Select
-          value={currentFilters.facilityId || ''}
+          value={currentFilters.facilityId || 'none'}
           onValueChange={(value) => onFilterChange('facilityId', value)}
         >
           <SelectTrigger className="h-8 text-xs">
@@ -110,7 +110,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
         </Select>
 
         <Select
-          value={currentFilters.status || ''}
+          value={currentFilters.status || 'none'}
           onValueChange={(value) => onFilterChange('status', value)}
         >
           <SelectTrigger className="h-8 text-xs">

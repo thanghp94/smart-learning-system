@@ -59,10 +59,10 @@ const StudentEmailService: React.FC<StudentEmailServiceProps> = ({
     try {
       console.log('Sending email with data:', values);
       
-      // In a real implementation, this would call an Edge Function
-      // that would handle the actual email sending
+      // In a real implementation, this would call an API endpoint that integrates with
+      // an email service like Resend, SendGrid, or a custom email server
       
-      // Simulate API call
+      // For this demo, simulate an API call with a delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
@@ -85,6 +85,7 @@ const StudentEmailService: React.FC<StudentEmailServiceProps> = ({
   
   const handleClose = () => {
     setIsOpen(false);
+    form.reset();
     if (onClose) onClose();
   };
   
@@ -102,7 +103,10 @@ const StudentEmailService: React.FC<StudentEmailServiceProps> = ({
         {buttonLabel}
       </Button>
       
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) handleClose();
+      }}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Gửi email cho học sinh</DialogTitle>
