@@ -1,122 +1,54 @@
 
 import React, { useEffect, useState } from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { financeService } from '@/lib/supabase';
-import { FinanceTransactionType } from '@/lib/types/finance';
-import { UseFormReturn } from 'react-hook-form';
+import { useToast } from '@/hooks/use-toast';
 
-interface TransactionTypeSelectProps {
-  form: UseFormReturn<any>;
-  selectedTransactionCategory: string;
-  selectedEntityType: string | null;
-  onTransactionTypeChange?: (value: string, transactionTypeName: string) => void;
-}
+const TransactionTypeSelect = ({ form, transactionCategory }) => {
+  const [transactionTypes, setTransactionTypes] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
-  form,
-  selectedTransactionCategory,
-  selectedEntityType,
-  onTransactionTypeChange,
-}) => {
-  const [transactionTypes, setTransactionTypes] = useState<FinanceTransactionType[]>([]);
-  const [filteredTransactionTypes, setFilteredTransactionTypes] = useState<FinanceTransactionType[]>([]);
-
-  // Load all transaction types on component mount
   useEffect(() => {
-    const loadAllTransactionTypes = async () => {
+    const fetchTransactionTypes = async () => {
+      if (!transactionCategory) return;
+      
+      setIsLoading(true);
       try {
         const types = await financeService.getTransactionTypes();
         setTransactionTypes(types);
-        
-        // Also filter for the currently selected category
-        const filtered = types.filter(type => type.category === selectedTransactionCategory);
-        setFilteredTransactionTypes(filtered);
       } catch (error) {
-        console.error('Error loading transaction types:', error);
+        console.error('Error fetching transaction types:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải danh sách loại giao dịch',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
-    
-    loadAllTransactionTypes();
-  }, []);
 
-  // Update transaction types when transaction category changes
-  useEffect(() => {
-    // Filter transaction types by category
-    const filtered = transactionTypes.filter(type => type.category === selectedTransactionCategory);
-    
-    // Further filter by entity type if needed
-    if (selectedEntityType) {
-      let typeSpecificItems: FinanceTransactionType[] = [];
-      
-      // Filter transaction types specific to the selected entity type
-      switch (selectedEntityType) {
-        case 'student':
-          typeSpecificItems = filtered.filter(type => 
-            ['Học phí', 'Sách học', 'Hoàn học phí', 'Khen thưởng'].includes(type.name)
-          );
-          break;
-        case 'facility':
-          typeSpecificItems = filtered.filter(type => 
-            ['Tiền điện', 'Tiền nước', 'Tiền Internet', 'Phí điện thoại cố định', 
-             'Tiền rác', 'Tiền thuê nhà', 'Văn phòng phẩm', 'Mua máy móc thiết bị', 
-             'Sửa chữa cơ sở vật chất', 'Làm mới cơ sở vật chất', 'Nạp mực in', 
-             'Mua dụng cụ vệ sinh nhà cửa', 'Đơn vị'].includes(type.name)
-          );
-          break;
-        case 'employee':
-          typeSpecificItems = filtered.filter(type => 
-            ['Lương', 'Thưởng', 'Phụ cấp đi lại', 'Lương bảo hiểm', 'Tạm ứng', 
-             'Phụ cấp điện thoại', 'Bảo hiểm xã hội', 'Bảo hiểm y tế', 
-             'Thưởng Lễ Tết', 'Phụ cấp ăn ở'].includes(type.name)
-          );
-          break;
-        case 'government':
-          typeSpecificItems = filtered.filter(type => 
-            ['Phí giấy phép lao động', 'Phí thẻ tạm trú'].includes(type.name)
-          );
-          break;
-        case 'event':
-          typeSpecificItems = filtered.filter(type => 
-            ['Phí thuê địa điểm', 'Phí thuê xe', 'Tiền ăn', 
-             'Tiền lương nhân sự', 'Phí sự kiện'].includes(type.name)
-          );
-          break;
-        case 'asset':
-          typeSpecificItems = filtered.filter(type => 
-            ['Văn phòng phẩm', 'Mua máy móc thiết bị', 'Sửa chữa cơ sở vật chất', 
-             'Làm mới cơ sở vật chất', 'Nạp mực in', 'Mua dụng cụ vệ sinh nhà cửa',
-             'Phí cơ sở vật chất', 'Đơn vị'].includes(type.name)
-          );
-          break;
-        default:
-          typeSpecificItems = filtered;
-          break;
-      }
-      
-      // If we have entity-specific items, use those; otherwise fallback to all items in the category
-      setFilteredTransactionTypes(typeSpecificItems.length > 0 ? typeSpecificItems : filtered);
-    } else {
-      setFilteredTransactionTypes(filtered);
-    }
-    
-    // Reset the transaction type if it's no longer valid for the new category or entity type
-    const currentType = form.getValues('loai_giao_dich');
-    if (currentType && !filtered.some(type => type.name === currentType)) {
-      form.setValue('loai_giao_dich', '');
-      if (onTransactionTypeChange) {
-        onTransactionTypeChange('', '');
-      }
-    }
-  }, [selectedTransactionCategory, selectedEntityType, transactionTypes, form, onTransactionTypeChange]);
+    fetchTransactionTypes();
+  }, [transactionCategory, toast]);
 
-  // Handle transaction type change
-  const handleTransactionTypeChange = (value: string) => {
-    form.setValue('loai_giao_dich', value);
-    if (onTransactionTypeChange) {
-      onTransactionTypeChange(value, value);
-    }
-  };
+  // Filter types by the selected category (thu/chi)
+  const filteredTypes = transactionTypes.filter(type => 
+    type.category === transactionCategory
+  );
 
   return (
     <FormField
@@ -124,15 +56,19 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({
       name="loai_giao_dich"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Hạng mục</FormLabel>
-          <Select onValueChange={handleTransactionTypeChange} defaultValue={field.value}>
+          <FormLabel>Loại giao dịch</FormLabel>
+          <Select
+            onValueChange={field.onChange}
+            value={field.value || ''}
+            disabled={isLoading || !transactionCategory}
+          >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Chọn hạng mục" />
+                <SelectValue placeholder={isLoading ? 'Đang tải...' : 'Chọn loại giao dịch'} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {filteredTransactionTypes.map((type) => (
+              {filteredTypes.map(type => (
                 <SelectItem key={type.id} value={type.name}>
                   {type.name}
                 </SelectItem>

@@ -36,7 +36,6 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
     const loadFacilities = async () => {
       try {
         const data = await facilityService.getAll();
-        console.log('Loaded facilities for class filters:', data?.length || 0);
         setFacilities(data || []);
       } catch (error) {
         console.error('Error loading facilities:', error);
@@ -49,8 +48,8 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
   }, []);
 
   // Check if any filter is active
-  const hasActiveFilters = Object.values(currentFilters).some(
-    (value) => value && value.length > 0 && value !== 'none'
+  const hasActiveFilters = Object.entries(currentFilters).some(
+    ([key, value]) => value && value.length > 0 && value !== 'none'
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {

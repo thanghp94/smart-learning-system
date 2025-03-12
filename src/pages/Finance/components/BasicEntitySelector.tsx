@@ -78,12 +78,17 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
             data = await classService.getAll();
             setEntityOptions(data.map(item => ({
               id: item.id,
-              name: item.ten_lop_full
+              name: item.ten_lop_full || item.ten_lop
             })));
             break;
           
           default:
             setEntityOptions([]);
+        }
+        
+        // If we have an entityId and it matches one in our options, select it
+        if (entityId && data.some(item => item.id === entityId)) {
+          form.setValue('doi_tuong_id', entityId);
         }
       } catch (error) {
         console.error(`Error fetching ${selectedEntityType} entities:`, error);
@@ -93,10 +98,8 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
       }
     };
     
-    if (selectedEntityType && (!entityId || !entityType)) {
-      fetchEntities();
-    }
-  }, [selectedEntityType, entityId, entityType]);
+    fetchEntities();
+  }, [selectedEntityType, entityId, form]);
   
   return (
     <>
@@ -142,7 +145,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
               <FormLabel>Đối tượng chi tiết</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
                 disabled={!!entityId || isLoading}
               >
                 <FormControl>

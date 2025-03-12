@@ -28,6 +28,7 @@ import { Employee, Facility } from '@/lib/types';
 import BasicEntitySelector from './components/BasicEntitySelector';
 import PaymentMethodSelector from './components/PaymentMethodSelector';
 import AmountCalculator from './components/AmountCalculator';
+import TransactionTypeSelect from './components/TransactionTypeSelect';
 
 // Finance form schema
 const financeSchema = z.object({
@@ -66,22 +67,19 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
 }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [transactionTypes, setTransactionTypes] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [empData, facData, transData] = await Promise.all([
+        const [empData, facData] = await Promise.all([
           employeeService.getAll(),
           facilityService.getAll(),
-          financeService.getTransactionTypes(),
         ]);
         
         setEmployees(empData);
         setFacilities(facData);
-        setTransactionTypes(transData);
       } catch (error) {
         console.error('Error fetching form data:', error);
         toast({
@@ -118,7 +116,6 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   });
 
   const watchThuChi = form.watch('loai_thu_chi');
-  const watchType = form.watch('loai_doi_tuong');
   const watchAmount = form.watch('so_luong');
   const watchUnit = form.watch('don_vi');
   const watchPrice = form.watch('gia_tien');
@@ -198,7 +195,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
                 <FormLabel>Loại thu/chi</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -218,34 +215,9 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
 
         {watchThuChi && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="loai_giao_dich"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Loại giao dịch</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn loại giao dịch" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {transactionTypes
-                        .filter(t => t.category === watchThuChi)
-                        .map(type => (
-                          <SelectItem key={type.id} value={type.name}>
-                            {type.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <TransactionTypeSelect 
+              form={form} 
+              transactionCategory={watchThuChi} 
             />
 
             <BasicEntitySelector 
@@ -264,7 +236,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
               <FormLabel>Cơ sở</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value || ''}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -310,7 +282,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
               <FormLabel>Người tạo</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value || ''}
               >
                 <FormControl>
                   <SelectTrigger>

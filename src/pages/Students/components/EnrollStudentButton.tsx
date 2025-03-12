@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { enrollmentService, classService, studentService } from '@/lib/supabase';
-import { Class, Student } from '@/lib/types';
+import { enrollmentService, classService } from '@/lib/supabase';
+import { Student } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
@@ -16,49 +16,37 @@ interface EnrollStudentButtonProps {
   onEnrollmentCreated: () => Promise<void>;
 }
 
-const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({ 
+const EnrollStudentButton = ({ 
   student, 
   studentId, 
   classId, 
   onEnrollmentCreated 
-}) => {
+}: EnrollStudentButtonProps) => {
   const [open, setOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>(classId || '');
-  const [selectedStudentId, setSelectedStudentId] = useState<string>(studentId || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Load classes
+  // Load active classes
   const { data: classes = [], isLoading: isClassesLoading } = useQuery({
-    queryKey: ['classes'],
+    queryKey: ['active-classes'],
     queryFn: async () => {
       const result = await classService.getAll();
       return result.filter(c => c.tinh_trang === 'active');
     }
   });
 
-  // Load students when needed
-  const { data: students = [], isLoading: isStudentsLoading } = useQuery({
-    queryKey: ['students'],
-    queryFn: async () => {
-      const result = await studentService.getAll();
-      return result.filter(s => s.trang_thai === 'active');
-    },
-    enabled: !studentId && !!classId
-  });
-
   useEffect(() => {
     if (classId) setSelectedClassId(classId);
-    if (studentId) setSelectedStudentId(studentId);
-  }, [classId, studentId]);
+  }, [classId]);
 
   const handleSubmit = async () => {
-    if (!selectedClassId || !selectedStudentId) {
+    if (!selectedClassId || !studentId) {
       toast({
         title: "Lỗi",
         description: !selectedClassId 
           ? "Vui lòng chọn lớp học" 
-          : "Vui lòng chọn học sinh",
+          : "Không tìm thấy thông tin học sinh",
         variant: "destructive"
       });
       return;
@@ -68,7 +56,7 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({
     
     try {
       await enrollmentService.create({
-        hoc_sinh_id: selectedStudentId,
+        hoc_sinh_id: studentId,
         lop_chi_tiet_id: selectedClassId,
         tinh_trang_diem_danh: 'pending'
       });
@@ -92,98 +80,60 @@ const EnrollStudentButton: React.FC<EnrollStudentButtonProps> = ({
     }
   };
 
-  // Determine what fields to show based on context
-  const showStudentSelect = !studentId;
-  const showClassSelect = !classId;
-
-  // Render dialog content
-  const renderFormContent = () => (
-    <div className="space-y-4">
-      {showStudentSelect && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Học sinh</label>
-          <Select 
-            value={selectedStudentId} 
-            onValueChange={setSelectedStudentId}
-            disabled={isStudentsLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn học sinh" />
-            </SelectTrigger>
-            <SelectContent>
-              {students.map((student: Student) => (
-                <SelectItem key={student.id} value={student.id}>
-                  {student.ten_hoc_sinh || 'Học sinh không tên'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {showClassSelect && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Lớp học</label>
-          <Select 
-            value={selectedClassId} 
-            onValueChange={setSelectedClassId}
-            disabled={isClassesLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn lớp học" />
-            </SelectTrigger>
-            <SelectContent>
-              {classes.map((cls: Class) => (
-                <SelectItem key={cls.id} value={cls.id}>
-                  {cls.ten_lop_full || cls.ten_lop}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>Đăng ký vào lớp</Button>
       
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
-          Hủy
-        </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting || !selectedClassId || !selectedStudentId}>
-          {isSubmitting ? (
-            <>
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
-              Đang đăng ký...
-            </>
-          ) : (
-            'Đăng ký'
-          )}
-        </Button>
-      </div>
-    </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Đăng ký học sinh vào lớp</DialogTitle>
+            <DialogDescription>
+              {student ? `Chọn lớp học để đăng ký học sinh ${student?.ten_hoc_sinh}` : 'Chọn lớp học để đăng ký'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Lớp học</label>
+              <Select 
+                value={selectedClassId} 
+                onValueChange={setSelectedClassId}
+                disabled={isClassesLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn lớp học" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                      {cls.ten_lop_full || cls.ten_lop}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
+                Hủy
+              </Button>
+              <Button onClick={handleSubmit} disabled={isSubmitting || !selectedClassId}>
+                {isSubmitting ? (
+                  <>
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Đang đăng ký...
+                  </>
+                ) : (
+                  'Đăng ký'
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
-
-  // If we're in the student detail view
-  if (studentId) {
-    return (
-      <>
-        <Button onClick={() => setOpen(true)}>Đăng ký vào lớp</Button>
-        
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Đăng ký học sinh vào lớp</DialogTitle>
-              <DialogDescription>
-                {student ? `Chọn lớp học để đăng ký học sinh ${student?.ten_hoc_sinh}` : 'Chọn lớp học để đăng ký'}
-              </DialogDescription>
-            </DialogHeader>
-            {renderFormContent()}
-          </DialogContent>
-        </Dialog>
-      </>
-    );
-  }
-  
-  // If we're in a different context
-  return renderFormContent();
 };
 
 export default EnrollStudentButton;

@@ -1,14 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { User, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Student } from '@/lib/types';
-import { studentService, enrollmentService, facilityService } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
 import StudentInfoTab from './components/StudentInfoTab';
 import StudentFinanceTab from './components/StudentFinanceTab';
 import StudentEnrollmentsTab from './components/StudentEnrollmentsTab';
@@ -32,7 +29,6 @@ const StudentDetail = () => {
     handleImageUpload, 
     handleSave
   } = useStudentData(id);
-  const { toast } = useToast();
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -44,11 +40,11 @@ const StudentDetail = () => {
   };
 
   if (isLoading) {
-    return <div>Đang tải thông tin học sinh...</div>;
+    return <div className="p-4 text-center">Đang tải thông tin học sinh...</div>;
   }
 
   if (!student) {
-    return <div>Không tìm thấy thông tin học sinh</div>;
+    return <div className="p-4 text-center">Không tìm thấy thông tin học sinh</div>;
   }
 
   return (
@@ -103,27 +99,32 @@ const StudentDetail = () => {
 
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="grid grid-cols-4 mb-4">
-          <TabsTrigger value="info">Thông tin chung</TabsTrigger>
+          <TabsTrigger value="info">Thông tin</TabsTrigger>
           <TabsTrigger value="progress">Tiến độ</TabsTrigger>
           <TabsTrigger value="finance">Tài chính</TabsTrigger>
           <TabsTrigger value="enrollments">Ghi danh</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="space-y-4">
-          <StudentInfoTab 
-            student={student}
-            isEditing={isEditing}
-            tempStudentData={tempStudentData}
-            handleChange={handleChange}
-            handleImageUpload={handleImageUpload}
-            facilityName={facilityName}
-          />
-          
-          <StudentActionsSection 
-            student={student}
-            studentId={id || ''}
-            refreshEnrollments={refreshEnrollments}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <StudentInfoTab 
+                student={student}
+                isEditing={isEditing}
+                tempStudentData={tempStudentData}
+                handleChange={handleChange}
+                handleImageUpload={handleImageUpload}
+                facilityName={facilityName}
+              />
+            </div>
+            <div>
+              <StudentActionsSection 
+                student={student}
+                studentId={id || ''}
+                refreshEnrollments={refreshEnrollments}
+              />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="progress">
