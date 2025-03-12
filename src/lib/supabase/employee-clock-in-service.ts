@@ -1,12 +1,10 @@
 
 import { supabase } from './client';
 import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types';
-import { BaseService } from './base-service';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
-class EmployeeClockInService extends BaseService<EmployeeClockInOut> {
-  constructor() {
-    super('employee_clock_in_out');
-  }
+class EmployeeClockInService {
+  tableName = 'employee_clock_in_out';
 
   async getByEmployeeId(employeeId: string): Promise<EmployeeClockInOut[]> {
     const { data, error } = await supabase
@@ -80,7 +78,7 @@ class EmployeeClockInService extends BaseService<EmployeeClockInOut> {
     const clockInRecord = {
       nhan_vien_id: employeeId,
       ngay: today,
-      thoi_gian_bat_dau: now.toISOString(),
+      thoi_gian_bat_dau: now.toLocaleTimeString('vi-VN'),
       gio_vao: now.toLocaleTimeString('vi-VN'),
       trang_thai: 'present',
       employee_name: employeeName
@@ -106,7 +104,7 @@ class EmployeeClockInService extends BaseService<EmployeeClockInOut> {
     const { data, error } = await supabase
       .from(this.tableName)
       .update({
-        thoi_gian_ket_thuc: now.toISOString(),
+        thoi_gian_ket_thuc: now.toLocaleTimeString('vi-VN'),
         gio_ra: now.toLocaleTimeString('vi-VN')
       })
       .eq('id', recordId)
@@ -119,6 +117,67 @@ class EmployeeClockInService extends BaseService<EmployeeClockInOut> {
     }
 
     return data;
+  }
+
+  // Additional methods needed by components
+  async create(data: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> {
+    return insert<EmployeeClockInOut>(this.tableName, data);
+  }
+
+  async getAll(): Promise<EmployeeClockInOut[]> {
+    return fetchAll<EmployeeClockInOut>(this.tableName);
+  }
+
+  async getById(id: string): Promise<EmployeeClockInOut> {
+    return fetchById<EmployeeClockInOut>(this.tableName, id);
+  }
+
+  async update(id: string, data: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> {
+    return update<EmployeeClockInOut>(this.tableName, id, data);
+  }
+
+  async delete(id: string): Promise<void> {
+    return remove(this.tableName, id);
+  }
+
+  async getDailyReport(date: string): Promise<EmployeeClockInOut[]> {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .select('*, employees(ten_nhan_su, chuc_vu, phong_ban, hinh_anh)')
+      .eq('ngay', date);
+
+    if (error) {
+      console.error('Error fetching daily report:', error);
+      throw error;
+    }
+
+    return data?.map(record => ({
+      ...record,
+      employee_name: record.employees?.ten_nhan_su,
+      position: record.employees?.chuc_vu,
+      department: record.employees?.phong_ban,
+      employee_image: record.employees?.hinh_anh
+    })) || [];
+  }
+
+  async getAttendanceForEmployee(employeeId: string, month: number, year: number): Promise<EmployeeClockInOut[]> {
+    const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+    
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .select('*')
+      .eq('nhan_vien_id', employeeId)
+      .gte('ngay', startDate)
+      .lte('ngay', endDate)
+      .order('ngay', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching employee attendance:', error);
+      throw error;
+    }
+
+    return data || [];
   }
 }
 

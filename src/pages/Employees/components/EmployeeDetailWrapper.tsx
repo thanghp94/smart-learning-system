@@ -8,11 +8,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-export interface EmployeeDetailWrapperProps {
-  employeeId: string;
+interface EmployeeDetailWrapperProps {
+  employeeId?: string;
 }
 
-const EmployeeDetailWrapper: React.FC = () => {
+const EmployeeDetailWrapper: React.FC<EmployeeDetailWrapperProps> = () => {
   const { id } = useParams<{ id: string }>();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [isLoading, setIsLoading] = useState(true);

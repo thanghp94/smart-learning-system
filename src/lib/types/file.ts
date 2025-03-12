@@ -1,27 +1,30 @@
 
 export interface File {
   id: string;
-  doi_tuong_lien_quan: string;
-  ten_doi_tuong?: string;
-  nhan_vien_ID?: string;
-  co_so_id?: string;
-  lien_he_id?: string;
-  CSVC_ID?: string;
-  hoc_sinh_id?: string;
-  nhom_tai_lieu?: string;
-  dien_giai?: string;
   ten_tai_lieu: string;
+  id_tai_lieu?: string;
   file1?: string;
   file2?: string;
   anh?: string;
-  trang_thai?: string;
-  ngay_cap?: Date | string;
+  dien_giai?: string;
+  nhom_tai_lieu?: string;
   tinh_trang_han?: string;
-  han_tai_lieu?: Date | string;
-  lan_ban_hanh?: Date | string;
+  han_tai_lieu?: string;
+  ngay_cap?: string;
+  doi_tuong_lien_quan: string;
+  ten_doi_tuong?: string;
   ghi_chu?: string;
-  id_tai_lieu?: string;
-  tg_tao?: Date | string;
-  created_at: string;
+  lan_ban_hanh?: string;
+  trang_thai?: string;
+  
+  // Related entity IDs
+  hoc_sinh_id?: string;
+  csvc_id?: string;
+  lien_he_id?: string;
+  co_so_id?: string;
+  nhan_vien_id?: string;
+  
+  created_at?: string;
   updated_at?: string;
+  tg_tao?: string;
 }

@@ -1,4 +1,26 @@
-// Add recruitment types export
-export * from './recruitment';
+
+// Re-export all types
+export * from './activity';
+export * from './admission';
+export * from './asset';
+export * from './attendance';
+export * from './class';
+export * from './contact';
+export * from './employee';
 export * from './employee-clock-in-out';
-export type { Class, ClassDetail, ClassStudent } from './class';
+export * from './enrollment';
+export * from './evaluation';
+export * from './event';
+export * from './facility';
+export * from './file';
+export * from './finance';
+export * from './image';
+export * from './payroll';
+export * from './recruitment';
+export * from './request';
+export * from './session';
+export * from './setting';
+export * from './student';
+export * from './task';
+export * from './teaching-session';
+export * from './ui';
