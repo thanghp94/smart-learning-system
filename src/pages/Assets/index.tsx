@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,7 @@ const Assets = () => {
         matchesEmployee = asset.doi_tuong === 'employee' && asset.doi_tuong_id === employee;
       }
 
-      return matchesFacility && matchesEmployee;
+      return (facility ? matchesFacility : true) && (employee ? matchesEmployee : true);
     });
 
     setFilteredAssets(filtered);
@@ -147,29 +148,27 @@ const Assets = () => {
     },
   ];
 
-  const tableActions = (
-    <div className="flex items-center space-x-2">
-      <AssetFilters 
-        onFilterChange={handleFilterChange} 
-        onReset={handleResetFilters} 
-      />
-      
-      <Button variant="outline" size="sm" className="h-8" onClick={fetchAssets}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
-      </Button>
-      
-      <Button size="sm" className="h-8" onClick={handleAddClick}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Tài Sản
-      </Button>
-    </div>
-  );
-
   return (
     <>
       <TablePageLayout
         title="Tài Sản"
         description="Quản lý tài sản của trung tâm"
-        actions={tableActions}
+        actions={
+          <div className="flex items-center space-x-2">
+            <AssetFilters 
+              onFilterChange={handleFilterChange} 
+              onReset={handleResetFilters} 
+            />
+            
+            <Button variant="outline" size="sm" className="h-8" onClick={fetchAssets}>
+              <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
+            </Button>
+            
+            <Button size="sm" className="h-8" onClick={handleAddClick}>
+              <Plus className="h-4 w-4 mr-1" /> Thêm Tài Sản
+            </Button>
+          </div>
+        }
       >
         <div className="hidden md:block">
           <CommandInterface />

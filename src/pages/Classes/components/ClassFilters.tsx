@@ -57,55 +57,51 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({ onFilterChange, onReset }) 
   };
 
   return (
-    <div className="flex items-center space-x-2">
-      <div className="flex items-center space-x-2 bg-background border rounded-md p-1">
-        <div className="flex items-center">
-          <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs font-normal" disabled>
-            <Filter className="h-3.5 w-3.5" />
-            Lọc
-          </Button>
-          
-          <Select value={selectedFacility} onValueChange={handleFacilityChange}>
-            <SelectTrigger className="h-8 w-[180px] text-xs">
-              <SelectValue placeholder="Theo cơ sở" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Tất cả cơ sở</SelectItem>
-              {facilities.map((facility) => (
-                <SelectItem key={facility.id} value={facility.id}>
-                  {facility.ten_co_so}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select value={selectedProgram} onValueChange={handleProgramChange}>
-            <SelectTrigger className="h-8 w-[180px] text-xs ml-1">
-              <SelectValue placeholder="Theo chương trình học" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Tất cả chương trình</SelectItem>
-              {programs.map((program) => (
-                <SelectItem key={program.id} value={program.id}>
-                  {program.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {(selectedFacility || selectedProgram) && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 text-xs"
-            onClick={handleReset}
-          >
-            <RotateCw className="h-3.5 w-3.5 mr-1" />
-            Đặt lại
-          </Button>
-        )}
-      </div>
+    <div className="flex items-center space-x-2 bg-background border rounded-md p-1">
+      <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs font-normal" disabled>
+        <Filter className="h-3.5 w-3.5" />
+        Lọc
+      </Button>
+      
+      <Select value={selectedFacility} onValueChange={handleFacilityChange}>
+        <SelectTrigger className="h-8 w-[180px] text-xs">
+          <SelectValue placeholder="Theo cơ sở" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">Tất cả cơ sở</SelectItem>
+          {facilities.map((facility) => (
+            <SelectItem key={facility.id} value={facility.id}>
+              {facility.ten_co_so}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <Select value={selectedProgram} onValueChange={handleProgramChange}>
+        <SelectTrigger className="h-8 w-[180px] text-xs">
+          <SelectValue placeholder="Theo chương trình học" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">Tất cả chương trình</SelectItem>
+          {programs.map((program) => (
+            <SelectItem key={program.id} value={program.id}>
+              {program.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      {(selectedFacility || selectedProgram) && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 text-xs"
+          onClick={handleReset}
+        >
+          <RotateCw className="h-3.5 w-3.5 mr-1" />
+          Đặt lại
+        </Button>
+      )}
     </div>
   );
 };

@@ -50,61 +50,57 @@ const EnrollmentFilters: React.FC<EnrollmentFiltersProps> = ({
   }, []);
 
   return (
-    <div className="flex items-center space-x-2">
-      <div className="flex items-center space-x-2 bg-background border rounded-md p-1">
-        <div className="flex items-center">
-          <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs font-normal" disabled>
-            <Filter className="h-3.5 w-3.5" />
-            Lọc
-          </Button>
-          
-          <Select 
-            value={filters.classId} 
-            onValueChange={(value) => onFilterChange('classId', value)}
-          >
-            <SelectTrigger className="h-8 w-[180px] text-xs">
-              <SelectValue placeholder="Theo lớp học" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Tất cả lớp học</SelectItem>
-              {classes.map(c => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.ten_lop_full || c.ten_lop}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select 
-            value={filters.facilityId} 
-            onValueChange={(value) => onFilterChange('facilityId', value)}
-          >
-            <SelectTrigger className="h-8 w-[180px] text-xs ml-1">
-              <SelectValue placeholder="Theo cơ sở" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Tất cả cơ sở</SelectItem>
-              {facilities.map(f => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.ten_co_so}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {hasActiveFilters && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 text-xs"
-            onClick={onReset}
-          >
-            <RotateCw className="h-3.5 w-3.5 mr-1" />
-            Đặt lại
-          </Button>
-        )}
-      </div>
+    <div className="flex items-center space-x-2 bg-background border rounded-md p-1">
+      <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs font-normal" disabled>
+        <Filter className="h-3.5 w-3.5" />
+        Lọc
+      </Button>
+      
+      <Select 
+        value={filters.classId} 
+        onValueChange={(value) => onFilterChange('classId', value)}
+      >
+        <SelectTrigger className="h-8 w-[180px] text-xs">
+          <SelectValue placeholder="Theo lớp học" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">Tất cả lớp học</SelectItem>
+          {classes.map(c => (
+            <SelectItem key={c.id} value={c.id}>
+              {c.ten_lop_full || c.ten_lop}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <Select 
+        value={filters.facilityId} 
+        onValueChange={(value) => onFilterChange('facilityId', value)}
+      >
+        <SelectTrigger className="h-8 w-[180px] text-xs">
+          <SelectValue placeholder="Theo cơ sở" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">Tất cả cơ sở</SelectItem>
+          {facilities.map(f => (
+            <SelectItem key={f.id} value={f.id}>
+              {f.ten_co_so}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      {hasActiveFilters && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 text-xs"
+          onClick={onReset}
+        >
+          <RotateCw className="h-3.5 w-3.5 mr-1" />
+          Đặt lại
+        </Button>
+      )}
     </div>
   );
 };
