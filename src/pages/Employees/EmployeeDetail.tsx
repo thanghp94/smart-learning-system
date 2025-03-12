@@ -1,455 +1,237 @@
+
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Employee, Task, Asset, Finance } from '@/lib/types';
-import { employeeService } from '@/lib/supabase/employee-service';
-import { taskService } from '@/lib/supabase/task-service';
-import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
-import { assetService } from '@/lib/supabase/asset-service';
-import { financeService } from '@/lib/supabase/finance-service';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatDate, formatStatus } from '@/utils/format';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Employee } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PenSquare } from 'lucide-react';
-import DataTable from '@/components/ui/DataTable';
-import { Badge } from '@/components/ui/badge';
-import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
-import { Spinner } from '@/components/ui/spinner';
+import { employeeService, facilityService } from '@/lib/supabase';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Edit, ArrowLeft, Save, X } from 'lucide-react';
+import EmployeeBasicInfo from './components/EmployeeBasicInfo';
+import EmployeeContactInfo from './components/EmployeeContactInfo';
+import EmployeeWorkInfo from './components/EmployeeWorkInfo';
+import EmployeeContractTab from './components/EmployeeContractTab';
+import EmployeeFinancesTab from './components/EmployeeFinancesTab';
+import EmployeeFilesTab from './components/EmployeeFilesTab';
 
-interface EmployeeDetailProps {
-  employeeId: string;
-}
-
-const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId }) => {
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [attendance, setAttendance] = useState<EmployeeClockInOut[]>([]);
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [finances, setFinances] = useState<Finance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const EmployeeDetail = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [tempEmployeeData, setTempEmployeeData] = useState<Employee | null>(null);
+  const [facilities, setFacilities] = useState<any[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchEmployeeData = async () => {
+    const fetchData = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        
-        // Fetch employee details
-        const empData = await employeeService.getById(employeeId);
-        if (!empData) {
-          throw new Error('Không tìm thấy thông tin nhân viên');
+        setIsLoading(true);
+        if (id) {
+          const employeeData = await employeeService.getById(id);
+          setEmployee(employeeData);
+          setTempEmployeeData({...employeeData});
         }
         
-        setEmployee(empData);
-        
-        // Fetch related tasks - handle error if "nguoi_thuc_hien" column doesn't exist
-        try {
-          const tasksData = await taskService.getByEmployeeId(employeeId);
-          setTasks(tasksData);
-        } catch (taskError) {
-          console.error('Error fetching employee tasks:', taskError);
-          setTasks([]);
-        }
-        
-        // Fetch attendance records
-        try {
-          const attendanceData = await employeeClockInService.getByEmployee(employeeId);
-          // Set default values for any missing required properties
-          const formattedAttendance = attendanceData.map(item => ({
-            ...item,
-            xac_nhan: item.xac_nhan ?? false,
-            trang_thai: item.trang_thai || 'pending'
-          })) as EmployeeClockInOut[];
-          
-          setAttendance(formattedAttendance);
-        } catch (attendanceError) {
-          console.error('Error fetching attendance data:', attendanceError);
-          setAttendance([]);
-        }
-
-        // Fetch assets
-        try {
-          // Use getByOwner instead of getByEmployeeId
-          const assetsData = await assetService.getByOwner('employee', employeeId);
-          setAssets(assetsData || []);
-        } catch (assetError) {
-          console.error('Error fetching employee assets:', assetError);
-          setAssets([]);
-        }
-
-        // Fetch finances using financeService.getByEntity
-        try {
-          const financesData = await financeService.getByEntity('employee', employeeId);
-          setFinances(financesData || []);
-        } catch (financeError) {
-          console.error('Error fetching employee finances:', financeError);
-          setFinances([]);
-        }
-      } catch (error: any) {
-        console.error('Error fetching employee data:', error);
-        setError(error.message || 'Không thể tải dữ liệu nhân viên');
+        const facilitiesData = await facilityService.getAll();
+        setFacilities(facilitiesData);
+      } catch (error) {
+        console.error("Error fetching employee data:", error);
         toast({
-          title: 'Lỗi',
-          description: error.message || 'Không thể tải dữ liệu nhân viên',
-          variant: 'destructive',
+          title: "Lỗi",
+          description: "Không thể tải thông tin nhân viên",
+          variant: "destructive"
         });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
     
-    if (employeeId) {
-      fetchEmployeeData();
-    }
-  }, [employeeId, toast]);
+    fetchData();
+  }, [id, toast]);
 
-  const fetchEmployeeFinances = async () => {
+  const handleBack = () => {
+    navigate('/employees');
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Cancel edit mode
+      setTempEmployeeData({...employee});
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setTempEmployeeData(prev => {
+      if (!prev) return prev;
+      return { ...prev, [name]: value };
+    });
+  };
+
+  const handleMultiSelectChange = (name: string, value: string[]) => {
+    setTempEmployeeData(prev => {
+      if (!prev) return prev;
+      return { ...prev, [name]: value };
+    });
+  };
+
+  const handleDateChange = (name: string, value: Date | null) => {
+    setTempEmployeeData(prev => {
+      if (!prev) return prev;
+      return { ...prev, [name]: value };
+    });
+  };
+
+  const handleImageUpload = (url: string) => {
+    setTempEmployeeData(prev => {
+      if (!prev) return prev;
+      return { ...prev, hinh_anh: url };
+    });
+  };
+
+  const handleSave = async () => {
+    if (!tempEmployeeData || !employee || !id) return;
+    
     try {
-      if (employee?.id) {
-        const financesData = await financeService.getByEntity('employee', employee.id);
-        setFinances(financesData);
+      setIsLoading(true);
+      
+      // Process the data for API submission
+      const dataToSubmit = { ...tempEmployeeData };
+      
+      // Handle date conversion if needed
+      if (dataToSubmit.ngay_sinh instanceof Date) {
+        dataToSubmit.ngay_sinh = dataToSubmit.ngay_sinh.toISOString();
       }
+      
+      await employeeService.update(id, dataToSubmit);
+      
+      setEmployee(dataToSubmit);
+      setIsEditing(false);
+      
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật thông tin nhân viên"
+      });
     } catch (error) {
-      console.error('Error fetching employee finances:', error);
+      console.error("Error updating employee:", error);
       toast({
         title: "Lỗi",
-        description: "Không thể tải dữ liệu tài chính",
-        variant: "destructive",
+        description: "Không thể cập nhật thông tin nhân viên",
+        variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Column definitions for Tasks table
-  const taskColumns = [
-    {
-      title: 'Tên công việc',
-      key: 'ten_viec',
-    },
-    {
-      title: 'Deadline',
-      key: 'ngay_den_han',
-      render: (value: string) => formatDate(value),
-    },
-    {
-      title: 'Cấp độ',
-      key: 'cap_do',
-    },
-    {
-      title: 'Trạng thái',
-      key: 'trang_thai',
-      render: (value: string) => (
-        <Badge variant={value === 'completed' ? 'success' : 'secondary'}>
-          {formatStatus(value)}
-        </Badge>
-      ),
-    },
-    {
-      title: 'Chi tiết',
-      key: 'actions',
-      render: (_: string, task: Task) => (
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/tasks/${task.id}`}>
-            Xem chi tiết
-          </Link>
-        </Button>
-      ),
-    },
-  ];
-
-  // Column definitions for Attendance table
-  const attendanceColumns = [
-    {
-      title: 'Ngày',
-      key: 'ngay',
-      render: (value: string) => formatDate(value),
-    },
-    {
-      title: 'Giờ vào',
-      key: 'thoi_gian_bat_dau',
-    },
-    {
-      title: 'Giờ ra',
-      key: 'thoi_gian_ket_thuc',
-    },
-    {
-      title: 'Trạng thái',
-      key: 'trang_thai',
-      render: (value: string) => (
-        <Badge variant={value === 'approved' ? 'success' : 'secondary'}>
-          {formatStatus(value || 'pending')}
-        </Badge>
-      ),
-    },
-    {
-      title: 'Chi tiết',
-      key: 'actions',
-      render: (_: string, record: EmployeeClockInOut) => (
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/attendance?employeeId=${employeeId}&date=${record.ngay}`}>
-            Xem chấm công
-          </Link>
-        </Button>
-      ),
-    },
-  ];
-
-  // Column definitions for Assets table
-  const assetColumns = [
-    {
-      title: 'Tên tài sản',
-      key: 'ten_csvc',
-    },
-    {
-      title: 'Loại',
-      key: 'loai',
-    },
-    {
-      title: 'Số lượng',
-      key: 'so_luong',
-    },
-    {
-      title: 'Trạng thái',
-      key: 'tinh_trang',
-      render: (value: string) => (
-        <Badge variant={value === 'active' ? 'success' : 'secondary'}>
-          {formatStatus(value)}
-        </Badge>
-      ),
-    },
-    {
-      title: 'Chi tiết',
-      key: 'actions',
-      render: (_: string, asset: Asset) => (
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/assets/${asset.id}`}>
-            Xem chi tiết
-          </Link>
-        </Button>
-      ),
-    },
-  ];
-
-  // Column definitions for Finances table
-  const financeColumns = [
-    {
-      title: 'Ngày',
-      key: 'ngay',
-      render: (value: string) => formatDate(value),
-    },
-    {
-      title: 'Loại',
-      key: 'loai_thu_chi',
-    },
-    {
-      title: 'Diễn giải',
-      key: 'dien_giai',
-    },
-    {
-      title: 'Số tiền',
-      key: 'tong_tien',
-      render: (value: number) => value?.toLocaleString('vi-VN') + ' đ',
-    },
-    {
-      title: 'Chi tiết',
-      key: 'actions',
-      render: (_: string, finance: Finance) => (
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/finance/${finance.id}`}>
-            Xem chi tiết
-          </Link>
-        </Button>
-      ),
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="p-6">
-        <div className="text-center">
-          <h2 className="text-xl font-medium">Có lỗi xảy ra</h2>
-          <p className="text-muted-foreground mt-2">{error}</p>
-          <Button className="mt-4" onClick={() => navigate('/employees')}>
-            Quay lại danh sách
-          </Button>
-        </div>
-      </Card>
-    );
+  if (isLoading) {
+    return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
   }
 
   if (!employee) {
     return (
-      <Card className="p-6">
-        <div className="text-center">
-          <h2 className="text-xl font-medium">Không tìm thấy thông tin nhân viên</h2>
-          <p className="text-muted-foreground mt-2">ID không tồn tại hoặc đã bị xóa</p>
-          <Button className="mt-4" onClick={() => navigate('/employees')}>
-            Quay lại danh sách
-          </Button>
-        </div>
-      </Card>
+      <div className="p-8 text-center">
+        <p className="mb-4">Không tìm thấy thông tin nhân viên</p>
+        <Button onClick={handleBack}>Quay lại</Button>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">{employee.ten_nhan_su}</h2>
-          <p className="text-muted-foreground">{employee.chuc_danh || 'Chưa có chức danh'}</p>
+    <div className="container mx-auto py-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button variant="ghost" onClick={handleBack} className="mr-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Quay lại
+          </Button>
+          <h1 className="text-3xl font-bold">{employee.ten_nhan_su}</h1>
         </div>
-        <Button onClick={() => navigate(`/employees/edit/${employeeId}`)} className="flex items-center gap-1">
-          <PenSquare className="h-4 w-4" /> Chỉnh sửa
-        </Button>
+        
+        {isEditing ? (
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={handleEditToggle}>
+              <X className="h-4 w-4 mr-2" />
+              Hủy
+            </Button>
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              Lưu
+            </Button>
+          </div>
+        ) : (
+          <Button onClick={handleEditToggle}>
+            <Edit className="h-4 w-4 mr-2" />
+            Chỉnh sửa
+          </Button>
+        )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Thông tin cá nhân</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium">Họ và tên</p>
-            <p>{employee.ten_nhan_su}</p>
-          </div>
-          {employee.ten_tieng_anh && (
-            <div>
-              <p className="text-sm font-medium">Tên tiếng Anh</p>
-              <p>{employee.ten_tieng_anh}</p>
-            </div>
-          )}
-          {employee.dien_thoai && (
-            <div>
-              <p className="text-sm font-medium">Điện thoại</p>
-              <p>{employee.dien_thoai}</p>
-            </div>
-          )}
-          {employee.email && (
-            <div>
-              <p className="text-sm font-medium">Email</p>
-              <p>{employee.email}</p>
-            </div>
-          )}
-          {employee.dia_chi && (
-            <div>
-              <p className="text-sm font-medium">Địa chỉ</p>
-              <p>{employee.dia_chi}</p>
-            </div>
-          )}
-          {employee.gioi_tinh && (
-            <div>
-              <p className="text-sm font-medium">Giới tính</p>
-              <p>{employee.gioi_tinh}</p>
-            </div>
-          )}
-          {employee.ngay_sinh && (
-            <div>
-              <p className="text-sm font-medium">Ngày sinh</p>
-              <p>{formatDate(employee.ngay_sinh)}</p>
-            </div>
-          )}
-          {employee.bo_phan && (
-            <div>
-              <p className="text-sm font-medium">Bộ phận</p>
-              <p>{employee.bo_phan}</p>
-            </div>
-          )}
-          {employee.chuc_danh && (
-            <div>
-              <p className="text-sm font-medium">Chức danh</p>
-              <p>{employee.chuc_danh}</p>
-            </div>
-          )}
-          <div>
-            <p className="text-sm font-medium">Trạng thái</p>
-            <Badge variant={employee.tinh_trang_lao_dong === 'active' ? 'success' : 'destructive'}>
-              {formatStatus(employee.tinh_trang_lao_dong)}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+      <Separator className="mb-6" />
 
-      <Tabs defaultValue="tasks">
-        <TabsList>
-          <TabsTrigger value="tasks">Công việc</TabsTrigger>
-          <TabsTrigger value="attendance">Chấm công</TabsTrigger>
-          <TabsTrigger value="assets">Tài sản</TabsTrigger>
-          <TabsTrigger value="finances">Thu chi</TabsTrigger>
+      <Tabs defaultValue="basic">
+        <TabsList className="mb-6">
+          <TabsTrigger value="basic">Thông tin cơ bản</TabsTrigger>
+          <TabsTrigger value="contracts">Hợp đồng</TabsTrigger>
+          <TabsTrigger value="finances">Tài chính</TabsTrigger>
+          <TabsTrigger value="files">Tài liệu</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="tasks">
-          <Card>
-            <CardHeader>
-              <CardTitle>Công việc</CardTitle>
-              <CardDescription>Danh sách công việc được giao cho nhân viên này</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {tasks.length === 0 ? (
-                <p className="text-muted-foreground">Chưa có công việc nào được giao</p>
-              ) : (
-                <DataTable columns={taskColumns} data={tasks} />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="attendance">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chấm công</CardTitle>
-              <CardDescription>Lịch sử chấm công</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {attendance.length === 0 ? (
-                <p className="text-muted-foreground">Chưa có dữ liệu chấm công</p>
-              ) : (
-                <DataTable columns={attendanceColumns} data={attendance} />
-              )}
-            </CardContent>
-          </Card>
+
+        <TabsContent value="basic">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="pt-6">
+                <EmployeeBasicInfo 
+                  employee={isEditing ? tempEmployeeData : employee}
+                  isEditing={isEditing}
+                  handleChange={handleChange}
+                  handleImageUpload={handleImageUpload}
+                  handleDateChange={handleDateChange}
+                />
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <EmployeeContactInfo 
+                    employee={isEditing ? tempEmployeeData : employee}
+                    isEditing={isEditing}
+                    handleChange={handleChange}
+                  />
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <EmployeeWorkInfo 
+                    employee={isEditing ? tempEmployeeData : employee}
+                    facilities={facilities}
+                    isEditing={isEditing}
+                    handleChange={handleChange}
+                    handleMultiSelectChange={handleMultiSelectChange}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
-        <TabsContent value="assets">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tài sản</CardTitle>
-              <CardDescription>Tài sản được giao cho nhân viên</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {assets.length === 0 ? (
-                <p className="text-muted-foreground">Chưa có tài sản nào được giao</p>
-              ) : (
-                <DataTable columns={assetColumns} data={assets} />
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="contracts">
+          <EmployeeContractTab employeeId={id || ''} />
         </TabsContent>
 
         <TabsContent value="finances">
-          <Card>
-            <CardHeader>
-              <CardTitle>Thu chi</CardTitle>
-              <CardDescription>Các giao dịch tài chính liên quan</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {finances.length === 0 ? (
-                <p className="text-muted-foreground">Chưa có giao dịch tài chính nào</p>
-              ) : (
-                <DataTable columns={financeColumns} data={finances} />
-              )}
-            </CardContent>
-          </Card>
+          <EmployeeFinancesTab employeeId={id || ''} />
+        </TabsContent>
+
+        <TabsContent value="files">
+          <EmployeeFilesTab employeeId={id || ''} />
         </TabsContent>
       </Tabs>
     </div>

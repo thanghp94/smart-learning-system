@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FormField,
   FormItem,
@@ -14,60 +14,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { financeService } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase/client';
 
 interface TransactionTypeSelectProps {
   form: any;
-  transactionCategory: string | undefined;
+  transactionCategory: string;
 }
 
 const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, transactionCategory }) => {
-  const [transactionTypes, setTransactionTypes] = useState<any[]>([]);
+  const [transactionTypes, setTransactionTypes] = useState<Array<{id: string; name: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
+    if (!transactionCategory) return;
+    
     const fetchTransactionTypes = async () => {
-      if (!transactionCategory) return;
-      
       setIsLoading(true);
       try {
-        console.log('Fetching transaction types for category:', transactionCategory);
-        const types = await financeService.getTransactionTypes();
-        console.log('Fetched transaction types:', types);
+        const { data, error } = await supabase
+          .from('finance_transaction_types')
+          .select('id, name')
+          .eq('category', transactionCategory);
         
-        if (Array.isArray(types)) {
-          setTransactionTypes(types);
-        } else {
-          console.error('Expected array of transaction types but got:', types);
-          setTransactionTypes([]);
-        }
+        if (error) throw error;
+        
+        setTransactionTypes(data || []);
       } catch (error) {
         console.error('Error fetching transaction types:', error);
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải danh sách loại giao dịch',
-          variant: 'destructive',
-        });
-        setTransactionTypes([]);
+        setTransactionTypes([]); // Set empty array on error to prevent UI issues
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     fetchTransactionTypes();
-  }, [transactionCategory, toast]);
-
-  // Map category "thu" to "income" and "chi" to "expense"
-  const mappedCategory = transactionCategory === 'thu' ? 'income' : transactionCategory === 'chi' ? 'expense' : transactionCategory;
-
-  // Filter types by the selected category (thu/chi)
-  const filteredTypes = transactionTypes.filter(type => 
-    type.category === mappedCategory
-  );
-
-  console.log('Filtered types:', filteredTypes, 'for category:', mappedCategory);
+  }, [transactionCategory]);
 
   return (
     <FormField
@@ -79,22 +60,26 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
           <Select
             onValueChange={field.onChange}
             value={field.value || ''}
-            disabled={isLoading || !transactionCategory}
+            disabled={isLoading || transactionTypes.length === 0}
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder={isLoading ? 'Đang tải...' : 'Chọn loại giao dịch'} />
+                <SelectValue placeholder={
+                  isLoading ? 'Đang tải...' : 
+                  transactionTypes.length === 0 ? 'Không có loại giao dịch' : 
+                  'Chọn loại giao dịch'
+                } />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {filteredTypes.length > 0 ? (
-                filteredTypes.map(type => (
-                  <SelectItem key={type.id} value={type.name}>
+              {transactionTypes.length > 0 ? (
+                transactionTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
                     {type.name}
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="loading" disabled>
+                <SelectItem value="" disabled>
                   {isLoading ? 'Đang tải...' : 'Không có loại giao dịch'}
                 </SelectItem>
               )}

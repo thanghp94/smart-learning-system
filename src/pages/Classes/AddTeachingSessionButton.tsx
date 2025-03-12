@@ -72,26 +72,28 @@ const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ cla
         Thêm buổi học
       </Button>
       
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Thêm Buổi Học cho lớp: {classItem.ten_lop_full}</DialogTitle>
-            <DialogDescription>
-              Nhập thông tin buổi học mới vào biểu mẫu bên dưới
-            </DialogDescription>
-          </DialogHeader>
-          <SessionForm 
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            initialData={{
-              lop_chi_tiet_id: classItem.id,
-              giao_vien: classItem.gv_chinh,
-              session_id: ""
-            }}
-            isEdit={false}
-          />
-        </DialogContent>
-      </Dialog>
+      {isOpen && (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Thêm Buổi Học cho lớp: {classItem.ten_lop_full}</DialogTitle>
+              <DialogDescription>
+                Nhập thông tin buổi học mới vào biểu mẫu bên dưới
+              </DialogDescription>
+            </DialogHeader>
+            <SessionForm 
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              initialData={{
+                lop_chi_tiet_id: classItem.id,
+                giao_vien: classItem.gv_chinh,
+                session_id: ""
+              }}
+              isEdit={false}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };

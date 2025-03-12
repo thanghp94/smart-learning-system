@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,11 +19,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import { File as FileType, Contact, Employee, Facility, Class } from '@/lib/types';
 import { fileSchema, FileFormData } from './schemas/fileSchema';
 import { contactService, employeeService, facilityService, classService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import ImageUpload from '@/components/common/ImageUpload';
 
 interface FileFormProps {
   initialData?: Partial<FileType>;
@@ -36,6 +38,7 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string>('');
   const { toast } = useToast();
 
   const form = useForm<FileFormData>({
@@ -50,6 +53,7 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
       ngay_cap: initialData?.ngay_cap || null,
       han_tai_lieu: initialData?.han_tai_lieu || null,
       trang_thai: initialData?.trang_thai || 'active',
+      uploaded_file: null,
     },
   });
 
@@ -112,10 +116,21 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
         break;
     }
     
-    mappedData.file1 = data.duong_dan;
+    // Use uploaded file URL if available
+    if (uploadedFileUrl) {
+      mappedData.file1 = uploadedFileUrl;
+      mappedData.duong_dan = uploadedFileUrl;
+    } else {
+      mappedData.file1 = data.duong_dan;
+    }
     
     console.log("Submitting file with mapped data:", mappedData);
     onSubmit(mappedData);
+  };
+
+  const handleFileUpload = (url: string) => {
+    setUploadedFileUrl(url);
+    form.setValue('duong_dan', url);
   };
 
   const renderEntityOptions = () => {
@@ -219,15 +234,68 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
           )}
         />
 
+        <div className="space-y-4 border p-4 rounded-md">
+          <h4 className="text-sm font-medium">Tệp đính kèm</h4>
+          
+          <FormField
+            control={form.control}
+            name="uploaded_file"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tải lên tài liệu/hình ảnh</FormLabel>
+                <FormControl>
+                  <ImageUpload
+                    value={uploadedFileUrl || field.value}
+                    onChange={handleFileUpload}
+                    onRemove={() => {
+                      setUploadedFileUrl('');
+                      form.setValue('duong_dan', '');
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="duong_dan"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hoặc nhập đường dẫn</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Nhập URL tài liệu" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
-          name="duong_dan"
+          name="nhom_tai_lieu"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Đường dẫn</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
+              <FormLabel>Nhóm tài liệu</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value || ''}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn nhóm tài liệu" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="hop_dong">Hợp đồng</SelectItem>
+                  <SelectItem value="ho_so">Hồ sơ</SelectItem>
+                  <SelectItem value="chung_chi">Chứng chỉ</SelectItem>
+                  <SelectItem value="bao_cao">Báo cáo</SelectItem>
+                  <SelectItem value="tai_lieu_khac">Tài liệu khác</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

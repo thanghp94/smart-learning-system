@@ -11,6 +11,7 @@ export const fileSchema = z.object({
   han_tai_lieu: z.string().optional().nullable(),
   ghi_chu: z.string().optional(),
   trang_thai: z.string().optional(),
+  uploaded_file: z.any().optional(), // For file upload handling
   // Fields to map to the correct database columns
   file1: z.string().optional(),
   nhan_vien_ID: z.string().optional(),

@@ -14,11 +14,15 @@ export const fileService = {
     // Ensure the correct entity type is set
     const entityType = file.doi_tuong_lien_quan;
     
+    if (!entityType) {
+      throw new Error("Entity type is required");
+    }
+    
     // Extract and prepare the data for insert
     const dataToInsert: any = {
       ten_tai_lieu: file.ten_tai_lieu,
       doi_tuong_lien_quan: entityType,
-      file1: file.file1 || file.duong_dan,
+      file1: file.file1,
       nhom_tai_lieu: file.nhom_tai_lieu,
       ngay_cap: file.ngay_cap,
       han_tai_lieu: file.han_tai_lieu,
@@ -26,17 +30,29 @@ export const fileService = {
       ghi_chu: file.ghi_chu
     };
     
+    // Make sure we have an entity ID field
+    let hasEntityId = false;
+    
     // Add the correct entity ID field based on entity type
-    if (entityType === 'nhan_vien' && file.nhan_vien_ID) {
+    if (entityType === 'nhan_vien' || entityType === 'employee') {
       dataToInsert.nhan_vien_ID = file.nhan_vien_ID;
-    } else if (entityType === 'co_so' && file.co_so_id) {
+      hasEntityId = !!file.nhan_vien_ID;
+    } else if (entityType === 'co_so' || entityType === 'facility') {
       dataToInsert.co_so_id = file.co_so_id;
-    } else if (entityType === 'lien_he' && file.lien_he_id) {
+      hasEntityId = !!file.co_so_id;
+    } else if (entityType === 'lien_he' || entityType === 'contact') {
       dataToInsert.lien_he_id = file.lien_he_id;
-    } else if (entityType === 'CSVC' && file.CSVC_ID) {
+      hasEntityId = !!file.lien_he_id;
+    } else if (entityType === 'CSVC' || entityType === 'asset') {
       dataToInsert.CSVC_ID = file.CSVC_ID;
-    } else if ((entityType === 'hoc_sinh' || entityType === 'class') && file.hoc_sinh_id) {
+      hasEntityId = !!file.CSVC_ID;
+    } else if ((entityType === 'hoc_sinh' || entityType === 'student' || entityType === 'class' || entityType === 'lop')) {
       dataToInsert.hoc_sinh_id = file.hoc_sinh_id;
+      hasEntityId = !!file.hoc_sinh_id;
+    }
+    
+    if (!hasEntityId) {
+      throw new Error("Entity ID is required");
     }
     
     console.log("Data prepared for insert:", dataToInsert);
@@ -52,13 +68,13 @@ export const fileService = {
     let column = '';
     
     // Determine which column to use based on entity type
-    if (entityType === 'nhan_vien') {
+    if (entityType === 'nhan_vien' || entityType === 'employee') {
       column = 'nhan_vien_ID';
-    } else if (entityType === 'co_so') {
+    } else if (entityType === 'co_so' || entityType === 'facility') {
       column = 'co_so_id';
-    } else if (entityType === 'lien_he') {
+    } else if (entityType === 'lien_he' || entityType === 'contact') {
       column = 'lien_he_id';
-    } else if (entityType === 'CSVC') {
+    } else if (entityType === 'CSVC' || entityType === 'asset') {
       column = 'CSVC_ID';
     } else {
       column = 'hoc_sinh_id';

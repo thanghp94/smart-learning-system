@@ -11,6 +11,7 @@ import StudentFinanceTab from './components/StudentFinanceTab';
 import StudentEnrollmentsTab from './components/StudentEnrollmentsTab';
 import StudentActionsSection from './components/StudentActionsSection';
 import StudentProgressTab from './components/StudentProgressTab';
+import StudentAttendanceTab from './components/StudentAttendanceTab';
 import { useStudentData } from './hooks/useStudentData';
 
 const StudentDetail = () => {
@@ -98,11 +99,12 @@ const StudentDetail = () => {
       <Separator />
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-4">
+        <TabsList className="grid grid-cols-5 mb-4">
           <TabsTrigger value="info">Thông tin</TabsTrigger>
           <TabsTrigger value="progress">Tiến độ</TabsTrigger>
           <TabsTrigger value="finance">Tài chính</TabsTrigger>
           <TabsTrigger value="enrollments">Ghi danh</TabsTrigger>
+          <TabsTrigger value="attendance">Điểm danh</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="space-y-4">
@@ -137,6 +139,10 @@ const StudentDetail = () => {
 
         <TabsContent value="enrollments">
           <StudentEnrollmentsTab enrollments={enrollments} />
+        </TabsContent>
+
+        <TabsContent value="attendance">
+          <StudentAttendanceTab studentId={id || ''} />
         </TabsContent>
       </Tabs>
     </div>
