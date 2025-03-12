@@ -89,6 +89,75 @@ export const employeeClockInService = {
     return data || [];
   },
   
+  // Get today's attendance for the dashboard
+  getTodayAttendance: async (): Promise<EmployeeClockInOut[]> => {
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('employee_clock_in_out')
+      .select('*')
+      .eq('ngay', today);
+    
+    if (error) throw error;
+    return data || [];
+  },
+  
+  // Clock in for an employee
+  clockIn: async (employeeId: string): Promise<EmployeeClockInOut> => {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
+    
+    // Check if employee already clocked in today
+    const { data: existing } = await supabase
+      .from('employee_clock_in_out')
+      .select('*')
+      .eq('nhan_vien_id', employeeId)
+      .eq('ngay', today)
+      .maybeSingle();
+    
+    if (existing) {
+      // Update existing record
+      return employeeClockInService.update(existing.id, {
+        thoi_gian_vao: now,
+        thoi_gian_bat_dau: now
+      });
+    } else {
+      // Create new record
+      return employeeClockInService.create({
+        nhan_vien_id: employeeId,
+        ngay: today,
+        thoi_gian_vao: now,
+        thoi_gian_bat_dau: now,
+        trang_thai: 'present'
+      });
+    }
+  },
+  
+  // Clock out for an employee
+  clockOut: async (employeeId: string): Promise<EmployeeClockInOut> => {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
+    
+    // Find employee's clock-in record for today
+    const { data: existing, error } = await supabase
+      .from('employee_clock_in_out')
+      .select('*')
+      .eq('nhan_vien_id', employeeId)
+      .eq('ngay', today)
+      .maybeSingle();
+    
+    if (error) throw error;
+    
+    if (!existing) {
+      throw new Error('No clock-in record found for today');
+    }
+    
+    // Update with clock-out time
+    return employeeClockInService.update(existing.id, {
+      thoi_gian_ra: now,
+      thoi_gian_ket_thuc: now
+    });
+  },
+  
   // Get attendance by employee and date
   getByEmployeeAndDate: async (employeeId: string, date: string): Promise<EmployeeClockInOut | null> => {
     const { data, error } = await supabase

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,7 +21,10 @@ interface AssetFormProps {
 
 const AssetForm: React.FC<AssetFormProps> = ({ initialData = {}, onSubmit, onCancel }) => {
   const { toast } = useToast();
-  const [assetImages, setAssetImages] = useState({
+  const [assetImages, setAssetImages] = useState<{
+    hinh_anh: string;
+    hinh_anh_2: string;
+  }>({
     hinh_anh: initialData?.hinh_anh || '',
     hinh_anh_2: initialData?.hinh_anh_2 || ''
   });
@@ -53,19 +57,19 @@ const AssetForm: React.FC<AssetFormProps> = ({ initialData = {}, onSubmit, onCan
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    form.setValue(name as any, value);
+    form.setValue(name as keyof AssetFormData, value);
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    form.setValue(name as any, value === '' ? 0 : Number(value));
+    form.setValue(name as keyof AssetFormData, value === '' ? 0 : Number(value));
   };
 
   const handleImageUpload = async (url: string, field: keyof AssetFormData) => {
     form.setValue(field, url);
   };
 
-  const handleImageChange = (field: string, url: string) => {
+  const handleImageChange = (field: keyof AssetFormData, url: string) => {
     setAssetImages(prev => ({
       ...prev,
       [field]: url
@@ -73,7 +77,7 @@ const AssetForm: React.FC<AssetFormProps> = ({ initialData = {}, onSubmit, onCan
     form.setValue(field, url);
   };
 
-  const handleRemoveImage = (field: string) => {
+  const handleRemoveImage = (field: keyof AssetFormData) => {
     setAssetImages(prev => ({
       ...prev,
       [field]: ''

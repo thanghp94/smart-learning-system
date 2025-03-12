@@ -12,10 +12,12 @@ export interface EmployeeClockInOut {
   trang_thai?: string;
   created_at?: string;
   updated_at?: string;
-  // Add missing fields for TodayAttendance component
+  // Fields for TodayAttendance component
   thoi_gian_vao?: string;
   thoi_gian_ra?: string;
   nhan_su_id?: string;
+  gio_vao?: string;
+  gio_ra?: string;
 }
 
 export interface MonthlyAttendanceSummary {

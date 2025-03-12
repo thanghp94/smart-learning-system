@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { FileSignature, Plus, RotateCw } from "lucide-react";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
@@ -6,8 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import RequestsTable from "./RequestsTable";
+import { Request } from "@/lib/types";
 
-interface RequestData {
+// Add missing 'type' field to match Request interface
+interface RequestData extends Omit<Request, 'type'> {
   id: string;
   title: string;
   description?: string;
@@ -21,13 +24,13 @@ interface RequestData {
   trang_thai?: string;
   ngay_de_xuat?: string;
   request_type?: string;
-  type?: string;
+  type: string; // Make this required to match Request interface
 }
 
 const Requests = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [requests, setRequests] = useState<Request[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const { toast } = useToast();
 
@@ -51,7 +54,7 @@ const Requests = () => {
       
       if (employeesError) throw employeesError;
       
-      const formattedRequests = (requestsData || []).map((req: any) => {
+      const formattedRequests: Request[] = (requestsData || []).map((req: any) => {
         const employee = employeesData?.find(e => e.id === req.nguoi_de_xuat_id);
         return {
           ...req,
@@ -60,7 +63,7 @@ const Requests = () => {
           description: req.ly_do,
           status: req.trang_thai || 'pending',
           priority: req.priority || 'Medium',
-          request_type: req.request_type || 'other'
+          type: req.request_type || 'other' // Ensure type is always set
         };
       });
       

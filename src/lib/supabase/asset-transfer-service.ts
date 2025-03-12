@@ -56,6 +56,11 @@ export const assetTransferService = {
     return data as AssetTransfer;
   },
   
+  // Same method but with different name for compatibility
+  createTransfer: async (transfer: Partial<AssetTransfer>): Promise<AssetTransfer> => {
+    return assetTransferService.create(transfer);
+  },
+  
   update: async (id: string, updates: Partial<AssetTransfer>): Promise<AssetTransfer> => {
     // If status is being updated to 'completed', update the asset quantities
     if (updates.status === 'completed') {
@@ -131,6 +136,11 @@ export const assetTransferService = {
     }
     
     return data as AssetTransfer[];
+  },
+  
+  // Alternate method name for compatibility
+  getTransfersByAssetId: async (assetId: string): Promise<AssetTransfer[]> => {
+    return assetTransferService.getByAsset(assetId);
   },
   
   // Get transfers by source

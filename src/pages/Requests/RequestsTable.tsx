@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Plus, RotateCw, Filter, FileDown } from "lucide-react";
 import { DataTable } from "@/components/ui/DataTable";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import ExportButton from "@/components/ui/ExportButton";
 import FilterButton, { FilterCategory } from "@/components/ui/FilterButton";
+import TablePageLayout from "@/components/common/TablePageLayout";
 
 interface RequestsTableProps {
   requests: Request[];
