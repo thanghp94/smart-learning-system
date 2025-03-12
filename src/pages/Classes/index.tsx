@@ -199,7 +199,26 @@ const Classes = () => {
         <TablePageLayout
           title="Lớp Học"
           description="Quản lý thông tin lớp học"
-          actions={tableActions}
+          actions={
+            <div className="flex items-center space-x-2">
+              <ClassFilters 
+                onFilterChange={handleFilterChange} 
+                onReset={handleResetFilters} 
+              />
+              
+              <Button variant="outline" size="sm" className="h-8" onClick={fetchClasses}>
+                <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
+              </Button>
+              
+              <Button variant="outline" size="sm" className="h-8">
+                <FileDown className="h-4 w-4 mr-1" /> Xuất
+              </Button>
+              
+              <Button size="sm" className="h-8" onClick={handleAddClick}>
+                <Plus className="h-4 w-4 mr-1" /> Thêm Lớp Học
+              </Button>
+            </div>
+          }
         >
           <ClassesTable
             classes={filteredClasses}

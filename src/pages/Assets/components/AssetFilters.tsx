@@ -53,7 +53,7 @@ const AssetFilters: React.FC<AssetFiltersProps> = ({ onFilterChange, onReset }) 
       facility: selectedFacility,
       employee: selectedEmployee
     });
-  }, [selectedFacility, selectedEmployee]);
+  }, [selectedFacility, selectedEmployee, onFilterChange]);
 
   const handleReset = () => {
     setSelectedFacility(undefined);
@@ -62,25 +62,30 @@ const AssetFilters: React.FC<AssetFiltersProps> = ({ onFilterChange, onReset }) 
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 bg-background border rounded-md p-1">
+      <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs font-normal" disabled>
+        <Filter className="h-3.5 w-3.5" />
+        Lọc
+      </Button>
+      
       <Popover open={facilityOpen} onOpenChange={setFacilityOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={facilityOpen}
-            className="w-[200px] justify-between"
+            className="w-[180px] h-8 justify-between text-xs"
             size="sm"
           >
             {selectedFacility
               ? facilities.find((facility) => facility.id === selectedFacility)?.name || "Cơ sở"
-              : "Cơ sở"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              : "Theo cơ sở"}
+            <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
+        <PopoverContent className="w-[180px] p-0">
           <Command>
-            <CommandInput placeholder="Tìm cơ sở..." />
+            <CommandInput placeholder="Tìm cơ sở..." className="h-9" />
             <CommandEmpty>Không tìm thấy.</CommandEmpty>
             <CommandGroup>
               {facilities.map((facility) => (
@@ -112,18 +117,18 @@ const AssetFilters: React.FC<AssetFiltersProps> = ({ onFilterChange, onReset }) 
             variant="outline"
             role="combobox"
             aria-expanded={employeeOpen}
-            className="w-[200px] justify-between"
+            className="w-[180px] h-8 justify-between text-xs"
             size="sm"
           >
             {selectedEmployee
               ? employees.find((employee) => employee.id === selectedEmployee)?.name || "Nhân viên"
-              : "Nhân viên"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              : "Theo nhân viên"}
+            <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
+        <PopoverContent className="w-[180px] p-0">
           <Command>
-            <CommandInput placeholder="Tìm nhân viên..." />
+            <CommandInput placeholder="Tìm nhân viên..." className="h-9" />
             <CommandEmpty>Không tìm thấy.</CommandEmpty>
             <CommandGroup>
               {employees.map((employee) => (
@@ -150,7 +155,12 @@ const AssetFilters: React.FC<AssetFiltersProps> = ({ onFilterChange, onReset }) 
       </Popover>
 
       {(selectedFacility || selectedEmployee) && (
-        <Button size="sm" variant="ghost" onClick={handleReset}>
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          className="h-8 text-xs"
+          onClick={handleReset}
+        >
           Đặt lại
         </Button>
       )}
