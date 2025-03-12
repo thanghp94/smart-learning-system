@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -75,11 +74,11 @@ const Assets = () => {
       let matchesEmployee = true;
 
       if (facility) {
-        matchesFacility = asset.co_so_id === facility;
+        matchesFacility = asset.facility_id === facility;
       }
 
       if (employee) {
-        matchesEmployee = asset.nguoi_quan_ly === employee;
+        matchesEmployee = asset.manager_id === employee;
       }
 
       return matchesFacility && matchesEmployee;

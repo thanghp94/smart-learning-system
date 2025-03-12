@@ -1,4 +1,5 @@
-import { supabase } from './supabase';
+
+import { supabase } from './client';
 import { TeachingSession } from '@/lib/types';
 
 const teachingSessionService = {
@@ -112,7 +113,7 @@ const teachingSessionService = {
     }
   },
 
-  // Add getWithAvgScore method
+  // Add getWithAvgScore method - Fixed the 'eval' issue by using 'evaluation' instead
   async getWithAvgScore(): Promise<any[]> {
     try {
       const { data, error } = await supabase
@@ -125,7 +126,7 @@ const teachingSessionService = {
       return (data || []).map(session => {
         const evaluations = session.evaluations || [];
         const avgScore = evaluations.length > 0 
-          ? evaluations.reduce((sum: number, eval: any) => sum + (eval.score || 0), 0) / evaluations.length 
+          ? evaluations.reduce((sum: number, evaluation: any) => sum + (evaluation.score || 0), 0) / evaluations.length 
           : 0;
       
         return { ...session, avgScore };
@@ -143,7 +144,6 @@ const teachingSessionService = {
         .from('teaching_sessions')
         .update({
           status: 'completed'
-          // Remove invalid updated_at field
         })
         .eq('id', id)
         .select()

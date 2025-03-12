@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Filter, X, Building, User, GraduationCap, Factory, Check, Tag, Calendar } from 'lucide-react';
@@ -17,10 +16,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+export type FilterType = 'status' | 'date' | 'other' | 'category' | 'student' | 'employee' | 'facility' | 'tuition';
+
 export type FilterOption = {
   label: string;
   value: string;
-  type: 'facility' | 'employee' | 'student' | 'status' | 'other' | 'date' | 'category';
+  type: FilterType;
 };
 
 export type FilterCategory = {
@@ -58,7 +59,6 @@ const FilterButton: React.FC<FilterButtonProps> = ({
       [category]: value,
     };
     
-    // If value is empty, remove the filter
     if (!value) {
       delete newFilters[category];
     }

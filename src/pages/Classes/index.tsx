@@ -1,19 +1,18 @@
+
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
 import { classService } from "@/lib/supabase";
 import { Class } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
-import { Badge } from "@/components/ui/badge";
-import DetailPanel from "@/components/ui/DetailPanel";
-import ClassDetail from "./ClassDetail";
-import ClassForm from "./ClassForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 import { useDatabase } from "@/contexts/DatabaseContext";
 import ClassFilters from "./components/ClassFilters";
+import ClassesTable from "./components/ClassesTable";
+import ClassDetailPanel from "./components/ClassDetailPanel";
+import AddClassDialog from "./components/AddClassDialog";
+import ClassErrorDialog from "./components/ClassErrorDialog";
 
 const Classes = () => {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -167,39 +166,6 @@ const Classes = () => {
     }
   };
 
-  const columns = [
-    {
-      title: "Tên Lớp Đầy Đủ",
-      key: "ten_lop_full",
-      sortable: true,
-    },
-    {
-      title: "Tên Lớp",
-      key: "ten_lop",
-      sortable: true,
-    },
-    {
-      title: "Chương Trình",
-      key: "ct_hoc",
-    },
-    {
-      title: "Ngày Bắt Đầu",
-      key: "ngay_bat_dau",
-      sortable: true,
-      render: (value: string) => value ? new Date(value).toLocaleDateString('vi-VN') : '',
-    },
-    {
-      title: "Tình Trạng",
-      key: "tinh_trang",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={value === "active" ? "success" : value === "inactive" ? "destructive" : "secondary"}>
-          {value === "active" ? "Đang hoạt động" : value === "inactive" ? "Ngừng hoạt động" : "Chờ xử lý"}
-        </Badge>
-      ),
-    },
-  ];
-
   const tableActions = (
     <div className="flex items-center space-x-2">
       <ClassFilters 
@@ -235,56 +201,33 @@ const Classes = () => {
           description="Quản lý thông tin lớp học"
           actions={tableActions}
         >
-          <DataTable
-            columns={columns}
-            data={filteredClasses}
+          <ClassesTable
+            classes={filteredClasses}
             isLoading={isLoading}
             onRowClick={handleRowClick}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm lớp học..."
           />
         </TablePageLayout>
       )}
 
-      {selectedClass && (
-        <DetailPanel
-          title="Thông Tin Lớp Học"
-          isOpen={showDetail}
-          onClose={closeDetail}
-        >
-          {selectedClass && <ClassDetail classItem={selectedClass} />}
-        </DetailPanel>
-      )}
+      <ClassDetailPanel
+        classItem={selectedClass}
+        isOpen={showDetail}
+        onClose={closeDetail}
+      />
 
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Thêm Lớp Học Mới</DialogTitle>
-            <DialogDescription>
-              Nhập thông tin lớp học mới vào mẫu dưới đây
-            </DialogDescription>
-          </DialogHeader>
-          <ClassForm 
-            onSubmit={handleAddFormSubmit}
-            onCancel={handleAddFormCancel}
-          />
-        </DialogContent>
-      </Dialog>
+      <AddClassDialog
+        open={showAddForm}
+        onOpenChange={setShowAddForm}
+        onSubmit={handleAddFormSubmit}
+        onCancel={handleAddFormCancel}
+      />
 
-      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Lỗi</DialogTitle>
-            <DialogDescription>
-              {errorMessage}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button variant="outline" onClick={() => setShowErrorDialog(false)}>Hủy</Button>
-            <Button onClick={handleInitializeDatabase}>Khởi tạo lại cơ sở dữ liệu</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ClassErrorDialog
+        open={showErrorDialog}
+        onOpenChange={setShowErrorDialog}
+        errorMessage={errorMessage}
+        onInitializeDatabase={handleInitializeDatabase}
+      />
     </>
   );
 };
