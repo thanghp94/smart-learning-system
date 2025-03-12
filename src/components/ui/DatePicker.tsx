@@ -21,6 +21,7 @@ export interface DatePickerProps {
   onChange?: (date: Date | null) => void;
   disabled?: boolean;
   placeholder?: string;
+  id?: string; // Add id prop to support the pattern used in the app
 }
 
 export function DatePicker({ 
@@ -30,7 +31,8 @@ export function DatePicker({
   onChange,
   className,
   disabled = false,
-  placeholder = "Chọn ngày"
+  placeholder = "Chọn ngày",
+  id, // Add id prop
 }: DatePickerProps) {
   // Support both patterns: date+setDate and selected+onChange
   const value = date || selected;
@@ -40,7 +42,7 @@ export function DatePicker({
   };
 
   return (
-    <div className={className}>
+    <div className={className} id={id}>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -69,3 +71,5 @@ export function DatePicker({
     </div>
   )
 }
+
+export default DatePicker;

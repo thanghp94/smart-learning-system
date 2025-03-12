@@ -10,6 +10,9 @@ export interface ImageUploadProps {
   entityId: string;
   className?: string;
   onRemove?: () => void;
+  // Add additional props that are being used in the codebase
+  value?: string;
+  onChange?: (url: string) => void;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -19,7 +22,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   entityId,
   className,
   onRemove,
+  value, // Add value prop
+  onChange, // Add onChange prop
 }) => {
+  // Use both currentUrl and value, preferring currentUrl if both are provided
+  const imageUrl = currentUrl || value || '';
+
+  // Handle image upload
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -37,6 +46,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
       if (response.ok) {
         const data = await response.json();
+        if (onChange) onChange(data.url);
         onUpload(data.url);
       } else {
         console.error('Upload failed');
@@ -46,18 +56,24 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
+  // Handle remove functionality
+  const handleRemove = () => {
+    if (onChange) onChange('');
+    if (onRemove) onRemove();
+  };
+
   return (
     <div className={className}>
       <div className="relative w-32 h-32 mb-2">
         <img
-          src={currentUrl || '/placeholder.svg'}
+          src={imageUrl || '/placeholder.svg'}
           alt="Uploaded"
           className="w-full h-full object-cover rounded-full border border-gray-200"
         />
-        {onRemove && (
+        {(onRemove || onChange) && imageUrl && (
           <button 
             type="button"
-            onClick={onRemove}
+            onClick={handleRemove}
             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

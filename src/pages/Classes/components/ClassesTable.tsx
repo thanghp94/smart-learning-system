@@ -1,6 +1,6 @@
 
 import React from 'react';
-import DataTable from '@/components/ui/DataTable';
+import { DataTable } from '@/components/ui/DataTable'; // Changed from default import
 import { Class } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 

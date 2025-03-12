@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -208,17 +207,18 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
               
               <div>
                 <Label htmlFor="documentType">Loại tài liệu</Label>
-                <Select
-                  id="documentType"
-                  value={documentType}
-                  onChange={handleDocumentTypeChange}
-                >
-                  <option value="">Chọn loại tài liệu</option>
-                  <option value="contract">Hợp đồng</option>
-                  <option value="certificate">Chứng chỉ</option>
-                  <option value="id_card">CMND/CCCD</option>
-                  <option value="cv">CV</option>
-                  <option value="other">Khác</option>
+                <Select value={documentType} onValueChange={(value) => handleDocumentTypeChange({ target: { value } })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn loại tài liệu" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Chọn loại tài liệu</SelectItem>
+                    <SelectItem value="contract">Hợp đồng</SelectItem>
+                    <SelectItem value="certificate">Chứng chỉ</SelectItem>
+                    <SelectItem value="id_card">CMND/CCCD</SelectItem>
+                    <SelectItem value="cv">CV</SelectItem>
+                    <SelectItem value="other">Khác</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
             </div>
