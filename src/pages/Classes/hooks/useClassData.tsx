@@ -16,7 +16,7 @@ export function useClassData() {
       console.log("Fetching classes...");
       
       // Using the service method to get all classes
-      const data = await classService.getAll();
+      const data = await classService.getAllWithStudentCount();
       console.log("Classes data received:", data);
       
       if (data && Array.isArray(data)) {

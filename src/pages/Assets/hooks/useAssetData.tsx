@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { assetService } from "@/lib/supabase";
 import { Asset } from "@/lib/types";
@@ -50,6 +49,10 @@ export function useAssetData() {
         matchesEmployee = asset.doi_tuong === 'employee' && asset.doi_tuong_id === employee;
       }
 
+      if (facility && employee) {
+        return matchesFacility || matchesEmployee;
+      }
+      
       return (facility ? matchesFacility : true) && (employee ? matchesEmployee : true);
     });
 

@@ -18,12 +18,36 @@ class ClassQueryService {
       
       if (error) {
         console.error('Error fetching classes with student count:', error);
-        return [];
+        // Fall back to regular class fetch
+        return this.getAllFallback();
       }
       
       return data || [];
     } catch (error) {
       console.error('Error in fetchClassesWithStudentCount:', error);
+      return this.getAllFallback();
+    }
+  }
+
+  /**
+   * Fallback method to fetch all classes if the view doesn't exist
+   */
+  private async getAllFallback(): Promise<Class[]> {
+    try {
+      console.log('Falling back to regular class fetch');
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .order('ten_lop_full', { ascending: true });
+      
+      if (error) {
+        console.error('Error in fallback class fetch:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error in fallback class fetch:', error);
       return [];
     }
   }
