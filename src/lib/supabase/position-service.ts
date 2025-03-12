@@ -1,30 +1,41 @@
 
+import { supabase } from './client';
 import { Position } from '@/lib/types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
+import { BaseService } from './base-service';
 
-class PositionService {
-  async getAll(): Promise<Position[]> {
-    return fetchAll('positions') as Promise<Position[]>;
+class PositionService extends BaseService<Position> {
+  constructor() {
+    super('positions');
   }
 
-  async getById(id: string): Promise<Position> {
-    return fetchById('positions', id) as Promise<Position>;
+  async getAllActive(): Promise<Position[]> {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .select('*')
+      .eq('is_active', true)
+      .order('title', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching active positions:', error);
+      throw error;
+    }
+
+    return data || [];
   }
 
-  async create(position: Partial<Position>): Promise<Position> {
-    return insert('positions', position) as Promise<Position>;
-  }
+  async getByDepartment(department: string): Promise<Position[]> {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .select('*')
+      .eq('department', department)
+      .order('title', { ascending: true });
 
-  async update(id: string, data: Partial<Position>): Promise<Position> {
-    return update('positions', id, data) as Promise<Position>;
-  }
+    if (error) {
+      console.error('Error fetching positions by department:', error);
+      throw error;
+    }
 
-  async delete(id: string): Promise<void> {
-    return remove('positions', id);
-  }
-  
-  async getActive(): Promise<Position[]> {
-    return fetchAll('positions', { is_active: true }) as Promise<Position[]>;
+    return data || [];
   }
 }
 

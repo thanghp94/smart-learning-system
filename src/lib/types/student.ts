@@ -1,60 +1,46 @@
 
 export interface Student {
-  id: string;
+  id?: string;
   ten_hoc_sinh?: string;
   ngay_sinh?: Date;
-  gioi_tinh?: string; 
+  gioi_tinh?: string;
   dia_chi?: string;
   co_so_id?: string;
-  sdt_ph1?: string;
+  ghi_chu?: string;
+  trang_thai?: string;
   ten_PH?: string;
+  sdt_ph1?: string;
   email_ph1?: string;
   ct_hoc?: string;
-  trang_thai?: string;
-  ghi_chu?: string;
   password?: string;
   parentpassword?: string;
   han_hoc_phi?: Date;
   ngay_bat_dau_hoc_phi?: Date;
   
-  // Image fields
-  anh_minh_hoc?: string;
-  hinh_anh_hoc_sinh?: string;
-  
-  // Additional properties that were missing
-  created_at?: string;
-  updated_at?: string;
-  sdt_ph2?: string;
-  email_ph2?: string;
-  ma_so_thue?: string;
-  ngay_nhap_hoc?: Date;
-  hoc_phi_thang?: number;
-  ngay_phai_dong_hp?: string;
-  trang_thai_hp?: string;
-  mien_giam_hp?: string;
-  thong_tin_hoc_phi?: string;
-  ghi_chu_hp?: string;
-  
-  // Backward compatibility or alternative field names
-  ho_va_ten?: string;
-  email?: string;
+  // Additional fields used in components
+  ho_va_ten?: string; // For backward compatibility
   ma_hoc_sinh?: string;
+  email?: string;
   so_dien_thoai?: string;
-  ten_ph?: string;
-  ten_phu_huynh?: string;
   truong?: string;
   lop?: string;
+  nguon_den?: string;
   mo_ta_tinh_cach?: string;
   diem_manh?: string;
-  nguon_den?: string;
+  ten_phu_huynh?: string;
+  hinh_anh_hoc_sinh?: string;
+  anh_minh_hoc?: string;
+  trang_thai_hp?: string;
   trang_thai_hoc_phi?: string;
 }
 
-export interface StudentInfoTabProps {
-  student: Student;
-  isEditing: boolean;
-  tempStudentData: Student;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  handleImageUpload: (url: string) => Promise<void>;
-  facilityName: string;
+export interface TuitionDetail {
+  id: string;
+  student_id: string;
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  status: string;
+  expired_date: string;
+  notes?: string;
 }

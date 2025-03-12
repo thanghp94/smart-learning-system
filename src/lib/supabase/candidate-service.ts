@@ -1,42 +1,64 @@
 
 import { supabase } from './client';
-import { Candidate } from '@/lib/types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
+import { Candidate, CandidateStatus } from '@/lib/types';
+import { BaseService } from './base-service';
 
-class CandidateService {
-  async getAll(): Promise<Candidate[]> {
-    return fetchAll('candidates') as Promise<Candidate[]>;
+class CandidateService extends BaseService<Candidate> {
+  constructor() {
+    super('candidates');
   }
 
-  async getById(id: string): Promise<Candidate> {
-    return fetchById('candidates', id) as Promise<Candidate>;
-  }
+  async getByStatus(status: CandidateStatus): Promise<Candidate[]> {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .select('*, positions(title)')
+      .eq('status', status)
+      .order('created_at', { ascending: false });
 
-  async create(candidate: Partial<Candidate>): Promise<Candidate> {
-    return insert('candidates', candidate) as Promise<Candidate>;
-  }
-
-  async update(id: string, data: Partial<Candidate>): Promise<Candidate> {
-    return update('candidates', id, data) as Promise<Candidate>;
-  }
-
-  async delete(id: string): Promise<void> {
-    return remove('candidates', id);
-  }
-  
-  async getByStatus(status: string): Promise<Candidate[]> {
-    try {
-      const { data, error } = await supabase
-        .from('candidates')
-        .select('*')
-        .eq('status', status);
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error getting candidates by status:', error);
-      return [];
+    if (error) {
+      console.error('Error fetching candidates by status:', error);
+      throw error;
     }
+
+    return data?.map(candidate => ({
+      ...candidate,
+      position_name: candidate.positions?.title
+    })) || [];
+  }
+
+  async updateStatus(id: string, status: CandidateStatus): Promise<Candidate> {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating candidate status:', error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  async scheduleInterview(id: string, date: Date): Promise<Candidate> {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .update({ 
+        interview_date: date.toISOString(),
+        status: CandidateStatus.INTERVIEW
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error scheduling interview:', error);
+      throw error;
+    }
+
+    return data;
   }
 }
 

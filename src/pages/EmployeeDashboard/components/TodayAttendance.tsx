@@ -2,139 +2,159 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Clock, CheckCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { EmployeeClockInOut } from '@/lib/types';
 import { employeeClockInService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { formatTime } from '@/lib/utils';
-import { Check, Clock, LogIn, LogOut } from 'lucide-react';
 
-interface TodayAttendanceProps {
+export interface TodayAttendanceProps {
   employeeId: string;
   employeeName: string;
 }
 
 const TodayAttendance: React.FC<TodayAttendanceProps> = ({ employeeId, employeeName }) => {
-  const [attendance, setAttendance] = useState<EmployeeClockInOut[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [clockingIn, setClockingIn] = useState(false);
-  const [clockingOut, setClockingOut] = useState(false);
+  const [attendance, setAttendance] = useState<EmployeeClockInOut | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { toast } = useToast();
 
-  const fetchAttendance = async () => {
-    setIsLoading(true);
-    try {
-      const data = await employeeClockInService.getTodayAttendance();
-      // Filter for the current employee
-      const employeeAttendance = data.filter(record => record.nhan_vien_id === employeeId);
-      setAttendance(employeeAttendance);
-    } catch (error) {
-      console.error('Error fetching attendance:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải dữ liệu điểm danh',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (employeeId) {
-      fetchAttendance();
-    }
+    const fetchTodayAttendance = async () => {
+      try {
+        setLoading(true);
+        const data = await employeeClockInService.getTodayAttendance(employeeId);
+        setAttendance(data);
+      } catch (error) {
+        console.error("Error fetching today's attendance:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải dữ liệu điểm danh hôm nay",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTodayAttendance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employeeId]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const handleClockIn = async () => {
-    setClockingIn(true);
     try {
-      const result = await employeeClockInService.clockIn(employeeId);
-      if (result) {
-        toast({
-          title: 'Điểm danh thành công',
-          description: `Đã điểm danh vào lúc ${formatTime(new Date())}`,
-        });
-        fetchAttendance();
-      }
-    } catch (error) {
-      console.error('Error clocking in:', error);
+      setLoading(true);
+      const data = await employeeClockInService.clockIn(employeeId, employeeName);
+      setAttendance(data);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể điểm danh',
-        variant: 'destructive'
+        title: "Điểm danh thành công",
+        description: `Bạn đã điểm danh vào lúc ${format(new Date(), 'HH:mm')}`,
+      });
+    } catch (error) {
+      console.error("Error clocking in:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể điểm danh vào",
+        variant: "destructive"
       });
     } finally {
-      setClockingIn(false);
+      setLoading(false);
     }
   };
 
   const handleClockOut = async () => {
-    setClockingOut(true);
+    if (!attendance) return;
+    
     try {
-      const result = await employeeClockInService.clockOut(employeeId);
-      if (result) {
-        toast({
-          title: 'Đã đăng xuất',
-          description: `Đã đăng xuất lúc ${formatTime(new Date())}`,
-        });
-        fetchAttendance();
-      }
-    } catch (error) {
-      console.error('Error clocking out:', error);
+      setLoading(true);
+      const data = await employeeClockInService.clockOut(attendance.id);
+      setAttendance(data);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể đăng xuất',
-        variant: 'destructive'
+        title: "Điểm danh ra thành công",
+        description: `Bạn đã điểm danh ra lúc ${format(new Date(), 'HH:mm')}`,
+      });
+    } catch (error) {
+      console.error("Error clocking out:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể điểm danh ra",
+        variant: "destructive"
       });
     } finally {
-      setClockingOut(false);
+      setLoading(false);
     }
   };
-
-  const todayAttendance = attendance.length > 0 ? attendance[0] : null;
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-semibold">Điểm danh hôm nay</CardTitle>
+        <CardTitle className="text-lg font-medium">Điểm danh hôm nay</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col items-center justify-center p-3 border rounded-lg">
-              <Clock className="h-6 w-6 text-primary mb-1" />
-              <p className="text-sm text-muted-foreground">Giờ vào</p>
-              <p className="text-lg font-semibold">
-                {todayAttendance && todayAttendance.gio_vao ? todayAttendance.gio_vao : '...'}
-              </p>
-            </div>
-            <div className="flex flex-col items-center justify-center p-3 border rounded-lg">
-              <Clock className="h-6 w-6 text-primary mb-1" />
-              <p className="text-sm text-muted-foreground">Giờ ra</p>
-              <p className="text-lg font-semibold">
-                {todayAttendance && todayAttendance.gio_ra ? todayAttendance.gio_ra : '...'}
-              </p>
-            </div>
+        <div className="flex flex-col items-center">
+          <div className="mb-4 text-center">
+            <p className="text-xl font-bold">
+              {format(currentTime, 'HH:mm:ss', { locale: vi })}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {format(currentTime, 'EEEE, dd/MM/yyyy', { locale: vi })}
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <Button 
-              onClick={handleClockIn} 
-              disabled={isLoading || clockingIn || (todayAttendance && todayAttendance.gio_ra)}
-              className="w-full"
-            >
-              <LogIn className="mr-2 h-4 w-4" />
-              {clockingIn ? 'Đang xử lý...' : 'Điểm danh'}
-            </Button>
-            <Button 
-              onClick={handleClockOut} 
-              disabled={isLoading || clockingOut || !todayAttendance || !todayAttendance.gio_vao}
-              className="w-full"
-              variant={todayAttendance && todayAttendance.gio_ra ? 'default' : 'secondary'}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              {clockingOut ? 'Đang xử lý...' : 'Đăng xuất'}
-            </Button>
+          <div className="w-full grid grid-cols-2 gap-4 mb-4">
+            {attendance && attendance.gio_vao && (
+              <div className="p-3 bg-muted rounded-md text-center">
+                <p className="text-sm font-medium">Giờ vào</p>
+                <p className="text-base">{attendance.gio_vao || '--:--'}</p>
+              </div>
+            )}
+            
+            {attendance && attendance.gio_ra && (
+              <div className="p-3 bg-muted rounded-md text-center">
+                <p className="text-sm font-medium">Giờ ra</p>
+                <p className="text-base">{attendance.gio_ra || '--:--'}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 w-full">
+            {!attendance && (
+              <Button 
+                className="w-full" 
+                onClick={handleClockIn} 
+                disabled={loading || !!attendance?.gio_ra}
+              >
+                <Clock className="mr-2 h-4 w-4" />
+                Điểm danh vào
+              </Button>
+            )}
+            
+            {attendance && !attendance.gio_ra && (
+              <Button 
+                className="w-full"
+                onClick={handleClockOut} 
+                disabled={loading || !!attendance?.gio_ra === true}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Điểm danh ra
+              </Button>
+            )}
+            
+            {attendance && attendance.gio_vao && attendance.gio_ra && (
+              <Button disabled className="w-full bg-green-500">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Đã điểm danh đủ
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
