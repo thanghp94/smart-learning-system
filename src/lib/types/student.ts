@@ -34,6 +34,20 @@ export interface Student {
   mien_giam_hp?: string;
   thong_tin_hoc_phi?: string;
   ghi_chu_hp?: string;
+  
+  // Backward compatibility or alternative field names
+  ho_va_ten?: string;
+  email?: string;
+  ma_hoc_sinh?: string;
+  so_dien_thoai?: string;
+  ten_ph?: string;
+  ten_phu_huynh?: string;
+  truong?: string;
+  lop?: string;
+  mo_ta_tinh_cach?: string;
+  diem_manh?: string;
+  nguon_den?: string;
+  trang_thai_hoc_phi?: string;
 }
 
 export interface StudentInfoTabProps {

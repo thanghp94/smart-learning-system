@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,286 +21,181 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
-import ImageUpload from '@/components/common/ImageUpload';
+import { DatePicker } from '@/components/ui/DatePicker';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@supabase/supabase-js';
 import { positionService } from '@/lib/supabase/position-service';
 import { candidateService } from '@/lib/supabase/candidate-service';
-import { Candidate, CandidateStatus, Position } from '@/lib/types';
-import { Label } from '@/components/ui/label';
+import { Candidate, CandidateStatus, Position } from '@/lib/types/recruitment';
 
-const candidateSchema = z.object({
-  full_name: z.string().min(1, { message: 'Họ tên không được để trống' }),
-  email: z.string().email({ message: 'Email không hợp lệ' }).optional().or(z.literal('')),
-  phone: z.string().optional(),
-  birth_date: z.date().optional(),
-  gender: z.string().optional(),
-  address: z.string().optional(),
-  years_of_experience: z.coerce.number().min(0).default(0),
-  education: z.string().optional(),
-  skills: z.string().optional(),
-  current_status: z.enum(['new', 'screening', 'interview', 'offer', 'hired', 'rejected']).default('new'),
+const formSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  phone: z.string().min(10, { message: 'Please enter a valid phone number' }),
   position_id: z.string().optional(),
+  resume_url: z.string().optional(),
+  status: z.enum([
+    CandidateStatus.NEW,
+    CandidateStatus.SCREENING,
+    CandidateStatus.INTERVIEW,
+    CandidateStatus.OFFER,
+    CandidateStatus.HIRED,
+    CandidateStatus.REJECTED
+  ]),
+  interview_date: z.date().optional().nullable(),
   notes: z.string().optional(),
-  desired_salary: z.string().optional(),
-  cv_path: z.string().optional(),
-  linkedin_url: z.string().optional(),
-  portfolio_url: z.string().optional(),
 });
 
-type CandidateFormValues = z.infer<typeof candidateSchema>;
-
-interface CandidateFormProps {
+export interface CandidateFormProps {
+  candidateId?: string;
   initialData?: Partial<Candidate>;
-  onSubmit: (data: Partial<Candidate>) => void;
+  onSubmit: (data: z.infer<typeof formSchema>) => void;
   onCancel: () => void;
 }
 
 const CandidateForm: React.FC<CandidateFormProps> = ({
-  initialData = {},
+  candidateId,
+  initialData,
   onSubmit,
   onCancel,
 }) => {
   const [positions, setPositions] = useState<Position[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [cvFile, setCvFile] = useState<File | null>(null);
-  const [cvUrl, setCvUrl] = useState<string>(initialData.cv_path || '');
-  const [photoUrl, setPhotoUrl] = useState<string>(initialData.photo_url || '');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  
-  const form = useForm<CandidateFormValues>({
-    resolver: zodResolver(candidateSchema),
-    defaultValues: {
-      full_name: initialData.full_name || '',
-      email: initialData.email || '',
-      phone: initialData.phone || '',
-      birth_date: initialData.birth_date ? new Date(initialData.birth_date) : undefined,
-      gender: initialData.gender || '',
-      address: initialData.address || '',
-      years_of_experience: initialData.years_of_experience || 0,
-      education: initialData.education || '',
-      skills: initialData.skills || '',
-      current_status: initialData.current_status || 'new',
-      position_id: initialData.position_id || '',
-      notes: initialData.notes || '',
-      desired_salary: initialData.desired_salary || '',
-      cv_path: initialData.cv_path || '',
-      linkedin_url: initialData.linkedin_url || '',
-      portfolio_url: initialData.portfolio_url || '',
-    },
-  });
 
   useEffect(() => {
     const fetchPositions = async () => {
       try {
-        const positionsData = await positionService.getAll();
-        setPositions(positionsData);
+        const data = await positionService.getActive();
+        setPositions(data);
       } catch (error) {
         console.error('Error fetching positions:', error);
         toast({
-          title: 'Lỗi',
-          description: 'Không thể tải danh sách vị trí',
+          title: 'Error',
+          description: 'Could not load positions',
           variant: 'destructive',
         });
       }
     };
 
-    fetchPositions();
-  }, [toast]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setCvFile(file);
-    }
-  };
-
-  const uploadCv = async (): Promise<string> => {
-    if (!cvFile) return cvUrl;
-    
-    try {
-      // In a real implementation, this would upload to Supabase storage
-      // For now, let's simulate a successful upload
-      // const { data } = await supabase.storage.from('cvs').upload(`cv-${Date.now()}`, cvFile);
-      // return data?.path || '';
+    const fetchCandidate = async () => {
+      if (!candidateId) return;
       
-      // Mock response
-      return `/mock-uploads/cv-${Date.now()}-${cvFile.name}`;
-    } catch (error) {
-      console.error('Error uploading CV:', error);
-      throw new Error('Failed to upload CV');
-    }
-  };
-
-  const handleFormSubmit = async (values: CandidateFormValues) => {
-    try {
-      setIsSubmitting(true);
-      
-      // Upload CV if provided
-      let cvPath = cvUrl;
-      if (cvFile) {
-        cvPath = await uploadCv();
+      try {
+        setIsLoading(true);
+        const data = await candidateService.getById(candidateId);
+        if (data) {
+          form.reset({
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            position_id: data.position_id,
+            resume_url: data.resume_url || '',
+            status: data.status,
+            interview_date: data.interview_date ? new Date(data.interview_date) : null,
+            notes: data.notes || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching candidate:', error);
+        toast({
+          title: 'Error',
+          description: 'Could not load candidate data',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
       }
-      
-      // Prepare data for submission
-      const candidateData: Partial<Candidate> = {
-        ...values,
-        cv_path: cvPath,
-        photo_url: photoUrl,
-        current_status: values.current_status as CandidateStatus,
-      };
-      
-      onSubmit(candidateData);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể lưu thông tin ứng viên',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    };
+
+    fetchPositions();
+    fetchCandidate();
+  }, [candidateId, toast]);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: initialData?.name || '',
+      email: initialData?.email || '',
+      phone: initialData?.phone || '',
+      position_id: initialData?.position_id || '',
+      resume_url: initialData?.resume_url || '',
+      status: initialData?.status || CandidateStatus.NEW,
+      interview_date: initialData?.interview_date ? new Date(initialData.interview_date) : null,
+      notes: initialData?.notes || '',
+    },
+  });
+
+  const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
+    onSubmit(values);
   };
 
-  const handlePhotoUpload = (url: string) => {
-    setPhotoUrl(url);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
-            <FormField
-              control={form.control}
-              name="full_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Họ và tên *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nhập họ và tên" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Số điện thoại</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Số điện thoại" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="birth_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Ngày sinh</FormLabel>
-                    <DatePicker 
-                      date={field.value} 
-                      onSelect={field.onChange}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Giới tính</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn giới tính" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="male">Nam</SelectItem>
-                        <SelectItem value="female">Nữ</SelectItem>
-                        <SelectItem value="other">Khác</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center space-y-4">
-            <Label>Ảnh chân dung</Label>
-            <ImageUpload
-              currentUrl={photoUrl}
-              onUpload={handlePhotoUpload}
-              entityType="candidate"
-              entityId={initialData.id || "new"}
-              onRemove={() => setPhotoUrl('')}
-            />
-          </div>
-        </div>
-
         <FormField
           control={form.control}
-          name="address"
+          name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Địa chỉ</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Địa chỉ" {...field} />
+                <Input placeholder="Enter candidate name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter email address" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter phone number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="position_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Vị trí ứng tuyển</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+                <FormLabel>Position</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Chọn vị trí" />
+                      <SelectValue placeholder="Select a position" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -318,56 +213,23 @@ const CandidateForm: React.FC<CandidateFormProps> = ({
 
           <FormField
             control={form.control}
-            name="years_of_experience"
+            name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Số năm kinh nghiệm</FormLabel>
-                <FormControl>
-                  <Input type="number" min="0" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="desired_salary"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Mức lương mong muốn</FormLabel>
-                <FormControl>
-                  <Input placeholder="Mức lương mong muốn" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="current_status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Trạng thái</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Chọn trạng thái" />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="new">Mới</SelectItem>
-                    <SelectItem value="screening">Sàng lọc</SelectItem>
-                    <SelectItem value="interview">Phỏng vấn</SelectItem>
-                    <SelectItem value="offer">Đề xuất</SelectItem>
-                    <SelectItem value="hired">Đã thuê</SelectItem>
-                    <SelectItem value="rejected">Đã từ chối</SelectItem>
+                    <SelectItem value={CandidateStatus.NEW}>New</SelectItem>
+                    <SelectItem value={CandidateStatus.SCREENING}>Screening</SelectItem>
+                    <SelectItem value={CandidateStatus.INTERVIEW}>Interview</SelectItem>
+                    <SelectItem value={CandidateStatus.OFFER}>Offer</SelectItem>
+                    <SelectItem value={CandidateStatus.HIRED}>Hired</SelectItem>
+                    <SelectItem value={CandidateStatus.REJECTED}>Rejected</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -378,17 +240,15 @@ const CandidateForm: React.FC<CandidateFormProps> = ({
 
         <FormField
           control={form.control}
-          name="skills"
+          name="interview_date"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Kỹ năng</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Các kỹ năng của ứng viên" 
-                  className="min-h-[80px]" 
-                  {...field} 
-                />
-              </FormControl>
+            <FormItem className="flex flex-col">
+              <FormLabel>Interview Date</FormLabel>
+              <DatePicker 
+                date={field.value || undefined} 
+                setDate={field.onChange}
+                placeholder="Select interview date"
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -396,82 +256,29 @@ const CandidateForm: React.FC<CandidateFormProps> = ({
 
         <FormField
           control={form.control}
-          name="education"
+          name="resume_url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Học vấn</FormLabel>
+              <FormLabel>Resume URL</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Thông tin học vấn" 
-                  className="min-h-[80px]" 
-                  {...field} 
-                />
+                <Input placeholder="Enter resume URL" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="linkedin_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>LinkedIn URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="LinkedIn profile URL" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="portfolio_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Website / Portfolio</FormLabel>
-                <FormControl>
-                  <Input placeholder="Website or portfolio URL" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div>
-          <Label>CV / Sơ yếu lý lịch</Label>
-          <div className="mt-2 flex items-center gap-4">
-            <Input
-              type="file"
-              accept=".pdf,.doc,.docx"
-              onChange={handleFileChange}
-              className="max-w-md"
-            />
-            {cvUrl && (
-              <div className="text-sm text-blue-500 underline">
-                <a href={cvUrl} target="_blank" rel="noopener noreferrer">
-                  Xem CV hiện tại
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
 
         <FormField
           control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ghi chú</FormLabel>
+              <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Ghi chú thêm về ứng viên" 
-                  className="min-h-[100px]" 
-                  {...field} 
+                <Textarea
+                  placeholder="Add notes about the candidate"
+                  className="min-h-[120px]"
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -479,13 +286,11 @@ const CandidateForm: React.FC<CandidateFormProps> = ({
           )}
         />
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Hủy
+            Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Đang lưu...' : 'Lưu'}
-          </Button>
+          <Button type="submit">Save Candidate</Button>
         </div>
       </form>
     </Form>

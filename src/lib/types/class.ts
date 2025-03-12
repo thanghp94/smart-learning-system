@@ -23,6 +23,17 @@ export interface Class {
   giao_vien_id?: string;
   teacher_id?: string; // For backward compatibility
   ten_giao_vien?: string;
+  
+  // Added fields to match usage in components
+  ten_lop_full?: string;
+  ct_hoc?: string;
+  co_so?: string;
+  gv_chinh?: string;
+  ngay_bat_dau?: string;
+  tinh_trang?: string;
+  unit_id?: string;
+  teacher_name?: string;
+  Ten_lop_full?: string; // Some components are using capitalized version
 }
 
 export interface ClassDetail extends Class {

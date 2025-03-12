@@ -1,75 +1,48 @@
 
-import * as React from "react"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { vi } from "date-fns/locale"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import React from 'react';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from '@/components/ui/popover';
 
-export interface DatePickerProps {
-  date?: Date | null;
-  setDate?: (date?: Date | null) => void;
-  className?: string;
-  selected?: Date | null;
-  onChange?: (date: Date | null) => void;
-  disabled?: boolean;
+interface DatePickerProps {
+  date: Date | undefined;
+  setDate: (date: Date | undefined) => void;
   placeholder?: string;
-  id?: string; // Add id prop to support the pattern used in the app
+  disabled?: boolean;
 }
 
-export function DatePicker({ 
-  date,
-  setDate,
-  selected,
-  onChange,
-  className,
-  disabled = false,
-  placeholder = "Chọn ngày",
-  id, // Add id prop
-}: DatePickerProps) {
-  // Support both patterns: date+setDate and selected+onChange
-  const value = date || selected;
-  const handleChange = (newDate: Date | null | undefined) => {
-    if (setDate) setDate(newDate || null);
-    if (onChange) onChange(newDate || null);
-  };
-
+export function DatePicker({ date, setDate, placeholder = "Chọn ngày", disabled = false }: DatePickerProps) {
   return (
-    <div className={className} id={id}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant={"outline"}
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !value && "text-muted-foreground"
-            )}
-            disabled={disabled}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {value ? format(value, "PPP", { locale: vi }) : <span>{placeholder}</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0">
-          <Calendar
-            mode="single"
-            selected={value || undefined}
-            onSelect={handleChange}
-            initialFocus
-            locale={vi}
-            className="pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
-  )
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            !date && "text-muted-foreground"
+          )}
+          disabled={disabled}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {date ? format(date, "dd/MM/yyyy", { locale: vi }) : placeholder}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={setDate}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
 }
-
-export default DatePicker;

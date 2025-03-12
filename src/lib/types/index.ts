@@ -1,3 +1,4 @@
+
 // Export all types from domain-specific files
 export * from './student';
 export * from './class';
@@ -20,6 +21,5 @@ export * from './request';
 export * from './contact';
 export * from './attendance';
 export * from './ui';
-
-// Import the new EmployeeClockInOut type
 export * from './employee-clock-in-out';
+export * from './recruitment';

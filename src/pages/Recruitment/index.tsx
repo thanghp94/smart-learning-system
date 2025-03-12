@@ -1,121 +1,166 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import KanbanView from './KanbanView';
-import CandidatesTable from './components/CandidatesTable';
-import PositionsTable from './components/PositionsTable';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Briefcase } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import PageHeader from '@/components/common/PageHeader';
 import CandidateForm from './components/CandidateForm';
-import PositionForm from './components/PositionForm';
+import { candidateService } from '@/lib/supabase/candidate-service';
+import { Candidate, CandidateStatus } from '@/lib/types/recruitment';
 
 const Recruitment = () => {
-  const [activeTab, setActiveTab] = useState('kanban');
-  const [showCandidateForm, setShowCandidateForm] = useState(false);
-  const [showPositionForm, setShowPositionForm] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
-  const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editCandidateId, setEditCandidateId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('all');
+
+  useEffect(() => {
+    fetchCandidates();
+  }, []);
+
+  const fetchCandidates = async () => {
+    try {
+      setLoading(true);
+      const data = await candidateService.getAll();
+      setCandidates(data);
+    } catch (error) {
+      console.error('Error fetching candidates:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load candidates',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddCandidate = () => {
-    setSelectedCandidate(null);
-    setShowCandidateForm(true);
+    setShowAddDialog(true);
   };
 
   const handleEditCandidate = (id: string) => {
-    setSelectedCandidate(id);
-    setShowCandidateForm(true);
+    setEditCandidateId(id);
   };
 
-  const handleAddPosition = () => {
-    setSelectedPosition(null);
-    setShowPositionForm(true);
+  const handleSubmitAdd = async (data: any) => {
+    try {
+      await candidateService.create(data);
+      toast({
+        title: 'Success',
+        description: 'Candidate added successfully',
+      });
+      setShowAddDialog(false);
+      fetchCandidates();
+    } catch (error) {
+      console.error('Error adding candidate:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add candidate',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleEditPosition = (id: string) => {
-    setSelectedPosition(id);
-    setShowPositionForm(true);
+  const handleSubmitEdit = async (data: any) => {
+    if (!editCandidateId) return;
+    
+    try {
+      await candidateService.update(editCandidateId, data);
+      toast({
+        title: 'Success',
+        description: 'Candidate updated successfully',
+      });
+      setEditCandidateId(null);
+      fetchCandidates();
+    } catch (error) {
+      console.error('Error updating candidate:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update candidate',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleCloseForm = () => {
-    setShowCandidateForm(false);
-    setShowPositionForm(false);
-    setSelectedCandidate(null);
-    setSelectedPosition(null);
-  };
-
-  const handleFormSubmit = () => {
-    handleCloseForm();
+  const handleCancel = () => {
+    setShowAddDialog(false);
+    setEditCandidateId(null);
   };
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Tuyển dụng</h1>
-        <div className="flex gap-2">
-          <Button onClick={handleAddCandidate}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Thêm ứng viên
-          </Button>
-          <Button variant="outline" onClick={handleAddPosition}>
-            <Briefcase className="mr-2 h-4 w-4" />
-            Thêm vị trí
-          </Button>
-        </div>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="kanban">Bảng Kanban</TabsTrigger>
-          <TabsTrigger value="candidates">Danh sách ứng viên</TabsTrigger>
-          <TabsTrigger value="positions">Vị trí tuyển dụng</TabsTrigger>
+      <PageHeader
+        title="Recruitment"
+        description="Manage candidates and job applications"
+        action={{
+          label: "Add Candidate",
+          onClick: handleAddCandidate
+        }}
+      />
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">All Candidates</TabsTrigger>
+          <TabsTrigger value="new">New</TabsTrigger>
+          <TabsTrigger value="screening">Screening</TabsTrigger>
+          <TabsTrigger value="interview">Interview</TabsTrigger>
+          <TabsTrigger value="offer">Offer</TabsTrigger>
+          <TabsTrigger value="hired">Hired</TabsTrigger>
         </TabsList>
-        <TabsContent value="kanban">
-          <KanbanView onCandidateEdit={handleEditCandidate} />
+        
+        <TabsContent value="all">
+          {/* Candidate table or list would go here */}
+          <p>Content for All Candidates tab</p>
         </TabsContent>
-        <TabsContent value="candidates">
-          <CandidatesTable 
-            onRowClick={handleEditCandidate} 
-            onAddClick={handleAddCandidate} 
-          />
+        
+        <TabsContent value="new">
+          {/* New candidates would go here */}
+          <p>Content for New tab</p>
         </TabsContent>
-        <TabsContent value="positions">
-          <PositionsTable 
-            onRowClick={handleEditPosition} 
-            onAddClick={handleAddPosition} 
-          />
+        
+        <TabsContent value="screening">
+          <p>Content for Screening tab</p>
+        </TabsContent>
+        
+        <TabsContent value="interview">
+          <p>Content for Interview tab</p>
+        </TabsContent>
+        
+        <TabsContent value="offer">
+          <p>Content for Offer tab</p>
+        </TabsContent>
+        
+        <TabsContent value="hired">
+          <p>Content for Hired tab</p>
         </TabsContent>
       </Tabs>
-
-      {/* Candidate Form Dialog */}
-      <Dialog open={showCandidateForm} onOpenChange={setShowCandidateForm}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedCandidate ? 'Chỉnh sửa ứng viên' : 'Thêm ứng viên mới'}
-            </DialogTitle>
-          </DialogHeader>
-          <CandidateForm 
-            candidateId={selectedCandidate || undefined} 
-            onSubmit={handleFormSubmit} 
-            onCancel={handleCloseForm} 
+      
+      {/* Add Candidate Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <CandidateForm
+            onSubmit={handleSubmitAdd}
+            onCancel={handleCancel}
           />
         </DialogContent>
       </Dialog>
-
-      {/* Position Form Dialog */}
-      <Dialog open={showPositionForm} onOpenChange={setShowPositionForm}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedPosition ? 'Chỉnh sửa vị trí' : 'Thêm vị trí mới'}
-            </DialogTitle>
-          </DialogHeader>
-          <PositionForm 
-            positionId={selectedPosition || undefined} 
-            onSubmit={handleFormSubmit} 
-            onCancel={handleCloseForm} 
-          />
+      
+      {/* Edit Candidate Dialog */}
+      <Dialog open={!!editCandidateId} onOpenChange={(open) => !open && setEditCandidateId(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          {editCandidateId && (
+            <CandidateForm
+              candidateId={editCandidateId}
+              onSubmit={handleSubmitEdit}
+              onCancel={handleCancel}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
