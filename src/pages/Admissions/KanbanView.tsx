@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import AdmissionForm from './components/AdmissionForm';
 import { admissionService } from '@/lib/supabase/admission-service';
 import { Admission, AdmissionStatus, ADMISSION_STATUS_MAP } from '@/lib/types/admission';
 import { employeeService } from '@/lib/supabase';
+
 const KanbanView = () => {
   const {
     toast

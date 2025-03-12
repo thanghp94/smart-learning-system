@@ -19,6 +19,7 @@ const Tasks = () => {
     status: '',
     priority: '',
     assignee: '',
+    facility: '',
   });
   const { toast } = useToast();
 
@@ -75,6 +76,7 @@ const Tasks = () => {
     let matchesStatus = true;
     let matchesPriority = true;
     let matchesAssignee = true;
+    let matchesFacility = true;
 
     if (filters.status) {
       matchesStatus = task.trang_thai === filters.status;
@@ -88,7 +90,17 @@ const Tasks = () => {
       matchesAssignee = task.nguoi_phu_trach === filters.assignee;
     }
 
-    return matchesStatus && matchesPriority && matchesAssignee;
+    // For facility filter, we'd need to add that property to tasks or check related records
+    // This is a placeholder - in a real app you'd need to define the relationship
+    if (filters.facility && task.doi_tuong === 'co_so') {
+      matchesFacility = task.doi_tuong_id === filters.facility;
+    } else if (filters.facility) {
+      // If facility is selected but task is not related to a facility
+      // Consider if tasks should still show up or not
+      matchesFacility = false;
+    }
+
+    return matchesStatus && matchesPriority && matchesAssignee && matchesFacility;
   });
 
   const tableActions = (

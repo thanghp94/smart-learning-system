@@ -9,9 +9,11 @@ import EnrollmentTable from "./components/EnrollmentTable";
 import EnrollmentDetailPanel from "./components/EnrollmentDetailPanel";
 import EnrollmentActions from "./components/EnrollmentActions";
 import EnrollmentSheets from "./components/EnrollmentSheets";
+import EnrollmentFilters from "./components/EnrollmentFilters";
 
 const Enrollments = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [filteredEnrollments, setFilteredEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
@@ -20,6 +22,10 @@ const Enrollments = () => {
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [filters, setFilters] = useState<Record<string, string>>({
+    classId: '',
+    facilityId: ''
+  });
   const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
@@ -31,6 +37,7 @@ const Enrollments = () => {
       const classesData = await classService.getAll();
       
       setEnrollments(enrollmentsData || []);
+      setFilteredEnrollments(enrollmentsData || []);
       setStudents(studentsData || []);
       setClasses(classesData || []);
     } catch (error) {
@@ -48,6 +55,35 @@ const Enrollments = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!enrollments.length) return;
+    
+    let filtered = [...enrollments];
+    
+    if (filters.classId) {
+      filtered = filtered.filter(enrollment => enrollment.lop_chi_tiet_id === filters.classId);
+    }
+    
+    // For facility filter, we need to check the class facility
+    if (filters.facilityId) {
+      const classesInFacility = classes.filter(cls => cls.co_so === filters.facilityId).map(cls => cls.id);
+      filtered = filtered.filter(enrollment => classesInFacility.includes(enrollment.lop_chi_tiet_id));
+    }
+    
+    setFilteredEnrollments(filtered);
+  }, [enrollments, filters, classes]);
+
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      classId: '',
+      facilityId: ''
+    });
+  };
 
   const openAddSheet = () => {
     setIsAddSheetOpen(true);
@@ -163,14 +199,25 @@ const Enrollments = () => {
     );
   }
 
+  const renderActions = () => (
+    <div className="flex items-center space-x-2">
+      <EnrollmentFilters 
+        onFilterChange={handleFilterChange} 
+        filters={filters} 
+        onReset={handleResetFilters} 
+      />
+      <EnrollmentActions onRefresh={fetchData} onAdd={openAddSheet} />
+    </div>
+  );
+
   return (
     <TablePageLayout
       title="Ghi Danh"
       description="Quản lý danh sách ghi danh học sinh vào lớp học"
-      actions={<EnrollmentActions onRefresh={fetchData} onAdd={openAddSheet} />}
+      actions={renderActions()}
     >
       <EnrollmentTable 
-        enrollments={enrollments}
+        enrollments={filteredEnrollments}
         isLoading={isLoading}
         onRowClick={openDetailPanel}
         onEditClick={openEditSheet}

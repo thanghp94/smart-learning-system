@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatDate } from '@/lib/utils';
 import { Admission } from '@/lib/types/admission';
+import { Calendar, Phone, User } from 'lucide-react';
 
 interface AdmissionCardProps {
   admission: Admission;
@@ -11,57 +11,44 @@ interface AdmissionCardProps {
   onDragStart: (e: React.DragEvent, admission: Admission) => void;
 }
 
-const AdmissionCard: React.FC<AdmissionCardProps> = ({ admission, onClick, onDragStart }) => {
+const AdmissionCard: React.FC<AdmissionCardProps> = ({ 
+  admission, 
+  onClick, 
+  onDragStart 
+}) => {
   return (
-    <Card 
-      className="cursor-pointer hover:bg-muted transition-colors"
+    <Card
+      className="cursor-pointer hover:shadow-md transition-shadow"
       onClick={() => onClick(admission)}
       draggable
       onDragStart={(e) => onDragStart(e, admission)}
     >
-      <CardContent className="p-1.5 text-xs">
-        <div className="space-y-0.5">
-          {/* Removed status badge */}
+      <CardContent className="p-3">
+        <div className="space-y-2">
+          <div className="font-medium text-sm">{admission.ten_hoc_sinh}</div>
           
-          {/* Student name */}
-          <h3 className="font-medium text-xs line-clamp-1">{admission.ten_hoc_sinh}</h3>
+          {admission.ten_phu_huynh && (
+            <div className="flex items-center text-xs text-muted-foreground">
+              <User className="h-3 w-3 mr-1" />
+              {admission.ten_phu_huynh}
+            </div>
+          )}
           
-          {/* Contact info - more compact */}
-          <div className="text-[9px] text-muted-foreground">
-            {admission.so_dien_thoai && (
-              <p className="line-clamp-1 truncate">
-                SĐT: {admission.so_dien_thoai}
-              </p>
-            )}
-            
-            {admission.ten_phu_huynh && (
-              <p className="line-clamp-1 truncate">
-                PH: {admission.ten_phu_huynh}
-              </p>
-            )}
-          </div>
+          {admission.so_dien_thoai_phu_huynh && (
+            <div className="flex items-center text-xs text-muted-foreground">
+              <Phone className="h-3 w-3 mr-1" />
+              {admission.so_dien_thoai_phu_huynh}
+            </div>
+          )}
           
-          {/* Updated timestamp */}
-          <div className="text-[9px] text-muted-foreground pt-0.5 border-t border-gray-100 mt-0.5">
-            <span>
-              {admission.updated_at 
-                ? formatDate(admission.updated_at)
-                : formatDate(admission.created_at || '')}
-            </span>
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3 mr-1" />
+            {formatDate(admission.updated_at)}
           </div>
         </div>
       </CardContent>
     </Card>
   );
-};
-
-// Helper function
-const formatDate = (dateString: string) => {
-  try {
-    return format(new Date(dateString), 'dd/MM/yyyy', { locale: vi });
-  } catch (e) {
-    return dateString;
-  }
 };
 
 export default AdmissionCard;

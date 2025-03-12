@@ -14,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { employeeService } from '@/lib/supabase';
-import { Employee } from '@/lib/types';
+import { employeeService, facilityService } from '@/lib/supabase';
+import { Employee, Facility } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface TaskFiltersProps {
@@ -23,30 +23,37 @@ interface TaskFiltersProps {
     status: string;
     priority: string;
     assignee: string;
+    facility: string;
   };
   setFilters: React.Dispatch<
     React.SetStateAction<{
       status: string;
       priority: string;
       assignee: string;
+      facility: string;
     }>
   >;
 }
 
 const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
 
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const fetchData = async () => {
       try {
-        const data = await employeeService.getAll();
-        setEmployees(data);
+        const [employeesData, facilitiesData] = await Promise.all([
+          employeeService.getAll(),
+          facilityService.getAll()
+        ]);
+        setEmployees(employeesData || []);
+        setFacilities(facilitiesData || []);
       } catch (error) {
-        console.error('Error fetching employees:', error);
+        console.error('Error fetching filter data:', error);
       }
     };
 
-    fetchEmployees();
+    fetchData();
   }, []);
 
   const handleReset = () => {
@@ -54,6 +61,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
       status: '',
       priority: '',
       assignee: '',
+      facility: '',
     });
   };
 
@@ -127,6 +135,28 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
                   {employees.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.ten_nhan_su}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Cơ sở</label>
+              <Select
+                value={filters.facility}
+                onValueChange={(value) =>
+                  setFilters({ ...filters, facility: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả cơ sở" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tất cả cơ sở</SelectItem>
+                  {facilities.map((facility) => (
+                    <SelectItem key={facility.id} value={facility.id}>
+                      {facility.ten_co_so}
                     </SelectItem>
                   ))}
                 </SelectContent>
