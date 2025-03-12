@@ -1,3 +1,4 @@
+
 import { Finance } from '../types';
 import { fetchAll, fetchById, remove } from './base-service';
 import { supabase } from './client';
@@ -10,7 +11,9 @@ type FinanceFilter = {
   co_so?: string;
 };
 
+// Main finance service
 export const financeService = {
+  // Transaction types
   getTransactionTypes: async (): Promise<any[]> => {
     try {
       const { data, error } = await supabase
@@ -26,14 +29,53 @@ export const financeService = {
     }
   },
   
+  // Basic CRUD operations
   getAll: async (): Promise<Finance[]> => {
     return fetchAll<Finance>('finances');
+  },
+  
+  getById: async (id: string): Promise<Finance | null> => {
+    return fetchById<Finance>('finances', id);
   },
   
   delete: async (id: string): Promise<void> => {
     return remove('finances', id);
   },
   
+  create: async (finance: Partial<Finance>): Promise<Finance> => {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .insert(finance)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating finance record:', error);
+      throw error;
+    }
+  },
+  
+  update: async (id: string, updates: Partial<Finance>): Promise<Finance> => {
+    try {
+      const { data, error } = await supabase
+        .from('finances')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating finance record:', error);
+      throw error;
+    }
+  },
+  
+  // Entity-related queries
   getByEntity: async (entityType: string, entityId: string): Promise<Finance[]> => {
     try {
       const { data, error } = await supabase
@@ -50,6 +92,7 @@ export const financeService = {
     }
   },
   
+  // Filter operations
   getFiltered: async (filters: FinanceFilter): Promise<Finance[]> => {
     try {
       let query = supabase
@@ -88,6 +131,7 @@ export const financeService = {
     }
   },
   
+  // Receipt-related operations
   getReceipts: async (): Promise<any[]> => {
     try {
       const { data, error } = await supabase
@@ -165,6 +209,7 @@ export const financeService = {
     }
   },
   
+  // Receipt template operations
   getReceiptTemplates: async (): Promise<any[]> => {
     try {
       const { data, error } = await supabase
@@ -238,39 +283,6 @@ export const financeService = {
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting finance receipt template:', error);
-      throw error;
-    }
-  },
-  
-  create: async (finance: Partial<Finance>): Promise<Finance> => {
-    try {
-      const { data, error } = await supabase
-        .from('finances')
-        .insert(finance)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error creating finance record:', error);
-      throw error;
-    }
-  },
-  
-  update: async (id: string, updates: Partial<Finance>): Promise<Finance> => {
-    try {
-      const { data, error } = await supabase
-        .from('finances')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error updating finance record:', error);
       throw error;
     }
   }

@@ -86,6 +86,7 @@ const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ cla
               lop_chi_tiet_id: classItem.id,
               giao_vien: classItem.gv_chinh
             }}
+            isEdit={false}
           />
         </DialogContent>
       </Dialog>

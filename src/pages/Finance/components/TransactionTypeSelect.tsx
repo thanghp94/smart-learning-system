@@ -17,7 +17,12 @@ import {
 import { financeService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
-const TransactionTypeSelect = ({ form, transactionCategory }) => {
+interface TransactionTypeSelectProps {
+  form: any;
+  transactionCategory: string | undefined;
+}
+
+const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, transactionCategory }) => {
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -28,7 +33,9 @@ const TransactionTypeSelect = ({ form, transactionCategory }) => {
       
       setIsLoading(true);
       try {
+        console.log('Fetching transaction types for category:', transactionCategory);
         const types = await financeService.getTransactionTypes();
+        console.log('Fetched transaction types:', types);
         setTransactionTypes(types);
       } catch (error) {
         console.error('Error fetching transaction types:', error);
@@ -45,10 +52,15 @@ const TransactionTypeSelect = ({ form, transactionCategory }) => {
     fetchTransactionTypes();
   }, [transactionCategory, toast]);
 
+  // Map category "thu" to "income" and "chi" to "expense"
+  const mappedCategory = transactionCategory === 'thu' ? 'income' : transactionCategory === 'chi' ? 'expense' : transactionCategory;
+
   // Filter types by the selected category (thu/chi)
   const filteredTypes = transactionTypes.filter(type => 
-    type.category === transactionCategory
+    type.category === mappedCategory
   );
+
+  console.log('Filtered types:', filteredTypes, 'for category:', mappedCategory);
 
   return (
     <FormField

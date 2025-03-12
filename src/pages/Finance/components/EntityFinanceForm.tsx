@@ -1,16 +1,23 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FinanceForm from '../FinanceForm';
 import { useToast } from '@/hooks/use-toast';
+import { studentService, employeeService, facilityService } from '@/lib/supabase';
 
-const EntityFinanceForm = ({ onSubmit, onCancel }) => {
+interface EntityFinanceFormProps {
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
+}
+
+const EntityFinanceForm: React.FC<EntityFinanceFormProps> = ({ onSubmit, onCancel }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryParams = new URLSearchParams(location.search);
   const entityType = queryParams.get('entityType');
   const entityId = queryParams.get('entityId');
+  const [entityName, setEntityName] = useState<string>('');
 
   useEffect(() => {
     if (!entityType || !entityId) {
@@ -20,10 +27,39 @@ const EntityFinanceForm = ({ onSubmit, onCancel }) => {
         variant: "destructive"
       });
       navigate('/finance'); // Redirect to finance page if missing required params
+      return;
     }
+
+    // Fetch entity name for display
+    const fetchEntityName = async () => {
+      try {
+        let name = '';
+        switch (entityType) {
+          case 'hoc_sinh':
+            const student = await studentService.getById(entityId);
+            name = student?.ho_ten || 'Học sinh';
+            break;
+          case 'nhan_vien':
+            const employee = await employeeService.getById(entityId);
+            name = employee?.ten_nhan_su || 'Nhân viên';
+            break;
+          case 'co_so':
+            const facility = await facilityService.getById(entityId);
+            name = facility?.ten_co_so || 'Cơ sở';
+            break;
+          default:
+            name = 'Đối tượng';
+        }
+        setEntityName(name);
+      } catch (error) {
+        console.error('Error fetching entity details:', error);
+      }
+    };
+
+    fetchEntityName();
   }, [entityType, entityId, toast, navigate]);
 
-  const handleFormSubmit = (data) => {
+  const handleFormSubmit = (data: any) => {
     // Ensure entity data is properly set
     const formData = {
       ...data,
@@ -35,12 +71,25 @@ const EntityFinanceForm = ({ onSubmit, onCancel }) => {
   };
 
   return (
-    <FinanceForm
-      onSubmit={handleFormSubmit}
-      onCancel={onCancel}
-      entityType={entityType || undefined}
-      entityId={entityId || undefined}
-    />
+    <div>
+      {entityName && (
+        <div className="mb-4 p-3 bg-muted rounded-md">
+          <p className="text-sm font-medium">Đối tượng: <span className="font-bold">{entityName}</span></p>
+          <p className="text-xs text-muted-foreground">Loại: {
+            entityType === 'hoc_sinh' ? 'Học sinh' : 
+            entityType === 'nhan_vien' ? 'Nhân viên' : 
+            entityType === 'co_so' ? 'Cơ sở' : 'Khác'
+          }</p>
+        </div>
+      )}
+      
+      <FinanceForm
+        onSubmit={handleFormSubmit}
+        onCancel={onCancel}
+        entityType={entityType || undefined}
+        entityId={entityId || undefined}
+      />
+    </div>
   );
 };
 

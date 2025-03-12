@@ -7,8 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import FinanceForm from './FinanceForm';
 import EntityFinanceForm from './components/EntityFinanceForm';
 import { financeService } from '@/lib/supabase';
-
-// Import correct component
 import FinancePageContent from './components/FinancePageContent';
 
 const Finance = () => {
@@ -64,7 +62,6 @@ const Finance = () => {
   
   return (
     <>
-      {/* Fix: Correctly pass onAddClick prop */}
       <FinancePageContent onAddClick={() => setShowAddForm(true)} />
       
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>

@@ -70,6 +70,30 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  // Setup form
+  const form = useForm<z.infer<typeof financeSchema>>({
+    resolver: zodResolver(financeSchema),
+    defaultValues: initialData || {
+      ngay: new Date(),
+      loai_thu_chi: '',
+      loai_giao_dich: '',
+      loai_doi_tuong: entityType || '',
+      doi_tuong_id: entityId || '',
+      co_so: '',
+      dien_giai: '',
+      ten_phi: '',
+      so_luong: 1,
+      don_vi: 1,
+      gia_tien: 0,
+      tong_tien: 0,
+      kieu_thanh_toan: 'cash',
+      bang_chu: '',
+      ghi_chu: '',
+      nguoi_tao: '',
+    },
+  });
+
+  // Fetch data for dropdowns
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -93,28 +117,7 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     fetchData();
   }, [toast]);
 
-  const form = useForm<z.infer<typeof financeSchema>>({
-    resolver: zodResolver(financeSchema),
-    defaultValues: initialData || {
-      ngay: new Date(),
-      loai_thu_chi: '',
-      loai_giao_dich: '',
-      loai_doi_tuong: entityType || '',
-      doi_tuong_id: entityId || '',
-      co_so: '',
-      dien_giai: '',
-      ten_phi: '',
-      so_luong: 1,
-      don_vi: 1,
-      gia_tien: 0,
-      tong_tien: 0,
-      kieu_thanh_toan: 'cash',
-      bang_chu: '',
-      ghi_chu: '',
-      nguoi_tao: '',
-    },
-  });
-
+  // Watch values for calculations
   const watchThuChi = form.watch('loai_thu_chi');
   const watchAmount = form.watch('so_luong');
   const watchUnit = form.watch('don_vi');
@@ -139,28 +142,13 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
         ngay: values.ngay.toISOString().split('T')[0],
       };
       
-      if (initialData?.id) {
-        // Update existing record
-        await financeService.update(initialData.id, financeData);
-        toast({
-          title: 'Thành công',
-          description: 'Cập nhật thông tin thu chi thành công',
-        });
-      } else {
-        // Create new record
-        await financeService.create(financeData);
-        toast({
-          title: 'Thành công',
-          description: 'Thêm khoản thu chi mới thành công',
-        });
-      }
-      
-      onSubmit(values);
+      // Use the unified onSubmit handler from props
+      onSubmit(financeData);
     } catch (error) {
-      console.error('Error saving finance record:', error);
+      console.error('Error in form submission:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể lưu thông tin thu chi: ' + (error as Error).message,
+        description: 'Không thể xử lý biểu mẫu: ' + (error as Error).message,
         variant: 'destructive',
       });
     } finally {

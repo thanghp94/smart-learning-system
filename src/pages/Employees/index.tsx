@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { employeeService } from "@/lib/supabase";
+import { employeeService, facilityService } from "@/lib/supabase";
 import { Employee } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
@@ -26,10 +26,12 @@ const Employees = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [facilities, setFacilities] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchEmployees();
+    fetchFacilities();
     // Test Supabase connection
     testSupabaseConnection();
   }, []);
@@ -68,6 +70,15 @@ const Employees = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchFacilities = async () => {
+    try {
+      const data = await facilityService.getAll();
+      setFacilities(data);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách cơ sở:", error);
     }
   };
 
@@ -123,6 +134,15 @@ const Employees = () => {
     }));
   }, [employees]);
 
+  // Facility options
+  const facilityOptions = useMemo(() => {
+    return facilities.map(facility => ({
+      label: facility.ten_co_so,
+      value: facility.id,
+      type: 'other' as const
+    }));
+  }, [facilities]);
+
   // Status options
   const statusOptions = [
     { label: 'Đang làm việc', value: 'active', type: 'status' as const },
@@ -131,6 +151,11 @@ const Employees = () => {
 
   // Create filter categories
   const filterCategories = [
+    {
+      name: 'Cơ sở',
+      type: 'other' as const,
+      options: facilityOptions
+    },
     {
       name: 'Bộ phận',
       type: 'other' as const,
@@ -154,6 +179,7 @@ const Employees = () => {
       // Check each filter
       for (const [category, value] of Object.entries(filters)) {
         if (value) {
+          if (category === 'Cơ sở' && employee.co_so_id !== value) return false;
           if (category === 'Bộ phận' && employee.bo_phan !== value) return false;
           if (category === 'Chức danh' && employee.chuc_danh !== value) return false;
           if (category === 'Trạng thái' && employee.tinh_trang_lao_dong !== value) return false;

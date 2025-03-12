@@ -13,7 +13,11 @@ import FinanceLedger from './FinanceLedger';
 import FilterButton from '@/components/ui/FilterButton';
 import ExportButton from '@/components/ui/ExportButton';
 
-const FinancePageContent: React.FC = () => {
+interface FinancePageContentProps {
+  onAddClick: () => void;
+}
+
+const FinancePageContent: React.FC<FinancePageContentProps> = ({ onAddClick }) => {
   const [finances, setFinances] = useState<Finance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -41,14 +45,6 @@ const FinancePageContent: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleAddFinance = () => {
-    navigate('/finance/add');
-  };
-
-  const handleDeleteFinance = (finance: Finance) => {
-    setFinances(prev => prev.filter(f => f.id !== finance.id));
   };
 
   // Tính toán tổng thu, tổng chi và số dư
@@ -143,7 +139,7 @@ const FinancePageContent: React.FC = () => {
             label="Xuất dữ liệu"
           />
         </div>
-        <Button onClick={handleAddFinance}>
+        <Button onClick={onAddClick}>
           <Plus className="h-4 w-4 mr-1" /> Thêm giao dịch
         </Button>
       </div>
@@ -159,7 +155,7 @@ const FinancePageContent: React.FC = () => {
           <FinanceList 
             finances={filteredFinances} 
             isLoading={isLoading}
-            onDelete={handleDeleteFinance}
+            onDelete={(finance) => setFinances(prev => prev.filter(f => f.id !== finance.id))}
           />
         </TabsContent>
         
