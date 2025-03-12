@@ -23,7 +23,7 @@ interface TransactionTypeSelectProps {
 }
 
 const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, transactionCategory }) => {
-  const [transactionTypes, setTransactionTypes] = useState([]);
+  const [transactionTypes, setTransactionTypes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -36,7 +36,13 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
         console.log('Fetching transaction types for category:', transactionCategory);
         const types = await financeService.getTransactionTypes();
         console.log('Fetched transaction types:', types);
-        setTransactionTypes(types);
+        
+        if (Array.isArray(types)) {
+          setTransactionTypes(types);
+        } else {
+          console.error('Expected array of transaction types but got:', types);
+          setTransactionTypes([]);
+        }
       } catch (error) {
         console.error('Error fetching transaction types:', error);
         toast({
@@ -44,6 +50,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
           description: 'Không thể tải danh sách loại giao dịch',
           variant: 'destructive',
         });
+        setTransactionTypes([]);
       } finally {
         setIsLoading(false);
       }
@@ -87,7 +94,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="none" disabled>
+                <SelectItem value="loading" disabled>
                   {isLoading ? 'Đang tải...' : 'Không có loại giao dịch'}
                 </SelectItem>
               )}

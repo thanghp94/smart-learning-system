@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -27,6 +26,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { format } from 'date-fns';
 
 interface ContractTemplateManagerProps {
   employee?: Employee;
@@ -64,6 +64,32 @@ const ContractTemplateManager: React.FC<ContractTemplateManagerProps> = ({
     luong_co_ban: true,
     ngay_vao_lam: true,
   });
+
+  const getTemplateDataContext = (employee: Employee) => {
+    if (!employee) return {};
+    
+    // Format date for display if available
+    const formattedBirthDate = employee.ngay_sinh 
+      ? format(new Date(employee.ngay_sinh), 'dd/MM/yyyy') 
+      : '';
+    
+    const formattedStartDate = employee.ngay_vao_lam 
+      ? format(new Date(employee.ngay_vao_lam), 'dd/MM/yyyy') 
+      : '';
+    
+    return {
+      TEN_NHAN_VIEN: employee.ten_nhan_su || '',
+      CHUC_DANH: employee.chuc_danh || '',
+      NGAY_SINH: formattedBirthDate,
+      DIA_CHI: employee.dia_chi || '',
+      SDT: employee.dien_thoai || '',
+      EMAIL: employee.email || '',
+      BO_PHAN: employee.bo_phan || '',
+      LUONG_CO_BAN: employee.luong_co_ban || '',
+      NGAY_VAO_LAM: formattedStartDate,
+      // Add more fields as needed
+    };
+  };
 
   useEffect(() => {
     const fetchEmployees = async () => {

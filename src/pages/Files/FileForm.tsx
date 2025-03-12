@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -82,7 +81,41 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
   }, [toast]);
 
   const handleFormSubmit = (data: FileFormData) => {
-    onSubmit(data);
+    const mappedData = { ...data };
+    
+    mappedData.nhan_vien_ID = undefined;
+    mappedData.lien_he_id = undefined;
+    mappedData.co_so_id = undefined;
+    mappedData.CSVC_ID = undefined;
+    mappedData.hoc_sinh_id = undefined;
+    
+    switch (data.loai_doi_tuong) {
+      case 'employee':
+      case 'nhan_vien':
+        mappedData.nhan_vien_ID = data.doi_tuong_id;
+        break;
+      case 'contact':
+      case 'lien_he':
+        mappedData.lien_he_id = data.doi_tuong_id;
+        break;
+      case 'facility':
+      case 'co_so':
+        mappedData.co_so_id = data.doi_tuong_id;
+        break;
+      case 'asset':
+      case 'CSVC':
+        mappedData.CSVC_ID = data.doi_tuong_id;
+        break;
+      case 'class':
+      case 'lop':
+        mappedData.hoc_sinh_id = data.doi_tuong_id;
+        break;
+    }
+    
+    mappedData.file1 = data.duong_dan;
+    
+    console.log("Submitting file with mapped data:", mappedData);
+    onSubmit(mappedData);
   };
 
   const renderEntityOptions = () => {

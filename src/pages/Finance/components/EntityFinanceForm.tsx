@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FinanceForm from '../FinanceForm';
@@ -37,7 +36,7 @@ const EntityFinanceForm: React.FC<EntityFinanceFormProps> = ({ onSubmit, onCance
         switch (entityType) {
           case 'hoc_sinh':
             const student = await studentService.getById(entityId);
-            name = student?.ho_ten || 'Học sinh';
+            name = student?.ten_hoc_sinh || 'Học sinh';
             break;
           case 'nhan_vien':
             const employee = await employeeService.getById(entityId);

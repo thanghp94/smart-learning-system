@@ -56,6 +56,12 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
     onSubmit(sessionData);
   };
 
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -69,7 +75,7 @@ const SessionForm = ({ initialData, onSubmit, isEdit = false, onCancel }: Sessio
         <SessionContentField form={form} />
         
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>Hủy</Button>
           <Button type="submit">{isEdit ? "Cập nhật" : "Thêm mới"}</Button>
         </div>
       </form>

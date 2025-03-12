@@ -11,6 +11,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Asset } from '@/lib/types';
 import { assetSchema, AssetFormData } from './schemas/assetSchema';
 import BasicInfoFields from './components/BasicInfoFields';
@@ -24,35 +26,17 @@ interface AssetFormProps {
   onCancel: () => void;
 }
 
-const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
-  const [assetData, setAssetData] = useState<AssetFormData>({
-    ten_csvc: initialData?.ten_CSVC || '',
-    loai: initialData?.loai || '',
-    danh_muc: initialData?.danh_muc || '',
-    so_luong: initialData?.so_luong || 0,
-    don_vi: initialData?.don_vi || '',
-    so_tien_mua: initialData?.so_tien_mua || '',
-    tinh_trang: initialData?.tinh_trang || '',
-    trang_thai_so_huu: initialData?.trang_thai_so_huu || '',
-    mo_ta_1: initialData?.mo_ta_1 || '',
-    thuong_hieu: initialData?.thuong_hieu || '',
-    mau: initialData?.mau || '',
-    khu_vuc: initialData?.khu_vuc || '',
-    hinh_anh: initialData?.hinh_anh || '',
-    hinh_anh_2: initialData?.hinh_anh_2 || '',
-    ghi_chu: initialData?.ghi_chu || '',
-  });
-
+const AssetForm: React.FC<AssetFormProps> = ({ initialData, onSubmit, onCancel }) => {
   const form = useForm<AssetFormData>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
       ten_csvc: initialData?.ten_CSVC || '',
       loai: initialData?.loai || '',
       danh_muc: initialData?.danh_muc || '',
-      so_luong: initialData?.so_luong || 0,
+      so_luong: initialData?.so_luong || 1,
       don_vi: initialData?.don_vi || '',
       so_tien_mua: initialData?.so_tien_mua || '',
-      tinh_trang: initialData?.tinh_trang || '',
+      tinh_trang: initialData?.tinh_trang || 'active',
       trang_thai_so_huu: initialData?.trang_thai_so_huu || '',
       mo_ta_1: initialData?.mo_ta_1 || '',
       thuong_hieu: initialData?.thuong_hieu || '',
@@ -64,54 +48,22 @@ const AssetForm = ({ initialData, onSubmit, onCancel }: AssetFormProps) => {
     },
   });
 
-  useEffect(() => {
-    // Update form values when initialData changes (for editing)
-    if (initialData) {
-      setAssetData({
-        ten_csvc: initialData.ten_CSVC || '',
-        loai: initialData.loai || '',
-        danh_muc: initialData.danh_muc || '',
-        so_luong: initialData.so_luong || 0,
-        don_vi: initialData.don_vi || '',
-        so_tien_mua: initialData.so_tien_mua || '',
-        tinh_trang: initialData.tinh_trang || '',
-        trang_thai_so_huu: initialData.trang_thai_so_huu || '',
-        mo_ta_1: initialData.mo_ta_1 || '',
-        thuong_hieu: initialData.thuong_hieu || '',
-        mau: initialData.mau || '',
-        khu_vuc: initialData.khu_vuc || '',
-        hinh_anh: initialData.hinh_anh || '',
-        hinh_anh_2: initialData.hinh_anh_2 || '',
-        ghi_chu: initialData.ghi_chu || '',
-      });
-    }
-  }, [initialData]);
-
   const handleFormSubmit = (data: AssetFormData) => {
+    console.log("Submitting asset form with data:", data);
     onSubmit(data);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setAssetData((prev) => ({ ...prev, [name]: value }));
+    form.setValue(name as any, value);
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Create a properly typed event object for handleChange
-    const syntheticEvent = {
-      target: {
-        name,
-        value: value === '' ? '' : Number(value),
-        type: 'number'
-      }
-    } as unknown as React.ChangeEvent<HTMLInputElement>;
-    
-    handleChange(syntheticEvent);
+    form.setValue(name as any, value === '' ? 0 : Number(value));
   };
 
   const handleImageUpload = async (url: string, field: keyof AssetFormData) => {
-    setAssetData((prev) => ({ ...prev, [field]: url }));
     form.setValue(field, url);
   };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,13 +52,43 @@ const FilesPage = () => {
     try {
       console.log("Submitting file data:", formData);
 
-      const formattedData = {
-        ...formData,
+      const formattedData: Partial<FileDocument> = {
+        ten_tai_lieu: formData.ten_tai_lieu,
+        doi_tuong_lien_quan: formData.loai_doi_tuong,
+        nhom_tai_lieu: formData.nhom_tai_lieu,
+        file1: formData.duong_dan,
         ngay_cap: formData.ngay_cap || null,
         han_tai_lieu: formData.han_tai_lieu || null,
+        ghi_chu: formData.ghi_chu,
+        trang_thai: formData.trang_thai || 'active'
       };
 
+      switch(formData.loai_doi_tuong) {
+        case 'nhan_vien':
+        case 'employee':
+          formattedData.nhan_vien_ID = formData.doi_tuong_id;
+          break;
+        case 'lien_he':
+        case 'contact':
+          formattedData.lien_he_id = formData.doi_tuong_id;
+          break;
+        case 'co_so':
+        case 'facility':
+          formattedData.co_so_id = formData.doi_tuong_id;
+          break;
+        case 'CSVC':
+        case 'asset':
+          formattedData.CSVC_ID = formData.doi_tuong_id;
+          break;
+        case 'class':
+        case 'hoc_sinh':
+          formattedData.hoc_sinh_id = formData.doi_tuong_id;
+          break;
+      }
+
+      console.log("Formatted data for submission:", formattedData);
       await fileService.create(formattedData);
+      
       toast({
         title: "Thành công",
         description: "Thêm hồ sơ mới thành công",
@@ -68,9 +97,10 @@ const FilesPage = () => {
       fetchFiles();
     } catch (error) {
       console.error("Error adding file:", error);
+      console.error("Error details:", (error as any).details || error);
       toast({
         title: "Lỗi",
-        description: "Không thể thêm hồ sơ mới",
+        description: "Không thể thêm hồ sơ mới. " + ((error as Error).message || "Kiểm tra lại kết nối với database."),
         variant: "destructive"
       });
     }

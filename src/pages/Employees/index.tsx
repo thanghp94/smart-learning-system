@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -179,7 +178,7 @@ const Employees = () => {
       // Check each filter
       for (const [category, value] of Object.entries(filters)) {
         if (value) {
-          if (category === 'Cơ sở' && employee.co_so_id !== value) return false;
+          if (category === 'Cơ sở' && !employee.co_so_id?.includes(value)) return false;
           if (category === 'Bộ phận' && employee.bo_phan !== value) return false;
           if (category === 'Chức danh' && employee.chuc_danh !== value) return false;
           if (category === 'Trạng thái' && employee.tinh_trang_lao_dong !== value) return false;

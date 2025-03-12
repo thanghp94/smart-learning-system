@@ -19,6 +19,7 @@ const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ cla
   const { toast } = useToast();
 
   const handleAddSession = () => {
+    console.log('Opening teaching session form for class:', classItem);
     setIsOpen(true);
   };
 
@@ -84,7 +85,8 @@ const AddTeachingSessionButton: React.FC<AddTeachingSessionButtonProps> = ({ cla
             onCancel={handleCancel}
             initialData={{
               lop_chi_tiet_id: classItem.id,
-              giao_vien: classItem.gv_chinh
+              giao_vien: classItem.gv_chinh,
+              session_id: ""
             }}
             isEdit={false}
           />

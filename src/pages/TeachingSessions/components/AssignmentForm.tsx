@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -55,6 +54,17 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({ sessionId, onSuccess })
 
   const clearFile = () => {
     setSelectedFile(null);
+  };
+
+  const handleCancel = () => {
+    form.reset();
+    setSelectedFile(null);
+    
+    // If we're in a dialog, this would close it
+    const closeButton = document.querySelector('[data-state="open"] button[data-dismiss]');
+    if (closeButton instanceof HTMLElement) {
+      closeButton.click();
+    }
   };
 
   const onSubmit = async (values: AssignmentFormValues) => {
@@ -208,7 +218,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({ sessionId, onSuccess })
         </div>
         
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline">
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Hủy
           </Button>
           <Button type="submit" disabled={isSubmitting}>
