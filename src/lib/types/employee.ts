@@ -19,4 +19,9 @@ export interface Employee {
   tinh_trang_lao_dong?: string;
   chuc_vu?: string;
   phong_ban?: string;
+  
+  // Additional fields used in components
+  vai_tro?: string;
+  ngay_vao_lam?: string | Date;
+  luong_co_ban?: number | string;
 }

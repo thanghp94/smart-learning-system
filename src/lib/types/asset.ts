@@ -38,6 +38,9 @@ export interface Asset {
   noi_chuyen_toi?: string;
   so_luong_chuyen?: number;
   gia_tri?: number;
+  
+  // For backward compatibility
+  ten_CSVC?: string; // Alias for ten_csvc
 }
 
 export interface AssetTransfer {

@@ -18,4 +18,5 @@ export interface Enrollment {
   ten_lop?: string;
   ten_lop_full?: string;
   ct_hoc?: string;
+  tong_tien?: string | number;
 }

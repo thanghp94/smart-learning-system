@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { employeeClockInService } from '@/lib/supabase';
 import { Clock } from 'lucide-react';
-import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
+import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types/employee-clock-in-out';
 import AttendanceHeader from './components/AttendanceHeader';
 import AttendanceTable, { GroupedAttendance as AttendanceTableGroupedAttendance } from './components/AttendanceTable';
 
@@ -47,8 +48,8 @@ const EmployeeAttendance: React.FC<EmployeeAttendanceProps> = () => {
       setIsLoading(true);
       const data = await employeeClockInService.getMonthlyAttendance(parseInt(month), parseInt(year));
       
-      const convertedData: AttendanceRecord[] = data.map((summary) => {
-        const record: EmployeeClockInOut = {
+      const convertedData: AttendanceRecord[] = data.map((summary: MonthlyAttendanceSummary) => {
+        const record: AttendanceRecord = {
           id: summary.employee_id,
           nhan_vien_id: summary.employee_id,
           ngay: summary.attendance_date || new Date().toISOString().split('T')[0],

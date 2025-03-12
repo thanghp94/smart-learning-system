@@ -23,7 +23,7 @@ export const assetTransferService = {
     
     // Check if there's enough quantity to transfer
     if (asset.so_luong < transfer.quantity) {
-      throw new Error(`Không đủ số lượng tài sản "${asset.ten_CSVC}" để chuyển`);
+      throw new Error(`Không đủ số lượng tài sản "${asset.ten_csvc}" để chuyển`);
     }
     
     // Begin transaction
@@ -48,7 +48,7 @@ export const assetTransferService = {
     await logActivity(
       'Tạo mới', 
       'Chuyển tài sản', 
-      `Chuyển ${transfer.quantity} ${asset.ten_CSVC}`, 
+      `Chuyển ${transfer.quantity} ${asset.ten_csvc}`, 
       'Hệ thống',
       transfer.status
     );
@@ -81,7 +81,7 @@ export const assetTransferService = {
       
       // Verify still enough quantity
       if (asset.so_luong < transfer.quantity) {
-        throw new Error(`Không đủ số lượng tài sản "${asset.ten_CSVC}" để chuyển`);
+        throw new Error(`Không đủ số lượng tài sản "${asset.ten_csvc}" để chuyển`);
       }
       
       // Update the asset with reduced quantity
@@ -93,7 +93,7 @@ export const assetTransferService = {
       await logActivity(
         'Hoàn thành', 
         'Chuyển tài sản', 
-        `Chuyển ${transfer.quantity} ${asset.ten_CSVC}`, 
+        `Chuyển ${transfer.quantity} ${asset.ten_csvc}`, 
         'Hệ thống'
       );
     }

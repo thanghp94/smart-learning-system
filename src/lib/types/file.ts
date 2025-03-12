@@ -24,6 +24,10 @@ export interface File {
   co_so_id?: string;
   nhan_vien_id?: string;
   
+  // For backward compatibility
+  CSVC_ID?: string; // Alias for csvc_id
+  nhan_vien_ID?: string; // Alias for nhan_vien_id
+  
   created_at?: string;
   updated_at?: string;
   tg_tao?: string;

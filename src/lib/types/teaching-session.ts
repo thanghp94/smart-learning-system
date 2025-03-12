@@ -29,4 +29,15 @@ export interface TeachingSession {
   lesson_content?: string;
   class_name?: string;
   avg_score?: number;
+  
+  // Additional properties needed by existing code
+  completed?: string | boolean;
+  co_so_id?: string;
+  noi_dung?: string;
+  buoi_hoc_so?: string;
+  classes?: any;
+  danh_gia_buoi_hoc?: string;
+  diem_manh?: string;
+  diem_yeu?: string;
+  ghi_chu_danh_gia?: string;
 }

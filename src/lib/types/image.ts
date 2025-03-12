@@ -10,4 +10,5 @@ export interface Image {
   created_at?: string;
   updated_at?: string;
   tg_tao?: string;
+  file_name?: string; // Add file_name property
 }

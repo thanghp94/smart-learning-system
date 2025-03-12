@@ -64,19 +64,17 @@ const ClassSessionsList: React.FC<ClassSessionsListProps> = ({
                     </CardDescription>
                   </div>
                   <Badge variant={
-                    typeof session.completed === 'boolean' 
-                      ? (session.completed ? 'success' : 'destructive')
-                      : session.completed === 'completed' ? 'success' :
-                        session.completed === 'cancelled' ? 'destructive' :
-                        'secondary'
+                    session.tinh_trang ? 
+                      (session.tinh_trang === 'active' || session.tinh_trang === 'completed' ? 'success' : 
+                       session.tinh_trang === 'cancelled' ? 'destructive' : 'secondary') :
+                      'secondary'
                   }>
                     {
-                      typeof session.completed === 'boolean'
-                        ? (session.completed ? 'Đã hoàn thành' : 'Chưa hoàn thành')
-                        : session.completed === 'completed' ? 'Đã hoàn thành' :
-                          session.completed === 'cancelled' ? 'Đã hủy' :
-                          session.completed === 'scheduled' ? 'Đã lên lịch' :
-                          'Chưa xác định'
+                      session.tinh_trang ? 
+                        (session.tinh_trang === 'active' || session.tinh_trang === 'completed' ? 'Đã hoàn thành' : 
+                         session.tinh_trang === 'cancelled' ? 'Đã hủy' : 
+                         session.tinh_trang === 'scheduled' ? 'Đã lên lịch' : 'Chưa xác định') :
+                        'Chưa xác định'
                     }
                   </Badge>
                 </div>

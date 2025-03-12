@@ -36,4 +36,9 @@ export interface Student {
   diem_manh?: string;
   trang_thai_hp?: string;
   trang_thai_hoc_phi?: string;
+  
+  // Alias for compatibility
+  ten_ph?: string; // Alias for ten_PH
+  email_ph2?: string; // Sometimes used in code
+  ghi_chu?: string; // Added for compatibility
 }

@@ -20,4 +20,16 @@ export interface Request {
   created_at?: string;
   updated_at?: string;
   tg_tao?: string;
+
+  // Additional fields used in components
+  title?: string;
+  type?: string;
+  requester?: string;
+  description?: string;
+  status?: string; 
+  priority?: string;
+  entity_type?: string;
+  entity_id?: string;
+  location?: string;
+  requested_date?: string;
 }

@@ -40,6 +40,13 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
     }
   };
 
+  // Convert the ngay_sinh to a Date object if it's a string
+  const birthDate = employee.ngay_sinh
+    ? typeof employee.ngay_sinh === 'string'
+      ? new Date(employee.ngay_sinh)
+      : employee.ngay_sinh
+    : null;
+
   return (
     <div>
       <h3 className="text-lg font-medium mb-4">Thông tin cơ bản</h3>
@@ -96,12 +103,17 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
 
         <FormItem>
           <Label htmlFor="ngay_sinh">Ngày sinh</Label>
-          <DatePicker
-            selected={employee.ngay_sinh instanceof Date ? employee.ngay_sinh : employee.ngay_sinh ? new Date(employee.ngay_sinh) : null}
-            onChange={(date) => handleDateChange('ngay_sinh', date)}
-            disabled={!isEditing}
-            className="w-full"
-          />
+          <div className="w-full">
+            <input
+              type="date"
+              id="ngay_sinh"
+              name="ngay_sinh"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              value={birthDate ? birthDate.toISOString().split('T')[0] : ''}
+              onChange={(e) => handleDateChange('ngay_sinh', e.target.value ? new Date(e.target.value) : null)}
+              disabled={!isEditing}
+            />
+          </div>
         </FormItem>
 
         <FormItem>
