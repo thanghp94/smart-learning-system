@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -12,7 +13,6 @@ import EmployeeSalaryTab from './components/EmployeeSalaryTab';
 import EmployeeContractsTab from './components/EmployeeContractsTab';
 
 interface EmployeeDetailProps {
-  // Making employeeId optional since we'll get it from useParams if not provided
   employeeId?: string;
 }
 
@@ -75,7 +75,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId: propEmploye
     <div className="container mx-auto py-6">
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <Spinner size="large" />
+          <Spinner size="lg" />
         </div>
       ) : employee ? (
         <>
@@ -95,7 +95,13 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId: propEmploye
               <TabsTrigger value="contracts">Hợp đồng</TabsTrigger>
             </TabsList>
             <TabsContent value="basic">
-              <EmployeeBasicInfo employee={employee} />
+              <EmployeeBasicInfo 
+                employee={employee}
+                isEditing={false}
+                handleChange={() => {}}
+                handleImageUpload={() => {}}
+                handleDateChange={() => {}}
+              />
             </TabsContent>
             <TabsContent value="files">
               <EmployeeFilesTab employeeId={employee.id} />
@@ -103,7 +109,7 @@ const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId: propEmploye
             <TabsContent value="salary">
               <EmployeeSalaryTab employeeId={employee.id} />
             </TabsContent>
-             <TabsContent value="contracts">
+            <TabsContent value="contracts">
               <EmployeeContractsTab employeeId={employee.id} />
             </TabsContent>
           </Tabs>
