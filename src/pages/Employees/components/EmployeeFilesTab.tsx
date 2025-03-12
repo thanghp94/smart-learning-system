@@ -46,10 +46,9 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
 
   const handleAddFile = async (data: any) => {
     try {
-      // Ensure the correct entity type is set
+      // Ensure the correct entity type and ID are set
       const fileData = {
         ...data,
-        doi_tuong_lien_quan: 'nhan_vien',
         nhan_vien_ID: employeeId,
       };
       

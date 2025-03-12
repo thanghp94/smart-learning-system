@@ -1,319 +1,383 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
-import { employeeService, facilityService } from "@/lib/supabase";
-import { Employee } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
-import TablePageLayout from "@/components/common/TablePageLayout";
-import { Badge } from "@/components/ui/badge";
-import DetailPanel from "@/components/ui/DetailPanel";
-import EmployeeDetail from "./EmployeeDetail";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import EmployeeForm from "./EmployeeForm";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { supabase } from "@/lib/supabase/client";
-import ExportButton from "@/components/ui/ExportButton";
-import FilterButton, { FilterCategory } from "@/components/ui/FilterButton";
-import CommandInterface from "@/components/CommandInterface";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { employeeService, facilityService } from '@/lib/supabase';
+import { Employee } from '@/lib/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { DataTable } from '@/components/ui/DataTable';
+import { ColumnDef } from '@tanstack/react-table';
+import { Edit, Plus, MoreHorizontal, FileText, Trash, Search } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import EmployeeFilesTab from './components/EmployeeFilesTab';
 
 const Employees = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [showDetail, setShowDetail] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const [facilities, setFacilities] = useState<any[]>([]);
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [facilities, setFacilities] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [positions, setPositions] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showFilesDialog, setShowFilesDialog] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [facilityFilter, setFacilityFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [positionFilter, setPositionFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
-    fetchEmployees();
-    fetchFacilities();
-    // Test Supabase connection
-    testSupabaseConnection();
-  }, []);
-
-  const testSupabaseConnection = async () => {
-    try {
-      console.log("Kiểm tra kết nối Supabase...");
-      const { data, error } = await supabase.from('employees').select('count');
-      
-      if (error) {
-        console.error("Kiểm tra kết nối Supabase thất bại:", error);
-        setConnectionError(`Lỗi kết nối cơ sở dữ liệu: ${error.message}`);
-      } else {
-        console.log("Kết nối Supabase thành công:", data);
-        setConnectionError(null);
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch employees
+        const employeesData = await employeeService.getAll();
+        setEmployees(employeesData);
+        setFilteredEmployees(employeesData);
+        
+        // Fetch facilities
+        const facilitiesData = await facilityService.getAll();
+        setFacilities(facilitiesData);
+        
+        // Extract unique departments and positions
+        const uniqueDepartments = [...new Set(employeesData.map(emp => emp.bo_phan).filter(Boolean))];
+        const uniquePositions = [...new Set(employeesData.map(emp => emp.chuc_danh).filter(Boolean))];
+        
+        setDepartments(uniqueDepartments as string[]);
+        setPositions(uniquePositions as string[]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải danh sách nhân viên',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error("Lỗi không xác định khi kiểm tra kết nối:", err);
-      setConnectionError(`Lỗi không xác định: ${err instanceof Error ? err.message : String(err)}`);
+    };
+    
+    fetchData();
+  }, [toast]);
+  
+  useEffect(() => {
+    // Apply filters
+    let filtered = [...employees];
+    
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        emp => 
+          emp.ten_nhan_su?.toLowerCase().includes(query) || 
+          emp.email?.toLowerCase().includes(query) ||
+          emp.dien_thoai?.toLowerCase().includes(query)
+      );
     }
-  };
-
-  const fetchEmployees = async () => {
-    try {
-      setIsLoading(true);
-      console.log("Đang tải dữ liệu nhân viên...");
-      const data = await employeeService.getAll();
-      console.log("Dữ liệu nhân viên đã nhận:", data);
-      setEmployees(data);
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách nhân viên:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải danh sách nhân viên",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchFacilities = async () => {
-    try {
-      const data = await facilityService.getAll();
-      setFacilities(data);
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách cơ sở:", error);
-    }
-  };
-
-  const handleRowClick = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setShowDetail(true);
-  };
-
-  const closeDetail = () => {
-    setShowDetail(false);
-  };
-
-  const handleAddEmployee = () => {
-    setShowAddForm(true);
-  };
-
-  const handleEmployeeSubmit = async (employeeData: Partial<Employee>) => {
-    try {
-      await employeeService.create(employeeData);
-      toast({
-        title: "Thành công",
-        description: "Đã thêm nhân viên mới vào hệ thống",
-      });
-      setShowAddForm(false);
-      fetchEmployees(); // Refresh the list
-    } catch (error) {
-      console.error("Lỗi khi thêm nhân viên:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể thêm nhân viên mới",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Extract departments for filter options
-  const departmentOptions = useMemo(() => {
-    const departments = [...new Set(employees.map(emp => emp.bo_phan || ''))].filter(Boolean);
-    return departments.map(dept => ({
-      label: dept,
-      value: dept,
-      type: 'other' as const
-    }));
-  }, [employees]);
-
-  // Extract positions for filter options
-  const positionOptions = useMemo(() => {
-    const positions = [...new Set(employees.map(emp => emp.chuc_danh || ''))].filter(Boolean);
-    return positions.map(pos => ({
-      label: pos,
-      value: pos,
-      type: 'other' as const
-    }));
-  }, [employees]);
-
-  // Facility options
-  const facilityOptions = useMemo(() => {
-    return facilities.map(facility => ({
-      label: facility.ten_co_so,
-      value: facility.id,
-      type: 'other' as const
-    }));
-  }, [facilities]);
-
-  // Status options
-  const statusOptions = [
-    { label: 'Đang làm việc', value: 'active', type: 'status' as const },
-    { label: 'Đã nghỉ việc', value: 'inactive', type: 'status' as const }
-  ];
-
-  // Create filter categories
-  const filterCategories = [
-    {
-      name: 'Cơ sở',
-      type: 'other' as const,
-      options: facilityOptions
-    },
-    {
-      name: 'Bộ phận',
-      type: 'other' as const,
-      options: departmentOptions
-    },
-    {
-      name: 'Chức danh',
-      type: 'other' as const,
-      options: positionOptions
-    },
-    {
-      name: 'Trạng thái',
-      type: 'status' as const,
-      options: statusOptions
-    }
-  ];
-
-  // Apply filters to data
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(employee => {
-      // Check each filter
-      for (const [category, value] of Object.entries(filters)) {
-        if (value) {
-          if (category === 'Cơ sở' && !employee.co_so_id?.includes(value)) return false;
-          if (category === 'Bộ phận' && employee.bo_phan !== value) return false;
-          if (category === 'Chức danh' && employee.chuc_danh !== value) return false;
-          if (category === 'Trạng thái' && employee.tinh_trang_lao_dong !== value) return false;
+    
+    if (facilityFilter) {
+      filtered = filtered.filter(emp => {
+        // Handle both array and string cases for co_so_id
+        if (Array.isArray(emp.co_so_id)) {
+          return emp.co_so_id.includes(facilityFilter);
+        } else if (typeof emp.co_so_id === 'string') {
+          return emp.co_so_id === facilityFilter;
         }
-      }
-      return true;
-    });
-  }, [employees, filters]);
-
-  const columns = [
+        return false;
+      });
+    }
+    
+    if (departmentFilter) {
+      filtered = filtered.filter(emp => emp.bo_phan === departmentFilter);
+    }
+    
+    if (positionFilter) {
+      filtered = filtered.filter(emp => emp.chuc_danh === positionFilter);
+    }
+    
+    if (statusFilter) {
+      filtered = filtered.filter(emp => emp.tinh_trang_lao_dong === statusFilter);
+    }
+    
+    setFilteredEmployees(filtered);
+  }, [employees, searchQuery, facilityFilter, departmentFilter, positionFilter, statusFilter]);
+  
+  const columns: ColumnDef<Employee>[] = [
     {
-      title: "Họ và tên",
-      key: "ten_nhan_su",
-      thumbnail: true,
-      sortable: true,
-      render: (value: string, employee: Employee) => (
-        <span className="ml-2">{value}</span>
-      ),
+      accessorKey: 'hinh_anh',
+      header: '',
+      cell: ({ row }) => {
+        const avatar = row.original.hinh_anh;
+        return (
+          <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gray-100">
+            <img 
+              src={avatar || '/placeholder.svg'} 
+              alt={row.original.ten_nhan_su}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        );
+      },
     },
     {
-      title: "Bộ phận",
-      key: "bo_phan",
-      sortable: true,
+      accessorKey: 'ten_nhan_su',
+      header: 'Tên nhân viên',
+      cell: ({ row }) => {
+        return (
+          <div>
+            <div className="font-medium">{row.original.ten_nhan_su}</div>
+            <div className="text-sm text-muted-foreground">{row.original.email}</div>
+          </div>
+        );
+      },
     },
     {
-      title: "Chức danh",
-      key: "chuc_danh",
-      sortable: true,
+      accessorKey: 'bo_phan',
+      header: 'Bộ phận',
     },
     {
-      title: "Điện thoại",
-      key: "dien_thoai",
+      accessorKey: 'chuc_danh',
+      header: 'Chức danh',
     },
     {
-      title: "Email",
-      key: "email",
+      accessorKey: 'dien_thoai',
+      header: 'Điện thoại',
     },
     {
-      title: "Trạng thái",
-      key: "tinh_trang_lao_dong",
-      sortable: true,
-      render: (value: string) => (
-        <Badge variant={value === "active" ? "success" : "destructive"}>
-          {value === "active" ? "Đang làm việc" : "Đã nghỉ việc"}
-        </Badge>
-      ),
+      accessorKey: 'tinh_trang_lao_dong',
+      header: 'Tình trạng',
+      cell: ({ row }) => {
+        const status = row.original.tinh_trang_lao_dong || 'Không xác định';
+        let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'secondary';
+        
+        if (status === 'Đang làm việc') {
+          variant = 'default';
+        } else if (status === 'Đã nghỉ việc') {
+          variant = 'destructive';
+        } else if (status === 'Tạm nghỉ') {
+          variant = 'outline';
+        }
+        
+        return <Badge variant={variant}>{status}</Badge>;
+      },
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Mở menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Hành động</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate(`/employees/${row.original.id}`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Xem chi tiết
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShowFiles(row.original.id)}>
+                <FileText className="mr-2 h-4 w-4" />
+                Tài liệu
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleDelete(row.original.id)} className="text-red-600">
+                <Trash className="mr-2 h-4 w-4" />
+                Xóa
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
   ];
 
-  const tableActions = (
-    <div className="flex items-center space-x-2">
-      <Button size="sm" className="h-8" onClick={handleAddEmployee}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Nhân Viên
-      </Button>
-    </div>
-  );
+  const handleDelete = async (id: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa nhân viên này không?')) return;
+    
+    try {
+      await employeeService.delete(id);
+      setEmployees(prevEmployees => prevEmployees.filter(emp => emp.id !== id));
+      toast({
+        title: 'Thành công',
+        description: 'Đã xóa nhân viên',
+      });
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xóa nhân viên',
+        variant: 'destructive',
+      });
+    }
+  };
 
-  const tableFilters = (
-    <div className="flex items-center space-x-2">
-      <FilterButton 
-        categories={filterCategories} 
-        onFilter={setFilters}
-      />
-      <ExportButton 
-        data={filteredEmployees} 
-        filename="Danh_sach_nhan_vien" 
-        label="Xuất dữ liệu"
-      />
-    </div>
-  );
+  const handleShowFiles = (employeeId: string) => {
+    setSelectedEmployee(employeeId);
+    setShowFilesDialog(true);
+  };
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setFacilityFilter('');
+    setDepartmentFilter('');
+    setPositionFilter('');
+    setStatusFilter('');
+  };
 
   return (
-    <TablePageLayout
-      title="Nhân Viên"
-      description="Quản lý thông tin nhân viên trong hệ thống"
-      actions={tableActions}
-      filters={tableFilters}
-    >
-      <div className="hidden md:block mb-4">
-        <CommandInterface />
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Quản lý nhân viên</h1>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Thêm nhân viên
+        </Button>
       </div>
       
-      {connectionError && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertTitle>Lỗi kết nối cơ sở dữ liệu</AlertTitle>
-          <AlertDescription>
-            {connectionError}
-            <div className="mt-2">
-              <p>Kiểm tra:</p>
-              <ul className="list-disc pl-5">
-                <li>Biến môi trường VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY đã được cấu hình</li>
-                <li>Kết nối internet hoạt động</li>
-                <li>Dịch vụ Supabase đang hoạt động</li>
-              </ul>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={testSupabaseConnection}
-                className="mt-2"
-              >
-                Kiểm tra lại kết nối
-              </Button>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="md:col-span-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Tìm kiếm theo tên, email, số điện thoại..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
             </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <DataTable
-        columns={columns}
-        data={filteredEmployees}
-        isLoading={isLoading}
-        onRowClick={handleRowClick}
-        searchable={true}
-        searchPlaceholder="Tìm kiếm nhân viên..."
-      />
-
-      {selectedEmployee && (
-        <DetailPanel
-          title="Thông Tin Nhân Viên"
-          isOpen={showDetail}
-          onClose={closeDetail}
-        >
-          <EmployeeDetail employeeId={selectedEmployee.id} />
-        </DetailPanel>
-      )}
-
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="sm:max-w-[600px]">
+            
+            <div>
+              <Select value={facilityFilter} onValueChange={setFacilityFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Cơ sở" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tất cả cơ sở</SelectItem>
+                  {facilities.map((facility) => (
+                    <SelectItem key={facility.id} value={facility.id}>
+                      {facility.ten_co_so}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Bộ phận" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tất cả bộ phận</SelectItem>
+                  {departments.map((department) => (
+                    <SelectItem key={department} value={department}>
+                      {department}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select value={positionFilter} onValueChange={setPositionFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chức danh" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tất cả chức danh</SelectItem>
+                  {positions.map((position) => (
+                    <SelectItem key={position} value={position}>
+                      {position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="md:col-span-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tình trạng" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tất cả tình trạng</SelectItem>
+                  <SelectItem value="Đang làm việc">Đang làm việc</SelectItem>
+                  <SelectItem value="Đã nghỉ việc">Đã nghỉ việc</SelectItem>
+                  <SelectItem value="Tạm nghỉ">Tạm nghỉ</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="md:col-span-2 flex justify-end">
+              <Button variant="outline" onClick={resetFilters}>Đặt lại bộ lọc</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="pt-6">
+          <DataTable
+            columns={columns}
+            data={filteredEmployees}
+            isLoading={isLoading}
+            onRowClick={(row) => navigate(`/employees/${row.id}`)}
+          />
+        </CardContent>
+      </Card>
+      
+      {/* Add Employee Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
-            <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
+            <DialogTitle>Thêm nhân viên mới</DialogTitle>
           </DialogHeader>
-          <EmployeeForm onSubmit={handleEmployeeSubmit} />
+          {/* Employee form will be added here */}
         </DialogContent>
       </Dialog>
-    </TablePageLayout>
+      
+      {/* Files Dialog */}
+      <Dialog open={showFilesDialog} onOpenChange={setShowFilesDialog}>
+        <DialogContent className="sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>Tài liệu nhân viên</DialogTitle>
+          </DialogHeader>
+          {selectedEmployee && <EmployeeFilesTab employeeId={selectedEmployee} />}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

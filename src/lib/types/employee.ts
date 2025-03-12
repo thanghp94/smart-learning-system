@@ -17,6 +17,8 @@ export interface Employee {
   created_at?: string;
   updated_at?: string;
   ten_tieng_anh?: string;
+  vai_tro?: string;
+  co_so_name?: string;
   
   // Additional fields for contract management
   luong_co_ban?: number | string;

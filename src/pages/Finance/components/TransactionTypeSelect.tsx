@@ -26,7 +26,12 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!transactionCategory) return;
+    if (!transactionCategory) {
+      setTransactionTypes([]);
+      // Reset form field if category is empty
+      form.setValue('loai_giao_dich', '');
+      return;
+    }
     
     const fetchTransactionTypes = async () => {
       setIsLoading(true);
@@ -39,16 +44,23 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
         if (error) throw error;
         
         setTransactionTypes(data || []);
+        
+        // If the currently selected value is not in the new options list, reset it
+        const currentValue = form.getValues('loai_giao_dich');
+        if (currentValue && data && !data.some(item => item.id === currentValue)) {
+          form.setValue('loai_giao_dich', '');
+        }
       } catch (error) {
         console.error('Error fetching transaction types:', error);
         setTransactionTypes([]); // Set empty array on error to prevent UI issues
+        form.setValue('loai_giao_dich', ''); // Reset value on error
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchTransactionTypes();
-  }, [transactionCategory]);
+  }, [transactionCategory, form]);
 
   return (
     <FormField
@@ -66,6 +78,7 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
               <SelectTrigger>
                 <SelectValue placeholder={
                   isLoading ? 'Đang tải...' : 
+                  !transactionCategory ? 'Vui lòng chọn danh mục trước' :
                   transactionTypes.length === 0 ? 'Không có loại giao dịch' : 
                   'Chọn loại giao dịch'
                 } />
@@ -80,7 +93,9 @@ const TransactionTypeSelect: React.FC<TransactionTypeSelectProps> = ({ form, tra
                 ))
               ) : (
                 <SelectItem value="" disabled>
-                  {isLoading ? 'Đang tải...' : 'Không có loại giao dịch'}
+                  {isLoading ? 'Đang tải...' : 
+                   !transactionCategory ? 'Vui lòng chọn danh mục trước' : 
+                   'Không có loại giao dịch'}
                 </SelectItem>
               )}
             </SelectContent>
