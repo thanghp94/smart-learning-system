@@ -1,24 +1,15 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Form } from '@/components/ui/form';
 import { Asset } from '@/lib/types';
-import { assetSchema, AssetFormData } from './schemas/assetSchema';
-import BasicInfoFields from './components/BasicInfoFields';
-import StatusFields from './components/StatusFields';
+import { useToast } from '@/hooks/use-toast';
+import AssetFormBasic from './components/AssetFormBasic';
+import AssetFormDetails from './components/AssetFormDetails';
+import AssetFormPurchase from './components/AssetFormPurchase';
 import ImageUploadFields from './components/ImageUploadFields';
-import AdditionalInfoFields from './components/AdditionalInfoFields';
 
 interface AssetFormProps {
   initialData?: Partial<Asset>;
@@ -26,7 +17,13 @@ interface AssetFormProps {
   onCancel: () => void;
 }
 
-const AssetForm: React.FC<AssetFormProps> = ({ initialData, onSubmit, onCancel }) => {
+const AssetForm: React.FC<AssetFormProps> = ({ initialData = {}, onSubmit, onCancel }) => {
+  const { toast } = useToast();
+  const [assetImages, setAssetImages] = useState({
+    hinh_anh: initialData?.hinh_anh || '',
+    hinh_anh_2: initialData?.hinh_anh_2 || ''
+  });
+
   const form = useForm<AssetFormData>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
@@ -67,16 +64,30 @@ const AssetForm: React.FC<AssetFormProps> = ({ initialData, onSubmit, onCancel }
     form.setValue(field, url);
   };
 
+  const handleImageChange = (field: string, url: string) => {
+    setAssetImages(prev => ({
+      ...prev,
+      [field]: url
+    }));
+    form.setValue(field, url);
+  };
+
+  const handleRemoveImage = (field: string) => {
+    setAssetImages(prev => ({
+      ...prev,
+      [field]: ''
+    }));
+    form.setValue(field, '');
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-        {/* Two-column layout for better space utilization */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left column - Basic info and Status */}
           <div className="space-y-4">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Thông tin cơ bản</h3>
-              <BasicInfoFields 
+              <AssetFormBasic 
                 form={form} 
                 handleChange={handleChange} 
                 handleNumberChange={handleNumberChange} 
@@ -85,18 +96,17 @@ const AssetForm: React.FC<AssetFormProps> = ({ initialData, onSubmit, onCancel }
             
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Trạng thái</h3>
-              <StatusFields 
+              <AssetFormDetails 
                 form={form} 
                 handleChange={handleChange} 
               />
             </div>
           </div>
           
-          {/* Right column - Additional info and Images */}
           <div className="space-y-4">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Thông tin bổ sung</h3>
-              <AdditionalInfoFields 
+              <AssetFormPurchase 
                 form={form} 
                 handleChange={handleChange} 
               />
@@ -104,9 +114,13 @@ const AssetForm: React.FC<AssetFormProps> = ({ initialData, onSubmit, onCancel }
             
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Hình ảnh</h3>
-              <ImageUploadFields 
-                form={form} 
-                handleImageUpload={handleImageUpload} 
+              <ImageUploadFields
+                assetData={assetImages}
+                handleImageChange={handleImageChange}
+                handleRemoveImage={handleRemoveImage}
+                entityId={initialData?.id || 'new'}
+                form={form}
+                handleImageUpload={handleImageUpload}
               />
             </div>
           </div>

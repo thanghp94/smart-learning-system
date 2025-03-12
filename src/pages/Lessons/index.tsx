@@ -1,15 +1,14 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import TablePageLayout from '@/components/common/TablePageLayout';
-import DataTable from '@/components/ui/DataTable';
-import { Session } from '@/lib/types';
-import { sessionService } from '@/lib/supabase/session-service';
-import { format } from 'date-fns';
-import { Plus, FileDown, Filter, RotateCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import PlaceholderPage from '@/components/common/PlaceholderPage';
+import React, { useState, useEffect } from "react";
+import { Plus, FileDown, Filter, RotateCw, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/DataTable";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import TablePageLayout from "@/components/common/TablePageLayout";
+import { Session } from "@/lib/types";
+import { sessionService } from "@/lib/supabase/session-service";
+import { format } from "date-fns";
+import { PlaceholderPage } from "@/components/common/PlaceholderPage";
 
 const Lessons = () => {
   const [lessons, setLessons] = useState<Session[]>([]);

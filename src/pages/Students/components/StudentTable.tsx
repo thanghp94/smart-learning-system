@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Student } from '@/lib/types';
-import DataTable from '@/components/ui/DataTable';
+import { DataTable } from '@/components/ui/DataTable';
 import { CalendarDays, Flag, User, Phone, School, MapPin } from 'lucide-react';
 
 interface StudentTableProps {

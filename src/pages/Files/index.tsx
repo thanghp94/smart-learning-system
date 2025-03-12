@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { fileService } from "@/lib/supabase";
 import { File as FileDocument } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";

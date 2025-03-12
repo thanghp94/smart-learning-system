@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Asset } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +8,7 @@ import AssetDetail from "./AssetDetail";
 import AssetForm from "./AssetForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
-import DataTable from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import CommandInterface from "@/components/CommandInterface";
 import { useAssetData } from "./hooks/useAssetData";
 import AssetActionsToolbar from "./components/AssetActionsToolbar";

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -45,14 +44,13 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
     }
   });
 
-  const handleImageChange = (url: string) => {
+  const handleImageUpload = (url: string) => {
     setEmployeeImage(url);
   };
 
   const processSubmit = async (formData: any) => {
     try {
       setIsSubmitting(true);
-      // Process the date field - if empty, set to null to avoid SQL date parsing errors
       const processedData = {
         ...formData,
         ngay_sinh: formData.ngay_sinh || null,
@@ -93,8 +91,12 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
             <Label htmlFor="employeeImage">Hình ảnh nhân viên</Label>
             <div className="mt-2">
               <ImageUpload
+                currentUrl={employeeImage}
+                onUpload={handleImageUpload}
+                entityType="employee"
+                entityId={initialData?.id || 'new'}
                 value={employeeImage}
-                onChange={handleImageChange}
+                onChange={handleImageUpload}
                 onRemove={() => setEmployeeImage('')}
               />
             </div>

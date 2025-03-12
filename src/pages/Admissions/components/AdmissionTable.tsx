@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import DataTable from '@/components/ui/DataTable';
+import { DataTable } from '@/components/ui/DataTable';
 import { useToast } from '@/hooks/use-toast';
 import { Admission } from '@/lib/types/admission';
 import { admissionService } from '@/lib/supabase/admission-service';

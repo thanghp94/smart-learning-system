@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
 import { useToast } from '@/hooks/use-toast';
-import DataTable from '@/components/ui/DataTable';
+import { DataTable } from '@/components/ui/DataTable';
 import ExportButton from '@/components/ui/ExportButton';
 
 const DailyAttendance = () => {

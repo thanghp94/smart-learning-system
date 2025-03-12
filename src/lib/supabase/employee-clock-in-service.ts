@@ -1,6 +1,6 @@
 
-import { supabase } from './client';
-import { EmployeeClockInOut } from '../types';
+import { supabase } from '../supabase-client';
+import { EmployeeClockInOut } from '@/lib/types';
 
 export const employeeClockInService = {
   getAll: async (): Promise<EmployeeClockInOut[]> => {
@@ -9,11 +9,7 @@ export const employeeClockInService = {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching employee clock in out records:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return data || [];
   },
 
@@ -24,11 +20,7 @@ export const employeeClockInService = {
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching employee clock in out record:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return data;
   },
 
@@ -39,11 +31,7 @@ export const employeeClockInService = {
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating employee clock in out record:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return data;
   },
 
@@ -55,11 +43,7 @@ export const employeeClockInService = {
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating employee clock in out record:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return data;
   },
 
@@ -69,130 +53,39 @@ export const employeeClockInService = {
       .delete()
       .eq('id', id);
 
-    if (error) {
-      console.error('Error deleting employee clock in out record:', error);
-      throw error;
-    }
+    if (error) throw error;
   },
-  
-  // Add specific methods for clock in/out operations
-  clockIn: async (record: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> => {
-    return employeeClockInService.create(record);
-  },
-  
-  clockOut: async (record: Partial<EmployeeClockInOut>): Promise<EmployeeClockInOut> => {
-    if (!record.id) {
-      throw new Error('ID is required for clock out');
-    }
-    return employeeClockInService.update(record.id, record);
-  },
-  
-  // Get attendance records by employee and date
-  getByEmployeeAndDate: async (employeeId: string, date: string): Promise<EmployeeClockInOut[]> => {
-    const { data, error } = await supabase
+
+  // Add this method which was missing
+  getAttendanceForEmployee: async (employeeId: string, month?: number, year?: number): Promise<EmployeeClockInOut[]> => {
+    let query = supabase
       .from('employee_clock_in_out')
       .select('*')
       .eq('nhan_vien_id', employeeId)
-      .eq('ngay', date)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching employee attendance by date:', error);
-      throw error;
-    }
-
-    return data || [];
-  },
-  
-  // Get attendance records by date
-  getByDate: async (date: string): Promise<EmployeeClockInOut[]> => {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*')
-      .eq('ngay', date)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching attendance by date:', error);
-      throw error;
-    }
-
-    return data || [];
-  },
-  
-  // Get attendance records by employee
-  getByEmployee: async (employeeId: string): Promise<EmployeeClockInOut[]> => {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*')
-      .eq('nhan_vien_id', employeeId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching employee attendance:', error);
-      throw error;
-    }
-
-    return data || [];
-  },
-  
-  // Get monthly attendance for an employee
-  getMonthlyAttendance: async (month: number, year: number): Promise<EmployeeClockInOut[]> => {
-    // Create the date range for the month
-    const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endMonth = month === 12 ? 1 : month + 1;
-    const endYear = month === 12 ? year + 1 : year;
-    const endDate = `${endYear}-${endMonth.toString().padStart(2, '0')}-01`;
+      .order('ngay', { ascending: false });
     
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*, employees!inner(ten_nhan_su)')
-      .gte('ngay', startDate)
-      .lt('ngay', endDate)
-      .order('ngay', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching monthly attendance:', error);
-      throw error;
+    // Filter by month and year if provided
+    if (month && year) {
+      const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+      
+      query = query
+        .gte('ngay', startDate)
+        .lte('ngay', endDate);
     }
-
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
     return data || [];
   },
-  
-  // Get daily report
+
+  // Get daily attendance report
   getDailyReport: async (date: string): Promise<any[]> => {
     const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select(`
-        *,
-        employees!inner(
-          id,
-          ten_nhan_su,
-          hinh_anh,
-          chuc_danh,
-          bo_phan
-        )
-      `)
-      .eq('ngay', date)
-      .order('created_at', { ascending: false });
+      .rpc('get_daily_attendance_report', { check_date: date });
 
-    if (error) {
-      console.error('Error fetching daily attendance report:', error);
-      throw error;
-    }
-
-    // Transform data to include employee details
-    const formattedData = data.map(record => ({
-      ...record,
-      employee_id: record.nhan_vien_id,
-      employee_name: record.employees?.ten_nhan_su || 'Unknown',
-      employee_image: record.employees?.hinh_anh || null,
-      position: record.employees?.chuc_danh || 'N/A',
-      department: record.employees?.bo_phan || 'N/A',
-    }));
-
-    return formattedData || [];
+    if (error) throw error;
+    return data || [];
   }
 };
-
-export default employeeClockInService;

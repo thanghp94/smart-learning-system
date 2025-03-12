@@ -13,8 +13,12 @@ import EmployeeContractTab from './components/EmployeeContractTab';
 import EmployeeFinancesTab from './components/EmployeeFinancesTab';
 import EmployeeFilesTab from './components/EmployeeFilesTab';
 
-const EmployeeDetail = () => {
-  const { id } = useParams<{ id: string }>();
+interface EmployeeDetailProps {
+  employeeId: string;
+  onFileUpload?: (file: File) => Promise<void>;
+}
+
+const EmployeeDetail: React.FC<EmployeeDetailProps> = ({ employeeId, onFileUpload }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -28,8 +32,8 @@ const EmployeeDetail = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        if (id) {
-          const employeeData = await employeeService.getById(id);
+        if (employeeId) {
+          const employeeData = await employeeService.getById(employeeId);
           setEmployee(employeeData);
           setTempEmployeeData({...employeeData});
         }
@@ -49,7 +53,7 @@ const EmployeeDetail = () => {
     };
     
     fetchData();
-  }, [id, toast]);
+  }, [employeeId, toast]);
 
   const handleBack = () => navigate('/employees');
 
@@ -90,7 +94,7 @@ const EmployeeDetail = () => {
   };
 
   const handleSave = async () => {
-    if (!tempEmployeeData || !employee || !id) return;
+    if (!tempEmployeeData || !employee || !employeeId) return;
     
     try {
       setIsLoading(true);
@@ -100,7 +104,7 @@ const EmployeeDetail = () => {
         dataToSubmit.ngay_sinh = dataToSubmit.ngay_sinh.toISOString();
       }
       
-      await employeeService.update(id, dataToSubmit);
+      await employeeService.update(employeeId, dataToSubmit);
       setEmployee(dataToSubmit);
       setIsEditing(false);
       
@@ -117,6 +121,37 @@ const EmployeeDetail = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFileUploadImpl = async (file: File) => {
+    if (!employeeId) return;
+    
+    // Call the provided onFileUpload function if available
+    if (onFileUpload) {
+      return onFileUpload(file);
+    }
+    
+    // Default implementation if no onFileUpload was provided
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('entityType', 'employee');
+    formData.append('entityId', employeeId);
+    
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
+      }
+      
+      return;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw error;
     }
   };
 
@@ -167,15 +202,18 @@ const EmployeeDetail = () => {
         </TabsContent>
 
         <TabsContent value="contracts">
-          <EmployeeContractTab employeeId={id || ''} />
+          <EmployeeContractTab employeeId={employeeId} />
         </TabsContent>
 
         <TabsContent value="finances">
-          <EmployeeFinancesTab employeeId={id || ''} />
+          <EmployeeFinancesTab employeeId={employeeId} />
         </TabsContent>
 
         <TabsContent value="files">
-          <EmployeeFilesTab employeeId={id || ''} />
+          <EmployeeFilesTab 
+            employeeId={employeeId} 
+            onFileUpload={handleFileUploadImpl} 
+          />
         </TabsContent>
       </Tabs>
     </div>

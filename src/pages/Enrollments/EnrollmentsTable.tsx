@@ -1,7 +1,6 @@
-
-import React, { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import DataTable from '@/components/ui/DataTable';
+import React from 'react';
+import { Enrollment } from '@/lib/types';
+import { DataTable } from '@/components/ui/DataTable';
 import { enrollmentService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -11,7 +10,7 @@ interface EnrollmentsTableProps {
 }
 
 const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({ classId, sessionId }) => {
-  const [enrollments, setEnrollments] = useState([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

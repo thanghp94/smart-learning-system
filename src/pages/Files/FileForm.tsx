@@ -39,6 +39,7 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string>('');
+  const [fileImageUrl, setFileImageUrl] = useState<string>('');
   const { toast } = useToast();
 
   const form = useForm<FileFormData>({
@@ -132,6 +133,11 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
     form.setValue('duong_dan', url);
   };
 
+  const handleImageUpload = (url: string) => {
+    setFileImageUrl(url);
+    form.setValue('duong_dan', url);
+  };
+
   const renderEntityOptions = () => {
     switch (selectedEntityType) {
       case 'contact':
@@ -219,7 +225,7 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn đối tượng" />
+                    <SelectValue placeholder="Chọn đối tư��ng" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -244,12 +250,13 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
                 <FormLabel>Tải lên tài liệu/hình ảnh</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    value={uploadedFileUrl || field.value}
-                    onChange={handleFileUpload}
-                    onRemove={() => {
-                      setUploadedFileUrl('');
-                      form.setValue('duong_dan', '');
-                    }}
+                    currentUrl={fileImageUrl}
+                    onUpload={handleImageUpload}
+                    entityType="file"
+                    entityId={initialData?.id || 'new'}
+                    value={fileImageUrl}
+                    onChange={handleImageUpload}
+                    onRemove={() => setFileImageUrl('')}
                   />
                 </FormControl>
                 <FormMessage />

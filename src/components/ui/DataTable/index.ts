@@ -1,3 +1,3 @@
 
-export { DataTable } from './DataTable';
-export * from './types';
+export { DataTable } from '../DataTable';
+export type { DataTableProps } from './types';

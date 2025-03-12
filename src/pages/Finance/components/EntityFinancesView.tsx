@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import DataTable from '@/components/ui/DataTable';
+import { DataTable } from '@/components/ui/DataTable';
 import { financeService } from '@/lib/supabase';
 import { Finance } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -32,7 +31,6 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({
   const params = useParams();
   const { toast } = useToast();
 
-  // If entityId is not provided, try to get it from URL parameters
   const effectiveEntityId = entityId || params.id;
 
   useEffect(() => {
@@ -69,7 +67,6 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({
 
   const handleFormSubmit = async (formData: any) => {
     setShowAddForm(false);
-    // Refresh the finances list after adding a new one
     if (effectiveEntityId) {
       const data = await financeService.getByEntity(entityType, effectiveEntityId);
       setFinances(data);

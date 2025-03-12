@@ -1,8 +1,7 @@
-
-import React, { useState, useEffect } from "react";
-import { Plus, FileDown, Filter, RotateCw, DollarSign } from "lucide-react";
+import React from "react";
+import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { payrollService, employeeService, facilityService } from "@/lib/supabase";
 import { Payroll, Employee, Facility } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";

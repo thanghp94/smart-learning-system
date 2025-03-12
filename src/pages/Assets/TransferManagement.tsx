@@ -1,15 +1,13 @@
-
-import React, { useState, useEffect } from "react";
-import { AssetTransfer, Asset } from "@/lib/types";
-import { assetTransferService, assetService } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import DataTable from "@/components/ui/DataTable";
+import React from "react";
+import { Asset, AssetTransfer } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { assetService } from "@/lib/supabase";
+import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { Check, X, Filter, RotateCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -32,7 +30,6 @@ const TransferManagement = () => {
       const data = await assetTransferService.getAll();
       setTransfers(data);
       
-      // Fetch all assets referenced in the transfers
       const assetIds = [...new Set(data.map(t => t.asset_id))];
       const assets: Record<string, Asset> = {};
       

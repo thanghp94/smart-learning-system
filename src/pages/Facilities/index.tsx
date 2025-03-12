@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import DataTable from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { facilityService } from "@/lib/supabase";
 import { Facility } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -64,7 +63,6 @@ const Facilities = () => {
 
   const handleAddFacility = async (data: any) => {
     try {
-      // In demo mode, just initialize the database and refresh
       if (isDemoMode) {
         await initializeDatabase();
         toast({
@@ -76,7 +74,6 @@ const Facilities = () => {
         return;
       }
 
-      // In real mode, add the facility with proper error handling
       console.log("Adding facility with data:", data);
       const newFacility = await facilityService.create(data);
       
@@ -91,7 +88,6 @@ const Facilities = () => {
     } catch (error: any) {
       console.error("Error adding facility:", error);
       
-      // Handle Row Level Security policy errors
       if (error.code === '42501' || (error.message && error.message.includes('row-level security policy'))) {
         setErrorMessage("Bạn không có quyền thêm cơ sở mới. Vui lòng kiểm tra quyền truy cập hoặc đăng nhập với tài khoản có quyền quản trị.");
         setShowErrorDialog(true);
