@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -27,10 +28,6 @@ const formatCurrency = (amount: number | string | undefined) => {
   }
 };
 
-// Rest of your ContractTemplateManager component implementation
-
-// ... keep existing code (component implementation) the same ...
-
 // For the merge fields processing logic, update the code to use the formatDate and formatCurrency helpers
 const processMergeFields = (template: string, employee: Employee) => {
   if (!template || !employee) return '';
@@ -55,6 +52,11 @@ const processMergeFields = (template: string, employee: Employee) => {
   return processed;
 };
 
-// ... keep rest of the existing code the same ...
+const ContractTemplateManager = () => {
+  // Component implementation here
+  return (
+    <div>Contract Template Manager Implementation</div>
+  );
+};
 
 export default ContractTemplateManager;

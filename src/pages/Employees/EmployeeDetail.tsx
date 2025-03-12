@@ -2,19 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Employee } from '@/lib/types';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { employeeService, facilityService } from '@/lib/supabase';
-import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Edit, ArrowLeft, Save, X } from 'lucide-react';
-import EmployeeBasicInfo from './components/EmployeeBasicInfo';
-import EmployeeContactInfo from './components/EmployeeContactInfo';
-import EmployeeWorkInfo from './components/EmployeeWorkInfo';
+import EmployeeHeader from './components/EmployeeHeader';
+import EmployeeBasicInfoTab from './components/EmployeeBasicInfoTab';
 import EmployeeContractTab from './components/EmployeeContractTab';
 import EmployeeFinancesTab from './components/EmployeeFinancesTab';
 import EmployeeFilesTab from './components/EmployeeFilesTab';
+import { Button } from '@/components/ui/button';
 
 const EmployeeDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -144,33 +141,13 @@ const EmployeeDetail = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <Button variant="ghost" onClick={handleBack} className="mr-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Quay lại
-          </Button>
-          <h1 className="text-3xl font-bold">{employee.ten_nhan_su}</h1>
-        </div>
-        
-        {isEditing ? (
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleEditToggle}>
-              <X className="h-4 w-4 mr-2" />
-              Hủy
-            </Button>
-            <Button onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
-              Lưu
-            </Button>
-          </div>
-        ) : (
-          <Button onClick={handleEditToggle}>
-            <Edit className="h-4 w-4 mr-2" />
-            Chỉnh sửa
-          </Button>
-        )}
-      </div>
+      <EmployeeHeader 
+        employeeName={employee.ten_nhan_su}
+        isEditing={isEditing}
+        handleBack={handleBack}
+        handleEditToggle={handleEditToggle}
+        handleSave={handleSave}
+      />
 
       <Separator className="mb-6" />
 
@@ -183,55 +160,28 @@ const EmployeeDetail = () => {
         </TabsList>
 
         <TabsContent value="basic">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="pt-6">
-                <EmployeeBasicInfo 
-                  employee={isEditing ? tempEmployeeData : employee}
-                  isEditing={isEditing}
-                  handleChange={handleChange}
-                  handleImageUpload={handleImageUpload}
-                  handleDateChange={handleDateChange}
-                />
-              </CardContent>
-            </Card>
-
-            <div className="space-y-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <EmployeeContactInfo 
-                    employee={isEditing ? tempEmployeeData : employee}
-                    isEditing={isEditing}
-                    handleChange={handleChange}
-                  />
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <EmployeeWorkInfo 
-                    employee={isEditing ? tempEmployeeData : employee}
-                    facilities={facilities}
-                    isEditing={isEditing}
-                    handleChange={handleChange}
-                    handleMultiSelectChange={handleMultiSelectChange}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          <EmployeeBasicInfoTab 
+            employee={employee}
+            tempEmployeeData={tempEmployeeData}
+            facilities={facilities}
+            isEditing={isEditing}
+            handleChange={handleChange}
+            handleImageUpload={handleImageUpload}
+            handleDateChange={handleDateChange}
+            handleMultiSelectChange={handleMultiSelectChange}
+          />
         </TabsContent>
 
         <TabsContent value="contracts">
-          <EmployeeContractTab employeeId={id || ''} />
+          {id && <EmployeeContractTab employeeId={id} />}
         </TabsContent>
 
         <TabsContent value="finances">
-          <EmployeeFinancesTab employeeId={id || ''} />
+          {id && <EmployeeFinancesTab employeeId={id} />}
         </TabsContent>
 
         <TabsContent value="files">
-          <EmployeeFilesTab employeeId={id || ''} />
+          {id && <EmployeeFilesTab employeeId={id} />}
         </TabsContent>
       </Tabs>
     </div>

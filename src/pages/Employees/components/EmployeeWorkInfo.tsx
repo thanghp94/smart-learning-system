@@ -9,13 +9,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue 
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 interface EmployeeWorkInfoProps {
@@ -44,6 +37,16 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
       }
     }
     handleMultiSelectChange('co_so_id', selectedValues);
+  };
+
+  const formatDateValue = (date: Date | string | undefined) => {
+    if (!date) return "";
+    try {
+      return typeof date === 'string' ? format(new Date(date), 'dd/MM/yyyy') : format(date, 'dd/MM/yyyy');
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return String(date);
+    }
   };
 
   return (
@@ -163,13 +166,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {employee.ngay_vao_lam ? (
-                      employee.ngay_vao_lam instanceof Date 
-                        ? format(employee.ngay_vao_lam, "dd/MM/yyyy")
-                        : format(new Date(employee.ngay_vao_lam), "dd/MM/yyyy")
-                    ) : (
-                      "Chọn ngày"
-                    )}
+                    {employee.ngay_vao_lam ? formatDateValue(employee.ngay_vao_lam) : "Chọn ngày"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -182,7 +179,11 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
                           ? new Date(employee.ngay_vao_lam) 
                           : undefined
                     }
-                    onSelect={(date) => handleMultiSelectChange("ngay_vao_lam", [date ? date.toISOString() : ''])}
+                    onSelect={(date) => {
+                      if (date) {
+                        handleMultiSelectChange("ngay_vao_lam", [date.toISOString()]);
+                      }
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
@@ -190,11 +191,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
             </div>
           ) : (
             <div className="p-2 border rounded bg-gray-50">
-              {employee.ngay_vao_lam 
-                ? (employee.ngay_vao_lam instanceof Date 
-                  ? format(employee.ngay_vao_lam, "dd/MM/yyyy") 
-                  : format(new Date(employee.ngay_vao_lam), "dd/MM/yyyy"))
-                : '—'}
+              {employee.ngay_vao_lam ? formatDateValue(employee.ngay_vao_lam) : '—'}
             </div>
           )}
         </div>

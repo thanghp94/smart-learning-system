@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { employeeService, facilityService } from '@/lib/supabase';
@@ -15,7 +16,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { DataTable } from '@/components/ui/DataTable';
+import DataTable from '@/components/ui/DataTable'; // Fixed import
 import { ColumnDef } from '@tanstack/react-table';
 import { Edit, Plus, MoreHorizontal, FileText, Trash, Search } from 'lucide-react';
 import {

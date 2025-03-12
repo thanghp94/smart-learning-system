@@ -35,8 +35,8 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
       <div className="flex flex-col items-center mb-4">
         {isEditing ? (
           <ImageUpload
-            existingUrl={employee.hinh_anh}
-            onUploadComplete={handleImageUpload}
+            url={employee.hinh_anh}
+            onUpload={handleImageUpload}
             entityType="employee"
             entityId={employee.id}
           />

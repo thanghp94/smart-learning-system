@@ -1,86 +1,144 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { FileText, Plus, ExternalLink, Trash } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { fileService } from '@/lib/supabase';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import FileForm from '@/pages/Files/FileForm';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { File } from '@/lib/types';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { 
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { FileText, Upload, Download, Trash, Eye, Plus } from 'lucide-react';
 import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 interface EmployeeFilesTabProps {
   employeeId: string;
 }
 
+// Extended File type to include additional properties
+interface EmployeeFile extends File {
+  loai_doi_tuong?: string;
+}
+
+const fileSchema = z.object({
+  ten_file: z.string().min(1, { message: 'Tên file không được để trống' }),
+  mo_ta: z.string().optional(),
+  file_type: z.string().min(1, { message: 'Loại file không được để trống' }),
+  loai_doi_tuong: z.string().optional(),
+});
+
+type FileFormValues = z.infer<typeof fileSchema>;
+
 const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
-  const [files, setFiles] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
+  const [files, setFiles] = useState<EmployeeFile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [fileTypeFilter, setFileTypeFilter] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  
+  const form = useForm<FileFormValues>({
+    resolver: zodResolver(fileSchema),
+    defaultValues: {
+      ten_file: '',
+      mo_ta: '',
+      file_type: '',
+      loai_doi_tuong: 'employee',
+    }
+  });
 
   useEffect(() => {
-    fetchFiles();
-  }, [employeeId]);
-
-  const fetchFiles = async () => {
-    if (!employeeId) return;
-
-    setIsLoading(true);
-    try {
-      const data = await fileService.getByEntity('nhan_vien', employeeId);
-      setFiles(data || []);
-    } catch (error) {
-      console.error('Error fetching files:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải danh sách tài liệu',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAddFile = async (data: any) => {
-    try {
-      // Ensure the correct entity type and ID are set
-      const fileData = {
-        ...data,
-        nhan_vien_ID: employeeId,
-      };
-      
-      await fileService.create(fileData);
-      
-      toast({
-        title: 'Thành công',
-        description: 'Đã thêm tài liệu mới',
-      });
-      
-      setShowAddForm(false);
+    const fetchFiles = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fileService.getByEntityId(employeeId, 'employee');
+        setFiles(data);
+      } catch (error) {
+        console.error('Error fetching files:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải danh sách tài liệu',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (employeeId) {
       fetchFiles();
+    }
+  }, [employeeId, toast]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setUploadedFile(file);
+      
+      // Extract filename to use as default for ten_file
+      const fileName = file.name.split('.').slice(0, -1).join('.');
+      form.setValue('ten_file', fileName);
+      
+      // Set file type based on extension
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      if (fileExt) {
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+          form.setValue('file_type', 'image');
+        } else if (['pdf', 'doc', 'docx', 'txt'].includes(fileExt)) {
+          form.setValue('file_type', 'document');
+        } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
+          form.setValue('file_type', 'spreadsheet');
+        } else {
+          form.setValue('file_type', 'other');
+        }
+      }
     } catch (error) {
-      console.error('Error adding file:', error);
+      console.error('Error uploading file:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể thêm tài liệu mới: ' + (error as Error).message,
+        description: 'Không thể tải lên tệp tin',
         variant: 'destructive',
       });
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const filteredFiles = fileTypeFilter 
+    ? files.filter(file => file.file_type === fileTypeFilter)
+    : files;
+
+  const handleDeleteFile = async (fileId: string) => {
     if (!confirm('Bạn có chắc chắn muốn xóa tài liệu này không?')) return;
     
     try {
-      await fileService.delete(id);
+      await fileService.delete(fileId);
+      setFiles(files.filter(file => file.id !== fileId));
       toast({
         title: 'Thành công',
         description: 'Đã xóa tài liệu',
       });
-      fetchFiles();
     } catch (error) {
       console.error('Error deleting file:', error);
       toast({
@@ -91,118 +149,230 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: vi });
-    } catch (error) {
-      return dateString;
+  const onSubmit = async (values: FileFormValues) => {
+    if (!uploadedFile) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng tải lên một tệp tin',
+        variant: 'destructive',
+      });
+      return;
     }
-  };
-
-  const getFileNameFromUrl = (url?: string) => {
-    if (!url) return 'Không có tài liệu';
     
     try {
-      const fileName = url.split('/').pop() || 'Tài liệu';
-      return fileName.length > 20 ? fileName.substring(0, 20) + '...' : fileName;
+      // Upload file to storage
+      const uploadResult = await fileService.upload(
+        uploadedFile, 
+        'employee_files', 
+        `${employeeId}/${uploadedFile.name}`
+      );
+      
+      if (!uploadResult.url) throw new Error('File upload failed');
+      
+      // Create file record in database
+      const newFile: Partial<EmployeeFile> = {
+        ten_file: values.ten_file,
+        mo_ta: values.mo_ta,
+        file_url: uploadResult.url,
+        file_type: values.file_type,
+        file_extension: uploadedFile.name.split('.').pop(),
+        file_size: uploadedFile.size,
+        entity_id: employeeId,
+        entity_type: 'employee',
+        // Using loai_doi_tuong as a custom field for the file record
+        loai_doi_tuong: values.loai_doi_tuong,
+      };
+      
+      const createdFile = await fileService.create(newFile);
+      setFiles([createdFile as EmployeeFile, ...files]);
+      
+      // Reset form
+      form.reset();
+      setUploadedFile(null);
+      setFileUrl(null);
+      setShowAddDialog(false);
+      
+      toast({
+        title: 'Thành công',
+        description: 'Đã tải lên tài liệu mới',
+      });
     } catch (error) {
-      return 'Tài liệu';
+      console.error('Error saving file:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể lưu tài liệu',
+        variant: 'destructive',
+      });
     }
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xl font-bold">Tài liệu</CardTitle>
-        <Button onClick={() => setShowAddForm(true)} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Tài liệu nhân viên</h3>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
           Thêm tài liệu
         </Button>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="text-center py-4">Đang tải dữ liệu...</div>
-        ) : files.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
-            Không có tài liệu nào
-          </div>
-        ) : (
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-            {files.map((file) => (
-              <div key={file.id} className="border rounded-lg p-4 relative">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-medium">{file.ten_tai_lieu}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {file.nhom_tai_lieu || 'Tài liệu khác'}
+      </div>
+      
+      <div className="mb-4">
+        <Select value={fileTypeFilter} onValueChange={setFileTypeFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Tất cả loại tài liệu" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Tất cả loại tài liệu</SelectItem>
+            <SelectItem value="image">Hình ảnh</SelectItem>
+            <SelectItem value="document">Tài liệu</SelectItem>
+            <SelectItem value="spreadsheet">Bảng tính</SelectItem>
+            <SelectItem value="other">Khác</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <Card>
+        <CardContent className="p-4">
+          {isLoading ? (
+            <div className="text-center py-4">Đang tải dữ liệu...</div>
+          ) : filteredFiles.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground">
+              Không có tài liệu nào được tìm thấy
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tên tài liệu</TableHead>
+                  <TableHead>Loại</TableHead>
+                  <TableHead>Ngày tạo</TableHead>
+                  <TableHead className="w-[100px]">Thao tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredFiles.map((file) => (
+                  <TableRow key={file.id}>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                        <div>
+                          <div className="font-medium">{file.ten_file}</div>
+                          <div className="text-sm text-muted-foreground">{file.mo_ta}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{file.file_type}</TableCell>
+                    <TableCell>
+                      {file.created_at && format(new Date(file.created_at), 'dd/MM/yyyy')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="sm" onClick={() => window.open(file.file_url, '_blank')}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => window.open(file.file_url, '_blank')}>
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteFile(file.id)}>
+                          <Trash className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>Thêm tài liệu mới</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-4 py-2">
+                <FormField
+                  control={form.control}
+                  name="ten_file"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tên tài liệu</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="mo_ta"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mô tả</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="file_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Loại tài liệu</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn loại tài liệu" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="image">Hình ảnh</SelectItem>
+                          <SelectItem value="document">Tài liệu</SelectItem>
+                          <SelectItem value="spreadsheet">Bảng tính</SelectItem>
+                          <SelectItem value="other">Khác</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormItem>
+                  <FormLabel>Tải lên tệp tin</FormLabel>
+                  <FormControl>
+                    <Input type="file" onChange={handleFileUpload} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+                
+                {uploadedFile && (
+                  <div className="p-2 border rounded bg-gray-50">
+                    <p className="text-sm font-medium">{uploadedFile.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(uploadedFile.size / 1024).toFixed(2)} KB
                     </p>
                   </div>
-                  <Badge variant={file.trang_thai === 'active' ? 'default' : 'secondary'}>
-                    {file.trang_thai === 'active' ? 'Hiệu lực' : 'Không hiệu lực'}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center text-sm mb-2">
-                  <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
-                  <span>{getFileNameFromUrl(file.file1)}</span>
-                </div>
-                
-                {file.ngay_cap && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Ngày cấp:</span> {formatDate(file.ngay_cap)}
-                  </div>
                 )}
-                
-                {file.han_tai_lieu && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Hạn đến:</span> {formatDate(file.han_tai_lieu)}
-                  </div>
-                )}
-                
-                {file.ghi_chu && (
-                  <div className="text-sm mt-2 italic">
-                    {file.ghi_chu}
-                  </div>
-                )}
-                
-                <div className="flex justify-end mt-3 space-x-2">
-                  {file.file1 && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={file.file1} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Xem
-                      </a>
-                    </Button>
-                  )}
-                  
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(file.id)}>
-                    <Trash className="h-4 w-4 mr-1" />
-                    Xóa
-                  </Button>
-                </div>
               </div>
-            ))}
-          </div>
-        )}
-        
-        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-          <DialogContent className="sm:max-w-[800px]">
-            <DialogHeader>
-              <DialogTitle>Thêm tài liệu mới</DialogTitle>
-            </DialogHeader>
-            <FileForm 
-              onSubmit={handleAddFile}
-              onCancel={() => setShowAddForm(false)}
-              initialData={{
-                loai_doi_tuong: 'nhan_vien',
-                doi_tuong_id: employeeId
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+              
+              <DialogFooter>
+                <Button type="submit" disabled={!uploadedFile}>Lưu tài liệu</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
