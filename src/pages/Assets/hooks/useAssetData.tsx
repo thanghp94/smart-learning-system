@@ -12,7 +12,9 @@ export function useAssetData() {
   const fetchAssets = async () => {
     try {
       setIsLoading(true);
+      console.log("Fetching assets...");
       const data = await assetService.getAll();
+      console.log("Assets loaded:", data?.length || 0);
       setAssets(data);
       setFilteredAssets(data);
     } catch (error) {
@@ -32,6 +34,8 @@ export function useAssetData() {
   }, []);
 
   const handleFilterChange = ({ facility, employee }: { facility?: string, employee?: string }) => {
+    console.log("Filtering assets by:", { facility, employee });
+    
     if (!facility && !employee) {
       setFilteredAssets(assets);
       return;
@@ -56,10 +60,12 @@ export function useAssetData() {
       return (facility ? matchesFacility : true) && (employee ? matchesEmployee : true);
     });
 
+    console.log("Filtered assets:", filtered.length);
     setFilteredAssets(filtered);
   };
 
   const handleResetFilters = () => {
+    console.log("Resetting asset filters");
     setFilteredAssets(assets);
   };
 

@@ -1,23 +1,31 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PlusCircle, RefreshCw, Search } from 'lucide-react';
+import { PlusCircle, RefreshCw, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import AdmissionCard from './components/AdmissionCard';
 import AdmissionForm from './components/AdmissionForm';
 import { admissionService } from '@/lib/supabase/admission-service';
 import { Admission, AdmissionStatus, ADMISSION_STATUS_MAP } from '@/lib/types/admission';
-import { employeeService } from '@/lib/supabase';
+import { employeeService, facilityService } from '@/lib/supabase';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Facility } from '@/lib/types';
 
 const KanbanView = () => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [admissions, setAdmissions] = useState<Admission[]>([]);
+  const [filteredAdmissions, setFilteredAdmissions] = useState<Admission[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [facilityFilter, setFacilityFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -32,6 +40,7 @@ const KanbanView = () => {
       try {
         const data = await admissionService.getAll();
         setAdmissions(data);
+        setFilteredAdmissions(data);
       } catch (error) {
         console.error('Error fetching admissions:', error);
         toast({
@@ -46,23 +55,46 @@ const KanbanView = () => {
     fetchAdmissions();
   }, [refreshTrigger, toast]);
 
-  // Fetch employees for the person in charge dropdown
+  // Fetch employees and facilities
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const fetchData = async () => {
       try {
-        const data = await employeeService.getAll();
-        setEmployees(data);
+        const [employeesData, facilitiesData] = await Promise.all([
+          employeeService.getAll(),
+          facilityService.getAll()
+        ]);
+        setEmployees(employeesData || []);
+        setFacilities(facilitiesData || []);
       } catch (error) {
-        console.error('Error fetching employees:', error);
+        console.error('Error fetching filter data:', error);
       }
     };
-    fetchEmployees();
+    fetchData();
   }, []);
 
-  // Filter admissions by search query
-  const filteredAdmissions = admissions.filter(admission => admission.ten_hoc_sinh.toLowerCase().includes(searchQuery.toLowerCase()) || admission.ten_phu_huynh && admission.ten_phu_huynh.toLowerCase().includes(searchQuery.toLowerCase()) || admission.so_dien_thoai && admission.so_dien_thoai.includes(searchQuery) || admission.so_dien_thoai_phu_huynh && admission.so_dien_thoai_phu_huynh.includes(searchQuery));
+  // Apply filters whenever they change
+  useEffect(() => {
+    let filtered = admissions;
+    
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(admission => 
+        admission.ten_hoc_sinh?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        admission.ten_phu_huynh?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        admission.so_dien_thoai?.includes(searchQuery) || 
+        admission.so_dien_thoai_phu_huynh?.includes(searchQuery)
+      );
+    }
+    
+    // Apply facility filter
+    if (facilityFilter) {
+      filtered = filtered.filter(admission => admission.co_so === facilityFilter);
+    }
+    
+    setFilteredAdmissions(filtered);
+  }, [admissions, searchQuery, facilityFilter]);
 
-  // Group admissions by status
+  // Filter admissions by status
   const admissionsByStatus: Record<AdmissionStatus, Admission[]> = {
     tim_hieu: filteredAdmissions.filter(a => a.trang_thai === 'tim_hieu'),
     tu_van: filteredAdmissions.filter(a => a.trang_thai === 'tu_van'),
@@ -70,24 +102,29 @@ const KanbanView = () => {
     chot: filteredAdmissions.filter(a => a.trang_thai === 'chot'),
     huy: filteredAdmissions.filter(a => a.trang_thai === 'huy')
   };
+  
   const handleOpenForm = (admission?: Admission) => {
     setSelectedAdmission(admission || null);
     setIsFormOpen(true);
     setIsDetailOpen(false);
   };
+  
   const handleOpenDetail = (admission: Admission) => {
     setSelectedAdmission(admission);
     setIsDetailOpen(true);
     setIsFormOpen(false);
   };
+  
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setSelectedAdmission(null);
   };
+  
   const handleCloseDetail = () => {
     setIsDetailOpen(false);
     setSelectedAdmission(null);
   };
+  
   const handleFormSubmit = (admission: Admission) => {
     // Update local state
     if (selectedAdmission) {
@@ -100,12 +137,15 @@ const KanbanView = () => {
     // Refresh data
     setRefreshTrigger(prev => prev + 1);
   };
+  
   const handleDragStart = (e: React.DragEvent, admission: Admission) => {
     e.dataTransfer.setData('admissionId', admission.id);
   };
+  
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
+  
   const handleDrop = async (e: React.DragEvent, status: AdmissionStatus) => {
     e.preventDefault();
     const admissionId = e.dataTransfer.getData('admissionId');
@@ -141,8 +181,14 @@ const KanbanView = () => {
       });
     }
   };
+  
   const refresh = () => {
     setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleResetFilters = () => {
+    setFacilityFilter('');
+    setSearchQuery('');
   };
 
   // Get employee name from ID
@@ -154,11 +200,19 @@ const KanbanView = () => {
 
   // Render the KanbanBoard
   const renderKanbanBoard = () => {
-    return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 p-2">
-        {Object.entries(ADMISSION_STATUS_MAP).map(([status, label]) => <div key={status} className="bg-gray-50 rounded-lg p-2 flex flex-col" style={{
-        maxHeight: 'calc(100vh - 13rem)',
-        height: 'calc(100vh - 13rem)'
-      }} onDragOver={handleDragOver} onDrop={e => handleDrop(e, status as AdmissionStatus)}>
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 p-2">
+        {Object.entries(ADMISSION_STATUS_MAP).map(([status, label]) => (
+          <div 
+            key={status} 
+            className="bg-gray-50 rounded-lg p-2 flex flex-col" 
+            style={{
+              maxHeight: 'calc(100vh - 13rem)',
+              height: 'calc(100vh - 13rem)'
+            }}
+            onDragOver={handleDragOver}
+            onDrop={e => handleDrop(e, status as AdmissionStatus)}
+          >
             <div className="flex justify-between items-center mb-2 sticky top-0 bg-gray-50 p-1 z-10 border-b">
               <h3 className="font-medium text-gray-800">{label}</h3>
               <span className="text-sm font-medium bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
@@ -166,20 +220,71 @@ const KanbanView = () => {
               </span>
             </div>
             <div className="overflow-y-auto flex-grow space-y-1.5 pr-1">
-              {admissionsByStatus[status as AdmissionStatus]?.map(admission => <AdmissionCard key={admission.id} admission={admission} onClick={handleOpenDetail} onDragStart={handleDragStart} />)}
-              {admissionsByStatus[status as AdmissionStatus]?.length === 0 && <div className="text-center text-gray-500 py-4">
+              {admissionsByStatus[status as AdmissionStatus]?.map(admission => (
+                <AdmissionCard 
+                  key={admission.id} 
+                  admission={admission} 
+                  onClick={handleOpenDetail}
+                  onDragStart={handleDragStart}
+                />
+              ))}
+              {admissionsByStatus[status as AdmissionStatus]?.length === 0 && (
+                <div className="text-center text-gray-500 py-4">
                   <p className="text-sm">Không có học sinh nào</p>
-                </div>}
+                </div>
+              )}
             </div>
-          </div>)}
-      </div>;
+          </div>
+        ))}
+      </div>
+    );
   };
-  return <div className="container mx-auto pb-4">
+
+  return (
+    <div className="container mx-auto pb-4">
       <div className="flex justify-between items-center mb-4">
         <div className="flex space-x-2">
           <div className="relative w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Tìm kiếm học sinh..." className="pl-8" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <Input 
+              placeholder="Tìm kiếm học sinh..." 
+              className="pl-8" 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex items-center space-x-2 bg-background border rounded-md p-1">
+            <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs font-normal" disabled>
+              <Filter className="h-3.5 w-3.5" />
+              Cơ sở
+            </Button>
+            
+            <Select value={facilityFilter} onValueChange={setFacilityFilter}>
+              <SelectTrigger className="h-8 w-[180px] text-xs">
+                <SelectValue placeholder="Theo cơ sở" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Tất cả cơ sở</SelectItem>
+                {facilities.map(facility => (
+                  <SelectItem key={facility.id} value={facility.id}>
+                    {facility.ten_co_so}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {facilityFilter && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 text-xs"
+                onClick={handleResetFilters}
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                Đặt lại
+              </Button>
+            )}
           </div>
         </div>
         <div className="flex space-x-2">
@@ -194,14 +299,17 @@ const KanbanView = () => {
         </div>
       </div>
 
-      {isLoading ? <div className="flex justify-center items-center h-64">
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
           <p className="text-muted-foreground">Đang tải dữ liệu...</p>
-        </div> : <Tabs defaultValue="kanban">
-          
+        </div>
+      ) : (
+        <Tabs defaultValue="kanban">
           <TabsContent value="kanban" className="p-0">
             {renderKanbanBoard()}
           </TabsContent>
-        </Tabs>}
+        </Tabs>
+      )}
 
       {/* Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -211,7 +319,11 @@ const KanbanView = () => {
               {selectedAdmission ? 'Cập nhật thông tin học sinh' : 'Thêm học sinh mới'}
             </DialogTitle>
           </DialogHeader>
-          <AdmissionForm initialData={selectedAdmission || undefined} onSubmit={handleFormSubmit} onCancel={handleCloseForm} />
+          <AdmissionForm 
+            initialData={selectedAdmission || undefined} 
+            onSubmit={handleFormSubmit} 
+            onCancel={handleCloseForm} 
+          />
         </DialogContent>
       </Dialog>
 
@@ -223,7 +335,8 @@ const KanbanView = () => {
               Thông tin chi tiết học sinh
             </DialogTitle>
           </DialogHeader>
-          {selectedAdmission && <div className="space-y-6">
+          {selectedAdmission && (
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-medium mb-3">Thông tin học sinh</h3>
@@ -318,15 +431,18 @@ const KanbanView = () => {
                   Đóng
                 </Button>
                 <Button onClick={() => {
-              handleCloseDetail();
-              handleOpenForm(selectedAdmission);
-            }}>
+                  handleCloseDetail();
+                  handleOpenForm(selectedAdmission);
+                }}>
                   Chỉnh sửa
                 </Button>
               </div>
-            </div>}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 };
+
 export default KanbanView;

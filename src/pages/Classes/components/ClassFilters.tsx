@@ -29,6 +29,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({ onFilterChange, onReset }) 
       setIsLoading(true);
       try {
         const data = await facilityService.getAll();
+        console.log("Successfully fetched", data?.length || 0, "records from facilities");
         setFacilities(data || []);
       } catch (error) {
         console.error('Error fetching facilities:', error);

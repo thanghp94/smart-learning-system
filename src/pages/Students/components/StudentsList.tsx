@@ -58,6 +58,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
           <FilterButton 
             categories={filterCategories} 
             onFilter={setFilters} 
+            label="Lọc học sinh"
           />
           <ExportButton 
             data={filteredData}

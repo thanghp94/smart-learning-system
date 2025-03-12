@@ -17,6 +17,7 @@ export interface Admission {
   ghi_chu?: string;
   ngay_lien_he_dau?: string;
   zalo?: string;
+  co_so?: string; // New field for facility
   created_at?: string;
   updated_at?: string;
 }

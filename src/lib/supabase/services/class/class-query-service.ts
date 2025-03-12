@@ -11,6 +11,7 @@ class ClassQueryService {
    */
   async getAllWithStudentCount(): Promise<any[]> {
     try {
+      console.log('Fetching classes with student count...');
       const { data, error } = await supabase
         .from('classes_with_student_count')
         .select('*')
@@ -19,12 +20,15 @@ class ClassQueryService {
       if (error) {
         console.error('Error fetching classes with student count:', error);
         // Fall back to regular class fetch
+        console.log('Falling back to regular class fetch...');
         return this.getAllFallback();
       }
       
+      console.log('Successfully fetched classes with student count:', data?.length || 0);
       return data || [];
     } catch (error) {
       console.error('Error in fetchClassesWithStudentCount:', error);
+      console.log('Falling back to regular class fetch due to error');
       return this.getAllFallback();
     }
   }
@@ -34,7 +38,7 @@ class ClassQueryService {
    */
   private async getAllFallback(): Promise<Class[]> {
     try {
-      console.log('Falling back to regular class fetch');
+      console.log('Executing fallback class fetch');
       const { data, error } = await supabase
         .from('classes')
         .select('*')
@@ -45,6 +49,7 @@ class ClassQueryService {
         return [];
       }
       
+      console.log('Successfully fetched classes in fallback:', data?.length || 0);
       return data || [];
     } catch (error) {
       console.error('Error in fallback class fetch:', error);
@@ -57,6 +62,7 @@ class ClassQueryService {
    */
   async getByFacility(facilityId: string): Promise<Class[]> {
     try {
+      console.log('Fetching classes by facility:', facilityId);
       const { data, error } = await supabase
         .from('classes')
         .select('*')
@@ -68,6 +74,7 @@ class ClassQueryService {
         return [];
       }
       
+      console.log('Successfully fetched classes by facility:', data?.length || 0);
       return data || [];
     } catch (error) {
       console.error('Error in fetchClassesByFacility:', error);
