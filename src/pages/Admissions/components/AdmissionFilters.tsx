@@ -52,7 +52,7 @@ const AdmissionFilters: React.FC<AdmissionFiltersProps> = ({
             <SelectValue placeholder="Theo cơ sở" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tất cả cơ sở</SelectItem>
+            <SelectItem value="all">Tất cả cơ sở</SelectItem>
             {facilities.map(facility => (
               <SelectItem key={facility.id} value={facility.id}>
                 {facility.ten_co_so}
@@ -61,7 +61,7 @@ const AdmissionFilters: React.FC<AdmissionFiltersProps> = ({
           </SelectContent>
         </Select>
         
-        {facilityFilter && (
+        {facilityFilter && facilityFilter !== 'all' && (
           <Button 
             variant="ghost" 
             size="sm" 

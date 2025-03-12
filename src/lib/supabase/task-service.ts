@@ -23,7 +23,7 @@ class TaskService {
     }
   }
   
-  async getById(id: string): Promise<Task> {
+  async getById(id: string): Promise<Task | null> {
     try {
       const { data, error } = await supabase
         .from('tasks')
@@ -31,11 +31,14 @@ class TaskService {
         .eq('id', id)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error(`Error fetching task with id ${id}:`, error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error(`Error fetching task with id ${id}:`, error);
-      throw error;
+      return null;
     }
   }
 
@@ -47,7 +50,10 @@ class TaskService {
         .eq('nguoi_phu_trach', employeeId)
         .order('created_at', { ascending: false });
         
-      if (error) throw error;
+      if (error) {
+        console.error(`Error fetching tasks for employee ${employeeId}:`, error);
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error(`Error fetching tasks for employee ${employeeId}:`, error);
@@ -60,7 +66,7 @@ class TaskService {
     return this.getByAssignee(employeeId);
   }
 
-  async create(task: Partial<Task>): Promise<Task> {
+  async create(task: Partial<Task>): Promise<Task | null> {
     try {
       const { data, error } = await supabase
         .from('tasks')
@@ -68,15 +74,18 @@ class TaskService {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating task:', error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error('Error creating task:', error);
-      throw error;
+      return null;
     }
   }
 
-  async update(id: string, updates: Partial<Task>): Promise<Task> {
+  async update(id: string, updates: Partial<Task>): Promise<Task | null> {
     try {
       const { data, error } = await supabase
         .from('tasks')
@@ -85,11 +94,14 @@ class TaskService {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error(`Error updating task ${id}:`, error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error(`Error updating task ${id}:`, error);
-      throw error;
+      return null;
     }
   }
 
@@ -100,14 +112,17 @@ class TaskService {
         .delete()
         .eq('id', id);
         
-      if (error) throw error;
+      if (error) {
+        console.error(`Error deleting task ${id}:`, error);
+        throw error;
+      }
     } catch (error) {
       console.error(`Error deleting task ${id}:`, error);
       throw error;
     }
   }
 
-  async complete(id: string): Promise<Task> {
+  async complete(id: string): Promise<Task | null> {
     return this.update(id, { 
       trang_thai: 'completed',
       ngay_hoan_thanh: new Date().toISOString()

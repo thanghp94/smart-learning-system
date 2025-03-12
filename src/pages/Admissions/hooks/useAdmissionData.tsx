@@ -12,7 +12,7 @@ export const useAdmissionData = () => {
   const [filteredAdmissions, setFilteredAdmissions] = useState<Admission[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [facilityFilter, setFacilityFilter] = useState('');
+  const [facilityFilter, setFacilityFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -23,6 +23,7 @@ export const useAdmissionData = () => {
       setIsLoading(true);
       try {
         const data = await admissionService.getAll();
+        console.log('Fetched admissions:', data);
         setAdmissions(data);
         setFilteredAdmissions(data);
       } catch (error) {
@@ -47,6 +48,8 @@ export const useAdmissionData = () => {
           employeeService.getAll(),
           facilityService.getAll()
         ]);
+        console.log('Fetched employees:', employeesData?.length || 0);
+        console.log('Fetched facilities:', facilitiesData?.length || 0);
         setEmployees(employeesData || []);
         setFacilities(facilitiesData || []);
       } catch (error) {
@@ -71,10 +74,11 @@ export const useAdmissionData = () => {
     }
     
     // Apply facility filter
-    if (facilityFilter) {
+    if (facilityFilter && facilityFilter !== 'all') {
       filtered = filtered.filter(admission => admission.co_so === facilityFilter);
     }
     
+    console.log('Filtered admissions count:', filtered.length);
     setFilteredAdmissions(filtered);
   }, [admissions, searchQuery, facilityFilter]);
 
@@ -139,7 +143,7 @@ export const useAdmissionData = () => {
   };
 
   const handleResetFilters = () => {
-    setFacilityFilter('');
+    setFacilityFilter('all');
     setSearchQuery('');
   };
 

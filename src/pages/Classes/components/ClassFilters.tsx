@@ -1,108 +1,140 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Filter, RotateCw } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { facilityService } from "@/lib/supabase";
-import { Facility } from "@/lib/types";
+import React, { useEffect, useState } from 'react';
+import { Filter, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { facilityService } from '@/lib/supabase';
+import { Input } from '@/components/ui/input';
+import { Facility } from '@/lib/types';
 
 interface ClassFiltersProps {
-  onFilterChange: (filter: { facility?: string, program?: string }) => void;
-  onReset: () => void;
+  onFilterChange: (field: string, value: string) => void;
+  onResetFilters: () => void;
+  currentFilters: {
+    searchTerm?: string;
+    facilityId?: string;
+    status?: string;
+    [key: string]: string | undefined;
+  };
 }
 
-const ClassFilters: React.FC<ClassFiltersProps> = ({ onFilterChange, onReset }) => {
+const ClassFilters: React.FC<ClassFiltersProps> = ({
+  onFilterChange,
+  onResetFilters,
+  currentFilters,
+}) => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [selectedFacility, setSelectedFacility] = useState<string>('');
-  const [selectedProgram, setSelectedProgram] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const programs = [
-    { id: 'toeic', name: 'TOEIC' },
-    { id: 'ielts', name: 'IELTS' },
-    { id: 'general', name: 'General English' },
-    { id: 'kids', name: 'English for Kids' }
-  ];
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFacilities = async () => {
-      setIsLoading(true);
+    const loadFacilities = async () => {
       try {
         const data = await facilityService.getAll();
-        console.log("Successfully fetched", data?.length || 0, "records from facilities");
+        console.log('Loaded facilities for class filters:', data?.length || 0);
         setFacilities(data || []);
       } catch (error) {
-        console.error('Error fetching facilities:', error);
+        console.error('Error loading facilities:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchFacilities();
+    loadFacilities();
   }, []);
 
-  const handleFacilityChange = (value: string) => {
-    setSelectedFacility(value);
-    onFilterChange({ facility: value, program: selectedProgram });
+  // Check if any filter is active
+  const hasActiveFilters = Object.values(currentFilters).some(
+    (value) => value && value.length > 0
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onFilterChange('searchTerm', e.target.value);
   };
 
-  const handleProgramChange = (value: string) => {
-    setSelectedProgram(value);
-    onFilterChange({ facility: selectedFacility, program: value });
-  };
-
-  const handleReset = () => {
-    setSelectedFacility('');
-    setSelectedProgram('');
-    onReset();
+  const clearSearch = () => {
+    onFilterChange('searchTerm', '');
   };
 
   return (
-    <div className="flex items-center space-x-2 bg-background border rounded-md p-1">
-      <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs font-normal" disabled>
-        <Filter className="h-3.5 w-3.5" />
-        Lọc
-      </Button>
-      
-      <Select value={selectedFacility} onValueChange={handleFacilityChange}>
-        <SelectTrigger className="h-8 w-[180px] text-xs">
-          <SelectValue placeholder="Theo cơ sở" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="">Tất cả cơ sở</SelectItem>
-          {facilities.map((facility) => (
-            <SelectItem key={facility.id} value={facility.id}>
-              {facility.ten_co_so}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      
-      <Select value={selectedProgram} onValueChange={handleProgramChange}>
-        <SelectTrigger className="h-8 w-[180px] text-xs">
-          <SelectValue placeholder="Theo chương trình học" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="">Tất cả chương trình</SelectItem>
-          {programs.map((program) => (
-            <SelectItem key={program.id} value={program.id}>
-              {program.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      
-      {(selectedFacility || selectedProgram) && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8 text-xs"
-          onClick={handleReset}
+    <div className="flex flex-wrap gap-2 items-center">
+      <div className="relative">
+        <Input
+          type="text"
+          placeholder="Tìm kiếm lớp học..."
+          className="h-8 w-60 pl-2 pr-8 text-sm"
+          value={currentFilters.searchTerm || ''}
+          onChange={handleSearchChange}
+        />
+        {currentFilters.searchTerm && (
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            onClick={clearSearch}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-center space-x-2 bg-background rounded-md border p-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1 text-xs font-normal"
+          disabled
         >
-          <RotateCw className="h-3.5 w-3.5 mr-1" />
-          Đặt lại
+          <Filter className="h-3.5 w-3.5" />
+          Bộ lọc
         </Button>
-      )}
+
+        <Select
+          value={currentFilters.facilityId || ''}
+          onValueChange={(value) => onFilterChange('facilityId', value)}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Cơ sở" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Tất cả cơ sở</SelectItem>
+            {facilities.map((facility) => (
+              <SelectItem key={facility.id} value={facility.id}>
+                {facility.ten_co_so}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={currentFilters.status || ''}
+          onValueChange={(value) => onFilterChange('status', value)}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Trạng thái" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Tất cả trạng thái</SelectItem>
+            <SelectItem value="active">Đang hoạt động</SelectItem>
+            <SelectItem value="inactive">Không hoạt động</SelectItem>
+            <SelectItem value="pending">Chờ xử lý</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={onResetFilters}
+          >
+            Đặt lại
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

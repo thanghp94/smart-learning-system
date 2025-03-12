@@ -22,15 +22,40 @@ export const useEnrollmentData = () => {
       setIsLoading(true);
       console.log('Fetching enrollment data...');
       
-      const [enrollmentsData, studentsData, classesData] = await Promise.all([
-        enrollmentService.getAll(),
-        studentService.getAll(),
-        classService.getAll()
-      ]);
+      // First try to get the enrollments
+      let enrollmentsData;
+      try {
+        enrollmentsData = await enrollmentService.getAll();
+        console.log('Enrollment data loaded:', enrollmentsData?.length || 0);
+      } catch (error) {
+        console.error('Error fetching enrollments:', error);
+        enrollmentsData = [];
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải dữ liệu ghi danh",
+          variant: "destructive"
+        });
+      }
       
-      console.log('Enrollment data loaded:', enrollmentsData?.length || 0);
-      console.log('Students data loaded:', studentsData?.length || 0);
-      console.log('Classes data loaded:', classesData?.length || 0);
+      // Then try to get students
+      let studentsData;
+      try {
+        studentsData = await studentService.getAll();
+        console.log('Students data loaded:', studentsData?.length || 0);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        studentsData = [];
+      }
+      
+      // Then try to get classes
+      let classesData;
+      try {
+        classesData = await classService.getAll();
+        console.log('Classes data loaded:', classesData?.length || 0);
+      } catch (error) {
+        console.error('Error fetching classes:', error);
+        classesData = [];
+      }
       
       setEnrollments(enrollmentsData || []);
       setFilteredEnrollments(enrollmentsData || []);
