@@ -7,7 +7,7 @@ import ClassFilters from "./ClassFilters";
 interface ClassActionsToolbarProps {
   onAddClick: () => void;
   onRefresh: () => void;
-  onFilterChange: (filters: { facility?: string, program?: string }) => void;
+  onFilterChange: (field: string, value: string) => void;
   onResetFilters: () => void;
 }
 
@@ -22,6 +22,7 @@ const ClassActionsToolbar: React.FC<ClassActionsToolbarProps> = ({
       <ClassFilters 
         onFilterChange={onFilterChange} 
         onReset={onResetFilters} 
+        currentFilters={{}}
       />
       
       <Button variant="outline" size="sm" className="h-8" onClick={onRefresh}>

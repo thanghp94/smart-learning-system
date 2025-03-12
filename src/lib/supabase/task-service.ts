@@ -19,7 +19,7 @@ class TaskService {
       return data || [];
     } catch (error) {
       console.error('Error in getAll tasks:', error);
-      return [];
+      throw error; // Re-throw error to be handled by caller
     }
   }
   
@@ -33,7 +33,7 @@ class TaskService {
         
       if (error) {
         console.error(`Error fetching task with id ${id}:`, error);
-        return null;
+        throw error;
       }
       return data;
     } catch (error) {
@@ -52,7 +52,7 @@ class TaskService {
         
       if (error) {
         console.error(`Error fetching tasks for employee ${employeeId}:`, error);
-        return [];
+        throw error;
       }
       return data || [];
     } catch (error) {
@@ -61,7 +61,7 @@ class TaskService {
     }
   }
   
-  // Add this method to fix the import error
+  // Method to ensure backward compatibility
   async getByEmployeeId(employeeId: string): Promise<Task[]> {
     return this.getByAssignee(employeeId);
   }
@@ -76,7 +76,7 @@ class TaskService {
         
       if (error) {
         console.error('Error creating task:', error);
-        return null;
+        throw error;
       }
       return data;
     } catch (error) {
@@ -96,7 +96,7 @@ class TaskService {
         
       if (error) {
         console.error(`Error updating task ${id}:`, error);
-        return null;
+        throw error;
       }
       return data;
     } catch (error) {
