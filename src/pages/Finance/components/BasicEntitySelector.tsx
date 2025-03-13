@@ -29,7 +29,16 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
   const [isLoadingEntities, setIsLoadingEntities] = useState(false);
   const { toast } = useToast();
 
-  // Watch for changes to entityType from parent form
+  // Set initial values if provided
+  useEffect(() => {
+    if (entityType && entityId) {
+      form.setValue('loai_doi_tuong', entityType);
+      form.setValue('doi_tuong_id', entityId);
+      setEntityTypeValue(entityType);
+    }
+  }, [entityType, entityId, form]);
+
+  // Watch for changes to entityType from form
   const watchEntityType = form.watch('loai_doi_tuong');
   
   useEffect(() => {
@@ -40,15 +49,6 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
       }
     }
   }, [watchEntityType, entityTypeValue, form, entityId]);
-
-  // Set initial values if provided
-  useEffect(() => {
-    if (entityType && entityId) {
-      form.setValue('loai_doi_tuong', entityType);
-      form.setValue('doi_tuong_id', entityId);
-      setEntityTypeValue(entityType);
-    }
-  }, [entityType, entityId, form]);
 
   // Fetch entities based on type
   useEffect(() => {
@@ -76,7 +76,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
             data = [];
         }
         
-        setEntities(data);
+        setEntities(data || []);
       } catch (error) {
         console.error('Error fetching entities:', error);
         toast({
@@ -121,8 +121,8 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
             <FormLabel>Loại đối tượng</FormLabel>
             <Select
               onValueChange={(value) => {
-                setEntityTypeValue(value);
                 field.onChange(value);
+                setEntityTypeValue(value);
               }}
               value={field.value || ''}
               disabled={!!entityType}
@@ -164,7 +164,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
                 <SelectContent>
                   {entities.length > 0 ? (
                     entities.map((entity: any) => (
-                      <SelectItem key={entity.id} value={entity.id || "placeholder"}>
+                      <SelectItem key={entity.id} value={entity.id}>
                         {getEntityName(entity)}
                       </SelectItem>
                     ))

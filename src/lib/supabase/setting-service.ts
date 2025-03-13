@@ -1,42 +1,133 @@
 
-import { Setting } from '../types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
 
 export const settingService = {
-  getAll: () => fetchAll<Setting>('settings'),
-  getById: (id: string) => fetchById<Setting>('settings', id),
-  create: (setting: Partial<Setting>) => insert<Setting>('settings', setting),
-  update: (id: string, updates: Partial<Setting>) => update<Setting>('settings', id, updates),
-  delete: (id: string) => remove('settings', id),
-  
-  // Get settings by department
-  getByDepartment: async (department: string): Promise<Setting[]> => {
+  async getAll() {
     const { data, error } = await supabase
       .from('settings')
       .select('*')
-      .eq('bo_phan', department);
+      .order('created_at', { ascending: false });
     
-    if (error) {
-      console.error(`Error fetching settings for department ${department}:`, error);
-      throw error;
-    }
-    
-    return data as Setting[];
+    if (error) throw error;
+    return data;
   },
   
-  // Get settings by process
-  getByProcess: async (process: string): Promise<Setting[]> => {
+  async getByKey(key: string) {
     const { data, error } = await supabase
       .from('settings')
       .select('*')
-      .eq('quy_trinh', process);
+      .eq('key', key)
+      .maybeSingle();
     
-    if (error) {
-      console.error(`Error fetching settings for process ${process}:`, error);
-      throw error;
+    if (error) throw error;
+    return data;
+  },
+  
+  async getEmailSettings() {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('hang_muc', 'email')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  },
+  
+  async save(setting: any) {
+    // If setting has an ID, update it; otherwise, create a new one
+    if (setting.id) {
+      const { data, error } = await supabase
+        .from('settings')
+        .update(setting)
+        .eq('id', setting.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } else {
+      const { data, error } = await supabase
+        .from('settings')
+        .insert(setting)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
+  },
+  
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('settings')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+  
+  async saveEmailSettings(emailSettings: any) {
+    // First check if email settings already exist
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('hang_muc', 'email')
+      .eq('tuy_chon', 'smtp')
+      .maybeSingle();
+    
+    if (error) throw error;
+    
+    // Update or create the settings
+    if (data?.id) {
+      const { data: updatedData, error: updateError } = await supabase
+        .from('settings')
+        .update({
+          mo_ta: JSON.stringify(emailSettings),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.id)
+        .select()
+        .single();
+      
+      if (updateError) throw updateError;
+      return updatedData;
+    } else {
+      const { data: newData, error: insertError } = await supabase
+        .from('settings')
+        .insert({
+          hang_muc: 'email',
+          tuy_chon: 'smtp',
+          mo_ta: JSON.stringify(emailSettings),
+          hien_thi: 'Email Configuration'
+        })
+        .select()
+        .single();
+      
+      if (insertError) throw insertError;
+      return newData;
+    }
+  },
+  
+  async getEmailConfig() {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('hang_muc', 'email')
+      .eq('tuy_chon', 'smtp')
+      .maybeSingle();
+    
+    if (error) throw error;
+    
+    if (data?.mo_ta) {
+      try {
+        return JSON.parse(data.mo_ta);
+      } catch (e) {
+        console.error('Error parsing email config:', e);
+        return null;
+      }
     }
     
-    return data as Setting[];
+    return null;
   }
 };

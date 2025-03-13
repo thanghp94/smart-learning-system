@@ -32,8 +32,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
   const [facilities, setFacilities] = useState([]);
   const { toast } = useToast();
   
-  // Use default values for the form
-  const defaultValues = {
+  // Define default values for the form
+  const defaultValues: Partial<SessionFormData> = {
     lop_chi_tiet_id: initialData?.lop_chi_tiet_id || '',
     giao_vien: initialData?.giao_vien || '',
     ngay_hoc: initialData?.ngay_hoc || '',
@@ -68,6 +68,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        // Fetch all required data
         const [classesData, teachersData, facilitiesData] = await Promise.all([
           classService.getAll(),
           employeeService.getAll(),

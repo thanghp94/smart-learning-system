@@ -36,7 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import { admissionService } from '@/lib/supabase/admission-service';
 import { employeeService } from '@/lib/supabase/employee-service';
 
-// Định nghĩa schema validation cho form
+// Define schema validation for form
 const formSchema = z.object({
   ten_hoc_sinh: z.string().min(1, { message: 'Tên học sinh không được để trống' }),
   ngay_sinh: z.date().optional(),
@@ -90,19 +90,30 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
   // Fetch employees for the assignee dropdown
   useEffect(() => {
     const fetchEmployees = async () => {
-      const data = await employeeService.getAll();
-      setEmployees(data);
+      try {
+        const data = await employeeService.getAll();
+        setEmployees(data || []);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải danh sách nhân viên',
+          variant: 'destructive',
+        });
+      }
     };
     fetchEmployees();
-  }, []);
+  }, [toast]);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
+      console.log("Form data being submitted:", values);
+      
       // Format data
       const formattedData: Partial<Admission> = {
         ...values,
-        ngay_sinh: values.ngay_sinh ? values.ngay_sinh.toISOString() : undefined,
+        ngay_sinh: values.ngay_sinh ? values.ngay_sinh.toISOString().split('T')[0] : null,
         trang_thai: values.trang_thai as AdmissionStatus,
       };
 
@@ -131,7 +142,7 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
       console.error('Error submitting admission form:', error);
       toast({
         title: 'Có lỗi xảy ra',
-        description: 'Không thể lưu thông tin học sinh',
+        description: 'Không thể lưu thông tin học sinh: ' + (error as Error).message,
         variant: 'destructive',
       });
     } finally {
@@ -429,7 +440,7 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
                 <FormControl>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    defaultValue={field.value || ''}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn người phụ trách" />
