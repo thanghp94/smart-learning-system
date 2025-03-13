@@ -27,12 +27,12 @@ const SessionForm: React.FC<SessionFormProps> = ({
   isEdit = false
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [classes, setClasses] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [facilities, setFacilities] = useState([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [facilities, setFacilities] = useState<any[]>([]);
   const { toast } = useToast();
   
-  // Define default values for the form
+  // Define default values for the form with improved data typing
   const defaultValues: Partial<SessionFormData> = {
     lop_chi_tiet_id: initialData?.lop_chi_tiet_id || '',
     giao_vien: initialData?.giao_vien || '',
@@ -75,6 +75,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
           facilityService.getAll()
         ]);
         
+        // Ensure we have arrays even if the response is empty
         setClasses(classesData || []);
         setTeachers(teachersData || []);
         setFacilities(facilitiesData || []);
@@ -93,10 +94,30 @@ const SessionForm: React.FC<SessionFormProps> = ({
     fetchData();
   }, [toast]);
 
-  // Handle form submission
+  // Handle form submission with better error handling
   const handleFormSubmit = (values: SessionFormData) => {
-    console.log('Form values submitted:', values);
-    onSubmit(values);
+    try {
+      console.log('Form values submitted:', values);
+      
+      // Ensure all required fields have values
+      if (!values.lop_chi_tiet_id || !values.ngay_hoc) {
+        toast({
+          title: 'Error',
+          description: 'Please fill in all required fields.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      onSubmit(values);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while submitting the form.',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (

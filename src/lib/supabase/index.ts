@@ -14,6 +14,7 @@ import { fileService } from './file-service';
 import { attendanceService } from './attendance-service';
 import { settingService } from './setting-service';
 
+// Re-export services for backward compatibility
 export {
   classService,
   studentService,

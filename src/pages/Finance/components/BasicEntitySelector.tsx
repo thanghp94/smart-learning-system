@@ -44,6 +44,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
   useEffect(() => {
     if (watchEntityType && watchEntityType !== entityTypeValue) {
       setEntityTypeValue(watchEntityType);
+      // Only reset the entity ID if we're not working with a provided entityId
       if (!entityId) {
         form.setValue('doi_tuong_id', '');
       }

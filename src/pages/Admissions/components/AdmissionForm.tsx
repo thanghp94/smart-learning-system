@@ -34,7 +34,7 @@ import {
 import { Admission, ADMISSION_STATUS_MAP, AdmissionStatus } from '@/lib/types/admission';
 import { useToast } from '@/hooks/use-toast';
 import { admissionService } from '@/lib/supabase/admission-service';
-import { employeeService } from '@/lib/supabase/employee-service';
+import { employeeService } from '@/lib/supabase';
 
 // Define schema validation for form
 const formSchema = z.object({
@@ -110,14 +110,16 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
     try {
       console.log("Form data being submitted:", values);
       
-      // Format data
+      // Format data - ensure proper handling of nullable fields
       const formattedData: Partial<Admission> = {
         ...values,
         ngay_sinh: values.ngay_sinh ? values.ngay_sinh.toISOString().split('T')[0] : null,
         trang_thai: values.trang_thai as AdmissionStatus,
+        // Make sure nguoi_phu_trach is properly handled - empty string should be null
+        nguoi_phu_trach: values.nguoi_phu_trach ? values.nguoi_phu_trach : null
       };
 
-      // Submit data
+      // Submit data with proper error handling
       let result;
       if (initialData?.id) {
         result = await admissionService.updateAdmission(initialData.id, formattedData);
@@ -132,11 +134,7 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
         });
         onSubmit(result);
       } else {
-        toast({
-          title: 'Có lỗi xảy ra',
-          description: 'Không thể lưu thông tin học sinh',
-          variant: 'destructive',
-        });
+        throw new Error('Không nhận được phản hồi từ máy chủ');
       }
     } catch (error) {
       console.error('Error submitting admission form:', error);
@@ -446,6 +444,8 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
                       <SelectValue placeholder="Chọn người phụ trách" />
                     </SelectTrigger>
                     <SelectContent>
+                      {/* Use a dummy item with a non-empty value instead of an empty string */}
+                      <SelectItem value="_none_">Không chọn</SelectItem>
                       {employees.map((employee) => (
                         <SelectItem key={employee.id} value={employee.id}>
                           {employee.ten_nhan_su}

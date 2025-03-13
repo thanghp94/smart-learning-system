@@ -42,7 +42,7 @@ export const settingService = {
         .update(setting)
         .eq('id', setting.id)
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -51,7 +51,7 @@ export const settingService = {
         .from('settings')
         .insert(setting)
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -88,7 +88,7 @@ export const settingService = {
         })
         .eq('id', data.id)
         .select()
-        .single();
+        .maybeSingle();
       
       if (updateError) throw updateError;
       return updatedData;
@@ -102,7 +102,7 @@ export const settingService = {
           hien_thi: 'Email Configuration'
         })
         .select()
-        .single();
+        .maybeSingle();
       
       if (insertError) throw insertError;
       return newData;
