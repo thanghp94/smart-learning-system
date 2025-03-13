@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AssetTransfer, Asset } from "@/lib/types";
 import { assetTransferService, assetService } from "@/lib/supabase";
@@ -29,19 +28,21 @@ const TransferManagement = () => {
   const fetchTransfers = async () => {
     try {
       setIsLoading(true);
-      const data = await assetTransferService.getAll();
-      setTransfers(data);
+      const transferData = await assetTransferService.getAll();
+      setTransfers(transferData || []);
       
       // Fetch all assets referenced in the transfers
-      const assetIds = [...new Set(data.map(t => t.asset_id))];
+      const assetIds = [...new Set(transferData.map((t: AssetTransfer) => t.asset_id))];
       const assets: Record<string, Asset> = {};
       
       for (const id of assetIds) {
-        try {
-          const asset = await assetService.getById(id);
-          assets[id] = asset;
-        } catch (error) {
-          console.error(`Error fetching asset ${id}:`, error);
+        if (id) { // Ensure id is defined before fetching
+          try {
+            const asset = await assetService.getById(id);
+            assets[id] = asset;
+          } catch (error) {
+            console.error(`Error fetching asset ${id}:`, error);
+          }
         }
       }
       
@@ -108,7 +109,7 @@ const TransferManagement = () => {
       title: "Tài Sản",
       key: "asset_id",
       render: (value: string) => (
-        <span>{assetMap[value]?.ten_CSVC || "Không xác định"}</span>
+        <span>{value && assetMap[value] ? assetMap[value].ten_CSVC : "Không xác định"}</span>
       ),
     },
     {

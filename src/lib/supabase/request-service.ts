@@ -1,111 +1,60 @@
 
-import { Request } from '@/lib/types';
-import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
 import { supabase } from './client';
 
 export const requestService = {
   async getAll() {
-    return fetchAll<Request>('requests');
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
   },
   
   async getById(id: string) {
-    return fetchById<Request>('requests', id);
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
   
-  async create(data: Partial<Request>) {
-    try {
-      const result = await insert<Request>('requests', data);
-      await logActivity('create', 'request', data.title || 'New request', 'system', 'completed');
-      return result;
-    } catch (error) {
-      console.error('Error creating request:', error);
-      throw error;
-    }
+  async create(request: any) {
+    const { data, error } = await supabase
+      .from('requests')
+      .insert(request)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
   
-  async update(id: string, data: Partial<Request>) {
-    try {
-      const result = await update<Request>('requests', id, data);
-      await logActivity('update', 'request', data.title || 'Update request', 'system', 'completed');
-      return result;
-    } catch (error) {
-      console.error('Error updating request:', error);
-      throw error;
-    }
+  async updateStatus(id: string, status: string, processedDate: string) {
+    const { data, error } = await supabase
+      .from('requests')
+      .update({ 
+        trang_thai: status,
+        processed_date: processedDate 
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
   
   async delete(id: string) {
-    try {
-      await remove('requests', id);
-      await logActivity('delete', 'request', 'Delete request', 'system', 'completed');
-    } catch (error) {
-      console.error('Error deleting request:', error);
-      throw error;
-    }
-  },
-  
-  async updateStatus(id: string, status: string, processedDate?: string) {
-    try {
-      const data: Partial<Request> = { 
-        status,
-        processed_at: processedDate || new Date().toISOString()
-      };
-      
-      const result = await update<Request>('requests', id, data);
-      await logActivity('update', 'request', `Request status updated to ${status}`, 'system', 'completed');
-      return result;
-    } catch (error) {
-      console.error('Error updating request status:', error);
-      throw error;
-    }
-  },
-  
-  async getByStatus(status: string) {
-    try {
-      const { data, error } = await supabase
-        .from('requests')
-        .select('*')
-        .eq('status', status)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error(`Error fetching requests with status ${status}:`, error);
-      throw error;
-    }
-  },
-  
-  async getByUser(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('requests')
-        .select('*')
-        .eq('requester', userId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error(`Error fetching requests for user ${userId}:`, error);
-      throw error;
-    }
-  },
-
-  async getByEntity(entityType: string, entityId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('requests')
-        .select('*')
-        .eq('entity_type', entityType)
-        .eq('entity_id', entityId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error(`Error fetching requests for ${entityType} ${entityId}:`, error);
-      throw error;
-    }
-  },
+    const { error } = await supabase
+      .from('requests')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
 };

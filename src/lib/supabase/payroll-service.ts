@@ -1,25 +1,29 @@
 
-import { Payroll } from '../types';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
 import { supabase } from './client';
 
 export const payrollService = {
-  getAll: () => fetchAll<Payroll>('payrolls'),
-  getById: (id: string) => fetchById<Payroll>('payrolls', id),
-  create: (payroll: Partial<Payroll> & { phu_cap?: number }) => {
-    // Remove phu_cap field as it doesn't exist in the database
-    const { phu_cap, ...validPayroll } = payroll;
-    return insert<Payroll>('payrolls', validPayroll);
+  async getAll() {
+    const { data, error } = await supabase
+      .from('payrolls')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
   },
-  update: (id: string, updates: Partial<Payroll> & { phu_cap?: number }) => {
-    // Remove phu_cap field as it doesn't exist in the database
-    const { phu_cap, ...validUpdates } = updates;
-    return update<Payroll>('payrolls', id, validUpdates);
-  },
-  delete: (id: string) => remove('payrolls', id),
   
-  // Get payrolls by employee
-  getByEmployee: async (employeeId: string): Promise<Payroll[]> => {
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('payrolls')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+  
+  async getByEmployee(employeeId: string) {
     const { data, error } = await supabase
       .from('payrolls')
       .select('*')
@@ -27,57 +31,57 @@ export const payrollService = {
       .order('nam', { ascending: false })
       .order('thang', { ascending: false });
     
-    if (error) {
-      console.error(`Error fetching payrolls for employee ${employeeId}:`, error);
-      throw error;
-    }
-    
-    return data as Payroll[];
+    if (error) throw error;
+    return data;
   },
   
-  // Get payrolls by month and year
-  getByPeriod: async (month: string, year: string): Promise<Payroll[]> => {
+  async create(payroll: any) {
+    // Remove any fields that would cause database constraints issues
+    const { phu_cap, ...payrollData } = payroll;
+    
     const { data, error } = await supabase
       .from('payrolls')
-      .select('*')
-      .eq('thang', month)
-      .eq('nam', year);
+      .insert(payrollData)
+      .select()
+      .single();
     
-    if (error) {
-      console.error(`Error fetching payrolls for period ${month}/${year}:`, error);
-      throw error;
-    }
-    
-    return data as Payroll[];
+    if (error) throw error;
+    return data;
   },
   
-  // Get payrolls by facility
-  getByFacility: async (facilityId: string): Promise<Payroll[]> => {
+  async update(id: string, updates: any) {
+    // Remove any fields that would cause database constraints issues
+    const { phu_cap, ...updateData } = updates;
+    
     const { data, error } = await supabase
       .from('payrolls')
-      .select('*')
-      .eq('co_so_id', facilityId);
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
     
-    if (error) {
-      console.error(`Error fetching payrolls for facility ${facilityId}:`, error);
-      throw error;
-    }
-    
-    return data as Payroll[];
+    if (error) throw error;
+    return data;
   },
   
-  // Get payrolls by status
-  getByStatus: async (status: string): Promise<Payroll[]> => {
+  async updateStatus(id: string, status: string) {
     const { data, error } = await supabase
       .from('payrolls')
-      .select('*')
-      .eq('trang_thai', status);
+      .update({ trang_thai: status })
+      .eq('id', id)
+      .select()
+      .single();
     
-    if (error) {
-      console.error(`Error fetching payrolls by status ${status}:`, error);
-      throw error;
-    }
+    if (error) throw error;
+    return data;
+  },
+  
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('payrolls')
+      .delete()
+      .eq('id', id);
     
-    return data as Payroll[];
+    if (error) throw error;
   }
 };

@@ -1,60 +1,69 @@
 
 import { supabase } from './client';
-import { fetchAll, fetchById, insert, update, remove } from './base-service';
-import { Evaluation } from '@/lib/types';
 
-class EvaluationService {
+export const evaluationService = {
   async getAll() {
-    return fetchAll<Evaluation>('evaluations');
-  }
+    const { data, error } = await supabase
+      .from('evaluations')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  },
   
   async getById(id: string) {
-    return fetchById<Evaluation>('evaluations', id);
-  }
+    const { data, error } = await supabase
+      .from('evaluations')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
   
-  async create(evaluation: Partial<Evaluation>) {
-    return insert<Evaluation>('evaluations', evaluation);
-  }
+  async getByEntityId(entityType: string, entityId: string) {
+    const { data, error } = await supabase
+      .from('evaluations')
+      .select('*')
+      .eq('entity_type', entityType)
+      .eq('entity_id', entityId)
+      .order('evaluation_date', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  },
   
-  async update(id: string, updates: Partial<Evaluation>) {
-    return update<Evaluation>('evaluations', id, updates);
-  }
+  async create(evaluation: any) {
+    const { data, error } = await supabase
+      .from('evaluations')
+      .insert(evaluation)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+  
+  async update(id: string, updates: any) {
+    const { data, error } = await supabase
+      .from('evaluations')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
   
   async delete(id: string) {
-    return remove('evaluations', id);
-  }
-  
-  async getByClass(classId: string) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('evaluations')
-      .select('*')
-      .eq('lop_chi_tiet_id', classId);
+      .delete()
+      .eq('id', id);
     
     if (error) throw error;
-    return data as Evaluation[];
   }
-  
-  async getByStudent(studentId: string) {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('*')
-      .eq('doi_tuong', 'student')
-      .eq('ghi_danh_id', studentId);
-    
-    if (error) throw error;
-    return data as Evaluation[];
-  }
-  
-  async getByEntity(entityType: string, entityId: string) {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('*')
-      .eq('doi_tuong', entityType)
-      .eq('ghi_danh_id', entityId);
-    
-    if (error) throw error;
-    return data as Evaluation[];
-  }
-}
-
-export const evaluationService = new EvaluationService();
+};

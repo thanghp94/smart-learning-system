@@ -1,115 +1,89 @@
 
-import { Image } from '@/lib/types';
-import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
 import { supabase } from './client';
-import { storageService } from './storage-service';
 
 export const imageService = {
   async getAll() {
-    return fetchAll<Image>('images');
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
   },
   
   async getById(id: string) {
-    return fetchById<Image>('images', id);
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
   
-  async create(image: Partial<Image>) {
-    try {
-      const result = await insert<Image>('images', image);
-      await logActivity('create', 'image', image.ten_anh || image.file_name || 'New image', 'system', 'completed');
-      return result;
-    } catch (error) {
-      console.error('Error creating image record:', error);
-      throw error;
-    }
+  async getByEntityId(entityType: string, entityId: string) {
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .eq('entity_type', entityType)
+      .eq('entity_id', entityId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
   },
   
-  async update(id: string, updates: Partial<Image>) {
-    try {
-      const result = await update<Image>('images', id, updates);
-      await logActivity('update', 'image', updates.ten_anh || updates.file_name || 'Update image', 'system', 'completed');
-      return result;
-    } catch (error) {
-      console.error('Error updating image record:', error);
-      throw error;
-    }
+  async create(image: any) {
+    const { data, error } = await supabase
+      .from('images')
+      .insert(image)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+  
+  async update(id: string, updates: any) {
+    const { data, error } = await supabase
+      .from('images')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
   
   async delete(id: string) {
-    try {
-      // Get the image record first to find the path
-      const image = await this.getById(id);
-      if (image && (image.file_name || image.ten_anh)) {
-        // Delete from storage
-        await storageService.deleteFile('images', image.file_name || image.ten_anh);
-      }
-      
-      // Delete the record
-      await remove('images', id);
-      await logActivity('delete', 'image', 'Delete image', 'system', 'completed');
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      throw error;
-    }
+    const { error } = await supabase
+      .from('images')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
   },
   
-  async getByEntity(entityType: string, entityId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('images')
-        .select('*')
-        .eq('entity_type', entityType)
-        .eq('entity_id', entityId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error(`Error fetching images for ${entityType} ${entityId}:`, error);
-      throw error;
-    }
+  async uploadFile(bucket: string, filePath: string, file: File) {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+    
+    if (error) throw error;
+    return data;
   },
   
-  async countByEntity(entityType: string, entityId: string) {
-    try {
-      const { count, error } = await supabase
-        .from('images')
-        .select('*', { count: 'exact', head: true })
-        .eq('entity_type', entityType)
-        .eq('entity_id', entityId);
-      
-      if (error) throw error;
-      return count || 0;
-    } catch (error) {
-      console.error(`Error counting images for ${entityType} ${entityId}:`, error);
-      throw error;
-    }
-  },
-
-  // Upload file to storage and return the path
-  async upload(formData: FormData) {
-    try {
-      const file = formData.get('file') as File;
-      if (!file) throw new Error('No file provided');
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${fileName}`;
-      
-      const uploadResult = await storageService.uploadFile('images', filePath, file);
-      
-      // Handle the result correctly
-      if (typeof uploadResult === 'string') {
-        return {
-          publicUrl: uploadResult,
-          path: filePath
-        };
-      }
-      
-      return uploadResult;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
+  getPublicUrl(bucket: string, filePath: string) {
+    const { data } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+    
+    return data.publicUrl;
   }
 };
