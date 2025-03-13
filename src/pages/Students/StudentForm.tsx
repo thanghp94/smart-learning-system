@@ -130,6 +130,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
                 <ImageUpload
                   value={studentImage}
                   onChange={handleImageChange}
+                  onUpload={handleImageChange}
                   onRemove={() => setStudentImage('')}
                 />
               </div>

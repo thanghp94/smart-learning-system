@@ -15,13 +15,13 @@ export interface ExtendedFile extends FileDocument {
   created_at?: string;
 }
 
-// Mock File Upload Result
-interface FileUploadResult {
+// File Upload Result interface
+export interface FileUploadResult {
   url: string;
   path: string;
 }
 
-// Service wrapper to ensure type safety
+// Service wrapper for file operations
 const FileStorageService = {
   // Get files by entity ID and type
   getByEntityId: async (entityId: string, entityType: string): Promise<ExtendedFile[]> => {
@@ -36,9 +36,6 @@ const FileStorageService = {
 
   // Upload a file and get its URL
   upload: async (file: File, bucket: string, path: string): Promise<FileUploadResult> => {
-    // Since the fileService doesn't have an upload method, we'll mock it for now
-    console.log(`Uploading file ${file.name} to ${bucket}/${path}`);
-    
     // In a real app, this would call an API endpoint or Supabase storage
     // For now, we'll just return a fake URL
     return {

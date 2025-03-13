@@ -61,12 +61,15 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
         
         switch (entityTypeValue) {
           case 'hoc_sinh':
+          case 'student':
             data = await studentService.getAll();
             break;
           case 'nhan_vien':
+          case 'employee':
             data = await employeeService.getAll();
             break;
           case 'co_so':
+          case 'facility':
             data = await facilityService.getAll();
             break;
           default:
@@ -95,10 +98,13 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
     
     switch (entityTypeValue) {
       case 'hoc_sinh':
+      case 'student':
         return entity.ten_hoc_sinh || 'N/A';
       case 'nhan_vien':
+      case 'employee':
         return entity.ten_nhan_su || 'N/A';
       case 'co_so':
+      case 'facility':
         return entity.ten_co_so || 'N/A';
       default:
         return 'N/A';
@@ -158,12 +164,12 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({ form, entityT
                 <SelectContent>
                   {entities.length > 0 ? (
                     entities.map((entity: any) => (
-                      <SelectItem key={entity.id} value={entity.id}>
+                      <SelectItem key={entity.id} value={entity.id || "placeholder"}>
                         {getEntityName(entity)}
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="placeholder" disabled>
                       {isLoadingEntities ? 'Đang tải...' : 'Không có đối tượng'}
                     </SelectItem>
                   )}

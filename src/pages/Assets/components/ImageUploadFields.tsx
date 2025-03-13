@@ -25,7 +25,8 @@ const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
             <FormControl>
               <ImageUpload 
                 value={field.value || ''} 
-                onChange={(url) => handleImageUpload(url, 'hinh_anh')} 
+                onChange={(url) => handleImageUpload(url, 'hinh_anh')}
+                onUpload={(url) => handleImageUpload(url, 'hinh_anh')}
               />
             </FormControl>
             <FormMessage />
@@ -42,7 +43,8 @@ const ImageUploadFields: React.FC<ImageUploadFieldsProps> = ({
             <FormControl>
               <ImageUpload 
                 value={field.value || ''} 
-                onChange={(url) => handleImageUpload(url, 'hinh_anh_2')} 
+                onChange={(url) => handleImageUpload(url, 'hinh_anh_2')}
+                onUpload={(url) => handleImageUpload(url, 'hinh_anh_2')}
               />
             </FormControl>
             <FormMessage />

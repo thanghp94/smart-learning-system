@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { 
   Dialog, 
   DialogContent, 
@@ -104,7 +103,7 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
   };
 
   const filteredFiles = fileTypeFilter 
-    ? files.filter(file => file.file_type === fileTypeFilter)
+    ? files.filter(file => file.file_type === fileTypeFilter || file.nhom_tai_lieu === fileTypeFilter)
     : files;
 
   const handleDeleteFile = async (fileId: string) => {

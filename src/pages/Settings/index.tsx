@@ -1,145 +1,69 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PageHeader from '@/components/common/PageHeader';
-import { Settings as SettingsIcon, List, Database, UserCog, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import EmailSettings from './EmailSettings';
 
 const Settings = () => {
+  const [activeTab, setActiveTab] = useState('general');
+
   return (
-    <div className="container mx-auto py-6 space-y-8">
-      <PageHeader 
-        title="Cài đặt" 
-        description="Quản lý các thiết lập của hệ thống" 
-        icon={<SettingsIcon className="h-6 w-6" />} 
-      />
-      
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList>
-          <TabsTrigger value="general">Thiết lập chung</TabsTrigger>
-          <TabsTrigger value="data">Quản lý dữ liệu</TabsTrigger>
-          <TabsTrigger value="users">Người dùng</TabsTrigger>
-          <TabsTrigger value="files">Hồ sơ và tài liệu</TabsTrigger>
+    <div className="container mx-auto py-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <p className="text-muted-foreground">Manage application settings</p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="email">Email</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="general" className="space-y-4 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <SettingCard 
-              title="Danh mục" 
-              description="Quản lý các loại danh mục trong hệ thống"
-              icon={<List />}
-              href="/settings/enum-manager"
-            />
-            
-            <SettingCard 
-              title="Cấu hình email" 
-              description="Thiết lập các mẫu email và thông tin gửi"
-              icon={<SettingsIcon />}
-            />
-            
-            <SettingCard 
-              title="Thiết lập hiển thị" 
-              description="Tùy chỉnh giao diện và cách hiển thị"
-              icon={<SettingsIcon />}
-            />
-          </div>
+        <TabsContent value="general">
+          <Card>
+            <CardHeader>
+              <CardTitle>General Settings</CardTitle>
+              <CardDescription>Manage general application settings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>General settings content goes here.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
         
-        <TabsContent value="data" className="space-y-4 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <SettingCard 
-              title="Khởi tạo dữ liệu" 
-              description="Thiết lập dữ liệu mẫu hoặc khởi tạo lại"
-              icon={<Database />}
-            />
-            
-            <SettingCard 
-              title="Sao lưu & phục hồi" 
-              description="Quản lý sao lưu và phục hồi dữ liệu"
-              icon={<Database />}
-            />
-            
-            <SettingCard 
-              title="Nhập/Xuất dữ liệu" 
-              description="Chức năng nhập xuất dữ liệu từ file"
-              icon={<Database />}
-            />
-          </div>
+        <TabsContent value="email">
+          <EmailSettings />
         </TabsContent>
         
-        <TabsContent value="users" className="space-y-4 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <SettingCard 
-              title="Phân quyền" 
-              description="Quản lý quyền và vai trò người dùng"
-              icon={<UserCog />}
-            />
-            
-            <SettingCard 
-              title="Nhóm người dùng" 
-              description="Quản lý các nhóm và phân quyền nhóm"
-              icon={<UserCog />}
-            />
-          </div>
+        <TabsContent value="appearance">
+          <Card>
+            <CardHeader>
+              <CardTitle>Appearance Settings</CardTitle>
+              <CardDescription>Customize the look and feel of the application</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Appearance settings content goes here.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
         
-        <TabsContent value="files" className="space-y-4 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <SettingCard 
-              title="Quản lý hồ sơ" 
-              description="Quản lý hồ sơ nhân viên và văn bản"
-              icon={<FileText />}
-              href="/employee-files"
-            />
-            
-            <SettingCard 
-              title="Cấu hình lưu trữ" 
-              description="Thiết lập thư mục và cấu trúc lưu trữ tài liệu"
-              icon={<FileText />}
-            />
-            
-            <SettingCard 
-              title="Phân loại tài liệu" 
-              description="Quản lý các loại tài liệu trong hệ thống"
-              icon={<FileText />}
-            />
-          </div>
+        <TabsContent value="advanced">
+          <Card>
+            <CardHeader>
+              <CardTitle>Advanced Settings</CardTitle>
+              <CardDescription>Configure advanced application settings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Advanced settings content goes here.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
-};
-
-interface SettingCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  href?: string;
-}
-
-const SettingCard = ({ title, description, icon, href }: SettingCardProps) => {
-  const cardContent = (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          {icon}
-          <CardTitle>{title}</CardTitle>
-        </div>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex justify-end pt-2">
-        <Button>Truy cập</Button>
-      </CardContent>
-    </Card>
-  );
-  
-  if (href) {
-    return <Link to={href} className="block h-full">{cardContent}</Link>;
-  }
-  
-  return cardContent;
 };
 
 export default Settings;

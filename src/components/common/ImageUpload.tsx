@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 interface ImageUploadProps {
   url?: string;
   value?: string;
-  onUpload: (url: string) => void;
+  onUpload?: (url: string) => void;
   onChange?: (url: string) => void;
   onRemove?: () => void;
   disabled?: boolean;
@@ -39,8 +39,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       const file = e.target.files[0];
       const fileUrl = URL.createObjectURL(file);
       
-      // Notify parent component
-      onUpload(fileUrl);
+      // Notify parent component through available callbacks
+      if (onUpload) onUpload(fileUrl);
       if (onChange) onChange(fileUrl);
       
     } catch (error) {
