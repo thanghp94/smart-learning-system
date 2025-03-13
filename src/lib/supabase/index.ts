@@ -4,7 +4,7 @@ import { classService } from '@/lib/supabase/services/class';
 import { studentService } from '@/lib/supabase/student-service';
 import { employeeService } from '@/lib/supabase/employee-service';
 import { facilityService } from '@/lib/supabase/facility-service';
-import { teachingSessionService } from '@/lib/supabase/teaching-session-service';
+import teachingSessionService from '@/lib/supabase/teaching-session-service';
 import { enrollmentService } from '@/lib/supabase/enrollment-service';
 import { assetService } from '@/lib/supabase/asset-service';
 import { contactService } from '@/lib/supabase/contact-service';

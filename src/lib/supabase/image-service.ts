@@ -85,5 +85,42 @@ export const imageService = {
       .getPublicUrl(filePath);
     
     return data.publicUrl;
+  },
+  
+  // Add missing upload method for ImageUploadForm
+  async upload(formData: FormData) {
+    try {
+      // Extract the file from the FormData
+      const file = formData.get('file') as File;
+      if (!file) throw new Error('No file provided');
+      
+      // Generate a unique file path
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}-${Date.now()}.${fileExt}`;
+      const filePath = `uploads/${fileName}`;
+      
+      // Upload to storage bucket
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL
+      const { data } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+      
+      return {
+        path: filePath,
+        publicUrl: data.publicUrl
+      };
+    } catch (error) {
+      console.error('Error in upload method:', error);
+      throw error;
+    }
   }
 };
