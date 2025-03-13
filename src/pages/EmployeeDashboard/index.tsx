@@ -61,7 +61,7 @@ const EmployeeDashboard = () => {
     <div className="container mx-auto py-6">
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
-          <Spinner size="large" />
+          <Spinner size="lg" />
         </div>
       ) : (
         employee && (

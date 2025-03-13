@@ -4,19 +4,29 @@ import { ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ImageUploadProps {
-  value: string;
-  onChange: (url: string) => void;
+  url?: string;
+  value?: string;
+  onUpload: (url: string) => void;
+  onChange?: (url: string) => void;
   onRemove?: () => void;
   disabled?: boolean;
+  entityType?: string;
+  entityId?: string;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ 
-  value, 
-  onChange, 
+  url, 
+  value,
+  onUpload,
+  onChange,
   onRemove, 
-  disabled = false 
+  disabled = false,
+  entityType,
+  entityId
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  
+  const imageUrl = url || value;
   
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -30,7 +40,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       const fileUrl = URL.createObjectURL(file);
       
       // Notify parent component
-      onChange(fileUrl);
+      onUpload(fileUrl);
+      if (onChange) onChange(fileUrl);
       
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -41,10 +52,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   
   return (
     <div className="relative h-40 w-full border border-dashed rounded-md overflow-hidden">
-      {value ? (
+      {imageUrl ? (
         <div className="relative w-full h-full">
           <img 
-            src={value} 
+            src={imageUrl} 
             alt="Uploaded" 
             className="w-full h-full object-cover"
           />

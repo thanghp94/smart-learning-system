@@ -1,10 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { fileService } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { File } from '@/lib/types';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { 
   Dialog, 
@@ -30,33 +28,28 @@ import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import FileUploader, { FileInfo } from '@/components/common/FileUploader';
+import FileStorageService, { ExtendedFile } from '@/lib/services/fileService';
 
 interface EmployeeFilesTabProps {
   employeeId: string;
-}
-
-// Extended File type to include additional properties
-interface EmployeeFile extends File {
-  loai_doi_tuong?: string;
 }
 
 const fileSchema = z.object({
   ten_file: z.string().min(1, { message: 'Tên file không được để trống' }),
   mo_ta: z.string().optional(),
   file_type: z.string().min(1, { message: 'Loại file không được để trống' }),
-  loai_doi_tuong: z.string().optional(),
 });
 
 type FileFormValues = z.infer<typeof fileSchema>;
 
 const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
   const { toast } = useToast();
-  const [files, setFiles] = useState<EmployeeFile[]>([]);
+  const [files, setFiles] = useState<ExtendedFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [fileTypeFilter, setFileTypeFilter] = useState('');
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
   
   const form = useForm<FileFormValues>({
     resolver: zodResolver(fileSchema),
@@ -64,7 +57,6 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
       ten_file: '',
       mo_ta: '',
       file_type: '',
-      loai_doi_tuong: 'employee',
     }
   });
 
@@ -72,7 +64,7 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
     const fetchFiles = async () => {
       try {
         setIsLoading(true);
-        const data = await fileService.getByEntityId(employeeId, 'employee');
+        const data = await FileStorageService.getByEntityId(employeeId, 'employee');
         setFiles(data);
       } catch (error) {
         console.error('Error fetching files:', error);
@@ -91,37 +83,23 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
     }
   }, [employeeId, toast]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFileSelected = (fileInfo: FileInfo) => {
+    setSelectedFile(fileInfo);
+      
+    // Extract filename to use as default for ten_file
+    const fileName = fileInfo.name.split('.').slice(0, -1).join('.');
+    form.setValue('ten_file', fileName);
     
-    try {
-      setUploadedFile(file);
-      
-      // Extract filename to use as default for ten_file
-      const fileName = file.name.split('.').slice(0, -1).join('.');
-      form.setValue('ten_file', fileName);
-      
-      // Set file type based on extension
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
-      if (fileExt) {
-        if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
-          form.setValue('file_type', 'image');
-        } else if (['pdf', 'doc', 'docx', 'txt'].includes(fileExt)) {
-          form.setValue('file_type', 'document');
-        } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
-          form.setValue('file_type', 'spreadsheet');
-        } else {
-          form.setValue('file_type', 'other');
-        }
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải lên tệp tin',
-        variant: 'destructive',
-      });
+    // Set file type based on extension
+    const fileExt = fileInfo.extension.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+      form.setValue('file_type', 'image');
+    } else if (['pdf', 'doc', 'docx', 'txt'].includes(fileExt)) {
+      form.setValue('file_type', 'document');
+    } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
+      form.setValue('file_type', 'spreadsheet');
+    } else {
+      form.setValue('file_type', 'other');
     }
   };
 
@@ -133,7 +111,7 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
     if (!confirm('Bạn có chắc chắn muốn xóa tài liệu này không?')) return;
     
     try {
-      await fileService.delete(fileId);
+      await FileStorageService.delete(fileId);
       setFiles(files.filter(file => file.id !== fileId));
       toast({
         title: 'Thành công',
@@ -150,7 +128,7 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
   };
 
   const onSubmit = async (values: FileFormValues) => {
-    if (!uploadedFile) {
+    if (!selectedFile) {
       toast({
         title: 'Lỗi',
         description: 'Vui lòng tải lên một tệp tin',
@@ -161,35 +139,32 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
     
     try {
       // Upload file to storage
-      const uploadResult = await fileService.upload(
-        uploadedFile, 
+      const uploadResult = await FileStorageService.upload(
+        selectedFile.file, 
         'employee_files', 
-        `${employeeId}/${uploadedFile.name}`
+        `${employeeId}/${selectedFile.name}`
       );
       
       if (!uploadResult.url) throw new Error('File upload failed');
       
       // Create file record in database
-      const newFile: Partial<EmployeeFile> = {
+      const newFile: Partial<ExtendedFile> = {
         ten_file: values.ten_file,
         mo_ta: values.mo_ta,
         file_url: uploadResult.url,
         file_type: values.file_type,
-        file_extension: uploadedFile.name.split('.').pop(),
-        file_size: uploadedFile.size,
+        file_extension: selectedFile.extension,
+        file_size: selectedFile.size,
         entity_id: employeeId,
         entity_type: 'employee',
-        // Using loai_doi_tuong as a custom field for the file record
-        loai_doi_tuong: values.loai_doi_tuong,
       };
       
-      const createdFile = await fileService.create(newFile);
-      setFiles([createdFile as EmployeeFile, ...files]);
+      const createdFile = await FileStorageService.create(newFile);
+      setFiles([createdFile, ...files]);
       
       // Reset form
       form.reset();
-      setUploadedFile(null);
-      setFileUrl(null);
+      setSelectedFile(null);
       setShowAddDialog(false);
       
       toast({
@@ -256,21 +231,21 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
                       <div className="flex items-center">
                         <FileText className="h-4 w-4 mr-2 text-blue-500" />
                         <div>
-                          <div className="font-medium">{file.ten_file}</div>
-                          <div className="text-sm text-muted-foreground">{file.mo_ta}</div>
+                          <div className="font-medium">{file.ten_file || file.ten_tai_lieu}</div>
+                          <div className="text-sm text-muted-foreground">{file.mo_ta || file.ghi_chu}</div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{file.file_type}</TableCell>
+                    <TableCell>{file.file_type || file.nhom_tai_lieu}</TableCell>
                     <TableCell>
                       {file.created_at && format(new Date(file.created_at), 'dd/MM/yyyy')}
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => window.open(file.file_url, '_blank')}>
+                        <Button variant="ghost" size="sm" onClick={() => window.open(file.file_url || file.file1, '_blank')}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => window.open(file.file_url, '_blank')}>
+                        <Button variant="ghost" size="sm" onClick={() => window.open(file.file_url || file.file1, '_blank')}>
                           <Download className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleDeleteFile(file.id)}>
@@ -350,23 +325,26 @@ const EmployeeFilesTab: React.FC<EmployeeFilesTabProps> = ({ employeeId }) => {
                 <FormItem>
                   <FormLabel>Tải lên tệp tin</FormLabel>
                   <FormControl>
-                    <Input type="file" onChange={handleFileUpload} />
+                    <FileUploader 
+                      onFileSelected={handleFileSelected} 
+                      label="Chọn tệp tin"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
                 
-                {uploadedFile && (
+                {selectedFile && (
                   <div className="p-2 border rounded bg-gray-50">
-                    <p className="text-sm font-medium">{uploadedFile.name}</p>
+                    <p className="text-sm font-medium">{selectedFile.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(uploadedFile.size / 1024).toFixed(2)} KB
+                      {(selectedFile.size / 1024).toFixed(2)} KB
                     </p>
                   </div>
                 )}
               </div>
               
               <DialogFooter>
-                <Button type="submit" disabled={!uploadedFile}>Lưu tài liệu</Button>
+                <Button type="submit" disabled={!selectedFile}>Lưu tài liệu</Button>
               </DialogFooter>
             </form>
           </Form>

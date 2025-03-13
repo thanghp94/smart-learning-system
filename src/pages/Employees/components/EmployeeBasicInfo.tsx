@@ -13,18 +13,18 @@ import ImageUpload from '@/components/common/ImageUpload';
 
 interface EmployeeBasicInfoProps {
   employee: Employee | null;
-  isEditing: boolean;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  handleImageUpload: (url: string) => void;
-  handleDateChange: (name: string, value: Date | null) => void;
+  isEditing?: boolean;
+  handleChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  handleImageUpload?: (url: string) => void;
+  handleDateChange?: (name: string, value: Date | null) => void;
 }
 
 const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
   employee,
-  isEditing,
-  handleChange,
-  handleImageUpload,
-  handleDateChange,
+  isEditing = false,
+  handleChange = () => {},
+  handleImageUpload = () => {},
+  handleDateChange = () => {},
 }) => {
   if (!employee) return null;
 
