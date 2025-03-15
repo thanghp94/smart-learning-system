@@ -27,7 +27,7 @@ const TransactionTypeSelect = ({
   onTransactionTypeChange 
 }: TransactionTypeSelectProps) => {
   const handleTypeChange = (value: string) => {
-    // Prevent default link behavior
+    // Set form value
     form.setValue('loai_giao_dich', value);
     
     // Get the label for the selected transaction type
@@ -37,6 +37,9 @@ const TransactionTypeSelect = ({
     else if (value === 'luong') typeLabel = 'Lương';
     else if (value === 'thue_mb') typeLabel = 'Thuê mặt bằng';
     else if (value === 'csvc') typeLabel = 'Cơ sở vật chất';
+    else if (value === 'mua_sam') typeLabel = 'Mua sắm';
+    else if (value === 'bao_duong') typeLabel = 'Bảo dưỡng';
+    else if (value === 'trang_thiet_bi') typeLabel = 'Trang thiết bị';
     else typeLabel = 'Khác';
     
     // Call callback to update description
@@ -66,6 +69,7 @@ const TransactionTypeSelect = ({
                 <>
                   <SelectItem value="hoc_phi">Học phí</SelectItem>
                   <SelectItem value="phu_phi">Phụ phí</SelectItem>
+                  <SelectItem value="tai_san">Tài sản</SelectItem>
                   <SelectItem value="other">Khác</SelectItem>
                 </>
               ) : (
@@ -73,6 +77,9 @@ const TransactionTypeSelect = ({
                   <SelectItem value="luong">Lương</SelectItem>
                   <SelectItem value="thue_mb">Thuê mặt bằng</SelectItem>
                   <SelectItem value="csvc">Cơ sở vật chất</SelectItem>
+                  <SelectItem value="mua_sam">Mua sắm</SelectItem>
+                  <SelectItem value="bao_duong">Bảo dưỡng</SelectItem>
+                  <SelectItem value="trang_thiet_bi">Trang thiết bị</SelectItem>
                   <SelectItem value="other">Khác</SelectItem>
                 </>
               )}

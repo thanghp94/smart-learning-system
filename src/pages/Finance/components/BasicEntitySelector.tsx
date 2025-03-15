@@ -1,8 +1,5 @@
 
 import React, { useState } from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { studentService, employeeService, contactService } from '@/lib/supabase';
 import { UseFormReturn } from 'react-hook-form';
 import EntitySelect from './EntitySelect';
 

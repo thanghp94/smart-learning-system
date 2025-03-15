@@ -2,7 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { studentService, employeeService, contactService, facilityService, assetService, eventService } from '@/lib/supabase';
+import { 
+  studentService, 
+  employeeService, 
+  contactService, 
+  facilityService, 
+  assetService, 
+  eventService,
+  enrollmentService,
+  classService
+} from '@/lib/supabase';
 import { Student, Employee, Contact, Facility } from '@/lib/types';
 import { UseFormReturn } from 'react-hook-form';
 
@@ -26,6 +35,8 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [assets, setAssets] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
 
   // Load related entities when the form loads or entity type changes
   useEffect(() => {
@@ -74,6 +85,24 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
           console.error('Error loading events:', error);
         }
       }
+      
+      if (selectedEntityType === 'enrollment' || !selectedEntityType) {
+        try {
+          const data = await enrollmentService.getAll();
+          setEnrollments(data);
+        } catch (error) {
+          console.error('Error loading enrollments:', error);
+        }
+      }
+      
+      if (selectedEntityType === 'class' || !selectedEntityType) {
+        try {
+          const data = await classService.getAll();
+          setClasses(data);
+        } catch (error) {
+          console.error('Error loading classes:', error);
+        }
+      }
     };
 
     loadEntities();
@@ -106,8 +135,10 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                 <SelectItem value="employee">Nhân viên</SelectItem>
                 <SelectItem value="contact">Liên hệ</SelectItem>
                 <SelectItem value="facility">Cơ sở</SelectItem>
-                <SelectItem value="asset">Cơ sở vật chất</SelectItem>
+                <SelectItem value="asset">Tài sản</SelectItem>
                 <SelectItem value="event">Sự kiện</SelectItem>
+                <SelectItem value="enrollment">Ghi danh</SelectItem>
+                <SelectItem value="class">Lớp học</SelectItem>
                 <SelectItem value="government">Cơ quan nhà nước</SelectItem>
               </SelectContent>
             </Select>
@@ -146,6 +177,12 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                   } else if (selectedEntityType === 'event') {
                     const event = events.find(e => e.id === value);
                     entityName = event?.ten_su_kien || '';
+                  } else if (selectedEntityType === 'enrollment') {
+                    const enrollment = enrollments.find(e => e.id === value);
+                    entityName = `${enrollment?.ten_hoc_sinh || ''} - ${enrollment?.ten_lop_full || enrollment?.class_name || ''}`;
+                  } else if (selectedEntityType === 'class') {
+                    const classItem = classes.find(c => c.id === value);
+                    entityName = classItem?.ten_lop_full || classItem?.ten_lop || '';
                   } else if (selectedEntityType === 'government') {
                     entityName = 'Cơ quan nhà nước';
                   }
@@ -191,7 +228,7 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                   {selectedEntityType === 'asset' &&
                     assets.map((asset) => (
                       <SelectItem key={asset.id} value={asset.id}>
-                        {asset.ten_csvc}
+                        {asset.ten_csvc} ({asset.loai || 'Không có loại'})
                       </SelectItem>
                     ))}
                     
@@ -199,6 +236,20 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                     events.map((event) => (
                       <SelectItem key={event.id} value={event.id}>
                         {event.ten_su_kien}
+                      </SelectItem>
+                    ))}
+                  
+                  {selectedEntityType === 'enrollment' &&
+                    enrollments.map((enrollment) => (
+                      <SelectItem key={enrollment.id} value={enrollment.id}>
+                        {enrollment.ten_hoc_sinh} - {enrollment.ten_lop_full || enrollment.class_name} {enrollment.ct_hoc ? `(${enrollment.ct_hoc})` : ''}
+                      </SelectItem>
+                    ))}
+                  
+                  {selectedEntityType === 'class' &&
+                    classes.map((cls) => (
+                      <SelectItem key={cls.id} value={cls.id}>
+                        {cls.ten_lop_full || cls.ten_lop} {cls.ct_hoc ? `(${cls.ct_hoc})` : ''}
                       </SelectItem>
                     ))}
                     

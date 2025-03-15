@@ -5,6 +5,8 @@ import { receiptTemplateService } from './receipt-template-service';
 import { receiptService } from './receipt-service';
 import { transactionService } from './transaction-service';
 import { ledgerService } from './ledger-service';
+import { enrollmentFinanceService } from './enrollment-finance-service';
+import { assetFinanceService } from './asset-finance-service';
 
 // Create a combined service with all the methods
 export const financeService = {
@@ -13,6 +15,8 @@ export const financeService = {
   ...receiptService,
   ...transactionService,
   ...ledgerService,
+  ...enrollmentFinanceService,
+  ...assetFinanceService,
 };
 
 export default financeService;

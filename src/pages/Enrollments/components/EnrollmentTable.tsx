@@ -24,13 +24,27 @@ const EnrollmentTable: React.FC<EnrollmentTableProps> = ({
       title: "Học sinh",
       key: "ten_hoc_sinh",
       sortable: true,
-      render: (value: string) => <span>{value}</span>
+      render: (value: string, record: Enrollment) => (
+        <div>
+          <span className="font-medium">{value}</span>
+          {record.hoc_sinh_id && (
+            <span className="text-xs text-muted-foreground block">ID: {record.hoc_sinh_id}</span>
+          )}
+        </div>
+      )
     },
     {
       title: "Lớp",
       key: "ten_lop_full",
       sortable: true,
-      render: (value: string) => <span>{value}</span>
+      render: (value: string, record: Enrollment) => (
+        <div>
+          <span>{value || record.class_name || "Không có thông tin"}</span>
+          {record.ct_hoc && (
+            <span className="text-xs text-muted-foreground block">CT: {record.ct_hoc}</span>
+          )}
+        </div>
+      )
     },
     {
       title: "Chương trình học",

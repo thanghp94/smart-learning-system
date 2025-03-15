@@ -49,6 +49,7 @@ export const transactionService = {
 
   async getByEntity(entityType: string, entityId: string) {
     try {
+      console.log(`Fetching finances for entity type: ${entityType}, ID: ${entityId}`);
       const { data, error } = await supabase
         .from('finances')
         .select('*')
@@ -57,6 +58,7 @@ export const transactionService = {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
+      console.log(`Found ${data.length} finance records`);
       return data as Finance[];
     } catch (error) {
       console.error(`Error fetching finances for entity ${entityType} with ID ${entityId}:`, error);
@@ -69,14 +71,22 @@ export const transactionService = {
   },
 
   async getByStudent(studentId: string) {
-    return this.getByEntity('hoc_sinh', studentId);
+    return this.getByEntity('student', studentId);
   },
 
   async getByFacility(facilityId: string) {
-    return this.getByEntity('co_so', facilityId);
+    return this.getByEntity('facility', facilityId);
+  },
+
+  async getByAsset(assetId: string) {
+    return this.getByEntity('asset', assetId);
   },
 
   async getByClass(classId: string) {
-    return this.getByEntity('lop', classId);
+    return this.getByEntity('class', classId);
+  },
+  
+  async getByEnrollment(enrollmentId: string) {
+    return this.getByEntity('enrollment', enrollmentId);
   }
 };
