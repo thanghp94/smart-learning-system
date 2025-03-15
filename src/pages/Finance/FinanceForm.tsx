@@ -132,6 +132,8 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
         ngay: values.ngay.toISOString().split('T')[0],
       };
       
+      console.log("Prepared finance data for submission:", financeData);
+      
       // Use the unified onSubmit handler from props
       onSubmit(financeData);
     } catch (error) {

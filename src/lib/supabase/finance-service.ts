@@ -44,13 +44,18 @@ export const financeService = {
   
   create: async (finance: Partial<Finance>): Promise<Finance> => {
     try {
+      console.log('Creating finance record with data:', finance);
       const { data, error } = await supabase
         .from('finances')
         .insert(finance)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating finance record:', error);
+        throw error;
+      }
+      console.log('Successfully created finance record:', data);
       return data;
     } catch (error) {
       console.error('Error creating finance record:', error);

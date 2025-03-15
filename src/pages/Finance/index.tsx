@@ -19,7 +19,10 @@ const Finance = () => {
   
   const handleFormSubmit = async (data) => {
     try {
-      await financeService.create(data);
+      console.log('Finance form submission data:', data);
+      const result = await financeService.create(data);
+      console.log('Finance creation result:', result);
+      
       toast({
         title: 'Thành công',
         description: 'Đã thêm khoản thu chi mới',
@@ -34,7 +37,7 @@ const Finance = () => {
       console.error('Error saving finance:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể lưu khoản thu chi',
+        description: 'Không thể lưu khoản thu chi: ' + (error as Error).message,
         variant: 'destructive',
       });
     }
