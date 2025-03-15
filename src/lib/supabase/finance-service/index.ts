@@ -1,8 +1,10 @@
 
+import { supabase } from '../client';
 import { financeService as baseFinanceService } from '../finance-service';
 import { receiptTemplateService } from './receipt-template-service';
 import { receiptService } from './receipt-service';
 import { transactionService } from './transaction-service';
+import { ledgerService } from './ledger-service';
 
 // Create a combined service with all the methods
 export const financeService = {
@@ -10,6 +12,7 @@ export const financeService = {
   ...receiptTemplateService,
   ...receiptService,
   ...transactionService,
+  ...ledgerService,
 };
 
 export default financeService;

@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 import FinanceList from './FinanceList';
 import FinanceStats from './FinanceStats';
 import FinanceLedger from './FinanceLedger';
-import FilterButton from '@/components/ui/FilterButton';
 import ExportButton from '@/components/ui/ExportButton';
 
 interface FinancePageContentProps {
@@ -33,7 +32,9 @@ const FinancePageContent: React.FC<FinancePageContentProps> = ({ onAddClick }) =
   const fetchFinances = async () => {
     setIsLoading(true);
     try {
+      console.log('Fetching all records from finances...');
       const data = await financeService.getAll();
+      console.log('Successfully fetched', data.length, 'records from finances');
       setFinances(data);
     } catch (error) {
       console.error('Error fetching finances:', error);
@@ -47,37 +48,24 @@ const FinancePageContent: React.FC<FinancePageContentProps> = ({ onAddClick }) =
     }
   };
 
-  // Tính toán tổng thu, tổng chi và số dư
-  const totalIncome = finances.filter(f => f.loai_thu_chi === 'income').reduce((sum, f) => sum + f.tong_tien, 0);
-  const totalExpense = finances.filter(f => f.loai_thu_chi === 'expense').reduce((sum, f) => sum + f.tong_tien, 0);
+  // Calculate total income, expense and balance
+  const totalIncome = finances
+    .filter(f => f.loai_thu_chi === 'income' || f.loai_thu_chi === 'thu')
+    .reduce((sum, f) => sum + f.tong_tien, 0);
+    
+  const totalExpense = finances
+    .filter(f => f.loai_thu_chi === 'expense' || f.loai_thu_chi === 'chi')
+    .reduce((sum, f) => sum + f.tong_tien, 0);
+    
   const balance = totalIncome - totalExpense;
-
-  // Filter categories
-  const filterCategories = [
-    {
-      name: 'Loại',
-      type: 'other' as const,
-      options: [
-        { label: 'Thu', value: 'income', type: 'other' as const },
-        { label: 'Chi', value: 'expense', type: 'other' as const }
-      ]
-    },
-    {
-      name: 'Đối tượng',
-      type: 'other' as const,
-      options: [
-        { label: 'Học sinh', value: 'student', type: 'other' as const },
-        { label: 'Nhân viên', value: 'employee', type: 'other' as const },
-        { label: 'Cơ sở', value: 'facility', type: 'other' as const },
-        { label: 'Khác', value: 'other', type: 'other' as const }
-      ]
-    }
-  ];
 
   // Apply filters
   const filteredFinances = finances.filter(finance => {
     if (filterMode === 'type') {
-      if (filters.loai_thu_chi && finance.loai_thu_chi !== filters.loai_thu_chi) {
+      if (filters.loai_thu_chi && 
+          !(finance.loai_thu_chi === filters.loai_thu_chi || 
+           (filters.loai_thu_chi === 'income' && finance.loai_thu_chi === 'thu') ||
+           (filters.loai_thu_chi === 'expense' && finance.loai_thu_chi === 'chi'))) {
         return false;
       }
     } else if (filterMode === 'entity') {
@@ -126,9 +114,9 @@ const FinancePageContent: React.FC<FinancePageContentProps> = ({ onAddClick }) =
               onChange={(e) => setFilters({ loai_doi_tuong: e.target.value })}
             >
               <option value="">Tất cả đối tượng</option>
-              <option value="student">Học sinh</option>
-              <option value="employee">Nhân viên</option>
-              <option value="facility">Cơ sở</option>
+              <option value="hoc_sinh">Học sinh</option>
+              <option value="nhan_vien">Nhân viên</option>
+              <option value="co_so">Cơ sở</option>
               <option value="other">Khác</option>
             </select>
           )}
@@ -155,7 +143,11 @@ const FinancePageContent: React.FC<FinancePageContentProps> = ({ onAddClick }) =
           <FinanceList 
             finances={filteredFinances} 
             isLoading={isLoading}
-            onDelete={(finance) => setFinances(prev => prev.filter(f => f.id !== finance.id))}
+            onDelete={(finance) => {
+              setFinances(prev => prev.filter(f => f.id !== finance.id));
+              // Refresh data to ensure consistency
+              fetchFinances();
+            }}
           />
         </TabsContent>
         
