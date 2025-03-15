@@ -37,7 +37,7 @@ export interface DataTableProps<T> {
 }
 
 // Components
-const TableHeader = <T,>({ 
+const SortableTableHeader = <T,>({ 
   columns, 
   sortColumn, 
   sortDirection, 
@@ -291,7 +291,7 @@ function DataTable<T>({
           {showHeader && (
             <TableHeader>
               <TableRow>
-                <TableHeader 
+                <SortableTableHeader 
                   columns={columns} 
                   sortColumn={sortColumn} 
                   sortDirection={sortDirection} 
