@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import EntitySelect from './EntitySelect';
 
@@ -17,6 +17,16 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
   onEntityChange 
 }) => {
   const [selectedEntityType, setSelectedEntityType] = useState<string | null>(entityType || null);
+  const [entityName, setEntityName] = useState<string>('');
+
+  // If entityType and entityId are provided, preload the entity data
+  useEffect(() => {
+    if (entityType && entityId) {
+      setSelectedEntityType(entityType);
+      form.setValue('loai_doi_tuong', entityType);
+      form.setValue('doi_tuong_id', entityId);
+    }
+  }, [entityType, entityId, form]);
 
   const handleEntityTypeChange = (value: string) => {
     setSelectedEntityType(value);
@@ -24,6 +34,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
     
     // Reset entity ID when type changes
     form.setValue('doi_tuong_id', '');
+    setEntityName('');
     
     // Notify parent component
     if (onEntityChange) {
@@ -31,9 +42,11 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
     }
   };
 
-  const handleEntityNameChange = (entityId: string, entityName: string) => {
+  const handleEntityNameChange = (entityId: string, name: string) => {
+    setEntityName(name);
+    
     if (onEntityChange && selectedEntityType) {
-      onEntityChange(selectedEntityType, entityId, entityName);
+      onEntityChange(selectedEntityType, entityId, name);
     }
   };
 

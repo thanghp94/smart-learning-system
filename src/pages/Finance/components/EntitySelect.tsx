@@ -12,7 +12,7 @@ import {
   enrollmentService,
   classService
 } from '@/lib/supabase';
-import { Student, Employee, Contact, Facility } from '@/lib/types';
+import { Student, Employee, Contact, Facility, Asset, Enrollment } from '@/lib/types';
 import { UseFormReturn } from 'react-hook-form';
 
 interface EntitySelectProps {
@@ -33,75 +33,55 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
   const [students, setStudents] = useState<Student[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [assets, setAssets] = useState<any[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [events, setEvents] = useState<any[]>([]);
-  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load related entities when the form loads or entity type changes
   useEffect(() => {
     const loadEntities = async () => {
-      if (selectedEntityType === 'student' || !selectedEntityType) {
-        try {
+      setIsLoading(true);
+      try {
+        if (selectedEntityType === 'student' || !selectedEntityType) {
           const data = await studentService.getAll();
           setStudents(data);
-        } catch (error) {
-          console.error('Error loading students:', error);
         }
-      }
-      
-      if (selectedEntityType === 'employee' || !selectedEntityType) {
-        try {
+        
+        if (selectedEntityType === 'employee' || !selectedEntityType) {
           const data = await employeeService.getAll();
           setEmployees(data);
-        } catch (error) {
-          console.error('Error loading employees:', error);
         }
-      }
-      
-      if (selectedEntityType === 'contact' || !selectedEntityType) {
-        try {
+        
+        if (selectedEntityType === 'contact' || !selectedEntityType) {
           const data = await contactService.getAll();
           setContacts(data);
-        } catch (error) {
-          console.error('Error loading contacts:', error);
         }
-      }
-      
-      if (selectedEntityType === 'asset' || !selectedEntityType) {
-        try {
+        
+        if (selectedEntityType === 'asset' || !selectedEntityType) {
           const data = await assetService.getAll();
           setAssets(data);
-        } catch (error) {
-          console.error('Error loading assets:', error);
         }
-      }
-      
-      if (selectedEntityType === 'event' || !selectedEntityType) {
-        try {
+        
+        if (selectedEntityType === 'event' || !selectedEntityType) {
           const data = await eventService.getAll();
           setEvents(data);
-        } catch (error) {
-          console.error('Error loading events:', error);
         }
-      }
-      
-      if (selectedEntityType === 'enrollment' || !selectedEntityType) {
-        try {
+        
+        if (selectedEntityType === 'enrollment' || !selectedEntityType) {
           const data = await enrollmentService.getAll();
           setEnrollments(data);
-        } catch (error) {
-          console.error('Error loading enrollments:', error);
         }
-      }
-      
-      if (selectedEntityType === 'class' || !selectedEntityType) {
-        try {
+        
+        if (selectedEntityType === 'class' || !selectedEntityType) {
           const data = await classService.getAll();
           setClasses(data);
-        } catch (error) {
-          console.error('Error loading classes:', error);
         }
+      } catch (error) {
+        console.error('Error loading entity data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -124,7 +104,11 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Loại đối tượng</FormLabel>
-            <Select onValueChange={(value) => onEntityTypeChange(value)} defaultValue={field.value}>
+            <Select 
+              onValueChange={(value) => onEntityTypeChange(value)} 
+              defaultValue={field.value}
+              disabled={isLoading}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn loại đối tượng" />
@@ -182,10 +166,11 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                     entityName = event?.ten_su_kien || '';
                   } else if (selectedEntityType === 'enrollment') {
                     const enrollment = enrollments.find(e => e.id === value);
-                    entityName = `${enrollment?.ten_hoc_sinh || ''} - ${enrollment?.ten_lop_full || enrollment?.ten_lop || 'Không có thông tin lớp'}`;
-                    if (enrollment?.ct_hoc) {
-                      entityName += ` (${enrollment.ct_hoc})`;
-                    }
+                    const studentName = enrollment?.ten_hoc_sinh || '';
+                    const className = enrollment?.ten_lop_full || enrollment?.ten_lop || '';
+                    const program = enrollment?.ct_hoc || '';
+                    
+                    entityName = `${studentName} - ${className}${program ? ` (${program})` : ''}`;
                   } else if (selectedEntityType === 'class') {
                     const classItem = classes.find(c => c.id === value);
                     entityName = classItem?.ten_lop_full || classItem?.ten_lop || '';
@@ -199,10 +184,11 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                   handleEntitySelection(value, entityName);
                 }} 
                 defaultValue={field.value}
+                disabled={isLoading}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn đối tượng" />
+                    <SelectValue placeholder={isLoading ? "Đang tải..." : "Chọn đối tượng"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>

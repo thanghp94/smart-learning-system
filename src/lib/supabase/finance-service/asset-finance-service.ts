@@ -1,6 +1,7 @@
 
 import { supabase } from '../client';
-import { Finance } from '@/lib/types';
+import { Finance, Asset } from '@/lib/types';
+import { formatCurrency } from '@/lib/utils';
 
 export const assetFinanceService = {
   // Get finances related to an asset
@@ -36,12 +37,16 @@ export const assetFinanceService = {
       
       if (assetError) throw assetError;
       
+      // Format asset details for the description
+      const assetDetails = `${asset.ten_csvc}${asset.loai ? ` (${asset.loai})` : ''}`;
+      const amountInfo = asset.so_tien_mua ? ` - ${formatCurrency(parseFloat(asset.so_tien_mua))}` : '';
+      
       // Prepare the finance record with asset data
       const financeRecord: Partial<Finance> = {
         ...financeData,
         loai_doi_tuong: 'asset',
         doi_tuong_id: assetId,
-        dien_giai: financeData.dien_giai || `${financeData.loai_thu_chi === 'thu' ? 'Thu' : 'Chi'} - ${financeData.loai_giao_dich || ''} - ${asset.ten_csvc} ${asset.loai ? `(${asset.loai})` : ''}`.trim(),
+        dien_giai: financeData.dien_giai || `${financeData.loai_thu_chi === 'thu' ? 'Thu' : 'Chi'} - ${financeData.loai_giao_dich || ''} - ${assetDetails}${amountInfo}`.trim(),
       };
       
       // Create the finance record

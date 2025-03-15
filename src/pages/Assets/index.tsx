@@ -14,6 +14,7 @@ import CommandInterface from "@/components/CommandInterface";
 import { useAssetData } from "./hooks/useAssetData";
 import AssetActionsToolbar from "./components/AssetActionsToolbar";
 import { assetService } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/utils";
 
 const Assets = () => {
   const { filteredAssets, isLoading, fetchAssets, handleFilterChange, handleResetFilters } = useAssetData();
@@ -60,31 +61,33 @@ const Assets = () => {
 
   const columns = [
     {
-      title: "Tên Tài Sản",
-      key: "ten_tai_san",
+      title: "Tài sản",
+      key: "ten_csvc",
       sortable: true,
+      thumbnail: true
     },
     {
       title: "Loại",
-      key: "loai_tai_san",
+      key: "loai",
       sortable: true,
     },
     {
-      title: "Số Lượng",
+      title: "Số lượng",
       key: "so_luong",
       sortable: true,
     },
     {
-      title: "Đơn Vị",
+      title: "Đơn vị",
       key: "don_vi",
     },
     {
-      title: "Giá Trị",
-      key: "gia_tri",
+      title: "Giá trị",
+      key: "so_tien_mua",
       sortable: true,
+      render: (value: string) => value ? formatCurrency(parseFloat(value)) : 'Chưa có thông tin'
     },
     {
-      title: "Tình Trạng",
+      title: "Tình trạng",
       key: "tinh_trang",
       sortable: true,
       render: (value: string) => (

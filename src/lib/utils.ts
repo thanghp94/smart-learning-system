@@ -1,4 +1,3 @@
-
 import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format } from "date-fns";
@@ -21,4 +20,15 @@ export const formatDate = (date: Date | string): string => {
 export const formatTime = (timeString: string | null): string => {
   if (!timeString) return "--:--";
   return timeString.substring(0, 5); // Get only HH:MM part
+};
+
+/**
+ * Format a number as Vietnamese currency
+ */
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('vi-VN', { 
+    style: 'currency', 
+    currency: 'VND',
+    maximumFractionDigits: 0 
+  }).format(amount);
 };
