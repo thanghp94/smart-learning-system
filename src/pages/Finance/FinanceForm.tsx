@@ -36,7 +36,7 @@ const financeSchema = z.object({
   kieu_thanh_toan: z.string().optional(),
   bang_chu: z.string().optional(),
   ghi_chu: z.string().optional(),
-  nguoi_tao: z.string(),
+  nguoi_tao: z.string().optional(), // Make optional to allow default setting
 });
 
 interface FinanceFormProps {
@@ -131,6 +131,11 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
         ...values,
         ngay: values.ngay.toISOString().split('T')[0],
       };
+      
+      // Make sure nguoi_tao is not an empty string - use null instead if it's empty
+      if (financeData.nguoi_tao === '') {
+        financeData.nguoi_tao = null;
+      }
       
       console.log("Prepared finance data for submission:", financeData);
       

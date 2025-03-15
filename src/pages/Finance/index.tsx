@@ -20,6 +20,26 @@ const Finance = () => {
   const handleFormSubmit = async (data) => {
     try {
       console.log('Finance form submission data:', data);
+      
+      // Validate required data before submitting
+      if (!data.loai_thu_chi) {
+        throw new Error('Loại thu chi là bắt buộc');
+      }
+      
+      if (!data.dien_giai) {
+        throw new Error('Diễn giải là bắt buộc');
+      }
+      
+      // If nguoi_tao is empty string, set it to null to avoid UUID parsing error
+      if (data.nguoi_tao === '') {
+        data.nguoi_tao = null;
+      }
+      
+      // Make sure co_so is a valid UUID
+      if (data.co_so === '') {
+        data.co_so = null;
+      }
+      
       const result = await financeService.create(data);
       console.log('Finance creation result:', result);
       
@@ -37,7 +57,7 @@ const Finance = () => {
       console.error('Error saving finance:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể lưu khoản thu chi: ' + (error as Error).message,
+        description: 'Không thể lưu khoản thu chi: ' + (error.message || 'Lỗi không xác định'),
         variant: 'destructive',
       });
     }

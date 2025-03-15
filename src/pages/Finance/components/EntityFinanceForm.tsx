@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FinanceForm from '../FinanceForm';
@@ -65,6 +66,16 @@ const EntityFinanceForm: React.FC<EntityFinanceFormProps> = ({ onSubmit, onCance
       loai_doi_tuong: entityType,
       doi_tuong_id: entityId
     };
+    
+    // If nguoi_tao is empty string, set it to null to avoid UUID parsing error
+    if (formData.nguoi_tao === '') {
+      formData.nguoi_tao = null;
+    }
+    
+    // Make sure co_so is a valid UUID or null
+    if (formData.co_so === '') {
+      formData.co_so = null;
+    }
     
     onSubmit(formData);
   };

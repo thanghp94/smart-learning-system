@@ -44,7 +44,23 @@ export const financeService = {
   
   create: async (finance: Partial<Finance>): Promise<Finance> => {
     try {
+      // Log detailed info about finance data before insertion
       console.log('Creating finance record with data:', finance);
+      
+      // Validate that required fields are present
+      if (!finance.loai_thu_chi) {
+        throw new Error('Loại thu chi là bắt buộc');
+      }
+      
+      if (!finance.tong_tien && finance.tong_tien !== 0) {
+        throw new Error('Tổng tiền là bắt buộc');
+      }
+      
+      // Clean up any empty string IDs (they should be null)
+      if (finance.nguoi_tao === '') finance.nguoi_tao = null;
+      if (finance.co_so === '') finance.co_so = null;
+      if (finance.doi_tuong_id === '') finance.doi_tuong_id = null;
+      
       const { data, error } = await supabase
         .from('finances')
         .insert(finance)
@@ -65,6 +81,11 @@ export const financeService = {
   
   update: async (id: string, updates: Partial<Finance>): Promise<Finance> => {
     try {
+      // Clean up any empty string IDs (they should be null)
+      if (updates.nguoi_tao === '') updates.nguoi_tao = null;
+      if (updates.co_so === '') updates.co_so = null;
+      if (updates.doi_tuong_id === '') updates.doi_tuong_id = null;
+      
       const { data, error } = await supabase
         .from('finances')
         .update(updates)
