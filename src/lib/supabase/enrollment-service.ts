@@ -1,15 +1,59 @@
-
 import { Enrollment } from '@/lib/types';
 import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
 import { supabase } from './client';
 
 export const enrollmentService = {
   async getAll() {
-    return fetchAll<Enrollment>('enrollments');
+    try {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select(`
+          *,
+          students:hoc_sinh_id (id, ten_hoc_sinh),
+          classes:lop_chi_tiet_id (id, ten_lop_full, ten_lop, ct_hoc)
+        `)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      return data.map(enrollment => ({
+        ...enrollment,
+        ten_hoc_sinh: enrollment.students?.ten_hoc_sinh || null,
+        ten_lop_full: enrollment.classes?.ten_lop_full || null,
+        ten_lop: enrollment.classes?.ten_lop || null,
+        ct_hoc: enrollment.classes?.ct_hoc || null
+      }));
+    } catch (error) {
+      console.error('Error fetching all enrollments:', error);
+      throw error;
+    }
   },
   
   async getById(id: string) {
-    return fetchById<Enrollment>('enrollments', id);
+    try {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select(`
+          *,
+          students:hoc_sinh_id (id, ten_hoc_sinh),
+          classes:lop_chi_tiet_id (id, ten_lop_full, ten_lop, ct_hoc)
+        `)
+        .eq('id', id)
+        .single();
+        
+      if (error) throw error;
+      
+      return {
+        ...data,
+        ten_hoc_sinh: data.students?.ten_hoc_sinh || null,
+        ten_lop_full: data.classes?.ten_lop_full || null,
+        ten_lop: data.classes?.ten_lop || null,
+        ct_hoc: data.classes?.ct_hoc || null
+      };
+    } catch (error) {
+      console.error(`Error fetching enrollment with ID ${id}:`, error);
+      throw error;
+    }
   },
   
   async create(enrollment: Partial<Enrollment>) {
@@ -49,7 +93,10 @@ export const enrollmentService = {
       console.log('Fetching enrollments for student', studentId);
       const { data, error } = await supabase
         .from('enrollments')
-        .select('*')
+        .select(`
+          *,
+          classes:lop_chi_tiet_id (id, ten_lop_full, ten_lop, ct_hoc)
+        `)
         .eq('hoc_sinh_id', studentId)
         .order('created_at', { ascending: false });
       
@@ -57,8 +104,16 @@ export const enrollmentService = {
         console.error(`Error fetching enrollments for student ${studentId}:`, error);
         throw error;
       }
-      console.log(`Successfully fetched ${data?.length || 0} enrollments for student ${studentId}`);
-      return data;
+      
+      const processedData = data.map(enrollment => ({
+        ...enrollment,
+        ten_lop_full: enrollment.classes?.ten_lop_full || null,
+        ten_lop: enrollment.classes?.ten_lop || null,
+        ct_hoc: enrollment.classes?.ct_hoc || null
+      }));
+      
+      console.log(`Successfully fetched ${processedData?.length || 0} enrollments for student ${studentId}`);
+      return processedData;
     } catch (error) {
       console.error(`Error fetching enrollments for student ${studentId}:`, error);
       throw error;
@@ -69,12 +124,19 @@ export const enrollmentService = {
     try {
       const { data, error } = await supabase
         .from('enrollments')
-        .select('*')
+        .select(`
+          *,
+          students:hoc_sinh_id (id, ten_hoc_sinh)
+        `)
         .eq('lop_chi_tiet_id', classId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      
+      return data.map(enrollment => ({
+        ...enrollment,
+        ten_hoc_sinh: enrollment.students?.ten_hoc_sinh || null
+      }));
     } catch (error) {
       console.error(`Error fetching enrollments for class ${classId}:`, error);
       throw error;
@@ -85,12 +147,19 @@ export const enrollmentService = {
     try {
       const { data, error } = await supabase
         .from('enrollments')
-        .select('*, students(*)')
+        .select(`
+          *,
+          students:hoc_sinh_id (*)
+        `)
         .eq('buoi_day_id', sessionId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      
+      return data.map(enrollment => ({
+        ...enrollment,
+        ten_hoc_sinh: enrollment.students?.ten_hoc_sinh || null
+      }));
     } catch (error) {
       console.error(`Error fetching enrollments for session ${sessionId}:`, error);
       throw error;
@@ -114,7 +183,6 @@ export const enrollmentService = {
     }
   },
   
-  // Add the missing method
   async getEnrollmentsBySessionId(sessionId: string) {
     try {
       const { data, error } = await supabase

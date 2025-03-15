@@ -38,7 +38,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <EntitySelect
         form={form}
         selectedEntityType={selectedEntityType}

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { enrollmentService, classService, studentService } from '@/lib/supabase';
 import { Enrollment, Student, Class } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase/client';
 
 export const useEnrollmentData = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -22,22 +23,41 @@ export const useEnrollmentData = () => {
       setIsLoading(true);
       console.log('Fetching enrollment data...');
       
-      // First try to get the enrollments
-      let enrollmentsData;
-      try {
-        enrollmentsData = await enrollmentService.getAll();
-        console.log('Enrollment data loaded:', enrollmentsData?.length || 0);
-      } catch (error) {
+      // Fetch enrollments with joined student and class data to get names
+      const { data: enrollmentsData, error } = await supabase
+        .from('enrollments')
+        .select(`
+          *,
+          students:hoc_sinh_id (id, ten_hoc_sinh),
+          classes:lop_chi_tiet_id (id, ten_lop_full, ten_lop, ct_hoc)
+        `)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
         console.error('Error fetching enrollments:', error);
-        enrollmentsData = [];
         toast({
           title: "Lỗi",
           description: "Không thể tải dữ liệu ghi danh",
           variant: "destructive"
         });
+        setEnrollments([]);
+        setFilteredEnrollments([]);
+      } else {
+        // Process the joined data to flatten it
+        const processedEnrollments = enrollmentsData.map(enrollment => ({
+          ...enrollment,
+          ten_hoc_sinh: enrollment.students?.ten_hoc_sinh || 'Không có thông tin',
+          ten_lop_full: enrollment.classes?.ten_lop_full || 'Không có thông tin',
+          ten_lop: enrollment.classes?.ten_lop || 'Không có thông tin',
+          ct_hoc: enrollment.classes?.ct_hoc || 'Không có thông tin'
+        }));
+        
+        console.log('Enrollment data loaded:', processedEnrollments.length || 0);
+        setEnrollments(processedEnrollments);
+        setFilteredEnrollments(processedEnrollments);
       }
       
-      // Then try to get students
+      // Then try to get students for reference
       let studentsData;
       try {
         studentsData = await studentService.getAll();
@@ -47,7 +67,7 @@ export const useEnrollmentData = () => {
         studentsData = [];
       }
       
-      // Then try to get classes
+      // Then try to get classes for reference
       let classesData;
       try {
         classesData = await classService.getAll();
@@ -57,8 +77,6 @@ export const useEnrollmentData = () => {
         classesData = [];
       }
       
-      setEnrollments(enrollmentsData || []);
-      setFilteredEnrollments(enrollmentsData || []);
       setStudents(studentsData || []);
       setClasses(classesData || []);
     } catch (error) {

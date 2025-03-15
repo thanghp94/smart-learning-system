@@ -174,15 +174,24 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                   } else if (selectedEntityType === 'asset') {
                     const asset = assets.find(a => a.id === value);
                     entityName = asset?.ten_csvc || '';
+                    if (asset?.loai) {
+                      entityName += ` (${asset.loai})`;
+                    }
                   } else if (selectedEntityType === 'event') {
                     const event = events.find(e => e.id === value);
                     entityName = event?.ten_su_kien || '';
                   } else if (selectedEntityType === 'enrollment') {
                     const enrollment = enrollments.find(e => e.id === value);
-                    entityName = `${enrollment?.ten_hoc_sinh || ''} - ${enrollment?.ten_lop_full || enrollment?.class_name || ''}`;
+                    entityName = `${enrollment?.ten_hoc_sinh || ''} - ${enrollment?.ten_lop_full || enrollment?.ten_lop || 'Không có thông tin lớp'}`;
+                    if (enrollment?.ct_hoc) {
+                      entityName += ` (${enrollment.ct_hoc})`;
+                    }
                   } else if (selectedEntityType === 'class') {
                     const classItem = classes.find(c => c.id === value);
                     entityName = classItem?.ten_lop_full || classItem?.ten_lop || '';
+                    if (classItem?.ct_hoc) {
+                      entityName += ` (${classItem.ct_hoc})`;
+                    }
                   } else if (selectedEntityType === 'government') {
                     entityName = 'Cơ quan nhà nước';
                   }
@@ -228,7 +237,7 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                   {selectedEntityType === 'asset' &&
                     assets.map((asset) => (
                       <SelectItem key={asset.id} value={asset.id}>
-                        {asset.ten_csvc} ({asset.loai || 'Không có loại'})
+                        {asset.ten_csvc} {asset.loai ? `(${asset.loai})` : ''}
                       </SelectItem>
                     ))}
                     
@@ -242,7 +251,7 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                   {selectedEntityType === 'enrollment' &&
                     enrollments.map((enrollment) => (
                       <SelectItem key={enrollment.id} value={enrollment.id}>
-                        {enrollment.ten_hoc_sinh} - {enrollment.ten_lop_full || enrollment.class_name} {enrollment.ct_hoc ? `(${enrollment.ct_hoc})` : ''}
+                        {enrollment.ten_hoc_sinh} - {enrollment.ten_lop_full || enrollment.ten_lop || 'Không có thông tin lớp'} {enrollment.ct_hoc ? `(${enrollment.ct_hoc})` : ''}
                       </SelectItem>
                     ))}
                   

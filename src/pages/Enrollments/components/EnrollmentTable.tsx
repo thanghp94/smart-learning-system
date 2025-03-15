@@ -26,7 +26,7 @@ const EnrollmentTable: React.FC<EnrollmentTableProps> = ({
       sortable: true,
       render: (value: string, record: Enrollment) => (
         <div>
-          <span className="font-medium">{value}</span>
+          <span className="font-medium">{value || "Không có thông tin"}</span>
           {record.hoc_sinh_id && (
             <span className="text-xs text-muted-foreground block">ID: {record.hoc_sinh_id}</span>
           )}
@@ -39,7 +39,7 @@ const EnrollmentTable: React.FC<EnrollmentTableProps> = ({
       sortable: true,
       render: (value: string, record: Enrollment) => (
         <div>
-          <span>{value || record.class_name || "Không có thông tin"}</span>
+          <span>{value || record.ten_lop || "Không có thông tin"}</span>
           {record.ct_hoc && (
             <span className="text-xs text-muted-foreground block">CT: {record.ct_hoc}</span>
           )}

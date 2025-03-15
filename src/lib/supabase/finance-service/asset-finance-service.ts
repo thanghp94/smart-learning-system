@@ -30,7 +30,7 @@ export const assetFinanceService = {
       // Get asset details first
       const { data: asset, error: assetError } = await supabase
         .from('assets')
-        .select('*')
+        .select('*, facilities:facility_id(ten_co_so)')
         .eq('id', assetId)
         .single();
       
@@ -41,7 +41,7 @@ export const assetFinanceService = {
         ...financeData,
         loai_doi_tuong: 'asset',
         doi_tuong_id: assetId,
-        // Add additional asset specific data if needed
+        dien_giai: financeData.dien_giai || `${financeData.loai_thu_chi === 'thu' ? 'Thu' : 'Chi'} - ${financeData.loai_giao_dich || ''} - ${asset.ten_csvc} ${asset.loai ? `(${asset.loai})` : ''}`.trim(),
       };
       
       // Create the finance record

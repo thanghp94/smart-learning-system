@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Layers, CalendarDays } from 'lucide-react';
+import { Layers, CalendarDays, Scroll } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -18,6 +18,11 @@ const StudentEnrollmentsTab: React.FC<StudentEnrollmentsTabProps> = ({ enrollmen
     } catch {
       return dateString;
     }
+  };
+  
+  const formatCurrency = (amount?: number) => {
+    if (!amount) return 'Chưa có thông tin';
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
   return (
@@ -39,15 +44,24 @@ const StudentEnrollmentsTab: React.FC<StudentEnrollmentsTabProps> = ({ enrollmen
                   to={`/classes/${enrollment.lop_chi_tiet_id}`} 
                   className="font-medium hover:underline text-blue-600"
                 >
-                  {enrollment.ten_lop || enrollment.class_name || 'Lớp không xác định'}
+                  {enrollment.ten_lop_full || enrollment.ten_lop || 'Lớp không xác định'}
                 </Link>
+                
+                {enrollment.ct_hoc && (
+                  <div className="text-sm text-muted-foreground mt-1 flex items-center">
+                    <Scroll className="h-3 w-3 mr-1" />
+                    Chương trình: {enrollment.ct_hoc}
+                  </div>
+                )}
+                
                 <div className="text-sm text-muted-foreground mt-1 flex items-center">
                   <CalendarDays className="h-3 w-3 mr-1" />
                   {enrollment.created_at ? formatDate(enrollment.created_at) : 'Không có ngày'}
                 </div>
+                
                 {enrollment.tong_tien && (
                   <div className="text-sm mt-1">
-                    Học phí: {Number(enrollment.tong_tien).toLocaleString('vi-VN')} VNĐ
+                    Học phí: {formatCurrency(enrollment.tong_tien)}
                   </div>
                 )}
               </div>

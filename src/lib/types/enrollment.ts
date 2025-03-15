@@ -13,9 +13,11 @@ export interface Enrollment {
   created_at?: string;
   updated_at?: string;
   
+  // Display fields
   ten_hoc_sinh?: string;
   ten_lop_full?: string;
   ten_lop?: string;
   ct_hoc?: string;
+  class_name?: string; // For backward compatibility
   tong_tien?: number;
 }
