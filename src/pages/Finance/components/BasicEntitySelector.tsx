@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import EntitySelect from './EntitySelect';
+import { facilityService } from '@/lib/supabase';
 
 interface BasicEntitySelectorProps {
   form: UseFormReturn<any>;
@@ -18,6 +19,21 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
 }) => {
   const [selectedEntityType, setSelectedEntityType] = useState<string | null>(entityType || null);
   const [entityName, setEntityName] = useState<string>('');
+  const [facilities, setFacilities] = useState<any[]>([]);
+  
+  // Load facilities for the EntitySelect component
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const data = await facilityService.getAll();
+        setFacilities(data);
+      } catch (error) {
+        console.error('Error fetching facilities:', error);
+      }
+    };
+    
+    fetchFacilities();
+  }, []);
 
   // If entityType and entityId are provided, preload the entity data
   useEffect(() => {
@@ -57,6 +73,7 @@ const BasicEntitySelector: React.FC<BasicEntitySelectorProps> = ({
         selectedEntityType={selectedEntityType}
         onEntityTypeChange={handleEntityTypeChange}
         onEntityNameChange={handleEntityNameChange}
+        facilities={facilities}
       />
     </div>
   );

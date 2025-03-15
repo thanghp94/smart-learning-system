@@ -38,7 +38,7 @@ export const assetFinanceService = {
       if (assetError) throw assetError;
       
       // Format asset details for the description
-      const assetDetails = `${asset.ten_csvc}${asset.loai ? ` (${asset.loai})` : ''}`;
+      const assetDetails = `${asset.ten_CSVC}${asset.loai ? ` (${asset.loai})` : ''}`;
       const amountInfo = asset.so_tien_mua ? ` - ${formatCurrency(parseFloat(asset.so_tien_mua))}` : '';
       
       // Prepare the finance record with asset data

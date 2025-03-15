@@ -157,7 +157,7 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                     entityName = facility?.ten_co_so || '';
                   } else if (selectedEntityType === 'asset') {
                     const asset = assets.find(a => a.id === value);
-                    entityName = asset?.ten_csvc || '';
+                    entityName = asset?.ten_CSVC || ''; // Fixed: use ten_CSVC instead of ten_csvc
                     if (asset?.loai) {
                       entityName += ` (${asset.loai})`;
                     }
@@ -223,7 +223,7 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
                   {selectedEntityType === 'asset' &&
                     assets.map((asset) => (
                       <SelectItem key={asset.id} value={asset.id}>
-                        {asset.ten_csvc} {asset.loai ? `(${asset.loai})` : ''}
+                        {asset.ten_CSVC} {asset.loai ? `(${asset.loai})` : ''} {/* Fixed: use ten_CSVC instead of ten_csvc */}
                       </SelectItem>
                     ))}
                     

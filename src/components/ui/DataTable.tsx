@@ -14,6 +14,7 @@ import { Search, ChevronLeft, ChevronRight, Image } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// Types
 export interface TableColumn {
   title: string;
   key: string;
@@ -35,6 +36,139 @@ export interface DataTableProps<T> {
   showHeader?: boolean;
 }
 
+// Components
+const TableHeader = <T,>({ 
+  columns, 
+  sortColumn, 
+  sortDirection, 
+  handleSort 
+}: { 
+  columns: TableColumn[]; 
+  sortColumn: string | null; 
+  sortDirection: "asc" | "desc"; 
+  handleSort: (key: string) => void; 
+}) => (
+  <TableHead>
+    {columns.map((column, index) => (
+      <TableHead
+        key={index}
+        className={column.sortable ? "cursor-pointer select-none" : ""}
+        onClick={() => column.sortable && handleSort(column.key)}
+      >
+        <div className="flex items-center">
+          {column.title || column.header}
+          {sortColumn === column.key && (
+            <span className="ml-1">
+              {sortDirection === "asc" ? "↑" : "↓"}
+            </span>
+          )}
+        </div>
+      </TableHead>
+    ))}
+  </TableHead>
+);
+
+const TableThumbnail = ({ imageUrl, label }: { imageUrl?: string; label?: string }) => (
+  <div className="flex items-center">
+    <Avatar className="h-8 w-8 mr-3">
+      <AvatarImage src={imageUrl} alt={label || "Thumbnail"} />
+      <AvatarFallback>
+        <Image className="h-4 w-4" />
+      </AvatarFallback>
+    </Avatar>
+    <span>{label || "N/A"}</span>
+  </div>
+);
+
+const Pagination = ({ 
+  currentPage, 
+  totalPages, 
+  handlePrevPage, 
+  handleNextPage 
+}: { 
+  currentPage: number; 
+  totalPages: number; 
+  handlePrevPage: () => void; 
+  handleNextPage: () => void; 
+}) => (
+  <div className="flex items-center justify-end space-x-2 py-4">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handlePrevPage}
+      disabled={currentPage === 1}
+    >
+      <ChevronLeft className="h-4 w-4" />
+    </Button>
+    <div className="text-sm text-muted-foreground">
+      Page {currentPage} of {totalPages}
+    </div>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleNextPage}
+      disabled={currentPage === totalPages}
+    >
+      <ChevronRight className="h-4 w-4" />
+    </Button>
+  </div>
+);
+
+const SearchBar = ({ 
+  searchQuery, 
+  setSearchQuery, 
+  setCurrentPage, 
+  searchPlaceholder 
+}: { 
+  searchQuery: string; 
+  setSearchQuery: (value: string) => void; 
+  setCurrentPage: (value: number) => void; 
+  searchPlaceholder: string; 
+}) => (
+  <div className="flex w-full items-center space-x-2 mb-4">
+    <Search className="h-4 w-4 text-muted-foreground ml-2" />
+    <Input
+      placeholder={searchPlaceholder}
+      value={searchQuery}
+      onChange={(e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1); // Reset to first page on search
+      }}
+      className="w-full h-9 pl-8 -ml-6"
+    />
+  </div>
+);
+
+const LoadingSkeleton = ({ columns }: { columns: TableColumn[] }) => (
+  <div className="w-full">
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((_, index) => (
+              <TableHead key={index}>
+                <Skeleton className="h-6 w-full" />
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 5 }).map((_, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {columns.map((_, colIndex) => (
+                <TableCell key={colIndex}>
+                  <Skeleton className="h-6 w-full" />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  </div>
+);
+
+// Main component
 function DataTable<T>({
   columns,
   data,
@@ -99,7 +233,7 @@ function DataTable<T>({
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredData, currentPage]);
+  }, [filteredData, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
@@ -124,68 +258,11 @@ function DataTable<T>({
     }
   };
 
-  // Render thumbnail
-  const renderThumbnail = (imageUrl: string | undefined, label: string) => {
-    if (!imageUrl) {
-      return (
-        <div className="flex items-center">
-          <Avatar className="h-8 w-8 mr-3">
-            <AvatarFallback>
-              <Image className="h-4 w-4" />
-            </AvatarFallback>
-          </Avatar>
-          <span>{label || "N/A"}</span>
-        </div>
-      );
-    }
-    
-    return (
-      <div className="flex items-center">
-        <Avatar className="h-8 w-8 mr-3">
-          <AvatarImage src={imageUrl} alt={label || "Thumbnail"} />
-          <AvatarFallback>
-            <Image className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-        <span>{label || "N/A"}</span>
-      </div>
-    );
-  };
-
   if (isLoading) {
     return (
       <div className="w-full">
-        {searchable && (
-          <div className="flex w-full items-center space-x-2 mb-4">
-            <Skeleton className="h-10 w-full" />
-          </div>
-        )}
-        <div className="rounded-md border">
-          <Table>
-            {showHeader && (
-              <TableHeader>
-                <TableRow>
-                  {columns.map((column, index) => (
-                    <TableHead key={index}>
-                      <Skeleton className="h-6 w-full" />
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-            )}
-            <TableBody>
-              {Array.from({ length: 5 }).map((_, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {columns.map((_, colIndex) => (
-                    <TableCell key={colIndex}>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        {searchable && <div className="flex w-full items-center space-x-2 mb-4"><Skeleton className="h-10 w-full" /></div>}
+        <LoadingSkeleton columns={columns} />
       </div>
     );
   }
@@ -202,40 +279,24 @@ function DataTable<T>({
   return (
     <div className="w-full">
       {searchable && (
-        <div className="flex w-full items-center space-x-2 mb-4">
-          <Search className="h-4 w-4 text-muted-foreground ml-2" />
-          <Input
-            placeholder={searchPlaceholder}
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
-            }}
-            className="w-full h-9 pl-8 -ml-6"
-          />
-        </div>
+        <SearchBar 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
+          setCurrentPage={setCurrentPage} 
+          searchPlaceholder={searchPlaceholder} 
+        />
       )}
       <div className="rounded-md border">
         <Table>
           {showHeader && (
             <TableHeader>
               <TableRow>
-                {columns.map((column, index) => (
-                  <TableHead
-                    key={index}
-                    className={column.sortable ? "cursor-pointer select-none" : ""}
-                    onClick={() => column.sortable && handleSort(column.key)}
-                  >
-                    <div className="flex items-center">
-                      {column.title || column.header}
-                      {sortColumn === column.key && (
-                        <span className="ml-1">
-                          {sortDirection === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
-                  </TableHead>
-                ))}
+                <TableHeader 
+                  columns={columns} 
+                  sortColumn={sortColumn} 
+                  sortDirection={sortDirection} 
+                  handleSort={handleSort} 
+                />
               </TableRow>
             </TableHeader>
           )}
@@ -259,7 +320,7 @@ function DataTable<T>({
                   {columns.map((column, colIndex) => (
                     <TableCell key={colIndex}>
                       {column.thumbnail ? (
-                        renderThumbnail(record.hinh_anh, record[column.key])
+                        <TableThumbnail imageUrl={record.hinh_anh} label={record[column.key]} />
                       ) : column.render ? (
                         column.render(record[column.key], record)
                       ) : (
@@ -276,27 +337,12 @@ function DataTable<T>({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          handlePrevPage={handlePrevPage} 
+          handleNextPage={handleNextPage} 
+        />
       )}
     </div>
   );
