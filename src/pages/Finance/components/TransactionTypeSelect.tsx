@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   FormField,
   FormItem,
@@ -18,12 +18,31 @@ import {
 interface TransactionTypeSelectProps {
   form: any;
   transactionCategory: string;
+  onTransactionTypeChange?: (type: string, typeLabel: string) => void;
 }
 
-const TransactionTypeSelect = ({ form, transactionCategory }: TransactionTypeSelectProps) => {
+const TransactionTypeSelect = ({ 
+  form, 
+  transactionCategory, 
+  onTransactionTypeChange 
+}: TransactionTypeSelectProps) => {
   const handleTypeChange = (value: string) => {
     // Prevent default link behavior
     form.setValue('loai_giao_dich', value);
+    
+    // Get the label for the selected transaction type
+    let typeLabel = '';
+    if (value === 'hoc_phi') typeLabel = 'Học phí';
+    else if (value === 'phu_phi') typeLabel = 'Phụ phí';
+    else if (value === 'luong') typeLabel = 'Lương';
+    else if (value === 'thue_mb') typeLabel = 'Thuê mặt bằng';
+    else if (value === 'csvc') typeLabel = 'Cơ sở vật chất';
+    else typeLabel = 'Khác';
+    
+    // Call callback to update description
+    if (onTransactionTypeChange) {
+      onTransactionTypeChange(value, typeLabel);
+    }
   };
 
   return (

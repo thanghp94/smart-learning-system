@@ -18,6 +18,7 @@ import AmountCalculator from './components/AmountCalculator';
 import PaymentMethodSelector from './components/PaymentMethodSelector';
 import BasicEntitySelector from './components/BasicEntitySelector';
 import TransactionTypeSelect from './components/TransactionTypeSelect';
+import { generateTransactionDescription } from './components/AutoDescription';
 
 // Finance form schema
 const financeSchema = z.object({
@@ -58,6 +59,10 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  
+  // State for description auto-generation
+  const [transactionTypeLabel, setTransactionTypeLabel] = useState('');
+  const [entityName, setEntityName] = useState('');
 
   // Setup form
   const form = useForm<z.infer<typeof financeSchema>>({
@@ -111,6 +116,26 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
   const watchAmount = form.watch('so_luong');
   const watchUnit = form.watch('don_vi');
   const watchPrice = form.watch('gia_tien');
+  const watchTransactionType = form.watch('loai_giao_dich');
+
+  // Update description when relevant fields change
+  useEffect(() => {
+    if (watchThuChi) {
+      // Only update if this isn't an edit operation or if the description is empty
+      if (!initialData || !form.getValues('dien_giai')) {
+        const description = generateTransactionDescription(
+          watchThuChi,
+          watchTransactionType,
+          transactionTypeLabel,
+          entityName
+        );
+        
+        if (description) {
+          form.setValue('dien_giai', description);
+        }
+      }
+    }
+  }, [watchThuChi, watchTransactionType, transactionTypeLabel, entityName, form, initialData]);
 
   // Update total amount when quantity, unit or price changes
   useEffect(() => {
@@ -121,6 +146,16 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     
     form.setValue('tong_tien', total);
   }, [watchAmount, watchUnit, watchPrice, form]);
+
+  // Handle transaction type change
+  const handleTransactionTypeChange = (type: string, label: string) => {
+    setTransactionTypeLabel(label);
+  };
+
+  // Handle entity change
+  const handleEntityChange = (entityType: string, entityId: string, name: string) => {
+    setEntityName(name);
+  };
 
   const handleSubmit = async (values: z.infer<typeof financeSchema>) => {
     console.log("Submitting form with values:", values);
@@ -164,13 +199,15 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TransactionTypeSelect 
               form={form} 
-              transactionCategory={watchThuChi} 
+              transactionCategory={watchThuChi}
+              onTransactionTypeChange={handleTransactionTypeChange}
             />
 
             <BasicEntitySelector 
               form={form} 
               entityType={entityType}
               entityId={entityId}
+              onEntityChange={handleEntityChange}
             />
           </div>
         )}
