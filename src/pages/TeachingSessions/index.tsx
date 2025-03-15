@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { TeachingSession } from '@/lib/types';
-import { teachingSessionService } from '@/lib/supabase';
+import { teachingSessionService, classService, sessionService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import DataTable from '@/components/ui/DataTable';
 import TablePageLayout from '@/components/common/TablePageLayout';
@@ -20,6 +20,8 @@ import AttendanceDialog from './components/AttendanceDialog';
 
 const TeachingSessions = () => {
   const [sessions, setSessions] = useState<TeachingSession[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [lessonSessions, setLessonSessions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSession, setSelectedSession] = useState<TeachingSession | null>(null);
@@ -32,14 +34,29 @@ const TeachingSessions = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchSessions();
+    fetchData();
   }, []);
 
-  const fetchSessions = async () => {
+  const fetchData = async () => {
     try {
       setIsLoading(true);
-      const data = await teachingSessionService.getAll();
-      setSessions(data);
+      const sessionsData = await teachingSessionService.getAll();
+      const classesData = await classService.getAll();
+      const lessonSessionsData = await sessionService.getAll();
+      
+      const processedSessions = sessionsData.map(session => {
+        const classInfo = classesData.find(c => c.id === session.lop_chi_tiet_id);
+        const lessonInfo = lessonSessionsData.find(l => l.id === session.session_id);
+        
+        return {
+          ...session,
+          class_name: classInfo?.ten_lop_full || 'N/A',
+          lesson_name: lessonInfo?.buoi_hoc_so || 'N/A',
+          lesson_content: lessonInfo?.noi_dung_bai_hoc || ''
+        };
+      });
+      
+      setSessions(processedSessions);
     } catch (error) {
       console.error("Error fetching teaching sessions:", error);
       toast({
@@ -113,7 +130,7 @@ const TeachingSessions = () => {
     }
   };
 
-  const handleAddAttendance = (session: TeachingSession) => {
+  const handleAttendance = (session: TeachingSession) => {
     setSelectedSession(session);
     setShowAttendanceDialog(true);
   };
@@ -141,6 +158,11 @@ const TeachingSessions = () => {
     return timeString.substring(0, 5); // Format HH:MM
   };
 
+  const getLessonName = (sessionId: string) => {
+    const lesson = lessonSessions.find(l => l.id === sessionId);
+    return lesson ? `Buổi ${lesson.buoi_hoc_so}` : sessionId;
+  };
+
   const renderSessionActions = (session: TeachingSession) => {
     return (
       <div className="flex items-center gap-1">
@@ -149,7 +171,7 @@ const TeachingSessions = () => {
           size="icon"
           onClick={(e) => {
             e.stopPropagation();
-            handleAddAttendance(session);
+            handleAttendance(session);
           }}
           title="Thêm điểm danh"
         >
@@ -213,7 +235,20 @@ const TeachingSessions = () => {
     {
       title: "Buổi học số",
       key: "session_id",
-      render: (value: string) => <Badge variant="outline">{value}</Badge>,
+      render: (value: string, record: TeachingSession) => (
+        <Badge variant="outline">
+          {record.lesson_name || getLessonName(value)}
+        </Badge>
+      ),
+    },
+    {
+      title: "Nội dung",
+      key: "lesson_content",
+      render: (value: string, record: TeachingSession) => (
+        <div className="max-w-xs truncate">
+          {value || "Học mới"}
+        </div>
+      )
     },
     {
       title: "Loại bài học",
