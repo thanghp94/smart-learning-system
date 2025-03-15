@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Calendar, Filter, RotateCw, UserCheck, Star, Clock } from 'lucide-react';
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { TeachingSession } from '@/lib/types';
-import { teachingSessionService, classService, sessionService } from '@/lib/supabase';
+import { teachingSessionService, classService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import DataTable from '@/components/ui/DataTable';
 import TablePageLayout from '@/components/common/TablePageLayout';
@@ -18,13 +19,20 @@ import PlaceholderPage from '@/components/common/PlaceholderPage';
 import ExportButton from '@/components/ui/ExportButton';
 import AttendanceDialog from './components/AttendanceDialog';
 
+// Extend TeachingSession with the properties we're adding
+interface EnhancedTeachingSession extends TeachingSession {
+  class_name?: string;
+  lesson_name?: string;
+  lesson_content?: string;
+}
+
 const TeachingSessions = () => {
-  const [sessions, setSessions] = useState<TeachingSession[]>([]);
+  const [sessions, setSessions] = useState<EnhancedTeachingSession[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [lessonSessions, setLessonSessions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedSession, setSelectedSession] = useState<TeachingSession | null>(null);
+  const [selectedSession, setSelectedSession] = useState<EnhancedTeachingSession | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
@@ -42,7 +50,13 @@ const TeachingSessions = () => {
       setIsLoading(true);
       const sessionsData = await teachingSessionService.getAll();
       const classesData = await classService.getAll();
+      
+      // Import from our local service file to avoid the export issue
+      const { sessionService } = await import('./TeachingSessionService');
       const lessonSessionsData = await sessionService.getAll();
+      
+      setClasses(classesData);
+      setLessonSessions(lessonSessionsData);
       
       const processedSessions = sessionsData.map(session => {
         const classInfo = classesData.find(c => c.id === session.lop_chi_tiet_id);
@@ -74,7 +88,7 @@ const TeachingSessions = () => {
     setSelectedDate(newDate);
   };
 
-  const handleRowClick = (session: TeachingSession) => {
+  const handleRowClick = (session: EnhancedTeachingSession) => {
     setSelectedSession(session);
     setShowDetail(true);
   };
@@ -99,7 +113,7 @@ const TeachingSessions = () => {
         description: "Thêm buổi học mới thành công",
       });
       setShowAddForm(false);
-      fetchSessions();
+      fetchData();
     } catch (error) {
       console.error("Error adding teaching session:", error);
       toast({
@@ -119,7 +133,7 @@ const TeachingSessions = () => {
         title: "Thành công",
         description: "Cập nhật buổi học thành công",
       });
-      fetchSessions();
+      fetchData();
     } catch (error) {
       console.error("Error updating session:", error);
       toast({
@@ -130,17 +144,17 @@ const TeachingSessions = () => {
     }
   };
 
-  const handleAttendance = (session: TeachingSession) => {
+  const handleAttendance = (session: EnhancedTeachingSession) => {
     setSelectedSession(session);
     setShowAttendanceDialog(true);
   };
 
-  const handleAddEvaluation = (session: TeachingSession) => {
+  const handleAddEvaluation = (session: EnhancedTeachingSession) => {
     setSelectedSession(session);
     setShowEvaluationForm(true);
   };
 
-  const handleConfirmTime = (session: TeachingSession) => {
+  const handleConfirmTime = (session: EnhancedTeachingSession) => {
     setSelectedSession(session);
     setShowConfirmTimeDialog(true);
   };
@@ -163,7 +177,7 @@ const TeachingSessions = () => {
     return lesson ? `Buổi ${lesson.buoi_hoc_so}` : sessionId;
   };
 
-  const renderSessionActions = (session: TeachingSession) => {
+  const renderSessionActions = (session: EnhancedTeachingSession) => {
     return (
       <div className="flex items-center gap-1">
         <Button
@@ -208,7 +222,7 @@ const TeachingSessions = () => {
       title: "Lớp",
       key: "class_name",
       sortable: true,
-      render: (_: string, record: TeachingSession) => (
+      render: (_: string, record: EnhancedTeachingSession) => (
         <div className="font-medium">{record.class_name || "N/A"}</div>
       ),
     },
@@ -221,9 +235,9 @@ const TeachingSessions = () => {
     {
       title: "Thời gian",
       key: "thoi_gian_bat_dau",
-      render: (value: string, record: TeachingSession) => (
+      render: (value: string, record: EnhancedTeachingSession) => (
         <span>
-          {formatSessionTime(value)} - {formatSessionTime(record.thoi_gian_ket_thuc)}
+          {formatSessionTime(value)} - {formatSessionTime(record.thoi_gian_ket_thuc || '')}
         </span>
       ),
     },
@@ -235,7 +249,7 @@ const TeachingSessions = () => {
     {
       title: "Buổi học số",
       key: "session_id",
-      render: (value: string, record: TeachingSession) => (
+      render: (value: string, record: EnhancedTeachingSession) => (
         <Badge variant="outline">
           {record.lesson_name || getLessonName(value)}
         </Badge>
@@ -244,7 +258,7 @@ const TeachingSessions = () => {
     {
       title: "Nội dung",
       key: "lesson_content",
-      render: (value: string, record: TeachingSession) => (
+      render: (value: string, record: EnhancedTeachingSession) => (
         <div className="max-w-xs truncate">
           {value || "Học mới"}
         </div>
@@ -267,7 +281,7 @@ const TeachingSessions = () => {
     {
       title: "Hành động",
       key: "actions",
-      render: (_, record: TeachingSession) => renderSessionActions(record),
+      render: (_, record: EnhancedTeachingSession) => renderSessionActions(record),
     },
   ];
 
@@ -282,7 +296,7 @@ const TeachingSessions = () => {
           value={selectedDate.toISOString().split('T')[0]}
         />
       </div>
-      <Button variant="outline" size="sm" className="h-8" onClick={fetchSessions}>
+      <Button variant="outline" size="sm" className="h-8" onClick={fetchData}>
         <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
       </Button>
       <Button variant="outline" size="sm" className="h-8">
