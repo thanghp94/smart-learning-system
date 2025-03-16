@@ -9,11 +9,11 @@ const SortableTableHeader: React.FC<SortableTableHeaderProps> = ({
   sortDirection, 
   handleSort 
 }) => (
-  <TableHead>
+  <>
     {columns.map((column, index) => (
       <TableHead
         key={index}
-        className={column.sortable ? "cursor-pointer select-none" : ""}
+        className={`${column.sortable ? "cursor-pointer select-none" : ""} ${column.className || ""}`}
         onClick={() => column.sortable && handleSort(column.key)}
       >
         <div className="flex items-center">
@@ -26,7 +26,7 @@ const SortableTableHeader: React.FC<SortableTableHeaderProps> = ({
         </div>
       </TableHead>
     ))}
-  </TableHead>
+  </>
 );
 
 export default SortableTableHeader;

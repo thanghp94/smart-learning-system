@@ -60,42 +60,53 @@ const TaskTable: React.FC<TaskTableProps> = ({
       title: 'Tên công việc',
       key: 'ten_viec',
       sortable: true,
+      width: '25%',
     },
     {
       title: 'Loại công việc',
       key: 'loai_viec',
       sortable: true,
       render: (value: string) => value || '--',
+      width: '15%',
     },
     {
       title: 'Người phụ trách',
       key: 'ten_nguoi_phu_trach',
       sortable: true,
       render: (value: string) => value || '--',
+      width: '15%',
     },
     {
       title: 'Ngày hạn',
       key: 'ngay_den_han',
       sortable: true,
       render: (value: string) => formatDate(value),
+      width: '10%',
+      className: 'text-center',
     },
     {
       title: 'Cấp độ',
       key: 'cap_do',
       sortable: true,
       render: (value: string) => getPriorityBadge(value),
+      width: '10%',
+      className: 'text-center',
     },
     {
       title: 'Trạng thái',
       key: 'trang_thai',
       sortable: true,
       render: (value: string) => getStatusBadge(value),
+      width: '10%',
+      className: 'text-center',
     },
     {
       title: 'Hành động',
       key: 'actions',
+      width: '15%',
+      className: 'text-right',
       render: (value: string, record: Task) => (
-        <div className="flex space-x-2">
+        <div className="flex justify-end space-x-2">
           {record.trang_thai !== 'completed' && (
             <Button
               size="sm"

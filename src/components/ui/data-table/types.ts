@@ -1,13 +1,15 @@
 
-import { ReactNode } from "react";
+import React from "react";
 
 export interface TableColumn {
-  title: string;
+  title?: string;
+  header?: string;
   key: string;
+  render?: (value: any, record?: any) => React.ReactNode;
   sortable?: boolean;
-  render?: (value: any, record?: any) => ReactNode;
-  header?: string; // For backward compatibility
-  thumbnail?: boolean; // Support for thumbnail display
+  thumbnail?: boolean;
+  width?: string;
+  className?: string;
 }
 
 export interface DataTableProps<T> {
@@ -29,11 +31,6 @@ export interface SortableTableHeaderProps {
   handleSort: (key: string) => void;
 }
 
-export interface TableThumbnailProps {
-  imageUrl?: string;
-  label?: string;
-}
-
 export interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -43,9 +40,14 @@ export interface PaginationProps {
 
 export interface SearchBarProps {
   searchQuery: string;
-  setSearchQuery: (value: string) => void;
-  setCurrentPage: (value: number) => void;
+  setSearchQuery: (query: string) => void;
+  setCurrentPage: (page: number) => void;
   searchPlaceholder: string;
+}
+
+export interface TableThumbnailProps {
+  imageUrl?: string;
+  label?: string;
 }
 
 export interface LoadingSkeletonProps {

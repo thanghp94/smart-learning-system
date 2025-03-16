@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableProps, TableColumn } from "./data-table/types";
 import SortableTableHeader from "./data-table/SortableTableHeader";
 import TableThumbnail from "./data-table/TableThumbnail";
@@ -124,6 +123,12 @@ function DataTable<T>({
     );
   }
 
+  // Process column widths to ensure consistent alignment
+  const processedColumns = columns.map(column => ({
+    ...column,
+    className: `${column.width ? `w-[${column.width}]` : ''} ${column.className || ''}`
+  }));
+
   return (
     <div className="w-full">
       {searchable && (
@@ -140,7 +145,7 @@ function DataTable<T>({
             <TableHeader>
               <TableRow>
                 <SortableTableHeader 
-                  columns={columns} 
+                  columns={processedColumns} 
                   sortColumn={sortColumn} 
                   sortDirection={sortDirection} 
                   handleSort={handleSort} 
@@ -165,8 +170,8 @@ function DataTable<T>({
                   className={onRowClick ? "cursor-pointer hover:bg-accent" : ""}
                   onClick={() => onRowClick && onRowClick(record)}
                 >
-                  {columns.map((column, colIndex) => (
-                    <TableCell key={colIndex}>
+                  {processedColumns.map((column, colIndex) => (
+                    <TableCell key={colIndex} className={column.className || ""}>
                       {column.thumbnail ? (
                         <TableThumbnail imageUrl={record.hinh_anh} label={record[column.key]} />
                       ) : column.render ? (

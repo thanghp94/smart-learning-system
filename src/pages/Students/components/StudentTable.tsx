@@ -23,6 +23,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
       key: 'ho_va_ten',
       thumbnail: true,
       sortable: true,
+      width: '20%',
       render: (value: string, student: Student) => (
         <span className="ml-2">{student.ten_hoc_sinh || value}</span>
       ),
@@ -31,6 +32,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
       title: 'Phụ huynh',
       key: 'ten_ph',
       sortable: true,
+      width: '18%',
       render: (value: string, student: Student) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
@@ -42,6 +44,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
       title: 'Số điện thoại',
       key: 'sdt_ph1',
       sortable: true,
+      width: '15%',
       render: (value: string, student: Student) => (
         <div className="flex items-center gap-2">
           <Phone className="h-4 w-4 text-muted-foreground" />
@@ -53,6 +56,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
       title: 'Cơ sở',
       key: 'co_so_id',
       sortable: true,
+      width: '15%',
       render: (value: string) => (
         <div className="flex items-center gap-2">
           <School className="h-4 w-4 text-muted-foreground" />
@@ -64,6 +68,8 @@ const StudentTable: React.FC<StudentTableProps> = ({
       title: 'Ngày sinh',
       key: 'ngay_sinh',
       sortable: true,
+      width: '12%',
+      className: 'text-center',
       render: (value: string) => (
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-muted-foreground" />
@@ -72,22 +78,13 @@ const StudentTable: React.FC<StudentTableProps> = ({
       ),
     },
     {
-      title: 'Địa chỉ',
-      key: 'dia_chi',
-      sortable: true,
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-muted-foreground" />
-          <span className="truncate max-w-[200px]">{value || 'Chưa có thông tin'}</span>
-        </div>
-      ),
-    },
-    {
       title: 'Trạng thái',
       key: 'trang_thai',
       sortable: true,
+      width: '12%',
+      className: 'text-center',
       render: (value: string) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <Flag className="h-4 w-4 text-muted-foreground" />
           {value === 'active' ? 'Đang học' : 
            value === 'inactive' ? 'Đã nghỉ' : 
