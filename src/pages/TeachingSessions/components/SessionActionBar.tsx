@@ -1,49 +1,41 @@
 
 import React from 'react';
-import { Calendar, Filter, RotateCw, Plus } from 'lucide-react';
+import { Plus, Filter, RotateCw, FileDown, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ExportButton from '@/components/ui/ExportButton';
-import { TeachingSession } from '@/lib/types';
+import { format } from 'date-fns';
+import { SessionActionBarProps } from '../types';
 
-interface SessionActionBarProps {
-  onAddClick: () => void;
-  onRefresh: () => void;
-  sessions: TeachingSession[];
-  selectedDate: Date;
-  onDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-const SessionActionBar: React.FC<SessionActionBarProps> = ({
-  onAddClick,
-  onRefresh,
-  sessions,
-  selectedDate,
-  onDateChange,
+const SessionActionBar: React.FC<SessionActionBarProps> = ({ 
+  onAddClick, 
+  onRefresh, 
+  sessions, 
+  selectedDate, 
+  onDateChange 
 }) => {
   return (
-    <div className="flex items-center space-x-2">
-      <div className="flex items-center">
-        <Calendar className="h-4 w-4 mr-2" />
-        <input
-          type="date"
-          className="border rounded px-2 py-1"
-          onChange={onDateChange}
-          value={selectedDate.toISOString().split('T')[0]}
-        />
+    <div className="flex justify-between items-center space-x-2">
+      <div className="flex items-center space-x-2">
+        <Button variant="outline" size="sm" className="h-8" onClick={onRefresh}>
+          <RotateCw className="h-4 w-4 mr-1" /> Làm mới
+        </Button>
+        <Button variant="outline" size="sm" className="h-8">
+          <Filter className="h-4 w-4 mr-1" /> Lọc
+        </Button>
+        <Button variant="outline" size="sm" className="h-8">
+          <FileDown className="h-4 w-4 mr-1" /> Xuất
+        </Button>
+        <div className="flex items-center space-x-2 ml-2">
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          <input
+            type="date"
+            className="h-8 px-2 rounded-md border border-input bg-transparent text-sm"
+            value={format(selectedDate, 'yyyy-MM-dd')}
+            onChange={onDateChange}
+          />
+        </div>
       </div>
-      <Button variant="outline" size="sm" className="h-8" onClick={onRefresh}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
-      <ExportButton 
-        data={sessions} 
-        filename="Danh_sach_buoi_hoc" 
-        label="Xuất dữ liệu"
-      />
       <Button size="sm" className="h-8" onClick={onAddClick}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Buổi Học
+        <Plus className="h-4 w-4 mr-1" /> Thêm buổi học
       </Button>
     </div>
   );

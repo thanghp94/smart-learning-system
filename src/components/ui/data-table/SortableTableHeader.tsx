@@ -14,7 +14,7 @@ const SortableTableHeader: React.FC<SortableTableHeaderProps> = ({
       <TableHead
         key={index}
         className={`${column.sortable ? "cursor-pointer select-none" : ""} ${column.className || ""}`}
-        style={{ width: column.width ? column.width : 'auto' }}
+        style={{ width: column.width }}
         onClick={() => column.sortable && handleSort(column.key)}
       >
         <div className="flex items-center">

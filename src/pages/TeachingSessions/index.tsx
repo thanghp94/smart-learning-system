@@ -1,23 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { TeachingSession } from '@/lib/types';
-import { teachingSessionService, classService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import DataTable from '@/components/ui/data-table';
 import TablePageLayout from '@/components/common/TablePageLayout';
-import DetailPanel from '@/components/ui/DetailPanel';
-import SessionDetail from './components/SessionDetail';
-import SessionForm from './SessionForm';
+import DataTable from '@/components/ui/data-table';
+import { teachingSessionService } from '@/lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import PlaceholderPage from '@/components/common/PlaceholderPage';
-import AttendanceDialog from './components/AttendanceDialog';
-import { sessionService } from './TeachingSessionService';
+import DetailPanel from '@/components/ui/DetailPanel';
+import { Button } from '@/components/ui/button';
 import { EnhancedTeachingSession } from './types';
-import { getTableColumns, formatSessionDate, formatSessionTime } from './components/SessionTableColumns';
+import { sessionService } from './TeachingSessionService';
 import SessionActionBar from './components/SessionActionBar';
+import SessionDetail from './components/SessionDetail';
+import SessionForm from './SessionForm';
+import AttendanceDialog from './components/AttendanceDialog';
+import { getTableColumns } from './components/SessionTableColumns';
 
 const TeachingSessions = () => {
   const [sessions, setSessions] = useState<EnhancedTeachingSession[]>([]);
@@ -41,28 +39,11 @@ const TeachingSessions = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const sessionsData = await teachingSessionService.getAll();
-      const classesData = await classService.getAll();
+      const data = await sessionService.fetchAllData();
       
-      // Get lessons data from sessionService
-      const lessonSessionsData = await sessionService.getAll();
-      
-      setClasses(classesData);
-      setLessonSessions(lessonSessionsData);
-      
-      const processedSessions = sessionsData.map(session => {
-        const classInfo = classesData.find(c => c.id === session.lop_chi_tiet_id);
-        const lessonInfo = lessonSessionsData.find(l => l.id === session.session_id);
-        
-        return {
-          ...session,
-          class_name: classInfo?.ten_lop_full || 'N/A',
-          lesson_name: lessonInfo?.buoi_hoc_so || 'N/A',
-          lesson_content: lessonInfo?.noi_dung_bai_hoc || ''
-        };
-      });
-      
-      setSessions(processedSessions);
+      setSessions(data.sessions);
+      setClasses(data.classes);
+      setLessonSessions(data.lessonSessions);
     } catch (error) {
       console.error("Error fetching teaching sessions:", error);
       toast({
@@ -97,7 +78,7 @@ const TeachingSessions = () => {
     setShowAddForm(false);
   };
 
-  const handleAddFormSubmit = async (formData: Partial<TeachingSession>) => {
+  const handleAddFormSubmit = async (formData: Partial<EnhancedTeachingSession>) => {
     try {
       await teachingSessionService.create(formData);
       toast({
@@ -116,7 +97,7 @@ const TeachingSessions = () => {
     }
   };
 
-  const handleSessionUpdate = async (updatedData: Partial<TeachingSession>) => {
+  const handleSessionUpdate = async (updatedData: Partial<EnhancedTeachingSession>) => {
     if (!selectedSession) return;
     
     try {
@@ -152,8 +133,7 @@ const TeachingSessions = () => {
   };
 
   const getLessonName = (sessionId: string) => {
-    const lesson = lessonSessions.find(l => l.id === sessionId);
-    return lesson ? `Buổi ${lesson.buoi_hoc_so}` : sessionId;
+    return sessionService.getLessonName(sessionId, lessonSessions);
   };
 
   const columns = getTableColumns(
@@ -163,44 +143,44 @@ const TeachingSessions = () => {
     getLessonName
   );
 
-  const tableActions = (
-    <SessionActionBar 
-      onAddClick={handleAddClick}
-      onRefresh={fetchData}
-      sessions={sessions}
-      selectedDate={selectedDate}
-      onDateChange={handleDateChange}
-    />
-  );
-
   const handleToggleAttendanceDialog = () => {
     setShowAttendanceDialog(!showAttendanceDialog);
   };
 
+  if (sessions.length === 0 && !isLoading) {
+    return (
+      <PlaceholderPage
+        title="Buổi Học"
+        description="Quản lý thông tin buổi học"
+        addButtonAction={handleAddClick}
+      />
+    );
+  }
+
   return (
     <>
-      {sessions.length === 0 && !isLoading ? (
-        <PlaceholderPage
-          title="Buổi Học"
-          description="Quản lý thông tin buổi học"
-          addButtonAction={handleAddClick}
-        />
-      ) : (
-        <TablePageLayout
-          title="Buổi Học"
-          description="Quản lý thông tin buổi học"
-          actions={tableActions}
-        >
-          <DataTable
-            columns={columns}
-            data={sessions}
-            isLoading={isLoading}
-            onRowClick={handleRowClick}
-            searchable={true}
-            searchPlaceholder="Tìm kiếm buổi học..."
+      <TablePageLayout
+        title="Buổi Học"
+        description="Quản lý thông tin buổi học"
+        actions={
+          <SessionActionBar 
+            onAddClick={handleAddClick}
+            onRefresh={fetchData}
+            sessions={sessions}
+            selectedDate={selectedDate}
+            onDateChange={handleDateChange}
           />
-        </TablePageLayout>
-      )}
+        }
+      >
+        <DataTable
+          columns={columns}
+          data={sessions}
+          isLoading={isLoading}
+          onRowClick={handleRowClick}
+          searchable={true}
+          searchPlaceholder="Tìm kiếm buổi học..."
+        />
+      </TablePageLayout>
 
       {selectedSession && (
         <DetailPanel
@@ -234,8 +214,8 @@ const TeachingSessions = () => {
         <AttendanceDialog
           open={showAttendanceDialog}
           onClose={handleToggleAttendanceDialog}
-          sessionId={selectedSession.id}
-          classId={selectedSession.lop_chi_tiet_id}
+          sessionId={selectedSession?.id || ''}
+          classId={selectedSession?.lop_chi_tiet_id || ''}
         />
       )}
 

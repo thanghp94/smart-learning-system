@@ -124,12 +124,6 @@ function DataTable<T>({
     );
   }
 
-  // Process column widths to ensure consistent alignment
-  const processedColumns = columns.map(column => ({
-    ...column,
-    className: `${column.width ? `w-[${column.width}]` : ''} ${column.className || ''}`
-  }));
-
   return (
     <div className="w-full">
       {searchable && (
@@ -146,7 +140,7 @@ function DataTable<T>({
             <TableHeader>
               <TableRow>
                 <SortableTableHeader 
-                  columns={processedColumns} 
+                  columns={columns} 
                   sortColumn={sortColumn} 
                   sortDirection={sortDirection} 
                   handleSort={handleSort} 
@@ -171,8 +165,8 @@ function DataTable<T>({
                   className={onRowClick ? "cursor-pointer hover:bg-accent" : ""}
                   onClick={() => onRowClick && onRowClick(record)}
                 >
-                  {processedColumns.map((column, colIndex) => (
-                    <TableCell key={colIndex} className={column.className || ""}>
+                  {columns.map((column, colIndex) => (
+                    <TableCell key={colIndex} className={column.className || ""} style={{ width: column.width }}>
                       {column.thumbnail ? (
                         <TableThumbnail imageUrl={record.hinh_anh} label={record[column.key]} />
                       ) : column.render ? (

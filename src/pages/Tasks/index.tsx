@@ -1,8 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import TablePageLayout from '@/components/common/TablePageLayout';
-import { Button } from '@/components/ui/button';
-import { Plus, Filter, RotateCw, CheckSquare } from 'lucide-react';
 import { taskService } from '@/lib/supabase';
 import { Task } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +9,8 @@ import TaskForm from './components/TaskForm';
 import TaskTable from './components/TaskTable';
 import TaskFilters from './components/TaskFilters';
 import PlaceholderPage from '@/components/common/PlaceholderPage';
+import { CheckSquare } from 'lucide-react';
+import TasksActionBar from './TasksActionBar';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -31,7 +31,6 @@ const Tasks = () => {
   const fetchTasks = async () => {
     try {
       setIsLoading(true);
-      // Make sure we log in the console for debugging
       console.log('Fetching tasks...');
       const data = await taskService.getAll();
       console.log('Fetched tasks:', data);
@@ -59,7 +58,6 @@ const Tasks = () => {
 
   const handleTaskComplete = async (taskId: string) => {
     try {
-      // Use update instead of complete
       await taskService.update(taskId, { trang_thai: 'completed' });
       toast({
         title: 'Thành công',
@@ -94,35 +92,14 @@ const Tasks = () => {
       matchesAssignee = task.nguoi_phu_trach === filters.assignee;
     }
 
-    // For facility filter, we'd need to add that property to tasks or check related records
-    // This is a placeholder - in a real app you'd need to define the relationship
     if (filters.facility && task.doi_tuong === 'co_so') {
       matchesFacility = task.doi_tuong_id === filters.facility;
     } else if (filters.facility) {
-      // If facility is selected but task is not related to a facility
-      // Consider if tasks should still show up or not
       matchesFacility = false;
     }
 
     return matchesStatus && matchesPriority && matchesAssignee && matchesFacility;
   });
-
-  const tableActions = (
-    <div className="flex items-center space-x-2">
-      <TaskFilters 
-        filters={filters} 
-        setFilters={setFilters} 
-      />
-      
-      <Button variant="outline" size="sm" className="h-8" onClick={fetchTasks}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
-      </Button>
-      
-      <Button size="sm" className="h-8" onClick={handleAddTask}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Công Việc
-      </Button>
-    </div>
-  );
 
   if (tasks.length === 0 && !isLoading) {
     return (
@@ -139,7 +116,18 @@ const Tasks = () => {
     <TablePageLayout
       title="Công Việc"
       description="Quản lý các công việc và nhiệm vụ"
-      actions={tableActions}
+      actions={
+        <div className="flex items-center space-x-2">
+          <TaskFilters 
+            filters={filters} 
+            setFilters={setFilters} 
+          />
+          <TasksActionBar
+            onRefresh={fetchTasks}
+            onAddClick={handleAddTask}
+          />
+        </div>
+      }
     >
       <TaskTable 
         tasks={filteredTasks} 

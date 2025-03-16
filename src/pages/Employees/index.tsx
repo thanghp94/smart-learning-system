@@ -6,19 +6,9 @@ import TablePageLayout from '@/components/common/TablePageLayout';
 import DataTable from '@/components/ui/data-table';
 import { Employee } from '@/lib/types';
 import { employeeService } from '@/lib/supabase';
-import { format } from 'date-fns';
 import { Plus, FileDown, Filter, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-interface TableColumn {
-  title: string;
-  key: string;
-  render?: (value: string) => React.ReactNode;
-  sortable?: boolean;
-  width?: string;
-  className?: string;
-}
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -55,7 +45,7 @@ const Employees = () => {
     navigate('/employees/add');
   };
 
-  const columns: TableColumn[] = [
+  const columns = [
     {
       title: "Họ và tên",
       key: "ten_nhan_su",
