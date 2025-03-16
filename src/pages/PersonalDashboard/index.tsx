@@ -2,17 +2,26 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, CreditCard, User2Icon, Clock, BookOpen, CheckSquare, RotateCw } from 'lucide-react';
+import { CalendarIcon, CreditCard, User2Icon, Clock, BookOpen, CheckSquare, RotateCw, Plus, Sparkles } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { taskService } from '@/lib/supabase';
+import { RequestsList } from './components/RequestsList';
+import { TasksList } from './components/TasksList';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { Task, Request } from '@/lib/types';
+import NewTaskDialog from './components/NewTaskDialog';
+import NewRequestDialog from './components/NewRequestDialog';
 
 const PersonalDashboard = () => {
   const [employee, setEmployee] = useState<any>(null);
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [requests, setRequests] = useState<Request[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showNewTaskDialog, setShowNewTaskDialog] = useState(false);
+  const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,6 +52,34 @@ const PersonalDashboard = () => {
         setTasks([]);
       }
 
+      // Mock requests data
+      setRequests([
+        {
+          id: '1',
+          type: 'facility',
+          title: 'Sửa máy chiếu Phòng A1',
+          description: 'Máy chiếu không hoạt động bình thường',
+          requester: 'Nguyễn Văn A',
+          requested_date: new Date().toISOString(),
+          status: 'pending',
+          priority: 'medium',
+          entity_type: 'facility',
+          entity_id: 'a1',
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: '2',
+          type: 'leave',
+          title: 'Đơn xin nghỉ phép',
+          description: 'Xin nghỉ phép 3 ngày từ 20/03/2025',
+          requester: 'Nguyễn Văn A',
+          requested_date: new Date().toISOString(),
+          status: 'approved',
+          priority: 'high',
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+        }
+      ]);
+
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
@@ -57,13 +94,22 @@ const PersonalDashboard = () => {
     }
   };
 
-  const getTaskPriorityClass = (priority: string) => {
-    switch(priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const handleTaskCreated = (newTask: Task) => {
+    setTasks([newTask, ...tasks]);
+    setShowNewTaskDialog(false);
+    toast({
+      title: 'Thành công',
+      description: 'Đã tạo công việc mới',
+    });
+  };
+
+  const handleRequestCreated = (newRequest: Request) => {
+    setRequests([newRequest, ...requests]);
+    setShowNewRequestDialog(false);
+    toast({
+      title: 'Thành công',
+      description: 'Đã tạo đề xuất mới',
+    });
   };
 
   return (
@@ -143,49 +189,48 @@ const PersonalDashboard = () => {
               </div>
             </div>
 
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Công việc cần làm</h2>
-                <Button variant="outline" size="sm" onClick={fetchPersonalData}>
-                  <RotateCw className="h-4 w-4 mr-1" /> Làm mới
-                </Button>
-              </div>
-              
-              <div className="bg-white rounded-md border">
-                {tasks.length === 0 ? (
-                  <div className="p-6 text-center text-muted-foreground">
-                    Không có công việc nào
+            <ResizablePanelGroup 
+              direction="horizontal" 
+              className="mb-8 rounded-lg border"
+            >
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div className="h-full p-4 bg-white">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">Công việc cần làm</h2>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm" onClick={fetchPersonalData}>
+                        <RotateCw className="h-4 w-4 mr-1" /> Làm mới
+                      </Button>
+                      <Button size="sm" onClick={() => setShowNewTaskDialog(true)}>
+                        <Plus className="h-4 w-4 mr-1" /> Thêm mới
+                      </Button>
+                    </div>
                   </div>
-                ) : (
-                  <ScrollArea className="h-80">
-                    {tasks.map((task, index) => (
-                      <div 
-                        key={task.id || index} 
-                        className="p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-lg font-semibold">{task.ten_viec || 'Công việc không tên'}</h3>
-                          <Badge className={getTaskPriorityClass(task.cap_do)}>
-                            {task.cap_do === 'high' ? 'Quan trọng' : 
-                             task.cap_do === 'medium' ? 'Vừa' : 'Thấp'}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">{task.mo_ta || 'Không có mô tả'}</p>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-xs text-muted-foreground">
-                            {task.ngay_den_han ? `Hạn: ${format(new Date(task.ngay_den_han), 'dd/MM/yyyy')}` : 'Không có hạn'}
-                          </span>
-                          <Badge variant={task.trang_thai === 'completed' ? 'success' : 'outline'}>
-                            {task.trang_thai === 'completed' ? 'Hoàn thành' : 
-                             task.trang_thai === 'in_progress' ? 'Đang làm' : 'Chờ xử lý'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </ScrollArea>
-                )}
-              </div>
-            </div>
+                  
+                  <TasksList tasks={tasks} />
+                </div>
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle />
+              
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div className="h-full p-4 bg-white">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">Đề xuất</h2>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm" onClick={fetchPersonalData}>
+                        <RotateCw className="h-4 w-4 mr-1" /> Làm mới
+                      </Button>
+                      <Button size="sm" onClick={() => setShowNewRequestDialog(true)}>
+                        <Plus className="h-4 w-4 mr-1" /> Thêm mới
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <RequestsList requests={requests} />
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
@@ -212,6 +257,19 @@ const PersonalDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Dialogs */}
+            <NewTaskDialog 
+              isOpen={showNewTaskDialog} 
+              onClose={() => setShowNewTaskDialog(false)}
+              onTaskCreated={handleTaskCreated}
+            />
+            
+            <NewRequestDialog
+              isOpen={showNewRequestDialog}
+              onClose={() => setShowNewRequestDialog(false)}
+              onRequestCreated={handleRequestCreated}
+            />
           </>
         )
       )}
