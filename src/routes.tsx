@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -78,16 +77,22 @@ const routes = createBrowserRouter([
         element: <Dashboard />
       },
       {
-        path: "personal",
-        element: <PersonalDashboard />
-      },
-      {
         path: "employee",
         element: <EmployeeDashboard />
       },
       {
         path: "schema",
         element: <DatabaseSchema />
+      }
+    ]
+  },
+  {
+    path: "/personal-dashboard",
+    element: <ProtectedRoute><DashboardLayout /></ProtectedRoute>,
+    children: [
+      {
+        index: true,
+        element: <PersonalDashboard />
       }
     ]
   },
