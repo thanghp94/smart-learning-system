@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableProps, TableColumn } from "./data-table/types";
 import SortableTableHeader from "./data-table/SortableTableHeader";
 import TableThumbnail from "./data-table/TableThumbnail";

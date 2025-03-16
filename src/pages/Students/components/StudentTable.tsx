@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Student } from '@/lib/types';
-import DataTable from '@/components/ui/DataTable';
+import DataTable from '@/components/ui/data-table';
 import { CalendarDays, Flag, User, Phone, School, MapPin } from 'lucide-react';
 
 interface StudentTableProps {
@@ -23,7 +23,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
       key: 'ho_va_ten',
       thumbnail: true,
       sortable: true,
-      width: '20%',
+      width: '22%',
       render: (value: string, student: Student) => (
         <span className="ml-2">{student.ten_hoc_sinh || value}</span>
       ),
@@ -32,7 +32,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
       title: 'Phụ huynh',
       key: 'ten_ph',
       sortable: true,
-      width: '18%',
+      width: '20%',
       render: (value: string, student: Student) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
@@ -68,10 +68,10 @@ const StudentTable: React.FC<StudentTableProps> = ({
       title: 'Ngày sinh',
       key: 'ngay_sinh',
       sortable: true,
-      width: '12%',
+      width: '13%',
       className: 'text-center',
       render: (value: string) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-center">
           <CalendarDays className="h-4 w-4 text-muted-foreground" />
           {value}
         </div>
@@ -81,7 +81,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
       title: 'Trạng thái',
       key: 'trang_thai',
       sortable: true,
-      width: '12%',
+      width: '15%',
       className: 'text-center',
       render: (value: string) => (
         <div className="flex items-center justify-center gap-2">

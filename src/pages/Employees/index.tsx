@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import TablePageLayout from '@/components/common/TablePageLayout';
-import DataTable from '@/components/ui/DataTable';
+import DataTable from '@/components/ui/data-table';
 import { Employee } from '@/lib/types';
 import { employeeService } from '@/lib/supabase';
 import { format } from 'date-fns';
@@ -15,6 +16,8 @@ interface TableColumn {
   key: string;
   render?: (value: string) => React.ReactNode;
   sortable?: boolean;
+  width?: string;
+  className?: string;
 }
 
 const Employees = () => {
@@ -56,26 +59,36 @@ const Employees = () => {
     {
       title: "Họ và tên",
       key: "ten_nhan_su",
+      sortable: true,
+      width: "25%",
     },
     {
       title: "Bộ phận",
       key: "bo_phan",
+      sortable: true,
+      width: "15%",
     },
     {
       title: "Chức danh",
       key: "chuc_danh",
+      sortable: true,
+      width: "20%",
     },
     {
       title: "Email",
       key: "email",
+      width: "20%",
     },
     {
       title: "Số điện thoại",
       key: "dien_thoai",
+      width: "12%",
     },
     {
       title: "Trạng thái",
       key: "tinh_trang_lao_dong",
+      width: "8%",
+      className: "text-center",
       render: (value: string) => (
         <Badge variant={value === 'active' ? 'default' : 'secondary'}>
           {value === 'active' ? 'Đang làm việc' : 'Đã nghỉ việc'}
