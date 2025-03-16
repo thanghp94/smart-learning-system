@@ -12,6 +12,12 @@ const SessionActionBar: React.FC<SessionActionBarProps> = ({
   selectedDate, 
   onDateChange 
 }) => {
+  const handleAddSession = () => {
+    if (onAddClick && typeof onAddClick === 'function') {
+      onAddClick();
+    }
+  };
+
   return (
     <div className="flex justify-between items-center space-x-2">
       <div className="flex items-center space-x-2">
@@ -34,7 +40,7 @@ const SessionActionBar: React.FC<SessionActionBarProps> = ({
           />
         </div>
       </div>
-      <Button size="sm" className="h-8" onClick={onAddClick}>
+      <Button size="sm" className="h-8" onClick={handleAddSession}>
         <Plus className="h-4 w-4 mr-1" /> Thêm buổi học
       </Button>
     </div>

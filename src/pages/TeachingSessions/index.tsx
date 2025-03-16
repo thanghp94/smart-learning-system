@@ -71,6 +71,7 @@ const TeachingSessions = () => {
   };
 
   const handleAddClick = () => {
+    console.log("Opening add session form");
     setShowAddForm(true);
   };
 

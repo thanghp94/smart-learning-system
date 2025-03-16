@@ -1,7 +1,8 @@
 
-import { teachingSessionService, classService } from '@/lib/supabase';
+import { teachingSessionService } from '@/lib/supabase';
 import { TeachingSession } from '@/lib/types';
 import { EnhancedTeachingSession } from './types';
+import { supabase } from '@/lib/supabase/client';
 
 interface SessionsData {
   sessions: EnhancedTeachingSession[];
@@ -13,7 +14,7 @@ interface SessionsData {
 class TeachingSessionDataService {
   async fetchAllData(): Promise<SessionsData> {
     const sessionsData = await teachingSessionService.getAll();
-    const classesData = await classService.getAll();
+    const classesData = await this.getClasses();
     const lessonSessionsData = await this.getSessionLessons();
       
     const processedSessions = sessionsData.map(session => {
@@ -38,7 +39,7 @@ class TeachingSessionDataService {
 
   async getSessionLessons() {
     try {
-      const { data, error } = await teachingSessionService.supabase
+      const { data, error } = await supabase
         .from('sessions')
         .select('*');
         
@@ -50,6 +51,24 @@ class TeachingSessionDataService {
       return data || [];
     } catch (error) {
       console.error("Error in getSessionLessons:", error);
+      return [];
+    }
+  }
+
+  async getClasses() {
+    try {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*');
+        
+      if (error) {
+        console.error("Error fetching classes:", error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error("Error in getClasses:", error);
       return [];
     }
   }
