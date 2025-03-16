@@ -2,6 +2,18 @@
 import { supabase } from '@/lib/supabase/client';
 import { TeachingSession } from '@/lib/types';
 
+export const sessionService = {
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as Session[];
+  }
+};
+
 export const teachingSessionService = {
   getAll: async () => {
     const { data, error } = await supabase
@@ -105,3 +117,5 @@ export const teachingSessionService = {
     return parseFloat((sum / scores.length).toFixed(2));
   }
 };
+
+export default teachingSessionService;

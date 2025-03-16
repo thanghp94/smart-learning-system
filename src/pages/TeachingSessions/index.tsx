@@ -9,7 +9,7 @@ import { vi } from 'date-fns/locale';
 import { TeachingSession } from '@/lib/types';
 import { teachingSessionService, classService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import DataTable from '@/components/ui/DataTable';
+import DataTable from '@/components/ui/data-table';
 import TablePageLayout from '@/components/common/TablePageLayout';
 import DetailPanel from '@/components/ui/DetailPanel';
 import SessionDetail from './components/SessionDetail';
@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import PlaceholderPage from '@/components/common/PlaceholderPage';
 import ExportButton from '@/components/ui/ExportButton';
 import AttendanceDialog from './components/AttendanceDialog';
+import { sessionService } from './TeachingSessionService';
 
 // Extend TeachingSession with the properties we're adding
 interface EnhancedTeachingSession extends TeachingSession {
@@ -51,8 +52,7 @@ const TeachingSessions = () => {
       const sessionsData = await teachingSessionService.getAll();
       const classesData = await classService.getAll();
       
-      // Import from our local service file to avoid the export issue
-      const { sessionService } = await import('./TeachingSessionService');
+      // Get lessons data from sessionService
       const lessonSessionsData = await sessionService.getAll();
       
       setClasses(classesData);

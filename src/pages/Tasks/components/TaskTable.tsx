@@ -1,6 +1,6 @@
 
 import React from 'react';
-import DataTable from '@/components/ui/DataTable';
+import DataTable from '@/components/ui/data-table';
 import { Task } from '@/lib/types';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';

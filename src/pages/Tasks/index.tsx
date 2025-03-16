@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import TaskForm from './components/TaskForm';
 import TaskTable from './components/TaskTable';
 import TaskFilters from './components/TaskFilters';
+import PlaceholderPage from '@/components/common/PlaceholderPage';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -30,7 +31,10 @@ const Tasks = () => {
   const fetchTasks = async () => {
     try {
       setIsLoading(true);
+      // Make sure we log in the console for debugging
+      console.log('Fetching tasks...');
       const data = await taskService.getAll();
+      console.log('Fetched tasks:', data);
       setTasks(data);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -119,6 +123,17 @@ const Tasks = () => {
       </Button>
     </div>
   );
+
+  if (tasks.length === 0 && !isLoading) {
+    return (
+      <PlaceholderPage
+        title="Công Việc"
+        description="Quản lý các công việc và nhiệm vụ"
+        icon={<CheckSquare className="h-16 w-16 text-muted-foreground/40" />}
+        addButtonAction={handleAddTask}
+      />
+    );
+  }
 
   return (
     <TablePageLayout
