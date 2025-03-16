@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, CreditCard, User2Icon, Clock, BookOpen, CheckSquare } from 'lucide-react';
+import { CalendarIcon, CreditCard, User2Icon, Clock, BookOpen, CheckSquare, RotateCw } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from '@/hooks/use-toast';

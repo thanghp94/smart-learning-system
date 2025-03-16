@@ -5,15 +5,21 @@ import { Task } from '@/lib/types';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Eye } from 'lucide-react';
 
 interface TaskTableProps {
   tasks: Task[];
   isLoading: boolean;
   onTaskComplete: (taskId: string) => void;
+  onTaskView?: (task: Task) => void;
 }
 
-const TaskTable: React.FC<TaskTableProps> = ({ tasks, isLoading, onTaskComplete }) => {
+const TaskTable: React.FC<TaskTableProps> = ({ 
+  tasks, 
+  isLoading, 
+  onTaskComplete,
+  onTaskView 
+}) => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '--';
     return format(new Date(dateString), 'dd/MM/yyyy');
@@ -100,6 +106,18 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, isLoading, onTaskComplete 
               }}
             >
               <Check className="h-4 w-4 mr-1" /> Hoàn thành
+            </Button>
+          )}
+          {onTaskView && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTaskView(record);
+              }}
+            >
+              <Eye className="h-4 w-4" />
             </Button>
           )}
         </div>

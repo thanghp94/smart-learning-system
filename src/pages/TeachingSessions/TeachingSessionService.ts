@@ -2,6 +2,19 @@
 import { supabase } from '@/lib/supabase/client';
 import { TeachingSession } from '@/lib/types';
 
+// Define Session type
+interface Session {
+  id: string;
+  buoi_hoc_so?: string;
+  noi_dung_bai_hoc?: string;
+  tsi_lesson_plan?: string;
+  rep_lesson_plan?: string;
+  bai_tap?: string;
+  unit_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export const sessionService = {
   getAll: async () => {
     const { data, error } = await supabase

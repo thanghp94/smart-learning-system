@@ -1,11 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, Filter, RotateCw, UserCheck, Star, Clock } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { TeachingSession } from '@/lib/types';
 import { teachingSessionService, classService } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -16,16 +13,11 @@ import SessionDetail from './components/SessionDetail';
 import SessionForm from './SessionForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import PlaceholderPage from '@/components/common/PlaceholderPage';
-import ExportButton from '@/components/ui/ExportButton';
 import AttendanceDialog from './components/AttendanceDialog';
 import { sessionService } from './TeachingSessionService';
-
-// Extend TeachingSession with the properties we're adding
-interface EnhancedTeachingSession extends TeachingSession {
-  class_name?: string;
-  lesson_name?: string;
-  lesson_content?: string;
-}
+import { EnhancedTeachingSession } from './types';
+import { getTableColumns, formatSessionDate, formatSessionTime } from './components/SessionTableColumns';
+import SessionActionBar from './components/SessionActionBar';
 
 const TeachingSessions = () => {
   const [sessions, setSessions] = useState<EnhancedTeachingSession[]>([]);
@@ -159,158 +151,26 @@ const TeachingSessions = () => {
     setShowConfirmTimeDialog(true);
   };
 
-  const formatSessionDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: vi });
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  const formatSessionTime = (timeString: string) => {
-    if (!timeString) return '';
-    return timeString.substring(0, 5); // Format HH:MM
-  };
-
   const getLessonName = (sessionId: string) => {
     const lesson = lessonSessions.find(l => l.id === sessionId);
     return lesson ? `Buổi ${lesson.buoi_hoc_so}` : sessionId;
   };
 
-  const renderSessionActions = (session: EnhancedTeachingSession) => {
-    return (
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleAttendance(session);
-          }}
-          title="Thêm điểm danh"
-        >
-          <UserCheck className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleAddEvaluation(session);
-          }}
-          title="Đánh giá giáo viên"
-        >
-          <Star className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleConfirmTime(session);
-          }}
-          title="Xác nhận thời gian"
-        >
-          <Clock className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  };
-
-  const columns = [
-    {
-      title: "Lớp",
-      key: "class_name",
-      sortable: true,
-      render: (_: string, record: EnhancedTeachingSession) => (
-        <div className="font-medium">{record.class_name || "N/A"}</div>
-      ),
-    },
-    {
-      title: "Ngày học",
-      key: "ngay_hoc",
-      sortable: true,
-      render: (value: string) => formatSessionDate(value),
-    },
-    {
-      title: "Thời gian",
-      key: "thoi_gian_bat_dau",
-      render: (value: string, record: EnhancedTeachingSession) => (
-        <span>
-          {formatSessionTime(value)} - {formatSessionTime(record.thoi_gian_ket_thuc || '')}
-        </span>
-      ),
-    },
-    {
-      title: "Giáo viên",
-      key: "teacher_name",
-      render: (value: string) => value || "N/A",
-    },
-    {
-      title: "Buổi học số",
-      key: "session_id",
-      render: (value: string, record: EnhancedTeachingSession) => (
-        <Badge variant="outline">
-          {record.lesson_name || getLessonName(value)}
-        </Badge>
-      ),
-    },
-    {
-      title: "Nội dung",
-      key: "lesson_content",
-      render: (value: string, record: EnhancedTeachingSession) => (
-        <div className="max-w-xs truncate">
-          {value || "Học mới"}
-        </div>
-      )
-    },
-    {
-      title: "Loại bài học",
-      key: "loai_bai_hoc",
-      render: (value: string) => value || "Học mới",
-    },
-    {
-      title: "Trạng thái",
-      key: "completed",
-      render: (value: string) => (
-        <Badge variant={value === "true" ? "success" : "secondary"}>
-          {value === "true" ? "Hoàn thành" : "Chưa hoàn thành"}
-        </Badge>
-      ),
-    },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (_, record: EnhancedTeachingSession) => renderSessionActions(record),
-    },
-  ];
+  const columns = getTableColumns(
+    handleAttendance,
+    handleAddEvaluation,
+    handleConfirmTime,
+    getLessonName
+  );
 
   const tableActions = (
-    <div className="flex items-center space-x-2">
-      <div className="flex items-center">
-        <Calendar className="h-4 w-4 mr-2" />
-        <input
-          type="date"
-          className="border rounded px-2 py-1"
-          onChange={handleDateChange}
-          value={selectedDate.toISOString().split('T')[0]}
-        />
-      </div>
-      <Button variant="outline" size="sm" className="h-8" onClick={fetchData}>
-        <RotateCw className="h-4 w-4 mr-1" /> Làm Mới
-      </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
-      <ExportButton 
-        data={sessions} 
-        filename="Danh_sach_buoi_hoc" 
-        label="Xuất dữ liệu"
-      />
-      <Button size="sm" className="h-8" onClick={handleAddClick}>
-        <Plus className="h-4 w-4 mr-1" /> Thêm Buổi Học
-      </Button>
-    </div>
+    <SessionActionBar 
+      onAddClick={handleAddClick}
+      onRefresh={fetchData}
+      sessions={sessions}
+      selectedDate={selectedDate}
+      onDateChange={handleDateChange}
+    />
   );
 
   const handleToggleAttendanceDialog = () => {
