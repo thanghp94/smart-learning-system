@@ -13,32 +13,50 @@ interface SessionsData {
 
 class TeachingSessionDataService {
   async fetchAllData(): Promise<SessionsData> {
-    const sessionsData = await teachingSessionService.getAll();
-    const classesData = await this.getClasses();
-    const lessonSessionsData = await this.getSessionLessons();
+    try {
+      console.log("Fetching all session data");
+      const [sessionsData, classesData, lessonSessionsData] = await Promise.all([
+        teachingSessionService.getAll(),
+        this.getClasses(),
+        this.getSessionLessons()
+      ]);
       
-    const processedSessions = sessionsData.map(session => {
-      const classInfo = classesData.find(c => c.id === session.lop_chi_tiet_id);
-      const lessonInfo = lessonSessionsData.find(l => l.id === session.session_id);
+      console.log("Sessions data:", sessionsData);
+      console.log("Classes data:", classesData);
+      console.log("Lesson sessions data:", lessonSessionsData);
         
+      const processedSessions = sessionsData.map(session => {
+        const classInfo = classesData.find(c => c.id === session.lop_chi_tiet_id);
+        const lessonInfo = lessonSessionsData.find(l => l.id === session.session_id);
+          
+        return {
+          ...session,
+          class_name: classInfo?.ten_lop_full || 'N/A',
+          lesson_name: lessonInfo?.buoi_hoc_so || 'N/A',
+          lesson_content: lessonInfo?.noi_dung_bai_hoc || ''
+        };
+      });
+      
       return {
-        ...session,
-        class_name: classInfo?.ten_lop_full || 'N/A',
-        lesson_name: lessonInfo?.buoi_hoc_so || 'N/A',
-        lesson_content: lessonInfo?.noi_dung_bai_hoc || ''
+        sessions: processedSessions,
+        classes: classesData,
+        lessonSessions: lessonSessionsData,
+        isLoading: false
       };
-    });
-    
-    return {
-      sessions: processedSessions,
-      classes: classesData,
-      lessonSessions: lessonSessionsData,
-      isLoading: false
-    };
+    } catch (error) {
+      console.error("Error in fetchAllData:", error);
+      return {
+        sessions: [],
+        classes: [],
+        lessonSessions: [],
+        isLoading: false
+      };
+    }
   }
 
   async getSessionLessons() {
     try {
+      console.log("Fetching session lessons");
       const { data, error } = await supabase
         .from('sessions')
         .select('*');
@@ -57,6 +75,7 @@ class TeachingSessionDataService {
 
   async getClasses() {
     try {
+      console.log("Fetching classes");
       const { data, error } = await supabase
         .from('classes')
         .select('*');

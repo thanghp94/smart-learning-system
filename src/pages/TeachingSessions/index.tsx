@@ -13,7 +13,7 @@ import { EnhancedTeachingSession } from './types';
 import { sessionService } from './TeachingSessionService';
 import SessionActionBar from './components/SessionActionBar';
 import SessionDetail from './components/SessionDetail';
-import SessionForm from './SessionForm';
+import SessionForm from './components/SessionForm';
 import AttendanceDialog from './components/AttendanceDialog';
 import { getTableColumns } from './components/SessionTableColumns';
 
@@ -81,6 +81,7 @@ const TeachingSessions = () => {
 
   const handleAddFormSubmit = async (formData: Partial<EnhancedTeachingSession>) => {
     try {
+      console.log("Submitting form data:", formData);
       await teachingSessionService.create(formData);
       toast({
         title: "Thành công",
@@ -211,12 +212,12 @@ const TeachingSessions = () => {
         </DialogContent>
       </Dialog>
 
-      {showAttendanceDialog && (
+      {showAttendanceDialog && selectedSession && (
         <AttendanceDialog
           open={showAttendanceDialog}
           onClose={handleToggleAttendanceDialog}
-          sessionId={selectedSession?.id || ''}
-          classId={selectedSession?.lop_chi_tiet_id || ''}
+          sessionId={selectedSession.id}
+          classId={selectedSession.lop_chi_tiet_id || ''}
         />
       )}
 

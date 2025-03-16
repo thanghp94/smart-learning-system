@@ -7,49 +7,45 @@ import { classService, employeeService, facilityService } from '@/lib/supabase';
 import { TeachingSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
-export function useSessionForm({ initialData }: { initialData?: Partial<TeachingSession> }) {
-  const [classes, setClasses] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [facilities, setFacilities] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+interface UseSessionFormProps {
+  initialData?: Partial<TeachingSession>;
+}
+
+export const useSessionForm = ({ initialData }: UseSessionFormProps) => {
+  const [classes, setClasses] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [facilities, setFacilities] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Process initialData
-  const processedInitialData = initialData || {};
+  // Define default values for the form
+  const defaultValues: Partial<SessionFormData> = {
+    lop_chi_tiet_id: initialData?.lop_chi_tiet_id || '',
+    giao_vien: initialData?.giao_vien || '',
+    ngay_hoc: initialData?.ngay_hoc || '',
+    thoi_gian_bat_dau: initialData?.thoi_gian_bat_dau || '09:00',
+    thoi_gian_ket_thuc: initialData?.thoi_gian_ket_thuc || '10:30',
+    session_id: initialData?.session_id || '',
+    loai_bai_hoc: initialData?.loai_bai_hoc || '',
+    phong_hoc_id: initialData?.phong_hoc_id || '',
+    tro_giang: initialData?.tro_giang || '',
+    noi_dung: initialData?.noi_dung || '',
+    ghi_chu: initialData?.ghi_chu || '',
+    co_so_id: initialData?.co_so_id || '',
+  };
 
+  // Initialize the form with react-hook-form
   const form = useForm<SessionFormData>({
     resolver: zodResolver(teachingSessionSchema),
-    defaultValues: {
-      lop_chi_tiet_id: processedInitialData.lop_chi_tiet_id || '',
-      giao_vien: processedInitialData.giao_vien || '',
-      ngay_hoc: processedInitialData.ngay_hoc || '',
-      thoi_gian_bat_dau: processedInitialData.thoi_gian_bat_dau || '',
-      thoi_gian_ket_thuc: processedInitialData.thoi_gian_ket_thuc || '',
-      session_id: processedInitialData.session_id || '',
-      loai_bai_hoc: processedInitialData.loai_bai_hoc || '',
-      phong_hoc_id: processedInitialData.phong_hoc_id || '',
-      tro_giang: processedInitialData.tro_giang || '',
-      ghi_chu: processedInitialData.ghi_chu || '',
-      co_so_id: processedInitialData.co_so_id || '',
-      noi_dung: processedInitialData.noi_dung || '',
-      nhan_xet_1: processedInitialData.nhan_xet_1 || '',
-      nhan_xet_2: processedInitialData.nhan_xet_2 || '',
-      nhan_xet_3: processedInitialData.nhan_xet_3 || '',
-      nhan_xet_4: processedInitialData.nhan_xet_4 || '',
-      nhan_xet_5: processedInitialData.nhan_xet_5 || '',
-      nhan_xet_6: processedInitialData.nhan_xet_6 || '',
-      nhan_xet_chung: processedInitialData.nhan_xet_chung || '',
-      danh_gia_buoi_hoc: processedInitialData.danh_gia_buoi_hoc || '',
-      diem_manh: processedInitialData.diem_manh || '',
-      diem_yeu: processedInitialData.diem_yeu || '',
-      ghi_chu_danh_gia: processedInitialData.ghi_chu_danh_gia || ''
-    }
+    defaultValues
   });
 
+  // Fetch necessary data for form dropdown options
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchFormData = async () => {
       setIsLoading(true);
       try {
+        // Fetch all required data in parallel
         const [classesData, teachersData, facilitiesData] = await Promise.all([
           classService.getAll(),
           employeeService.getAll(),
@@ -63,7 +59,7 @@ export function useSessionForm({ initialData }: { initialData?: Partial<Teaching
         console.error('Error fetching form data:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load data. Please try again.',
+          description: 'Failed to load form data. Please try again.',
           variant: 'destructive'
         });
       } finally {
@@ -71,7 +67,7 @@ export function useSessionForm({ initialData }: { initialData?: Partial<Teaching
       }
     };
     
-    fetchData();
+    fetchFormData();
   }, [toast]);
 
   return {
@@ -81,4 +77,4 @@ export function useSessionForm({ initialData }: { initialData?: Partial<Teaching
     facilities,
     isLoading
   };
-}
+};

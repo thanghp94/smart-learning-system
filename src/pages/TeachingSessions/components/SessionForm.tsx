@@ -23,6 +23,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
   const { form, classes, teachers, isLoading } = useSessionForm({ initialData });
 
   const handleSubmit = (data: any) => {
+    console.log("Form submitted:", data);
     onSubmit(data);
   };
 
