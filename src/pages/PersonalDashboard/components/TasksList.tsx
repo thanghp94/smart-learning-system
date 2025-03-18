@@ -12,7 +12,7 @@ interface TasksListProps {
 
 export const TasksList: React.FC<TasksListProps> = ({ tasks }) => {
   const getTaskPriorityClass = (priority: string) => {
-    switch(priority) {
+    switch(priority?.toLowerCase()) {
       case 'high': return 'bg-red-100 text-red-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'low': return 'bg-green-100 text-green-800';
@@ -20,7 +20,7 @@ export const TasksList: React.FC<TasksListProps> = ({ tasks }) => {
     }
   };
 
-  if (tasks.length === 0) {
+  if (!tasks || tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-60 text-center text-muted-foreground">
         <CheckSquare className="h-10 w-10 mb-2 opacity-30" />
@@ -39,8 +39,8 @@ export const TasksList: React.FC<TasksListProps> = ({ tasks }) => {
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold">{task.ten_viec || 'Công việc không tên'}</h3>
             <Badge className={getTaskPriorityClass(task.cap_do)}>
-              {task.cap_do === 'high' ? 'Quan trọng' : 
-               task.cap_do === 'medium' ? 'Vừa' : 'Thấp'}
+              {task.cap_do?.toLowerCase() === 'high' ? 'Quan trọng' : 
+               task.cap_do?.toLowerCase() === 'medium' ? 'Vừa' : 'Thấp'}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{task.dien_giai || 'Không có mô tả'}</p>
