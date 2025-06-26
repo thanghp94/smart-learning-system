@@ -224,10 +224,18 @@ CREATE TABLE IF NOT EXISTS employee_clock_ins (
   clock_in_time TIMESTAMP,
   clock_out_time TIMESTAMP,
   work_date DATE,
+  location_lat DECIMAL(10, 8),
+  location_lng DECIMAL(11, 8),
+  facility_id TEXT,
+  location_verified BOOLEAN DEFAULT FALSE,
   notes TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Add GPS coordinates to facilities table if not exists
+ALTER TABLE facilities ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 8);
+ALTER TABLE facilities ADD COLUMN IF NOT EXISTS longitude DECIMAL(11, 8);
 
 -- Admissions table
 CREATE TABLE IF NOT EXISTS admissions (

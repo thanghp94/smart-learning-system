@@ -4,7 +4,7 @@ import {
   Users, FolderInput, School, Calendar, BookOpen, 
   Sparkles, Clock, ClipboardCheck as ClipboardIcon,
   UserCheck as UserCheckIcon, Briefcase as BriefcaseIcon,
-  CheckSquare as CalendarCheckIcon
+  CheckSquare as CalendarCheckIcon, MapPin
 } from 'lucide-react';
 
 export const primaryLinks: NavLink[] = [
@@ -62,6 +62,11 @@ export const primaryLinks: NavLink[] = [
     title: 'Công cụ AI', 
     href: '/ai-tools', 
     icon: <Sparkles className="w-5 h-5" /> 
+  },
+  { 
+    title: 'Chấm công GPS',
+    href: '/employee-clock-in',
+    icon: <MapPin className="w-5 h-5" />,
   },
 ];
 

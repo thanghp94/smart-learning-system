@@ -644,10 +644,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Employee clock-in routes
   app.get("/api/employee-clock-in", async (req, res) => {
     try {
-      const { month, year } = req.query;
+      const { month, year, date } = req.query;
       let clockInData;
 
-      if (month && year) {
+      if (date) {
+        // Filter by specific date
+        const result = await storage.executeQuery(
+          `SELECT * FROM employee_clock_ins WHERE work_date = '${date}' ORDER BY clock_in_time DESC`
+        );
+        clockInData = Array.isArray(result) ? result : (result?.rows || []);
+      } else if (month && year) {
         clockInData = await storage.getEmployeeClockInByMonth(parseInt(month as string), parseInt(year as string));
       } else {
         clockInData = await storage.getEmployeeClockIn();
@@ -674,9 +680,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/employee-clock-in", async (req, res) => {
     try {
-      const clockInRecord = await storage.createEmployeeClockIn(req.body);
+      const { employee_id, clock_in_time, work_date, location_lat, location_lng, facility_id, location_verified, notes } = req.body;
+      
+      const result = await storage.executeQuery(
+        `INSERT INTO employee_clock_ins (id, employee_id, clock_in_time, work_date, location_lat, location_lng, facility_id, location_verified, notes) 
+         VALUES (gen_random_uuid()::text, '${employee_id}', '${clock_in_time}', '${work_date}', ${location_lat || 'NULL'}, ${location_lng || 'NULL'}, '${facility_id || ''}', ${location_verified}, '${notes || ''}') 
+         RETURNING *`
+      );
+      
+      const clockInRecord = Array.isArray(result) ? result[0] : (result?.rows?.[0] || {});
       res.json(clockInRecord);
     } catch (error) {
+      console.error('Error creating clock-in record:', error);
       res.status(400).json({ error: "Invalid clock-in data" });
     }
   });
