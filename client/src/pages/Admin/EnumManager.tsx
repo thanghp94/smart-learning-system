@@ -34,6 +34,7 @@ const EnumManager = () => {
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [editingEnum, setEditingEnum] = useState<EnumType | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<TableColumn | null>(null);
+  const [selectedTable, setSelectedTable] = useState('');
   const [newEnumName, setNewEnumName] = useState('');
   const [newEnumValues, setNewEnumValues] = useState('');
   const [selectedEnumForApply, setSelectedEnumForApply] = useState('');
@@ -217,6 +218,7 @@ const EnumManager = () => {
 
       setIsApplyDialogOpen(false);
       setSelectedColumn(null);
+      setSelectedTable('');
       setSelectedEnumForApply('');
       fetchData();
     } catch (error: any) {
@@ -262,21 +264,45 @@ const EnumManager = () => {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div>
-                  <label className="text-sm font-medium">Select Column</label>
-                  <Select onValueChange={(value) => {
-                    const [tableName, columnName] = value.split('.');
-                    const column = tableColumns.find(c => c.table_name === tableName && c.column_name === columnName);
-                    setSelectedColumn(column || null);
+                  <label className="text-sm font-medium">Select Table</label>
+                  <Select value={selectedTable} onValueChange={(value) => {
+                    setSelectedTable(value);
+                    setSelectedColumn(null); // Reset column selection when table changes
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a column" />
+                      <SelectValue placeholder="Select a table" />
                     </SelectTrigger>
                     <SelectContent>
-                      {tableColumns.map((col) => (
-                        <SelectItem key={`${col.table_name}.${col.column_name}`} value={`${col.table_name}.${col.column_name}`}>
-                          {col.table_name}.{col.column_name} ({col.data_type})
+                      {Array.from(new Set(tableColumns.map(col => col.table_name))).sort().map((tableName) => (
+                        <SelectItem key={tableName} value={tableName}>
+                          {tableName}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Select Column</label>
+                  <Select 
+                    value={selectedColumn ? `${selectedColumn.table_name}.${selectedColumn.column_name}` : ''}
+                    onValueChange={(value) => {
+                      const [tableName, columnName] = value.split('.');
+                      const column = tableColumns.find(c => c.table_name === tableName && c.column_name === columnName);
+                      setSelectedColumn(column || null);
+                    }}
+                    disabled={!selectedTable}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={selectedTable ? "Select a column" : "Select a table first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tableColumns
+                        .filter(col => col.table_name === selectedTable)
+                        .map((col) => (
+                          <SelectItem key={`${col.table_name}.${col.column_name}`} value={`${col.table_name}.${col.column_name}`}>
+                            {col.column_name} ({col.data_type})
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -297,7 +323,12 @@ const EnumManager = () => {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsApplyDialogOpen(false)}>
+                <Button variant="outline" onClick={() => {
+                  setIsApplyDialogOpen(false);
+                  setSelectedTable('');
+                  setSelectedColumn(null);
+                  setSelectedEnumForApply('');
+                }}>
                   Cancel
                 </Button>
                 <Button onClick={applyEnumToColumn}>
