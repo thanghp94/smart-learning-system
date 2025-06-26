@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -48,9 +47,13 @@ const Employees = () => {
   const columns = [
     {
       title: "Họ và tên",
-      key: "ten_nhan_su",
+      key: "ten_nhan_vien",
       sortable: true,
+      thumbnail: true,
       width: "25%",
+      render: (value: string, record: Employee) => {
+        return record.ten_nhan_vien || record.ten_nhan_su || record.ho_va_ten || `Employee ${record.id}`;
+      },
     },
     {
       title: "Bộ phận",
