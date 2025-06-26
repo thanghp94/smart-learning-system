@@ -1,16 +1,16 @@
-import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
+import { pgTable, text, integer, serial, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Users table for authentication
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
 });
 
 // Students table
-export const students = sqliteTable("students", {
+export const students = pgTable("students", {
   id: text("id").primaryKey(),
   ten_hoc_sinh: text("ten_hoc_sinh").notNull(),
   ngay_sinh: text("ngay_sinh"),
@@ -23,12 +23,12 @@ export const students = sqliteTable("students", {
   email_phu_huynh: text("email_phu_huynh"),
   trang_thai: text("trang_thai").default("active"),
   ghi_chu: text("ghi_chu"),
-  created_at: text("created_at"),
-  updated_at: text("updated_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Facilities table
-export const facilities = sqliteTable("facilities", {
+export const facilities = pgTable("facilities", {
   id: text("id").primaryKey(),
   ten_co_so: text("ten_co_so").notNull(),
   dia_chi: text("dia_chi"),
@@ -36,12 +36,12 @@ export const facilities = sqliteTable("facilities", {
   email: text("email"),
   mo_ta: text("mo_ta"),
   trang_thai: text("trang_thai").default("active"),
-  created_at: text("created_at"),
-  updated_at: text("updated_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Employees table
-export const employees = sqliteTable("employees", {
+export const employees = pgTable("employees", {
   id: text("id").primaryKey(),
   ten_nhan_vien: text("ten_nhan_vien").notNull(),
   ngay_sinh: text("ngay_sinh"),
@@ -54,12 +54,12 @@ export const employees = sqliteTable("employees", {
   ngay_vao_lam: text("ngay_vao_lam"),
   trang_thai: text("trang_thai").default("active"),
   ghi_chu: text("ghi_chu"),
-  created_at: text("created_at"),
-  updated_at: text("updated_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Classes table
-export const classes = sqliteTable("classes", {
+export const classes = pgTable("classes", {
   id: text("id").primaryKey(),
   ten_lop: text("ten_lop").notNull(),
   ten_lop_full: text("ten_lop_full").notNull(),
@@ -69,12 +69,12 @@ export const classes = sqliteTable("classes", {
   ngay_bat_dau: text("ngay_bat_dau"),
   tinh_trang: text("tinh_trang").default("active"),
   ghi_chu: text("ghi_chu"),
-  created_at: text("created_at"),
-  updated_at: text("updated_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Teaching Sessions table
-export const teachingSessions = sqliteTable("teaching_sessions", {
+export const teachingSessions = pgTable("teaching_sessions", {
   id: text("id").primaryKey(),
   class_id: text("class_id"),
   giao_vien: text("giao_vien"),
@@ -84,24 +84,24 @@ export const teachingSessions = sqliteTable("teaching_sessions", {
   noi_dung: text("noi_dung"),
   ghi_chu: text("ghi_chu"),
   trang_thai: text("trang_thai").default("scheduled"),
-  created_at: text("created_at"),
-  updated_at: text("updated_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Enrollments table
-export const enrollments = sqliteTable("enrollments", {
+export const enrollments = pgTable("enrollments", {
   id: text("id").primaryKey(),
   student_id: text("student_id"),
   class_id: text("class_id"),
   ngay_dang_ky: text("ngay_dang_ky"),
   trang_thai: text("trang_thai").default("active"),
   ghi_chu: text("ghi_chu"),
-  created_at: text("created_at"),
-  updated_at: text("updated_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Attendances table
-export const attendances = sqliteTable("attendances", {
+export const attendances = pgTable("attendances", {
   id: text("id").primaryKey(),
   teaching_session_id: text("teaching_session_id"),
   enrollment_id: text("enrollment_id"),
@@ -112,12 +112,12 @@ export const attendances = sqliteTable("attendances", {
   danh_gia_3: integer("danh_gia_3"),
   danh_gia_4: integer("danh_gia_4"),
   ghi_chu: text("ghi_chu"),
-  created_at: text("created_at"),
-  updated_at: text("updated_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Assets table
-export const assets = sqliteTable("assets", {
+export const assets = pgTable("assets", {
   id: text("id").primaryKey(),
   ten_csvc: text("ten_csvc").notNull(),
   danh_muc: text("danh_muc"),
@@ -135,8 +135,8 @@ export const assets = sqliteTable("assets", {
   noi_mua: text("noi_mua"),
   mo_ta_1: text("mo_ta_1"),
   ghi_chu: text("ghi_chu"),
-  created_at: text("created_at"),
-  updated_at: text("updated_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Insert schemas

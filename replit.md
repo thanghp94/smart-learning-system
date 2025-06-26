@@ -18,7 +18,7 @@ This is a comprehensive school management system built with a modern full-stack 
 ### Backend Architecture
 - **Runtime**: Node.js with TypeScript
 - **Framework**: Express.js for API routes
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: PostgreSQL with Drizzle ORM (migrated from SQLite)
 - **Database Provider**: Neon Database (serverless PostgreSQL)
 - **Session Management**: PostgreSQL session store
 - **Development**: Development server with hot reload
@@ -118,6 +118,12 @@ This is a comprehensive school management system built with a modern full-stack 
 ```
 Changelog:
 - June 26, 2025. Initial setup
+- June 26, 2025. Successfully migrated from SQLite to PostgreSQL database
+  * Updated schema from sqlite-core to pg-core
+  * Replaced better-sqlite3 with @neondatabase/serverless
+  * Updated all table definitions to use PostgreSQL types
+  * Fixed timestamp handling to use PostgreSQL defaultNow()
+  * All API endpoints verified working with PostgreSQL
 ```
 
 ## User Preferences

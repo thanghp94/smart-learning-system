@@ -1,56 +1,18 @@
 import { db } from "./db";
-import { 
-  users, students, employees, facilities, 
-  classes, teachingSessions, enrollments, 
-  attendances, assets 
-} from "@shared/schema";
 
-// Create tables using Drizzle schema
+// For PostgreSQL with Drizzle, the tables are created automatically by the push command
+// This function just verifies the database connection
 export async function initializeDatabase() {
   try {
-    console.log("Creating database tables...");
+    console.log("Verifying PostgreSQL database connection...");
     
-    // Create all tables - SQLite will automatically handle the schema
-    await db.select().from(users).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
+    // Test database connection
+    await db.execute(`SELECT 1`);
     
-    await db.select().from(students).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
-    
-    await db.select().from(employees).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
-    
-    await db.select().from(facilities).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
-    
-    await db.select().from(classes).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
-    
-    await db.select().from(teachingSessions).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
-    
-    await db.select().from(enrollments).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
-    
-    await db.select().from(attendances).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
-    
-    await db.select().from(assets).limit(1).catch(() => {
-      // Table doesn't exist, that's fine
-    });
-    
-    console.log("Database initialized successfully!");
+    console.log("PostgreSQL database connection verified!");
     return true;
   } catch (error) {
-    console.error("Error initializing database:", error);
+    console.error("Error connecting to PostgreSQL database:", error);
     return false;
   }
 }
