@@ -12,7 +12,7 @@ import EmployeeFilters from './components/EmployeeFilters';
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>(([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({ facility: 'all', status: 'all' });
   const { toast } = useToast();
@@ -173,3 +173,32 @@ const Employees = () => {
 };
 
 export default Employees;
+const handleSaveEmployee = async (employeeData: Partial<Employee>) => {
+    try {
+      console.log("handleSaveEmployee called with:", JSON.stringify(employeeData, null, 2));
+
+      if (editingEmployee) {
+        console.log("Updating employee ID:", editingEmployee.id);
+        const result = await employeeService.update(editingEmployee.id, employeeData);
+        console.log("Update result:", result);
+      } else {
+        console.log("Creating new employee");
+        const result = await employeeService.create(employeeData);
+        console.log("Create result:", result);
+      }
+      await loadEmployees();
+      setIsFormOpen(false);
+      setEditingEmployee(null);
+    } catch (error) {
+      console.error("Error in handleSaveEmployee:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data
+      });
+
+      // Show user-friendly error message
+      const errorMessage = error.response?.data?.details || error.message || 'Unknown error occurred';
+      alert(`Failed to save employee: ${errorMessage}`);
+    }
+  };

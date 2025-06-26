@@ -79,9 +79,14 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
       };
 
       console.log("Submitting employee data:", processedData);
+      console.log("co_so_id value:", processedData.co_so_id, "Type:", typeof processedData.co_so_id);
+      
       await onSubmit(processedData);
     } catch (error) {
       console.error("Error submitting form:", error);
+      console.error("Error details:", error.message || error);
+      // You might want to show an error toast or alert here
+      alert(`Error saving employee: ${error.message || 'Unknown error occurred'}`);
     } finally {
       setIsSubmitting(false);
     }

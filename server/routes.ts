@@ -93,15 +93,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/employees", async (req, res) => {
     try {
       const data = req.body;
-      console.log("Creating employee:", data);
+      console.log("Creating employee with data:", JSON.stringify(data, null, 2));
 
       // Handle co_so_id properly - convert array to single value if needed
       let coSoId = data.co_so_id;
+      console.log("Original co_so_id:", coSoId, "Type:", typeof coSoId);
+      
       if (Array.isArray(coSoId)) {
         coSoId = coSoId.length > 0 ? coSoId[0] : null;
+        console.log("Converted array co_so_id to:", coSoId);
       } else if (coSoId === '' || coSoId === undefined) {
         coSoId = null;
+        console.log("Converted empty/undefined co_so_id to null");
       }
+
+      console.log("Final co_so_id value:", coSoId);
 
       const result = await db.query(
         `INSERT INTO employees (
@@ -118,10 +124,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]
       );
 
+      console.log("Employee created successfully:", result.rows[0]);
       res.status(201).json(result.rows[0]);
     } catch (error) {
       console.error("Error creating employee:", error);
-      console.error("Error details:", error.message);
+      console.error("Error stack:", error.stack);
       res.status(500).json({ error: "Failed to create employee", details: error.message });
     }
   });
@@ -132,15 +139,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const data = req.body;
 
-      console.log("Updating employee:", id, data);
+      console.log("Updating employee ID:", id);
+      console.log("Update data:", JSON.stringify(data, null, 2));
 
       // Handle co_so_id properly - convert array to single value if needed
       let coSoId = data.co_so_id;
+      console.log("Original co_so_id:", coSoId, "Type:", typeof coSoId);
+      
       if (Array.isArray(coSoId)) {
         coSoId = coSoId.length > 0 ? coSoId[0] : null;
+        console.log("Converted array co_so_id to:", coSoId);
       } else if (coSoId === '' || coSoId === undefined) {
         coSoId = null;
+        console.log("Converted empty/undefined co_so_id to null");
       }
+
+      console.log("Final co_so_id value:", coSoId);
 
       const result = await db.query(
         `UPDATE employees 
@@ -159,13 +173,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       if (result.rows.length === 0) {
+        console.log("No employee found with ID:", id);
         return res.status(404).json({ error: "Employee not found" });
       }
 
+      console.log("Employee updated successfully:", result.rows[0]);
       res.json(result.rows[0]);
     } catch (error) {
       console.error("Error updating employee:", error);
-      console.error("Error details:", error.message);
+      console.error("Error stack:", error.stack);
       res.status(500).json({ error: "Failed to update employee", details: error.message });
     }
   });
