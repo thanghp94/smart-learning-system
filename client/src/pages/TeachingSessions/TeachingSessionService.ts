@@ -2,7 +2,6 @@
 import { teachingSessionService } from '@/lib/supabase';
 import { TeachingSession } from '@/lib/types';
 import { EnhancedTeachingSession } from './types';
-import { supabase } from '@/lib/supabase/client';
 
 interface SessionsData {
   sessions: EnhancedTeachingSession[];
@@ -15,32 +14,31 @@ class TeachingSessionDataService {
   async fetchAllData(): Promise<SessionsData> {
     try {
       console.log("Fetching all session data");
-      const [sessionsData, classesData, lessonSessionsData] = await Promise.all([
+      const [sessionsData, classesData, teachersData] = await Promise.all([
         teachingSessionService.getAll(),
         this.getClasses(),
-        this.getSessionLessons()
+        this.getTeachers()
       ]);
       
       console.log("Sessions data:", sessionsData);
       console.log("Classes data:", classesData);
-      console.log("Lesson sessions data:", lessonSessionsData);
+      console.log("Teachers data:", teachersData);
         
-      const processedSessions = sessionsData.map(session => {
-        const classInfo = classesData.find(c => c.id === session.lop_chi_tiet_id);
-        const lessonInfo = lessonSessionsData.find(l => l.id === session.session_id);
+      const processedSessions = sessionsData.map((session: any) => {
+        const classInfo = classesData.find((c: any) => c.id === session.class_id);
+        const teacherInfo = teachersData.find((t: any) => t.id === session.giao_vien);
           
         return {
           ...session,
-          class_name: classInfo?.ten_lop_full || 'N/A',
-          lesson_name: lessonInfo?.buoi_hoc_so || 'N/A',
-          lesson_content: lessonInfo?.noi_dung_bai_hoc || ''
+          class_name: classInfo?.ten_lop_full || classInfo?.ten_lop || 'N/A',
+          teacher_name: teacherInfo?.ten_nhan_vien || 'N/A'
         };
       });
       
       return {
         sessions: processedSessions,
         classes: classesData,
-        lessonSessions: lessonSessionsData,
+        lessonSessions: teachersData,
         isLoading: false
       };
     } catch (error) {
@@ -54,21 +52,17 @@ class TeachingSessionDataService {
     }
   }
 
-  async getSessionLessons() {
+  async getTeachers() {
     try {
-      console.log("Fetching session lessons");
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*');
-        
-      if (error) {
-        console.error("Error fetching session lessons:", error);
-        return [];
+      console.log("Fetching teachers");
+      const response = await fetch('/api/employees');
+      if (!response.ok) {
+        throw new Error('Failed to fetch teachers');
       }
-      
+      const data = await response.json();
       return data || [];
     } catch (error) {
-      console.error("Error in getSessionLessons:", error);
+      console.error("Error in getTeachers:", error);
       return [];
     }
   }
@@ -76,15 +70,11 @@ class TeachingSessionDataService {
   async getClasses() {
     try {
       console.log("Fetching classes");
-      const { data, error } = await supabase
-        .from('classes')
-        .select('*');
-        
-      if (error) {
-        console.error("Error fetching classes:", error);
-        return [];
+      const response = await fetch('/api/classes');
+      if (!response.ok) {
+        throw new Error('Failed to fetch classes');
       }
-      
+      const data = await response.json();
       return data || [];
     } catch (error) {
       console.error("Error in getClasses:", error);

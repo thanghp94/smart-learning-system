@@ -779,6 +779,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Evaluations routes
+  app.get("/api/evaluations", async (req, res) => {
+    try {
+      const evaluations = await storage.getEvaluations();
+      res.json(evaluations);
+    } catch (error) {
+      console.error('Error fetching evaluations:', error);
+      res.status(500).json({ error: "Failed to fetch evaluations" });
+    }
+  });
+
+  app.get("/api/evaluations/:id", async (req, res) => {
+    try {
+      const evaluation = await storage.getEvaluation(req.params.id);
+      if (!evaluation) {
+        return res.status(404).json({ error: "Evaluation not found" });
+      }
+      res.json(evaluation);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch evaluation" });
+    }
+  });
+
+  app.post("/api/evaluations", async (req, res) => {
+    try {
+      const evaluation = await storage.createEvaluation(req.body);
+      res.json(evaluation);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid evaluation data" });
+    }
+  });
+
+  // Payroll routes
+  app.get("/api/payroll", async (req, res) => {
+    try {
+      const { month, year } = req.query;
+      let payrollData;
+      
+      if (month && year) {
+        payrollData = await storage.getPayrollByMonth(parseInt(month as string), parseInt(year as string));
+      } else {
+        payrollData = await storage.getPayroll();
+      }
+      
+      res.json(payrollData);
+    } catch (error) {
+      console.error('Error fetching payroll data:', error);
+      res.status(500).json({ error: "Failed to fetch payroll data" });
+    }
+  });
+
+  app.get("/api/payroll/:id", async (req, res) => {
+    try {
+      const payrollRecord = await storage.getPayrollById(req.params.id);
+      if (!payrollRecord) {
+        return res.status(404).json({ error: "Payroll record not found" });
+      }
+      res.json(payrollRecord);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch payroll record" });
+    }
+  });
+
+  // Admissions routes
+  app.get("/api/admissions", async (req, res) => {
+    try {
+      const admissions = await storage.getAdmissions();
+      res.json(admissions);
+    } catch (error) {
+      console.error('Error fetching admissions:', error);
+      res.status(500).json({ error: "Failed to fetch admissions" });
+    }
+  });
+
+  app.get("/api/admissions/:id", async (req, res) => {
+    try {
+      const admission = await storage.getAdmission(req.params.id);
+      if (!admission) {
+        return res.status(404).json({ error: "Admission not found" });
+      }
+      res.json(admission);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch admission" });
+    }
+  });
+
+  app.post("/api/admissions", async (req, res) => {
+    try {
+      const admission = await storage.createAdmission(req.body);
+      res.json(admission);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid admission data" });
+    }
+  });
+
+  // Images routes
+  app.get("/api/images", async (req, res) => {
+    try {
+      const images = await storage.getImages();
+      res.json(images);
+    } catch (error) {
+      console.error('Error fetching images:', error);
+      res.status(500).json({ error: "Failed to fetch images" });
+    }
+  });
+
+  app.get("/api/images/:id", async (req, res) => {
+    try {
+      const image = await storage.getImage(req.params.id);
+      if (!image) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+      res.json(image);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch image" });
+    }
+  });
+
+  app.post("/api/images", async (req, res) => {
+    try {
+      const image = await storage.createImage(req.body);
+      res.json(image);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid image data" });
+    }
+  });
+
   // AI Command processing route (migrated from Supabase Edge Function)
   app.post("/api/ai/generate", async (req, res) => {
     try {

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 import type { 
   User, InsertUser, Student, InsertStudent, 
@@ -8,9 +8,10 @@ import type {
   Asset, InsertAsset
 } from "@shared/schema";
 import { 
-  students, employees, facilities, 
+  users, students, employees, facilities, 
   classes, teachingSessions, enrollments, 
-  attendances, assets, tasks
+  attendances, assets, tasks, files, contacts, requests,
+  evaluations, payroll, admissions, images
 } from "@shared/schema";
 
 export interface IStorage {
@@ -110,6 +111,35 @@ export interface IStorage {
   createEmployeeClockIn(data: any): Promise<any>;
   updateEmployeeClockIn(id: string, data: any): Promise<any | undefined>;
   deleteEmployeeClockIn(id: string): Promise<boolean>;
+
+  // Evaluations CRUD operations
+  getEvaluations(): Promise<any[]>;
+  getEvaluation(id: string): Promise<any | undefined>;
+  createEvaluation(data: any): Promise<any>;
+  updateEvaluation(id: string, data: any): Promise<any | undefined>;
+  deleteEvaluation(id: string): Promise<boolean>;
+
+  // Payroll CRUD operations
+  getPayroll(): Promise<any[]>;
+  getPayrollById(id: string): Promise<any | undefined>;
+  getPayrollByMonth(month: number, year: number): Promise<any[]>;
+  createPayroll(data: any): Promise<any>;
+  updatePayroll(id: string, data: any): Promise<any | undefined>;
+  deletePayroll(id: string): Promise<boolean>;
+
+  // Admissions CRUD operations
+  getAdmissions(): Promise<any[]>;
+  getAdmission(id: string): Promise<any | undefined>;
+  createAdmission(data: any): Promise<any>;
+  updateAdmission(id: string, data: any): Promise<any | undefined>;
+  deleteAdmission(id: string): Promise<boolean>;
+
+  // Images CRUD operations
+  getImages(): Promise<any[]>;
+  getImage(id: string): Promise<any | undefined>;
+  createImage(data: any): Promise<any>;
+  updateImage(id: string, data: any): Promise<any | undefined>;
+  deleteImage(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -685,6 +715,231 @@ export class DatabaseStorage implements IStorage {
       return false;
     } catch (error) {
       console.error('Error deleting employee clock-in record:', error);
+      throw error;
+    }
+  }
+
+  // Evaluations CRUD operations
+  async getEvaluations(): Promise<any[]> {
+    try {
+      console.log('Fetching all evaluations...');
+      const result = await db.select().from(evaluations);
+      console.log(`Successfully fetched ${result.length} evaluations`);
+      return result;
+    } catch (error) {
+      console.error('Error fetching evaluations:', error);
+      throw error;
+    }
+  }
+
+  async getEvaluation(id: string): Promise<any | undefined> {
+    try {
+      const result = await db.select().from(evaluations).where(eq(evaluations.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching evaluation:', error);
+      throw error;
+    }
+  }
+
+  async createEvaluation(data: any): Promise<any> {
+    try {
+      const result = await db.insert(evaluations).values(data).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating evaluation:', error);
+      throw error;
+    }
+  }
+
+  async updateEvaluation(id: string, data: any): Promise<any | undefined> {
+    try {
+      const result = await db.update(evaluations).set(data).where(eq(evaluations.id, id)).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating evaluation:', error);
+      throw error;
+    }
+  }
+
+  async deleteEvaluation(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(evaluations).where(eq(evaluations.id, id));
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.error('Error deleting evaluation:', error);
+      throw error;
+    }
+  }
+
+  // Payroll CRUD operations
+  async getPayroll(): Promise<any[]> {
+    try {
+      console.log('Fetching all payroll records...');
+      const result = await db.select().from(payroll);
+      console.log(`Successfully fetched ${result.length} payroll records`);
+      return result;
+    } catch (error) {
+      console.error('Error fetching payroll:', error);
+      throw error;
+    }
+  }
+
+  async getPayrollById(id: string): Promise<any | undefined> {
+    try {
+      const result = await db.select().from(payroll).where(eq(payroll.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching payroll record:', error);
+      throw error;
+    }
+  }
+
+  async getPayrollByMonth(month: number, year: number): Promise<any[]> {
+    try {
+      console.log(`Fetching payroll records for ${month}/${year}...`);
+      const result = await db.select().from(payroll)
+        .where(and(eq(payroll.month, month), eq(payroll.year, year)));
+      console.log(`Successfully fetched ${result.length} payroll records for ${month}/${year}`);
+      return result;
+    } catch (error) {
+      console.error('Error fetching payroll records by month:', error);
+      throw error;
+    }
+  }
+
+  async createPayroll(data: any): Promise<any> {
+    try {
+      const result = await db.insert(payroll).values(data).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating payroll record:', error);
+      throw error;
+    }
+  }
+
+  async updatePayroll(id: string, data: any): Promise<any | undefined> {
+    try {
+      const result = await db.update(payroll).set(data).where(eq(payroll.id, id)).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating payroll record:', error);
+      throw error;
+    }
+  }
+
+  async deletePayroll(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(payroll).where(eq(payroll.id, id));
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.error('Error deleting payroll record:', error);
+      throw error;
+    }
+  }
+
+  // Admissions CRUD operations
+  async getAdmissions(): Promise<any[]> {
+    try {
+      console.log('Fetching all admissions...');
+      const result = await db.select().from(admissions);
+      console.log(`Successfully fetched ${result.length} admissions`);
+      return result;
+    } catch (error) {
+      console.error('Error fetching admissions:', error);
+      throw error;
+    }
+  }
+
+  async getAdmission(id: string): Promise<any | undefined> {
+    try {
+      const result = await db.select().from(admissions).where(eq(admissions.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching admission:', error);
+      throw error;
+    }
+  }
+
+  async createAdmission(data: any): Promise<any> {
+    try {
+      const result = await db.insert(admissions).values(data).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating admission:', error);
+      throw error;
+    }
+  }
+
+  async updateAdmission(id: string, data: any): Promise<any | undefined> {
+    try {
+      const result = await db.update(admissions).set(data).where(eq(admissions.id, id)).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating admission:', error);
+      throw error;
+    }
+  }
+
+  async deleteAdmission(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(admissions).where(eq(admissions.id, id));
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.error('Error deleting admission:', error);
+      throw error;
+    }
+  }
+
+  // Images CRUD operations
+  async getImages(): Promise<any[]> {
+    try {
+      console.log('Fetching all images...');
+      const result = await db.select().from(images);
+      console.log(`Successfully fetched ${result.length} images`);
+      return result;
+    } catch (error) {
+      console.error('Error fetching images:', error);
+      throw error;
+    }
+  }
+
+  async getImage(id: string): Promise<any | undefined> {
+    try {
+      const result = await db.select().from(images).where(eq(images.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      throw error;
+    }
+  }
+
+  async createImage(data: any): Promise<any> {
+    try {
+      const result = await db.insert(images).values(data).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating image:', error);
+      throw error;
+    }
+  }
+
+  async updateImage(id: string, data: any): Promise<any | undefined> {
+    try {
+      const result = await db.update(images).set(data).where(eq(images.id, id)).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating image:', error);
+      throw error;
+    }
+  }
+
+  async deleteImage(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(images).where(eq(images.id, id));
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.error('Error deleting image:', error);
       throw error;
     }
   }
