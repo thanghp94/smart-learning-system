@@ -43,7 +43,7 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
           <div className="relative w-32 h-32 mb-2">
             <img
               src={employee.hinh_anh || '/placeholder.svg'}
-              alt={employee.ten_nhan_su}
+              alt={employee.ten_nhan_vien || employee.ten_nhan_su || 'Employee'}
               className="w-full h-full object-cover rounded-full border border-gray-200"
             />
           </div>
@@ -52,16 +52,16 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
 
       <div className="grid grid-cols-1 gap-4">
         <div>
-          <Label htmlFor="ten_nhan_su">Họ và tên</Label>
+          <Label htmlFor="ten_nhan_vien">Họ và tên</Label>
           {isEditing ? (
             <Input
-              id="ten_nhan_su"
-              name="ten_nhan_su"
-              value={employee.ten_nhan_su || ''}
+              id="ten_nhan_vien"
+              name="ten_nhan_vien"
+              value={employee.ten_nhan_vien || ''}
               onChange={handleChange}
             />
           ) : (
-            <div className="p-2 border rounded bg-gray-50">{employee.ten_nhan_su}</div>
+            <div className="p-2 border rounded bg-gray-50">{employee.ten_nhan_vien}</div>
           )}
         </div>
 
@@ -135,11 +135,11 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
             <select
               id="gioi_tinh"
               name="gioi_tinh"
-              value={employee.gioi_tinh || ''}
+              value={employee.gioi_tinh || 'placeholder'}
               onChange={handleChange}
               className="w-full p-2 border rounded"
             >
-              <option value="">Chọn giới tính</option>
+              <option value="placeholder" disabled>Chọn giới tính</option>
               <option value="Nam">Nam</option>
               <option value="Nữ">Nữ</option>
               <option value="Khác">Khác</option>
