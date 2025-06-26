@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [employeeImage, setEmployeeImage] = useState(initialData?.hinh_anh || '');
-  
+
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       ten_nhan_vien: initialData?.ten_nhan_vien || '',
@@ -59,7 +58,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
         co_so_id: formData.co_so_id ? [formData.co_so_id] : [],
         hinh_anh: employeeImage
       };
-      
+
       console.log("Submitting employee data:", processedData);
       await onSubmit(processedData);
     } catch (error) {

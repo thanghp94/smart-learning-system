@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Employee } from '@/lib/types';
 import { Input } from '@/components/ui/input';
@@ -52,7 +51,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Thông tin công việc</h3>
-      
+
       <div className="grid grid-cols-1 gap-4">
         <div>
           <Label htmlFor="bo_phan">Bộ phận</Label>
@@ -67,7 +66,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
             <div className="p-2 border rounded bg-gray-50">{employee.bo_phan || '—'}</div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="chuc_danh">Chức danh</Label>
           {isEditing ? (
@@ -81,7 +80,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
             <div className="p-2 border rounded bg-gray-50">{employee.chuc_danh || '—'}</div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="co_so_id">Cơ sở</Label>
           {isEditing ? (
@@ -112,7 +111,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
             </div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="tinh_trang_lao_dong">Tình trạng</Label>
           {isEditing ? (
@@ -132,7 +131,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
             <div className="p-2 border rounded bg-gray-50">{employee.tinh_trang_lao_dong || '—'}</div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="luong_co_ban">Lương cơ bản</Label>
           {isEditing ? (
@@ -151,7 +150,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
             </div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="ngay_vao_lam">Ngày vào làm</Label>
           {isEditing ? (
@@ -195,7 +194,7 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
             </div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="ghi_chu">Ghi chú</Label>
           {isEditing ? (
