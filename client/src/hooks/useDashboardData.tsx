@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
 
 interface CountData {
   students: number;
@@ -24,43 +23,30 @@ export const useDashboardData = () => {
       setIsLoading(true);
       try {
         // Fetch students count
-        const { count: studentsCount, error: studentsError } = await supabase
-          .from('students')
-          .select('*', { count: 'exact', head: true });
+        const studentsResponse = await fetch('/api/students');
+        const studentsData = studentsResponse.ok ? await studentsResponse.json() : [];
 
         // Fetch classes count
-        const { count: classesCount, error: classesError } = await supabase
-          .from('classes')
-          .select('*', { count: 'exact', head: true });
+        const classesResponse = await fetch('/api/classes');
+        const classesData = classesResponse.ok ? await classesResponse.json() : [];
 
         // Fetch employees count
-        const { count: employeesCount, error: employeesError } = await supabase
-          .from('employees')
-          .select('*', { count: 'exact', head: true });
+        const employeesResponse = await fetch('/api/employees');
+        const employeesData = employeesResponse.ok ? await employeesResponse.json() : [];
 
         // Fetch sessions count
-        const { count: sessionsCount, error: sessionsError } = await supabase
-          .from('teaching_sessions')
-          .select('*', { count: 'exact', head: true });
+        const sessionsResponse = await fetch('/api/teaching-sessions');
+        const sessionsData = sessionsResponse.ok ? await sessionsResponse.json() : [];
 
-        // Fetch recent activities
-        const { data: activitiesData, error: activitiesError } = await supabase
-          .from('activities')
-          .select('*')
-          .order('timestamp', { ascending: false })
-          .limit(10);
-
-        if (studentsError || classesError || employeesError || sessionsError) {
-          console.error("Error fetching counts");
-        } else {
-          setCountData({
-            students: studentsCount || 0,
-            classes: classesCount || 0,
-            employees: employeesCount || 0,
-            sessions: sessionsCount || 0
-          });
-          setActivities(activitiesData || []);
-        }
+        setCountData({
+          students: studentsData.length || 0,
+          classes: classesData.length || 0,
+          employees: employeesData.length || 0,
+          sessions: sessionsData.length || 0
+        });
+        
+        // For now, set activities to empty array since we don't have an activities table yet
+        setActivities([]);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
