@@ -50,7 +50,7 @@ export const secondaryLinks: NavLink[] = [
   },
   { 
     title: 'Thư mục', 
-    href: '/files', 
+    href: '/folders', 
     icon: <FolderOpenIcon className="w-5 h-5" /> 
   },
   { 

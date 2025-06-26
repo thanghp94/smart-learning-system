@@ -134,6 +134,14 @@ Changelog:
   * All database operations now use PostgreSQL exclusively
   * Fixed frontend loading issue caused by Supabase client initialization
   * System now loads properly without hanging on loading screen
+- June 26, 2025. Fixed critical runtime errors and stabilized application
+  * Fixed SelectItem component error by adding proper value props
+  * Resolved navigation duplicate key warning for file/folder links
+  * Added missing API endpoints for events, tasks, sessions, and admissions
+  * Fixed TypeScript errors in teaching-session-service (trang_thai vs status)
+  * Improved error handling in base-service to prevent UI crashes
+  * All major sections now load correctly: students, employees, classes, teaching sessions
+  * Application fully functional with PostgreSQL backend
 ```
 
 ## User Preferences

@@ -8,7 +8,7 @@ export async function fetchAll<T>(table: string): Promise<T[]> {
     return await response.json();
   } catch (error) {
     console.error(`Error in fetchAll for ${table}:`, error);
-    throw error;
+    return []; // Return empty array instead of throwing to prevent UI crashes
   }
 }
 

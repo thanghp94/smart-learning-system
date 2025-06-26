@@ -319,7 +319,7 @@ const SessionBasicInfoFields: React.FC<SessionBasicInfoFieldsProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Không có</SelectItem>
+                  <SelectItem value="none">Không có</SelectItem>
                   {teachers.map((teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id}>
                       {teacher.ten_nhan_su}

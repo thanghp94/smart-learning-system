@@ -109,7 +109,7 @@ const teachingSessionService = {
   // Fix the complete method to use valid fields
   async complete(id: string): Promise<TeachingSession> {
     return update<TeachingSession>('teaching-sessions', id, {
-      status: 'completed'
+      trang_thai: 'completed'
     });
   }
 };

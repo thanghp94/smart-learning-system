@@ -456,6 +456,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Events routes
+  app.get("/api/events", async (req, res) => {
+    try {
+      // Return empty array for now - events table exists but no CRUD methods in storage yet
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
+
+  // Tasks routes
+  app.get("/api/tasks", async (req, res) => {
+    try {
+      // Return empty array for now - tasks table exists but no CRUD methods in storage yet
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch tasks" });
+    }
+  });
+
+  // Session schedules routes
+  app.get("/api/sessions", async (req, res) => {
+    try {
+      // Return empty array for now - sessions table exists but no CRUD methods in storage yet
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch sessions" });
+    }
+  });
+
+  // Admissions routes
+  app.get("/api/admissions", async (req, res) => {
+    try {
+      // Return empty array for now - admissions table exists but no CRUD methods in storage yet
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch admissions" });
+    }
+  });
+
   // AI Command processing route (migrated from Supabase Edge Function)
   app.post("/api/ai/generate", async (req, res) => {
     try {
@@ -521,7 +561,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('Error in AI generation:', error);
-      res.status(500).json({ error: error.message || 'Internal server error' });
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+      res.status(500).json({ error: errorMessage });
     }
   });
 
