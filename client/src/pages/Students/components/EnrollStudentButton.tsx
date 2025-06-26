@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -6,7 +7,9 @@ import { Student } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
-import { Loader } from 'lucide-react';
+import { Loader, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 
 interface EnrollStudentButtonProps {
   student?: Student;
@@ -23,7 +26,7 @@ const EnrollStudentButton = ({
 }: EnrollStudentButtonProps) => {
   const [open, setOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>(classId || '');
-  const [selectedStudentId, setSelectedStudentId] = useState<string>(studentId || '');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -45,18 +48,35 @@ const EnrollStudentButton = ({
 
   useEffect(() => {
     if (classId) setSelectedClassId(classId);
-    if (studentId) setSelectedStudentId(studentId);
-  }, [classId, studentId]);
+    if (studentId) setSelectedStudentIds([studentId]);
+    if (student?.id) setSelectedStudentIds([student.id]);
+  }, [classId, studentId, student]);
+
+  const handleStudentToggle = (studentId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedStudentIds(prev => [...prev, studentId]);
+    } else {
+      setSelectedStudentIds(prev => prev.filter(id => id !== studentId));
+    }
+  };
+
+  const removeStudent = (studentId: string) => {
+    setSelectedStudentIds(prev => prev.filter(id => id !== studentId));
+  };
+
+  const getSelectedStudents = () => {
+    return students.filter(s => selectedStudentIds.includes(s.id));
+  };
 
   const handleSubmit = async () => {
-    const currentStudentId = studentId || selectedStudentId;
+    const currentStudentIds = student || studentId ? [studentId || student!.id] : selectedStudentIds;
     
-    if (!selectedClassId || !currentStudentId) {
+    if (!selectedClassId || currentStudentIds.length === 0) {
       toast({
         title: "Lỗi",
         description: !selectedClassId 
           ? "Vui lòng chọn lớp học" 
-          : "Vui lòng chọn học sinh",
+          : "Vui lòng chọn ít nhất một học sinh",
         variant: "destructive"
       });
       return;
@@ -65,21 +85,27 @@ const EnrollStudentButton = ({
     setIsSubmitting(true);
 
     try {
-      await enrollmentService.create({
-        hoc_sinh_id: currentStudentId,
-        lop_chi_tiet_id: selectedClassId,
-        tinh_trang_diem_danh: 'pending'
-      });
+      // Create enrollments for all selected students
+      const enrollmentPromises = currentStudentIds.map(id =>
+        enrollmentService.create({
+          hoc_sinh_id: id,
+          lop_chi_tiet_id: selectedClassId,
+          tinh_trang_diem_danh: 'pending'
+        })
+      );
+
+      await Promise.all(enrollmentPromises);
 
       toast({
         title: "Thành công",
-        description: "Đã đăng ký học sinh vào lớp học"
+        description: `Đã đăng ký ${currentStudentIds.length} học sinh vào lớp học`
       });
 
       setOpen(false);
+      setSelectedStudentIds([]);
       await onEnrollmentCreated();
     } catch (error) {
-      console.error("Error enrolling student:", error);
+      console.error("Error enrolling students:", error);
       toast({
         title: "Lỗi",
         description: "Không thể đăng ký học sinh. Vui lòng thử lại sau.",
@@ -96,7 +122,7 @@ const EnrollStudentButton = ({
         {classId ? 'Thêm ghi danh' : 'Ghi danh'}
       </Button>
 
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ghi danh học sinh</DialogTitle>
           <DialogDescription>
@@ -107,25 +133,59 @@ const EnrollStudentButton = ({
         <div className="space-y-4">
           {!student && !studentId && (
             <div>
-              <label className="text-sm font-medium">Học sinh</label>
-              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn học sinh" />
-                </SelectTrigger>
-                <SelectContent>
-                  {isStudentsLoading ? (
-                    <div className="flex items-center justify-center p-2">
-                      <Loader className="h-4 w-4 animate-spin" />
-                    </div>
-                  ) : (
-                    students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
+              <label className="text-sm font-medium mb-2 block">Học sinh</label>
+              
+              {/* Show selected students */}
+              {selectedStudentIds.length > 0 && (
+                <div className="mb-3">
+                  <div className="text-xs text-muted-foreground mb-2">
+                    Đã chọn {selectedStudentIds.length} học sinh:
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {getSelectedStudents().map((student) => (
+                      <Badge key={student.id} variant="secondary" className="px-2 py-1">
                         {student.ho_va_ten || student.ten_hoc_sinh}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                        <X 
+                          className="h-3 w-3 ml-1 cursor-pointer" 
+                          onClick={() => removeStudent(student.id)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Student selection list */}
+              <div className="border rounded-md max-h-60 overflow-y-auto">
+                {isStudentsLoading ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader className="h-4 w-4 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="p-2">
+                    {students.map((student) => (
+                      <div key={student.id} className="flex items-center space-x-2 py-2 px-2 hover:bg-muted rounded">
+                        <Checkbox
+                          id={`student-${student.id}`}
+                          checked={selectedStudentIds.includes(student.id)}
+                          onCheckedChange={(checked) => handleStudentToggle(student.id, checked as boolean)}
+                        />
+                        <label 
+                          htmlFor={`student-${student.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                        >
+                          {student.ho_va_ten || student.ten_hoc_sinh}
+                        </label>
+                      </div>
+                    ))}
+                    {students.length === 0 && (
+                      <div className="text-center text-muted-foreground py-4">
+                        Không có học sinh nào
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
