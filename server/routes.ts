@@ -69,19 +69,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all employees
   app.get('/api/employees', async (req, res) => {
     try {
-      const result = await db.query(`
-        SELECT 
-          id,
-          ten_nhan_vien,
-          ten_nhan_su,
-          ho_va_ten,
-          trang_thai,
-          created_at,
-          updated_at
-        FROM employees 
-        ORDER BY created_at DESC
-      `);
-      res.json(result.rows);
+      const employees = await storage.getEmployees();
+      res.json(employees);
     } catch (error) {
       console.error('Error getting employees:', error);
       res.status(500).json({ error: 'Failed to get employees' });
