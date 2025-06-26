@@ -73,6 +73,12 @@ import PersonalDashboard from '@/pages/PersonalDashboard';
 import AITools from '@/pages/AITools';
 import ImageGenerator from '@/pages/AITools/ImageGenerator';
 
+// Admin imports
+import Admin from '@/pages/Admin';
+import TableManager from '@/pages/Admin/TableManager';
+import SQLRunner from '@/pages/Admin/SQLRunner';
+import SchemaViewer from '@/pages/Admin/SchemaViewer';
+
 // Wrapper components for route props
 const EmployeeDetailRoute = () => {
   return <EmployeeDetail />;
@@ -214,6 +220,13 @@ function App() {
             
             <Route path="employee-dashboard/:id" element={<EmployeeDashboard />} />
             <Route path="personal-dashboard" element={<PersonalDashboard />} />
+            
+            {/* Admin Routes */}
+            <Route path="admin" element={<Admin />} />
+            <Route path="admin/tables" element={<TableManager />} />
+            <Route path="admin/table/:tableName" element={<TableManager />} />
+            <Route path="admin/sql" element={<SQLRunner />} />
+            <Route path="admin/schema" element={<SchemaViewer />} />
             
             <Route path="*" element={<NotFound />} />
           </Route>

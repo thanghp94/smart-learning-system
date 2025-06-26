@@ -328,3 +328,301 @@ const SQLRunner = () => {
 };
 
 export default SQLRunner;
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Play, Download, Clock, AlertTriangle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+interface QueryResult {
+  columns: string[];
+  rows: any[][];
+  row_count: number;
+  execution_time?: number;
+  message?: string;
+}
+
+interface QueryHistory {
+  query: string;
+  timestamp: Date;
+  success: boolean;
+  row_count?: number;
+  execution_time?: number;
+  error?: string;
+}
+
+const SQLRunner = () => {
+  const [query, setQuery] = useState('SELECT * FROM students LIMIT 10;');
+  const [result, setResult] = useState<QueryResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<QueryHistory[]>([]);
+
+  const executeQuery = async () => {
+    if (!query.trim()) return;
+
+    setLoading(true);
+    setError(null);
+    const startTime = Date.now();
+
+    try {
+      const response = await fetch('/api/admin/sql/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      });
+
+      const data = await response.json();
+      const executionTime = Date.now() - startTime;
+
+      if (response.ok) {
+        setResult({ ...data, execution_time: executionTime });
+        setHistory(prev => [
+          {
+            query,
+            timestamp: new Date(),
+            success: true,
+            row_count: data.row_count,
+            execution_time: executionTime
+          },
+          ...prev.slice(0, 9) // Keep last 10 queries
+        ]);
+      } else {
+        setError(data.error);
+        setHistory(prev => [
+          {
+            query,
+            timestamp: new Date(),
+            success: false,
+            error: data.error,
+            execution_time: executionTime
+          },
+          ...prev.slice(0, 9)
+        ]);
+      }
+    } catch (err) {
+      const executionTime = Date.now() - startTime;
+      const errorMessage = 'Network error or server unavailable';
+      setError(errorMessage);
+      setHistory(prev => [
+        {
+          query,
+          timestamp: new Date(),
+          success: false,
+          error: errorMessage,
+          execution_time: executionTime
+        },
+        ...prev.slice(0, 9)
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportResults = () => {
+    if (!result || !result.rows.length) return;
+
+    const csv = [
+      result.columns.join(','),
+      ...result.rows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'query_results.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exampleQueries = [
+    'SELECT * FROM students LIMIT 10;',
+    'SELECT COUNT(*) as total_students FROM students;',
+    'SELECT * FROM classes WHERE created_at >= CURRENT_DATE - INTERVAL \'30 days\';',
+    'SELECT students.ho_ten, classes.ten_lop FROM students JOIN enrollments ON students.id = enrollments.student_id JOIN classes ON enrollments.class_id = classes.id;',
+    'SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = \'public\' ORDER BY table_name, ordinal_position;'
+  ];
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Link to="/admin">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Admin
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">SQL Query Runner</h1>
+          </div>
+          <p className="text-muted-foreground">Execute custom SQL queries against your database</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Query Editor
+                <div className="flex gap-2">
+                  <Button onClick={executeQuery} disabled={loading || !query.trim()}>
+                    <Play className="w-4 h-4 mr-2" />
+                    {loading ? 'Executing...' : 'Execute'}
+                  </Button>
+                  {result && result.rows.length > 0 && (
+                    <Button variant="outline" onClick={exportResults}>
+                      <Download className="w-4 h-4 mr-2" />
+                      Export CSV
+                    </Button>
+                  )}
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Enter your SQL query here..."
+                className="min-h-32 font-mono"
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    executeQuery();
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Press Ctrl+Enter to execute. Only SELECT queries are allowed for safety.
+              </p>
+            </CardContent>
+          </Card>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {result && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Query Results</CardTitle>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">
+                      {result.row_count} rows
+                    </Badge>
+                    {result.execution_time && (
+                      <Badge variant="outline">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {result.execution_time}ms
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {result.rows.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          {result.columns.map((column, index) => (
+                            <th key={index} className="text-left p-2 font-medium">
+                              {column}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {result.rows.map((row, rowIndex) => (
+                          <tr key={rowIndex} className="border-b hover:bg-muted/50">
+                            {row.map((cell, cellIndex) => (
+                              <td key={cellIndex} className="p-2">
+                                <div className="max-w-xs truncate" title={cell?.toString()}>
+                                  {cell?.toString() || '—'}
+                                </div>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {result.message || 'Query executed successfully with no results.'}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Example Queries</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {exampleQueries.map((exampleQuery, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  className="w-full justify-start text-left h-auto p-2 whitespace-normal"
+                  onClick={() => setQuery(exampleQuery)}
+                >
+                  <code className="text-xs">{exampleQuery}</code>
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
+
+          {history.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Query History</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {history.map((item, index) => (
+                  <div
+                    key={index}
+                    className="p-2 border rounded cursor-pointer hover:bg-muted/50"
+                    onClick={() => setQuery(item.query)}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant={item.success ? 'default' : 'destructive'}>
+                        {item.success ? 'Success' : 'Error'}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {item.execution_time}ms
+                      </span>
+                    </div>
+                    <code className="text-xs block truncate">
+                      {item.query}
+                    </code>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {item.timestamp.toLocaleTimeString()}
+                      {item.success && item.row_count !== undefined && ` • ${item.row_count} rows`}
+                    </div>
+                    {item.error && (
+                      <div className="text-xs text-red-600 mt-1">{item.error}</div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SQLRunner;

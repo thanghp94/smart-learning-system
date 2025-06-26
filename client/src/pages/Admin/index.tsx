@@ -140,3 +140,102 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Database, Table, Code, Settings, Users, BarChart3 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+const Admin = () => {
+  const adminFeatures = [
+    {
+      title: 'Table Manager',
+      description: 'View and manage all database tables with CRUD operations',
+      icon: Table,
+      href: '/admin/tables',
+      color: 'bg-blue-500'
+    },
+    {
+      title: 'SQL Runner',
+      description: 'Execute custom SQL queries and view results',
+      icon: Code,
+      href: '/admin/sql',
+      color: 'bg-green-500'
+    },
+    {
+      title: 'Schema Viewer',
+      description: 'Explore database structure and relationships',
+      icon: Database,
+      href: '/admin/schema',
+      color: 'bg-purple-500'
+    },
+    {
+      title: 'Enum Manager',
+      description: 'Manage enum values and types',
+      icon: Settings,
+      href: '/admin/enums',
+      color: 'bg-orange-500'
+    }
+  ];
+
+  return (
+    <div className="p-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Database Administration</h1>
+        <p className="text-muted-foreground">
+          Manage your PostgreSQL database with powerful admin tools
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {adminFeatures.map((feature) => {
+          const Icon = feature.icon;
+          return (
+            <Link key={feature.href} to={feature.href} className="block">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader className="pb-3">
+                  <div className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center mb-3`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>{feature.description}</CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Stats</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">--</div>
+                <div className="text-sm text-muted-foreground">Total Tables</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">--</div>
+                <div className="text-sm text-muted-foreground">Total Records</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">--</div>
+                <div className="text-sm text-muted-foreground">Database Size</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">--</div>
+                <div className="text-sm text-muted-foreground">Active Connections</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;

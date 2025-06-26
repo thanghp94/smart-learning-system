@@ -224,3 +224,237 @@ const SchemaViewer = () => {
 };
 
 export default SchemaViewer;
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Database, Table, Key, Link as LinkIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface TableSchema {
+  table_name: string;
+  columns: ColumnInfo[];
+  constraints: ConstraintInfo[];
+}
+
+interface ColumnInfo {
+  column_name: string;
+  data_type: string;
+  is_nullable: string;
+  column_default: string;
+  character_maximum_length: number;
+}
+
+interface ConstraintInfo {
+  constraint_name: string;
+  constraint_type: string;
+  column_name: string;
+}
+
+const SchemaViewer = () => {
+  const [schema, setSchema] = useState<TableSchema[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchSchema();
+  }, []);
+
+  const fetchSchema = async () => {
+    try {
+      const response = await fetch('/api/admin/schema');
+      const data = await response.json();
+      setSchema(data);
+      if (data.length > 0) {
+        setSelectedTable(data[0].table_name);
+      }
+    } catch (error) {
+      console.error('Error fetching schema:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectedTableData = schema.find(table => table.table_name === selectedTable);
+
+  if (loading) {
+    return <div className="p-6">Loading database schema...</div>;
+  }
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Link to="/admin">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Admin
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">Database Schema</h1>
+          </div>
+          <p className="text-muted-foreground">Explore your database structure and relationships</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Database className="w-5 h-5 mr-2" />
+              Tables ({schema.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="space-y-1">
+              {schema.map((table) => (
+                <button
+                  key={table.table_name}
+                  onClick={() => setSelectedTable(table.table_name)}
+                  className={`w-full text-left p-3 hover:bg-muted/50 border-l-4 transition-colors ${
+                    selectedTable === table.table_name
+                      ? 'border-primary bg-muted/50'
+                      : 'border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{table.table_name}</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {table.columns.length}
+                    </Badge>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="lg:col-span-3">
+          {selectedTableData ? (
+            <Tabs defaultValue="columns" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="columns">Columns</TabsTrigger>
+                <TabsTrigger value="constraints">Constraints</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="columns">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Table className="w-5 h-5 mr-2" />
+                      {selectedTable} - Columns
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="border-b">
+                          <tr>
+                            <th className="text-left p-3 font-medium">Column Name</th>
+                            <th className="text-left p-3 font-medium">Data Type</th>
+                            <th className="text-left p-3 font-medium">Nullable</th>
+                            <th className="text-left p-3 font-medium">Default</th>
+                            <th className="text-left p-3 font-medium">Length</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedTableData.columns.map((column) => (
+                            <tr key={column.column_name} className="border-b hover:bg-muted/50">
+                              <td className="p-3">
+                                <div className="flex items-center">
+                                  <span className="font-medium">{column.column_name}</span>
+                                  {selectedTableData.constraints.some(
+                                    c => c.column_name === column.column_name && c.constraint_type === 'PRIMARY KEY'
+                                  ) && (
+                                    <Key className="w-4 h-4 ml-2 text-yellow-600" />
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <Badge variant="outline">{column.data_type}</Badge>
+                              </td>
+                              <td className="p-3">
+                                <Badge variant={column.is_nullable === 'YES' ? 'secondary' : 'destructive'}>
+                                  {column.is_nullable}
+                                </Badge>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-sm text-muted-foreground">
+                                  {column.column_default || '—'}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-sm">
+                                  {column.character_maximum_length || '—'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="constraints">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <LinkIcon className="w-5 h-5 mr-2" />
+                      {selectedTable} - Constraints
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedTableData.constraints.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="border-b">
+                            <tr>
+                              <th className="text-left p-3 font-medium">Constraint Name</th>
+                              <th className="text-left p-3 font-medium">Type</th>
+                              <th className="text-left p-3 font-medium">Column</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedTableData.constraints.map((constraint) => (
+                              <tr key={constraint.constraint_name} className="border-b hover:bg-muted/50">
+                                <td className="p-3 font-medium">{constraint.constraint_name}</td>
+                                <td className="p-3">
+                                  <Badge variant={
+                                    constraint.constraint_type === 'PRIMARY KEY' ? 'default' :
+                                    constraint.constraint_type === 'FOREIGN KEY' ? 'secondary' :
+                                    'outline'
+                                  }>
+                                    {constraint.constraint_type}
+                                  </Badge>
+                                </td>
+                                <td className="p-3">{constraint.column_name}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No constraints found for this table.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center h-96">
+                <p className="text-muted-foreground">Select a table to view its schema details</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SchemaViewer;
