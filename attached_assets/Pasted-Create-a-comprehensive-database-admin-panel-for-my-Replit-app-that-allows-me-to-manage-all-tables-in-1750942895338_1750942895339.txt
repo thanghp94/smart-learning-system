@@ -1,0 +1,82 @@
+Create a comprehensive database admin panel for my Replit app that allows me to manage all tables in my PostgreSQL database. The admin panel should include the following features:
+
+Core Requirements:
+Dynamic Table Discovery: Automatically detect and list all tables in my database by querying the PostgreSQL information schema
+
+CRUD Operations Interface: Create pages for each table that allow:
+
+Create: Add new records with form validation
+
+Read: View all records with pagination, sorting, and search functionality
+
+Update: Edit existing records inline or through forms
+
+Delete: Remove records with confirmation dialogs
+
+SQL Query Runner: Include a dedicated page with a text area where I can write and execute custom SQL queries, displaying results in a formatted table
+
+Enum Management System:
+
+Detect columns with enum types
+
+Provide an interface to add/remove enum values
+
+Generate and execute ALTER TABLE statements automatically
+
+Show current enum values for each column
+
+Technical Implementation:
+Use the existing DATABASE_URL environment variable from my Replit database connection
+
+Create a /admin route structure with proper navigation
+
+Implement proper error handling and user feedback
+
+Use responsive design that works well in Replit's preview pane
+
+Include confirmation dialogs for destructive operations (delete, alter table)
+
+Security Features:
+Add basic authentication (simple username/password is fine)
+
+Implement SQL injection protection for all queries
+
+Add audit logging for all database modifications
+
+Include rollback capabilities where possible
+
+User Interface Requirements:
+Clean, spreadsheet-like interface similar to Replit's Database Editor
+
+Breadcrumb navigation showing current table/operation
+
+Real-time updates when data changes
+
+Export functionality for table data (CSV format)
+
+Bulk operations for multiple records
+
+Additional Features:
+Schema Viewer: Display table structures, column types, and relationships
+
+Backup/Restore: Simple backup functionality for individual tables
+
+Query History: Keep track of executed SQL queries
+
+Performance Monitoring: Show query execution times
+
+File Structure:
+Create organized routes like:
+
+/admin - Dashboard with table list
+
+/admin/table/:tablename - CRUD operations for specific table
+
+/admin/sql - SQL query runner
+
+/admin/enums - Enum management interface
+
+/admin/schema - Database schema viewer
+
+Please create this admin panel step by step, starting with the basic table listing and CRUD operations, then adding the advanced features. Make sure to test each component thoroughly and ensure it integrates seamlessly with my existing Replit app.
+
