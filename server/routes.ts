@@ -99,6 +99,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let coSoId = data.co_so_id;
       if (Array.isArray(coSoId)) {
         coSoId = coSoId.length > 0 ? coSoId[0] : null;
+      } else if (coSoId === '') {
+        coSoId = null;
       }
 
       const result = await db.query(
@@ -136,6 +138,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let coSoId = data.co_so_id;
       if (Array.isArray(coSoId)) {
         coSoId = coSoId.length > 0 ? coSoId[0] : null;
+      } else if (coSoId === '') {
+        coSoId = null;
       }
 
       const result = await db.query(
