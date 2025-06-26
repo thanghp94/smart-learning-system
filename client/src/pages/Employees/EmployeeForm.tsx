@@ -260,6 +260,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
                 <SelectContent>
                   <SelectItem value="active">Đang làm việc</SelectItem>
                   <SelectItem value="inactive">Đã nghỉ việc</SelectItem>
+                  <SelectItem value="maternity_leave">Nghỉ thai sản</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -85,6 +85,7 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
           <SelectItem value="all">Tất cả trạng thái</SelectItem>
           <SelectItem value="active">Đang làm việc</SelectItem>
           <SelectItem value="inactive">Đã nghỉ việc</SelectItem>
+          <SelectItem value="maternity_leave">Nghỉ thai sản</SelectItem>
           <SelectItem value="on_leave">Tạm nghỉ</SelectItem>
         </SelectContent>
       </Select>
