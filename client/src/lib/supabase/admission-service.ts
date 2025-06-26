@@ -1,65 +1,50 @@
-
-import { supabase } from './client';
 import { Admission } from '../types/admission';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
 export const admissionService = {
   getAll: async () => {
-    const { data, error } = await supabase
-      .from('admissions')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data as Admission[];
+    try {
+      const admissions = await fetchAll<Admission>('admissions');
+      console.log('Filtered admissions count:', admissions.length);
+      return admissions;
+    } catch (error) {
+      console.error('Error fetching admissions:', error);
+      throw error;
+    }
   },
+
   getAdmissionById: async (id: string) => {
-    const { data, error } = await supabase
-      .from('admissions')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data as Admission;
+    return fetchById<Admission>('admissions', id);
   },
+
   createAdmission: async (admission: Partial<Admission>) => {
-    const { data, error } = await supabase
-      .from('admissions')
-      .insert(admission)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as Admission;
+    return insert<Admission>('admissions', admission);
   },
+
   updateAdmission: async (id: string, updates: Partial<Admission>) => {
-    const { data, error } = await supabase
-      .from('admissions')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as Admission;
+    return update<Admission>('admissions', id, updates);
   },
+
   deleteAdmission: async (id: string) => {
-    const { error } = await supabase
-      .from('admissions')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    return remove('admissions', id);
   },
+
   updateAdmissionStatus: async (id: string, status: string) => {
-    const { data, error } = await supabase
-      .from('admissions')
-      .update({ trang_thai: status })
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as Admission;
+    try {
+      const response = await fetch(`/api/admissions/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ trang_thai: status }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update admission status');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating admission status:', error);
+      throw error;
+    }
   },
 };

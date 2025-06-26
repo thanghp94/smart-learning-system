@@ -1,57 +1,27 @@
 
-import { supabase } from './client';
+import { fetchAll, fetchById, insert, update } from './base-service';
 
 export const assetTransferService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('asset_transfers')
-      .select('*')
-      .order('transfer_date', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    return fetchAll('asset-transfers');
   },
   
   async getById(id: string) {
-    const { data, error } = await supabase
-      .from('asset_transfers')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return fetchById('asset-transfers', id);
   },
   
   async create(assetTransfer: any) {
-    const { data, error } = await supabase
-      .from('asset_transfers')
-      .insert(assetTransfer)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return insert('asset-transfers', assetTransfer);
   },
   
   async approveTransfer(id: string) {
-    const { error } = await supabase
-      .from('asset_transfers')
-      .update({ status: 'completed' })
-      .eq('id', id);
-    
-    if (error) throw error;
+    return update('asset-transfers', id, { status: 'completed' });
   },
   
   async rejectTransfer(id: string, reason: string) {
-    const { error } = await supabase
-      .from('asset_transfers')
-      .update({ 
-        status: 'rejected',
-        notes: reason 
-      })
-      .eq('id', id);
-    
-    if (error) throw error;
+    return update('asset-transfers', id, { 
+      status: 'rejected',
+      notes: reason 
+    });
   }
 };

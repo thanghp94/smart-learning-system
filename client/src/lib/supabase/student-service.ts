@@ -1,177 +1,61 @@
-import { Student } from '@/lib/types';
+import { Student } from '../types';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
-class StudentService {
-  private apiUrl = '/api';
-
-  // Core CRUD operations
-
-  async getAll(): Promise<Student[]> {
-    console.log('Fetching all students...');
+export const studentService = {
+  async getAll() {
     try {
-      const response = await fetch(`${this.apiUrl}/students`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log(`Successfully fetched ${data?.length || 0} students`);
-      return this.normalizeStudentData(data || []);
+      console.log('Fetching all students...');
+      const students = await fetchAll<Student>('students');
+      console.log(`Successfully fetched ${students.length} students`);
+      console.log('Dữ liệu học sinh đã nhận:', students);
+      return students;
     } catch (error) {
       console.error('Error in fetchStudents:', error);
+      console.error('Lỗi khi tải danh sách học sinh:', error);
       throw error;
     }
-  }
+  },
 
-  async getById(id: string): Promise<Student | null> {
+  async getById(id: string) {
+    return fetchById<Student>('students', id);
+  },
+
+  async create(student: Partial<Student>) {
+    return insert<Student>('students', student);
+  },
+
+  async update(id: string, updates: Partial<Student>) {
+    return update<Student>('students', id, updates);
+  },
+
+  async delete(id: string) {
+    return remove('students', id);
+  },
+
+  // Additional methods for student-specific operations
+  async getByClass(classId: string): Promise<Student[]> {
     try {
-      const response = await fetch(`${this.apiUrl}/students/${id}`);
+      const response = await fetch(`/api/students?classId=${classId}`);
       if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Failed to fetch students by class');
       }
-
-      const data = await response.json();
-      if (!data) return null;
-
-      return this.normalizeStudentData([data])[0];
+      return await response.json();
     } catch (error) {
-      console.error('Error in getById:', error);
+      console.error('Error fetching students by class:', error);
       throw error;
     }
-  }
-
-  async create(studentData: Omit<Student, 'id'> & { id?: string }): Promise<Student | null> {
-    try {
-      console.log('Creating new student:', studentData);
-
-      const response = await fetch(`${this.apiUrl}/students`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(studentData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Student created successfully:', data);
-
-      return data as Student;
-    } catch (error) {
-      console.error('Error in createStudent:', error);
-      throw error;
-    }
-  }
-
-  async update(id: string, updates: Partial<Student>): Promise<Student | null> {
-    try {
-      console.log('Updating student:', id, updates);
-
-      const response = await fetch(`${this.apiUrl}/students/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Student updated successfully:', data);
-
-      return data as Student;
-    } catch (error) {
-      console.error('Error in updateStudent:', error);
-      throw error;
-    }
-  }
-
-  async delete(id: string): Promise<void> {
-    try {
-      const response = await fetch(`${this.apiUrl}/students/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Student not found');
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      console.log('Student deleted successfully:', id);
-    } catch (error) {
-      console.error('Error in deleteStudent:', error);
-      throw error;
-    }
-  }
-
-  // Specialized query methods
+  },
 
   async getByFacility(facilityId: string): Promise<Student[]> {
     try {
-      const response = await fetch(`${this.apiUrl}/students?facility_id=${facilityId}`);
+      const response = await fetch(`/api/students?facilityId=${facilityId}`);
       if (!response.ok) {
-        console.error('Error fetching students by facility');
-        return [];
+        throw new Error('Failed to fetch students by facility');
       }
-
-      const data = await response.json();
-      return this.normalizeStudentData(data || []);
+      return await response.json();
     } catch (error) {
-      console.error('Error in fetchStudentsByFacility:', error);
-      return [];
+      console.error('Error fetching students by facility:', error);
+      throw error;
     }
-  }
-
-  async getByClass(classId: string): Promise<Student[]> {
-    try {
-      // First get enrollments for this class
-      const enrollmentResponse = await fetch(`${this.apiUrl}/enrollments?class_id=${classId}`);
-      if (!enrollmentResponse.ok) {
-        console.error('Error fetching enrollments');
-        return [];
-      }
-
-      const enrollments = await enrollmentResponse.json();
-      if (!enrollments || enrollments.length === 0) {
-        return [];
-      }
-
-      // Get unique student IDs
-      const studentIds = [...new Set(enrollments.map((enrollment: any) => enrollment.hoc_sinh_id))];
-
-      // Fetch all students and filter by IDs
-      const allStudents = await this.getAll();
-      return allStudents.filter(student => studentIds.includes(student.id));
-    } catch (error) {
-      console.error('Error in fetchStudentsByClass:', error);
-      return [];
-    }
-  }
-
-  // Helper methods for data normalization
-
-  private normalizeStudentData(students: any[]): Student[] {
-    return students.map(student => ({
-      ...student,
-      id: student.id || crypto.randomUUID(),
-      co_so_id: student.co_so_id || '',
-      ten_hoc_sinh: student.ten_hoc_sinh || '',
-      email: student.email || student.email_ph1 || ''
-    }));
-  }
-}
-
-export const studentService = new StudentService();
+  },
+};

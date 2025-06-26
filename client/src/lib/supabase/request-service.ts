@@ -1,60 +1,26 @@
-
-import { supabase } from './client';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
 export const requestService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('requests')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    return fetchAll('requests');
   },
-  
+
   async getById(id: string) {
-    const { data, error } = await supabase
-      .from('requests')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return fetchById('requests', id);
   },
-  
+
   async create(request: any) {
-    const { data, error } = await supabase
-      .from('requests')
-      .insert(request)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return insert('requests', request);
   },
-  
+
   async updateStatus(id: string, status: string, processedDate: string) {
-    const { data, error } = await supabase
-      .from('requests')
-      .update({ 
-        trang_thai: status,
-        processed_date: processedDate 
-      })
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return update('requests', id, { 
+      trang_thai: status,
+      processed_date: processedDate 
+    });
   },
-  
+
   async delete(id: string) {
-    const { error } = await supabase
-      .from('requests')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    return remove('requests', id);
   }
 };

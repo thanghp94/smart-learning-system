@@ -1,7 +1,6 @@
 
 import { Contact } from '../types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
-import { supabase } from './client';
 
 export const contactService = {
   getAll: () => fetchAll<Contact>('contacts'),
@@ -12,47 +11,43 @@ export const contactService = {
   
   // Get contacts by type
   getByType: async (type: string): Promise<Contact[]> => {
-    const { data, error } = await supabase
-      .from('contacts')
-      .select('*')
-      .eq('phan_loai', type);
-    
-    if (error) {
+    try {
+      const response = await fetch(`/api/contacts?type=${type}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch contacts by type');
+      }
+      return await response.json();
+    } catch (error) {
       console.error('Error fetching contacts by type:', error);
       throw error;
     }
-    
-    return data as Contact[];
   },
   
   // Get contacts by entity
   getByEntity: async (entityType: string, entityId: string): Promise<Contact[]> => {
-    const { data, error } = await supabase
-      .from('contacts')
-      .select('*')
-      .eq('doi_tuong_id', entityId)
-      .eq('phan_loai', entityType);
-    
-    if (error) {
+    try {
+      const response = await fetch(`/api/contacts?entityType=${entityType}&entityId=${entityId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch contacts by entity');
+      }
+      return await response.json();
+    } catch (error) {
       console.error(`Error fetching contacts for ${entityType} ${entityId}:`, error);
       throw error;
     }
-    
-    return data as Contact[];
   },
   
   // Get active contacts
   getActive: async (): Promise<Contact[]> => {
-    const { data, error } = await supabase
-      .from('contacts')
-      .select('*')
-      .eq('trang_thai', 'active');
-    
-    if (error) {
+    try {
+      const response = await fetch('/api/contacts?status=active');
+      if (!response.ok) {
+        throw new Error('Failed to fetch active contacts');
+      }
+      return await response.json();
+    } catch (error) {
       console.error('Error fetching active contacts:', error);
       throw error;
     }
-    
-    return data as Contact[];
   }
 };

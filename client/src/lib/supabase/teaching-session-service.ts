@@ -1,95 +1,39 @@
-
-import { supabase } from './client';
 import { TeachingSession } from '@/lib/types';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
 const teachingSessionService = {
   async getAll(): Promise<TeachingSession[]> {
-    try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .select('*');
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching teaching sessions:', error);
-      throw error;
-    }
+    return fetchAll<TeachingSession>('teaching-sessions');
   },
 
   async getById(id: string): Promise<TeachingSession> {
-    try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error fetching teaching session by ID:', error);
-      throw error;
+    const result = await fetchById<TeachingSession>('teaching-sessions', id);
+    if (!result) {
+      throw new Error('Teaching session not found');
     }
+    return result;
   },
 
   async create(session: Partial<TeachingSession>): Promise<TeachingSession> {
-    try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .insert([session])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error creating teaching session:', error);
-      throw error;
-    }
+    return insert<TeachingSession>('teaching-sessions', session);
   },
 
   async update(id: string, updates: Partial<TeachingSession>): Promise<TeachingSession> {
-    try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error updating teaching session:', error);
-      throw error;
-    }
+    return update<TeachingSession>('teaching-sessions', id, updates);
   },
 
   async delete(id: string): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('teaching_sessions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting teaching session:', error);
-      throw error;
-    }
+    return remove('teaching-sessions', id);
   },
 
   // Add getByClass method
   async getByClass(classId: string): Promise<TeachingSession[]> {
     try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .select('*')
-        .eq('lop_chi_tiet_id', classId);
-
-      if (error) throw error;
-      return data || [];
+      const response = await fetch(`/api/teaching-sessions?classId=${classId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch teaching sessions by class');
+      }
+      return await response.json();
     } catch (error) {
       console.error('Error fetching teaching sessions by class:', error);
       throw error;
@@ -99,13 +43,11 @@ const teachingSessionService = {
   // Add getByTeacher method
   async getByTeacher(teacherId: string): Promise<TeachingSession[]> {
     try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .select('*, classes(*)')
-        .eq('giao_vien', teacherId);
-
-      if (error) throw error;
-      return data || [];
+      const response = await fetch(`/api/teaching-sessions?teacherId=${teacherId}&includeClasses=true`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch teaching sessions by teacher');
+      }
+      return await response.json();
     } catch (error) {
       console.error('Error fetching teaching sessions by teacher:', error);
       throw error;
@@ -115,14 +57,11 @@ const teachingSessionService = {
   // Add getByTeacherAndDate method
   async getByTeacherAndDate(teacherId: string, date: string): Promise<TeachingSession[]> {
     try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .select('*, classes(*)')
-        .eq('giao_vien', teacherId)
-        .eq('ngay_day', date);
-
-      if (error) throw error;
-      return data || [];
+      const response = await fetch(`/api/teaching-sessions?teacherId=${teacherId}&date=${date}&includeClasses=true`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch teaching sessions by teacher and date');
+      }
+      return await response.json();
     } catch (error) {
       console.error('Error fetching teaching sessions by teacher and date:', error);
       throw error;
@@ -132,35 +71,33 @@ const teachingSessionService = {
   // Add getByFacility method
   async getByFacility(facilityId: string): Promise<TeachingSession[]> {
     try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .select('*, classes(*)')
-        .eq('co_so_id', facilityId);
-
-      if (error) throw error;
-      return data || [];
+      const response = await fetch(`/api/teaching-sessions?facilityId=${facilityId}&includeClasses=true`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch teaching sessions by facility');
+      }
+      return await response.json();
     } catch (error) {
       console.error('Error fetching teaching sessions by facility:', error);
       throw error;
     }
   },
 
-  // Add getWithAvgScore method - fixed the 'eval' issue by renaming parameter
-  async getWithAvgScore(): Promise<any[]> {
+  // Add getWithAvgScore method
+  async getWithAvgScore(): Promise<any[]> => {
     try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .select('*, evaluations(*)');
+      const response = await fetch('/api/teaching-sessions?includeEvaluations=true');
+      if (!response.ok) {
+        throw new Error('Failed to fetch teaching sessions with evaluations');
+      }
+      const data = await response.json();
 
-      if (error) throw error;
-    
-      // Calculate average scores - renamed 'eval' to 'evaluation'
-      return (data || []).map(session => {
+      // Calculate average scores
+      return data.map((session: any) => {
         const evaluations = session.evaluations || [];
         const avgScore = evaluations.length > 0 
           ? evaluations.reduce((sum: number, evaluation: any) => sum + (evaluation.score || 0), 0) / evaluations.length 
           : 0;
-      
+
         return { ...session, avgScore };
       });
     } catch (error) {
@@ -171,23 +108,9 @@ const teachingSessionService = {
 
   // Fix the complete method to use valid fields
   async complete(id: string): Promise<TeachingSession> {
-    try {
-      const { data, error } = await supabase
-        .from('teaching_sessions')
-        .update({
-          status: 'completed'
-          // Remove invalid updated_at field
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error completing teaching session:', error);
-      throw error;
-    }
+    return update<TeachingSession>('teaching-sessions', id, {
+      status: 'completed'
+    });
   }
 };
 

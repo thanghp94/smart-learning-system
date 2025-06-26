@@ -1,119 +1,73 @@
+import { Employee } from '../types';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
-import { Employee } from '@/lib/types';
-
-class EmployeeService {
-  private apiUrl = '/api';
-
-  async getAll(): Promise<Employee[]> {
-    console.log('Fetching all employees...');
+export const employeeService = {
+  async getAll() {
     try {
-      const response = await fetch(`${this.apiUrl}/employees`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log(`Successfully fetched ${data?.length || 0} employees`);
-      return data || [];
+      console.log('Fetching all employees...');
+      const employees = await fetchAll<Employee>('employees');
+      console.log(`Successfully fetched ${employees.length} employees`);
+      console.log('Fetched employees:', employees.length);
+      return employees;
     } catch (error) {
       console.error('Error fetching employees:', error);
       throw error;
     }
-  }
+  },
 
-  async getById(id: string): Promise<Employee | null> {
+  async getById(id: string) {
+    return fetchById<Employee>('employees', id);
+  },
+
+  async create(employee: Partial<Employee>) {
+    return insert<Employee>('employees', employee);
+  },
+
+  async update(id: string, updates: Partial<Employee>) {
+    return update<Employee>('employees', id, updates);
+  },
+
+  async delete(id: string) {
+    return remove('employees', id);
+  },
+
+  // Additional methods for employee-specific operations
+  async getByDepartment(department: string): Promise<Employee[]> {
     try {
-      const response = await fetch(`${this.apiUrl}/employees/${id}`);
+      const response = await fetch(`/api/employees?department=${department}`);
       if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Failed to fetch employees by department');
       }
-      
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
-      console.error('Error in getById for employee:', error);
+      console.error('Error fetching employees by department:', error);
       throw error;
     }
-  }
+  },
 
-  async create(employeeData: Omit<Employee, 'id'> & { id?: string }): Promise<Employee | null> {
+  async getByPosition(position: string): Promise<Employee[]> {
     try {
-      const response = await fetch(`${this.apiUrl}/employees`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(employeeData),
-      });
-      
+      const response = await fetch(`/api/employees?position=${position}`);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Failed to fetch employees by position');
       }
-      
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
-      console.error('Error in create for employee:', error);
+      console.error('Error fetching employees by position:', error);
       throw error;
     }
-  }
+  },
 
-  async update(id: string, updates: Partial<Employee>): Promise<Employee | null> {
+  async getByFacility(facilityId: string): Promise<Employee[]> {
     try {
-      const response = await fetch(`${this.apiUrl}/employees/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-      
+      const response = await fetch(`/api/employees?facilityId=${facilityId}`);
       if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Failed to fetch employees by facility');
       }
-      
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
-      console.error('Error in update for employee:', error);
+      console.error('Error fetching employees by facility:', error);
       throw error;
     }
-  }
-
-  async delete(id: string): Promise<void> {
-    try {
-      const response = await fetch(`${this.apiUrl}/employees/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Employee not found');
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Error in delete for employee:', error);
-      throw error;
-    }
-  }
-
-  async getTeachers(): Promise<Employee[]> {
-    try {
-      const allEmployees = await this.getAll();
-      // Filter for teachers - assuming there's a role field or similar
-      return allEmployees.filter(emp => emp.chuc_vu?.toLowerCase().includes('giáo viên') || emp.chuc_vu?.toLowerCase().includes('teacher'));
-    } catch (error) {
-      console.error('Error fetching teachers:', error);
-      return [];
-    }
-  }
-}
-
-export const employeeService = new EmployeeService();
+  },
+};

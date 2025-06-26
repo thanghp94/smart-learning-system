@@ -1,133 +1,93 @@
-
-import { supabase } from './client';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
 export const settingService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    return fetchAll('settings');
   },
-  
+
   async getByKey(key: string) {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('key', key)
-      .maybeSingle();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch(`/api/settings?key=${key}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch setting by key');
+      }
+      const data = await response.json();
+      return data.length > 0 ? data[0] : null;
+    } catch (error) {
+      console.error('Error fetching setting by key:', error);
+      throw error;
+    }
   },
-  
+
   async getEmailSettings() {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('hang_muc', 'email')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch('/api/settings?category=email');
+      if (!response.ok) {
+        throw new Error('Failed to fetch email settings');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching email settings:', error);
+      throw error;
+    }
   },
-  
+
   async save(setting: any) {
     // If setting has an ID, update it; otherwise, create a new one
     if (setting.id) {
-      const { data, error } = await supabase
-        .from('settings')
-        .update(setting)
-        .eq('id', setting.id)
-        .select()
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data;
+      return update('settings', setting.id, setting);
     } else {
-      const { data, error } = await supabase
-        .from('settings')
-        .insert(setting)
-        .select()
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data;
+      return insert('settings', setting);
     }
   },
-  
+
   async delete(id: string) {
-    const { error } = await supabase
-      .from('settings')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    return remove('settings', id);
   },
-  
+
   async saveEmailSettings(emailSettings: any) {
-    // First check if email settings already exist
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('hang_muc', 'email')
-      .eq('tuy_chon', 'smtp')
-      .maybeSingle();
-    
-    if (error) throw error;
-    
-    // Update or create the settings
-    if (data?.id) {
-      const { data: updatedData, error: updateError } = await supabase
-        .from('settings')
-        .update({
+    try {
+      // First check if email settings already exist
+      const existing = await this.getByKey('smtp_config');
+
+      if (existing?.id) {
+        return this.save({
+          ...existing,
           mo_ta: JSON.stringify(emailSettings),
           updated_at: new Date().toISOString()
-        })
-        .eq('id', data.id)
-        .select()
-        .maybeSingle();
-      
-      if (updateError) throw updateError;
-      return updatedData;
-    } else {
-      const { data: newData, error: insertError } = await supabase
-        .from('settings')
-        .insert({
+        });
+      } else {
+        return this.save({
           hang_muc: 'email',
           tuy_chon: 'smtp',
+          key: 'smtp_config',
           mo_ta: JSON.stringify(emailSettings),
           hien_thi: 'Email Configuration'
-        })
-        .select()
-        .maybeSingle();
-      
-      if (insertError) throw insertError;
-      return newData;
+        });
+      }
+    } catch (error) {
+      console.error('Error saving email settings:', error);
+      throw error;
     }
   },
-  
+
   async getEmailConfig() {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('hang_muc', 'email')
-      .eq('tuy_chon', 'smtp')
-      .maybeSingle();
-    
-    if (error) throw error;
-    
-    if (data?.mo_ta) {
-      try {
-        return JSON.parse(data.mo_ta);
-      } catch (e) {
-        console.error('Error parsing email config:', e);
-        return null;
+    try {
+      const setting = await this.getByKey('smtp_config');
+
+      if (setting?.mo_ta) {
+        try {
+          return JSON.parse(setting.mo_ta);
+        } catch (e) {
+          console.error('Error parsing email config:', e);
+          return null;
+        }
       }
+
+      return null;
+    } catch (error) {
+      console.error('Error getting email config:', error);
+      return null;
     }
-    
-    return null;
   }
 };

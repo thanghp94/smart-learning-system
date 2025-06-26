@@ -1,5 +1,4 @@
 
-import { supabase } from './client';
 import { Attendance, AttendanceWithDetails } from '@/lib/types';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
@@ -26,13 +25,11 @@ class AttendanceService {
 
   async getByEnrollment(enrollmentId: string) {
     try {
-      const { data, error } = await supabase
-        .from('attendances')
-        .select('*')
-        .eq('enrollment_id', enrollmentId);
-      
-      if (error) throw error;
-      return data as Attendance[];
+      const response = await fetch(`/api/attendances?enrollmentId=${enrollmentId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch attendances by enrollment');
+      }
+      return await response.json() as Attendance[];
     } catch (error) {
       console.error('Error fetching attendances by enrollment:', error);
       throw error;
@@ -41,13 +38,11 @@ class AttendanceService {
 
   async getByTeachingSession(sessionId: string) {
     try {
-      const { data, error } = await supabase
-        .from('attendances')
-        .select('*')
-        .eq('teaching_session_id', sessionId);
-      
-      if (error) throw error;
-      return data as Attendance[];
+      const response = await fetch(`/api/attendances?sessionId=${sessionId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch attendances by teaching session');
+      }
+      return await response.json() as Attendance[];
     } catch (error) {
       console.error('Error fetching attendances by teaching session:', error);
       throw error;
@@ -56,22 +51,16 @@ class AttendanceService {
 
   async getWithDetails(studentId?: string, classId?: string) {
     try {
-      let query = supabase
-        .from('attendances_with_details')
-        .select('*');
+      const params = new URLSearchParams();
+      if (studentId) params.append('studentId', studentId);
+      if (classId) params.append('classId', classId);
+      params.append('includeDetails', 'true');
       
-      if (studentId) {
-        query = query.eq('hoc_sinh_id', studentId);
+      const response = await fetch(`/api/attendances?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch attendances with details');
       }
-      
-      if (classId) {
-        query = query.eq('lop_id', classId);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      return data as AttendanceWithDetails[];
+      return await response.json() as AttendanceWithDetails[];
     } catch (error) {
       console.error('Error fetching attendances with details:', error);
       throw error;
@@ -81,26 +70,18 @@ class AttendanceService {
   // Add the saveAttendance method
   async saveAttendance(attendanceRecords: any[]) {
     try {
-      // First delete any existing attendance records for this session to avoid duplicates
-      if (attendanceRecords.length > 0) {
-        const sessionId = attendanceRecords[0].teaching_session_id || attendanceRecords[0].session_id;
-        
-        if (sessionId) {
-          await supabase
-            .from('attendances')
-            .delete()
-            .eq('teaching_session_id', sessionId);
-        }
-      }
+      const response = await fetch('/api/attendances/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ records: attendanceRecords }),
+      });
       
-      // Insert all the new attendance records
-      const { data, error } = await supabase
-        .from('attendances')
-        .insert(attendanceRecords)
-        .select();
-        
-      if (error) throw error;
-      return data;
+      if (!response.ok) {
+        throw new Error('Failed to save attendance records');
+      }
+      return await response.json();
     } catch (error) {
       console.error('Error saving attendance records:', error);
       throw error;
@@ -110,13 +91,18 @@ class AttendanceService {
   // Add the missing methods for employee attendance
   async createEmployeeAttendance(data: any) {
     try {
-      const { data: result, error } = await supabase
-        .from('employee_clock_in_out')
-        .insert(data)
-        .select()
-        .single();
+      const response = await fetch('/api/employee-attendances', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to create employee attendance');
+      }
+      const result = await response.json();
       return { data: result, error: null };
     } catch (error) {
       console.error('Error creating employee attendance:', error);
@@ -126,14 +112,18 @@ class AttendanceService {
 
   async updateEmployeeAttendance(id: string, data: any) {
     try {
-      const { data: result, error } = await supabase
-        .from('employee_clock_in_out')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
+      const response = await fetch(`/api/employee-attendances/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to update employee attendance');
+      }
+      const result = await response.json();
       return { data: result, error: null };
     } catch (error) {
       console.error('Error updating employee attendance:', error);

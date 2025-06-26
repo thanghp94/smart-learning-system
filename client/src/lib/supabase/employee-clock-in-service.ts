@@ -1,147 +1,114 @@
-
-import { supabase } from './client';
+import { fetchAll, fetchById, insert, update } from './base-service';
 
 export const employeeClockInService = {
   async getByEmployeeId(employeeId: string) {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*')
-      .eq('employee_id', employeeId)
-      .order('clock_in_time', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch(`/api/employee-clock-ins?employeeId=${employeeId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch employee clock-ins');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching employee clock-ins:', error);
+      throw error;
+    }
   },
-  
+
   async getAllForDate(date: string) {
-    // Get records for a specific date
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*')
-      .gte('clock_in_time', `${date}T00:00:00`)
-      .lt('clock_in_time', `${date}T23:59:59`)
-      .order('clock_in_time', { ascending: true });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch(`/api/employee-clock-ins?date=${date}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch clock-ins for date');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching clock-ins for date:', error);
+      throw error;
+    }
   },
-  
+
   async create(clockInData: any) {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .insert(clockInData)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return insert('employee-clock-ins', clockInData);
   },
-  
+
   async updateClockOut(id: string, clockOutTime: string) {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .update({ 
-        clock_out_time: clockOutTime 
-      })
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return update('employee-clock-ins', id, { 
+      clock_out_time: clockOutTime 
+    });
   },
-  
-  // Add missing methods
+
   async getByEmployeeAndDate(employeeId: string, date: string) {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*')
-      .eq('nhan_vien_id', employeeId)
-      .eq('ngay', date)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch(`/api/employee-clock-ins?employeeId=${employeeId}&date=${date}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch employee clock-ins for date');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching employee clock-ins for date:', error);
+      throw error;
+    }
   },
-  
+
   async update(id: string, updates: any) {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return update('employee-clock-ins', id, updates);
   },
-  
+
   async getMonthlyReport(year: number, month: number) {
-    // Get monthly attendance summary
-    const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of month
-    
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*, employees(id, ten_nhan_su)')
-      .gte('clock_in_time', `${startDate}T00:00:00`)
-      .lt('clock_in_time', `${endDate}T23:59:59`)
-      .order('clock_in_time', { ascending: true });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch(`/api/employee-clock-ins?year=${year}&month=${month}&includeEmployee=true`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch monthly report');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching monthly report:', error);
+      throw error;
+    }
   },
-  
-  // Add missing methods for DailyAttendance.tsx
+
   async getDailyReport(date: string) {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*, employees(id, ten_nhan_su, hinh_anh, phong_ban, vi_tri)')
-      .eq('ngay', date)
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
-    
-    // Format the data to include employee details
-    return data.map((record) => ({
-      ...record,
-      employee_name: record.employees?.ten_nhan_su || 'Unknown',
-      employee_image: record.employees?.hinh_anh || null,
-      department: record.employees?.phong_ban || 'Unassigned',
-      position: record.employees?.vi_tri || 'No position'
-    }));
+    try {
+      const response = await fetch(`/api/employee-clock-ins?date=${date}&includeEmployee=true`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch daily report');
+      }
+
+      const data = await response.json();
+      // Format the data to include employee details
+      return data.map((record: any) => ({
+        ...record,
+        employee_name: record.employees?.ten_nhan_su || 'Unknown',
+        employee_image: record.employees?.hinh_anh || null,
+        department: record.employees?.phong_ban || 'Unassigned',
+        position: record.employees?.vi_tri || 'No position'
+      }));
+    } catch (error) {
+      console.error('Error fetching daily report:', error);
+      throw error;
+    }
   },
-  
-  // Add missing methods for MonthlyAttendanceSummary.tsx
+
   async getAll() {
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*, employees(id, ten_nhan_su)')
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
-    return data;
+    return fetchAll('employee-clock-ins');
   },
-  
-  // Add missing methods for EmployeeAttendance.tsx
+
   async getMonthlyAttendance(month: number, year: number) {
-    const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const lastDay = new Date(year, month, 0).getDate();
-    const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay}`;
-    
-    const { data, error } = await supabase
-      .from('employee_clock_in_out')
-      .select('*, employees(id, ten_nhan_su)')
-      .gte('ngay', startDate)
-      .lte('ngay', endDate)
-      .order('ngay', { ascending: true });
-      
-    if (error) throw error;
-    
-    // Format the data to include employee name
-    return data.map((record) => ({
-      ...record,
-      employee_name: record.employees?.ten_nhan_su || 'Unknown Employee'
-    }));
+    try {
+      const response = await fetch(`/api/employee-clock-ins?month=${month}&year=${year}&includeEmployee=true`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch monthly attendance');
+      }
+
+      const data = await response.json();
+      // Format the data to include employee name
+      return data.map((record: any) => ({
+        ...record,
+        employee_name: record.employees?.ten_nhan_su || 'Unknown Employee'
+      }));
+    } catch (error) {
+      console.error('Error fetching monthly attendance:', error);
+      throw error;
+    }
   }
 };

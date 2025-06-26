@@ -1,7 +1,6 @@
 
 import { Event } from '@/lib/types';
 import { fetchAll, fetchById, insert, update, remove, logActivity } from './base-service';
-import { supabase } from './client';
 
 export const eventService = {
   async getAll() {
@@ -46,15 +45,11 @@ export const eventService = {
 
   async getByEntity(entityType: string, entityId: string) {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('entity_type', entityType)
-        .eq('entity_id', entityId)
-        .order('start_date', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+      const response = await fetch(`/api/events?entityType=${entityType}&entityId=${entityId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events by entity');
+      }
+      return await response.json();
     } catch (error) {
       console.error(`Error fetching events for ${entityType} ${entityId}:`, error);
       throw error;
@@ -63,15 +58,11 @@ export const eventService = {
   
   async getBetweenDates(startDate: string, endDate: string) {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .gte('start_date', startDate)
-        .lte('end_date', endDate)
-        .order('start_date');
-      
-      if (error) throw error;
-      return data;
+      const response = await fetch(`/api/events?startDate=${startDate}&endDate=${endDate}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events between dates');
+      }
+      return await response.json();
     } catch (error) {
       console.error('Error fetching events between dates:', error);
       throw error;

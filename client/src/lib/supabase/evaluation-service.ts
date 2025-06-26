@@ -1,69 +1,36 @@
-
-import { supabase } from './client';
+import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
 export const evaluationService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    return fetchAll('evaluations');
   },
-  
+
   async getById(id: string) {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return fetchById('evaluations', id);
   },
-  
+
   async getByEntityId(entityType: string, entityId: string) {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('*')
-      .eq('entity_type', entityType)
-      .eq('entity_id', entityId)
-      .order('evaluation_date', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch(`/api/evaluations?entityType=${entityType}&entityId=${entityId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch evaluations by entity');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching evaluations by entity:', error);
+      throw error;
+    }
   },
-  
+
   async create(evaluation: any) {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .insert(evaluation)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return insert('evaluations', evaluation);
   },
-  
+
   async update(id: string, updates: any) {
-    const { data, error } = await supabase
-      .from('evaluations')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    return update('evaluations', id, updates);
   },
-  
+
   async delete(id: string) {
-    const { error } = await supabase
-      .from('evaluations')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    return remove('evaluations', id);
   }
 };

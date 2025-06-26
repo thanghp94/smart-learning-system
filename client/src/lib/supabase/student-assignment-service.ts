@@ -1,5 +1,4 @@
 
-import { supabase } from './client';
 import { fetchAll, fetchById, insert, update, remove } from './base-service';
 
 export interface StudentAssignment {
@@ -22,35 +21,32 @@ export interface StudentAssignment {
 
 class StudentAssignmentService {
   async getAll() {
-    return fetchAll<StudentAssignment>('student_assignments');
+    return fetchAll<StudentAssignment>('student-assignments');
   }
 
   async getById(id: string) {
-    return fetchById<StudentAssignment>('student_assignments', id);
+    return fetchById<StudentAssignment>('student-assignments', id);
   }
 
   async create(data: Partial<StudentAssignment>) {
-    return insert<StudentAssignment>('student_assignments', data);
+    return insert<StudentAssignment>('student-assignments', data);
   }
 
   async update(id: string, data: Partial<StudentAssignment>) {
-    return update<StudentAssignment>('student_assignments', id, data);
+    return update<StudentAssignment>('student-assignments', id, data);
   }
 
   async delete(id: string) {
-    return remove('student_assignments', id);
+    return remove('student-assignments', id);
   }
 
   async getByStudent(studentId: string) {
     try {
-      const { data, error } = await supabase
-        .from('student_assignments')
-        .select('*')
-        .eq('hoc_sinh_id', studentId)
-        .order('ngay_giao', { ascending: false });
-      
-      if (error) throw error;
-      return data as StudentAssignment[];
+      const response = await fetch(`/api/student-assignments?studentId=${studentId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch student assignments');
+      }
+      return await response.json() as StudentAssignment[];
     } catch (error) {
       console.error('Error fetching student assignments:', error);
       throw error;
@@ -59,13 +55,11 @@ class StudentAssignmentService {
 
   async getByClass(classId: string) {
     try {
-      const { data, error } = await supabase
-        .from('student_assignments')
-        .select('*')
-        .eq('lop_chi_tiet_id', classId);
-      
-      if (error) throw error;
-      return data as StudentAssignment[];
+      const response = await fetch(`/api/student-assignments?classId=${classId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch assignments by class');
+      }
+      return await response.json() as StudentAssignment[];
     } catch (error) {
       console.error('Error fetching assignments by class:', error);
       throw error;
@@ -74,13 +68,11 @@ class StudentAssignmentService {
 
   async getByTeachingSession(sessionId: string) {
     try {
-      const { data, error } = await supabase
-        .from('student_assignments')
-        .select('*')
-        .eq('buoi_day_id', sessionId);
-      
-      if (error) throw error;
-      return data as StudentAssignment[];
+      const response = await fetch(`/api/student-assignments?sessionId=${sessionId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch assignments by teaching session');
+      }
+      return await response.json() as StudentAssignment[];
     } catch (error) {
       console.error('Error fetching assignments by teaching session:', error);
       throw error;
