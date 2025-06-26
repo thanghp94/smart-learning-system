@@ -113,14 +113,10 @@ function App() {
           {/* Auth Routes */}
           <Route path="/auth" element={<AuthPage />} />
 
-          {/* Protected Routes */}
+          {/* Main Routes - Authentication bypassed for immediate loading */}
           <Route 
             path="/" 
-            element={
-              <ProtectedRoute>
-                <MainLayout />
-              </ProtectedRoute>
-            }
+            element={<MainLayout />}
           >
             <Route index element={<Index />} />
             <Route path="students" element={<Students />} />
