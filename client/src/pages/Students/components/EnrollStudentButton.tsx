@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { enrollmentService, classService } from '@/lib/supabase';
+import { enrollmentService, classService, studentService } from '@/lib/supabase';
 import { Student } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,6 +23,7 @@ const EnrollStudentButton = ({
 }: EnrollStudentButtonProps) => {
   const [open, setOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>(classId || '');
+  const [selectedStudentId, setSelectedStudentId] = useState<string>(studentId || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -35,17 +36,27 @@ const EnrollStudentButton = ({
     }
   });
 
+  // Load students when needed
+  const { data: students = [], isLoading: isStudentsLoading } = useQuery({
+    queryKey: ['students'],
+    queryFn: () => studentService.getAll(),
+    enabled: !student && !studentId
+  });
+
   useEffect(() => {
     if (classId) setSelectedClassId(classId);
-  }, [classId]);
+    if (studentId) setSelectedStudentId(studentId);
+  }, [classId, studentId]);
 
   const handleSubmit = async () => {
-    if (!selectedClassId || !studentId) {
+    const currentStudentId = studentId || selectedStudentId;
+    
+    if (!selectedClassId || !currentStudentId) {
       toast({
         title: "Lỗi",
         description: !selectedClassId 
           ? "Vui lòng chọn lớp học" 
-          : "Không tìm thấy thông tin học sinh",
+          : "Vui lòng chọn học sinh",
         variant: "destructive"
       });
       return;
@@ -55,7 +66,7 @@ const EnrollStudentButton = ({
 
     try {
       await enrollmentService.create({
-        hoc_sinh_id: studentId,
+        hoc_sinh_id: currentStudentId,
         lop_chi_tiet_id: selectedClassId,
         tinh_trang_diem_danh: 'pending'
       });
