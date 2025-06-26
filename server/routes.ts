@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertStudentSchema, insertEmployeeSchema, insertFacilitySchema,
   insertClassSchema, insertTeachingSessionSchema, insertEnrollmentSchema,
-  insertAttendanceSchema, insertAssetSchema
+  insertAttendanceSchema, insertAssetSchema, insertTaskSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -469,13 +469,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Tasks routes
+  // Task routes
   app.get("/api/tasks", async (req, res) => {
     try {
-      // Return empty array for now - tasks table exists but no CRUD methods in storage yet
-      res.json([]);
+      console.log('Tasks API endpoint called');
+      const tasks = await storage.getTasks();
+      console.log('Tasks fetched from storage:', tasks.length);
+      res.json(tasks);
     } catch (error) {
+      console.error('Error in tasks endpoint:', error);
       res.status(500).json({ error: "Failed to fetch tasks" });
+    }
+  });
+
+  app.get("/api/tasks/:id", async (req, res) => {
+    try {
+      const task = await storage.getTask(req.params.id);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch task" });
+    }
+  });
+
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const task = await storage.createTask(req.body);
+      res.json(task);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid task data" });
+    }
+  });
+
+  app.patch("/api/tasks/:id", async (req, res) => {
+    try {
+      const task = await storage.updateTask(req.params.id, req.body);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update task" });
+    }
+  });
+
+  app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteTask(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete task" });
     }
   });
 

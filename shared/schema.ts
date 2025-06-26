@@ -278,17 +278,24 @@ export const requests = pgTable("requests", {
 // Tasks table
 export const tasks = pgTable("tasks", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  title: text("title").notNull(),
-  description: text("description"),
-  assigned_to: text("assigned_to"),
-  assigned_by: text("assigned_by"),
-  status: text("status").default("pending"),
-  priority: text("priority").default("medium"),
-  due_date: date("due_date"),
-  completed_at: timestamp("completed_at"),
+  ten_viec: text("ten_viec").notNull(),
+  loai_viec: text("loai_viec"),
+  dien_giai: text("dien_giai"),
+  nguoi_phu_trach: text("nguoi_phu_trach"),
+  nguoi_tao: text("nguoi_tao"),
+  ngay_den_han: date("ngay_den_han"),
+  cap_do: text("cap_do").default("normal"),
+  trang_thai: text("trang_thai").default("pending"),
+  doi_tuong: text("doi_tuong"),
+  doi_tuong_id: text("doi_tuong_id"),
+  ghi_chu: text("ghi_chu"),
+  ngay_hoan_thanh: timestamp("ngay_hoan_thanh"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
+
+export const insertTaskSchema = createInsertSchema(tasks);
+export const selectTaskSchema = createSelectSchema(tasks);
 
 // Evaluations table
 export const evaluations = pgTable("evaluations", {

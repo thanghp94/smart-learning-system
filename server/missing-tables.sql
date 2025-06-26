@@ -1,4 +1,3 @@
-
 -- Settings table
 CREATE TABLE IF NOT EXISTS settings (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -114,8 +113,7 @@ CREATE TABLE IF NOT EXISTS contacts (
   dia_chi TEXT,
   loai_lien_he TEXT,
   ghi_chu TEXT,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Requests table

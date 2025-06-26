@@ -8,9 +8,9 @@ import type {
   Asset, InsertAsset
 } from "@shared/schema";
 import { 
-  users, students, employees, facilities, 
+  students, employees, facilities, 
   classes, teachingSessions, enrollments, 
-  attendances, assets 
+  attendances, assets, tasks
 } from "@shared/schema";
 
 export interface IStorage {
@@ -74,6 +74,13 @@ export interface IStorage {
   createAsset(asset: InsertAsset): Promise<Asset>;
   updateAsset(id: string, asset: Partial<InsertAsset>): Promise<Asset | undefined>;
   deleteAsset(id: string): Promise<boolean>;
+
+    // Task operations
+  getTasks(): Promise<any[]>;
+  getTask(id: string): Promise<any | undefined>;
+  createTask(task: any): Promise<any>;
+  updateTask(id: string, task: any): Promise<any | undefined>;
+  deleteTask(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -333,6 +340,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAsset(id: string): Promise<boolean> {
     const result = await db.delete(assets).where(eq(assets.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Task operations
+  async getTasks(): Promise<any[]> {
+    console.log('Fetching tasks from database...');
+    const result = await db.select().from(tasks);
+    console.log('Tasks found in database:', result.length);
+    return result;
+  }
+
+  async getTask(id: string): Promise<any | undefined> {
+    const result = await db.select().from(tasks).where(eq(tasks.id, id));
+    return result[0];
+  }
+
+  async createTask(task: any): Promise<any> {
+    const id = crypto.randomUUID();
+    const taskWithId = {
+      ...task,
+      id
+    };
+    const result = await db.insert(tasks).values(taskWithId).returning();
+    return result[0];
+  }
+
+  async updateTask(id: string, task: any): Promise<any | undefined> {
+    const result = await db.update(tasks).set(task).where(eq(tasks.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 
