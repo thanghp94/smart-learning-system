@@ -62,7 +62,7 @@ import ContractTemplateManagerPage from '@/pages/Employees/ContractTemplateManag
 import Attendance from '@/pages/Attendance';
 import TeacherSchedule from '@/pages/TeacherSchedule';
 import Settings from '@/pages/Settings';
-import EnumManager from '@/pages/Settings/EnumManager';
+import SettingsEnumManager from '@/pages/Settings/EnumManager';
 import AssetTransfer from '@/pages/Assets/AssetTransfer';
 import TransferManagement from '@/pages/Assets/TransferManagement';
 import Admissions from '@/pages/Admissions';
@@ -74,10 +74,11 @@ import AITools from '@/pages/AITools';
 import ImageGenerator from '@/pages/AITools/ImageGenerator';
 
 // Admin imports
-import Admin from '@/pages/Admin';
+import AdminDashboard from '@/pages/Admin';
 import TableManager from '@/pages/Admin/TableManager';
 import SQLRunner from '@/pages/Admin/SQLRunner';
 import SchemaViewer from '@/pages/Admin/SchemaViewer';
+import EnumManager from '@/pages/Admin/EnumManager';
 
 // Wrapper components for route props
 const EmployeeDetailRoute = () => {
@@ -213,6 +214,13 @@ function App() {
             
             <Route path="database-schema" element={<DatabaseSchema />} />
             
+            {/* Admin Panel Routes */}
+            <Route path="admin" element={<AdminDashboard />} />
+            <Route path="admin/sql" element={<SQLRunner />} />
+            <Route path="admin/schema" element={<SchemaViewer />} />
+            <Route path="admin/table/:tableName" element={<TableManager />} />
+            <Route path="admin/enums" element={<EnumManager />} />
+            
             <Route path="enum-manager" element={<EnumManager />} />
             <Route path="ai-tools" element={<AITools />} />
             <Route path="ai-tools/image-generator" element={<ImageGenerator />} />
@@ -222,11 +230,12 @@ function App() {
             <Route path="personal-dashboard" element={<PersonalDashboard />} />
             
             {/* Admin Routes */}
-            <Route path="admin" element={<Admin />} />
+            <Route path="admin" element={<AdminDashboard />} />
             <Route path="admin/tables" element={<TableManager />} />
             <Route path="admin/table/:tableName" element={<TableManager />} />
             <Route path="admin/sql" element={<SQLRunner />} />
             <Route path="admin/schema" element={<SchemaViewer />} />
+            <Route path="admin/enums" element={<EnumManager />} />
             
             <Route path="*" element={<NotFound />} />
           </Route>

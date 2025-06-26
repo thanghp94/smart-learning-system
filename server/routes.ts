@@ -1143,286 +1143,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Admin API routes
-  app.get("/api/admin/tables", async (req, res) => {
-    try {
-      const query = `
-        SELECT 
-          t.table_name,
-          t.table_type,
-          COALESCE(s.n_tup_ins + s.n_tup_upd + s.n_tup_del, 0) as row_count
-        FROM information_schema.tables t
-        LEFT JOIN pg_stat_user_tables s ON s.relname = t.table_name
-        WHERE t.table_schema = 'public'
-        ORDER BY t.table_name
-      `;
-      const result = await db.query(query);
-      res.json(result.rows);
-    } catch (error) {
-      console.error('Error fetching tables:', error);
-      res.status(500).json({ error: 'Failed to fetch tables' });
-    }
-  });
 
-  app.get("/api/admin/table/:tableName/columns", async (req, res) => {
-    try {
-      const { tableName } = req.params;
-      const query = `
-        SELECT 
-          column_name,
-          data_type,
-          is_nullable,
-          column_default
-        FROM information_schema.columns 
-        WHERE table_schema = 'public' AND table_name = $1
-        ORDER BY ordinal_position
-      `;
-      const result = await db.query(query, [tableName]);
-      res.json(result.rows);
-    } catch (error) {
-      console.error('Error fetching columns:', error);
-      res.status(500).json({ error: 'Failed to fetch columns' });
-    }
-  });
 
-  app.get("/api/admin/table/:tableName/data", async (req, res) => {
-    try {
-      const { tableName } = req.params;
-      const limit = parseInt(req.query.limit as string) || 1000;
-      const offset = parseInt(req.query.offset as string) || 0;
-
-      // Validate table name to prevent SQL injection
-      const tableExistsQuery = `
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_schema = 'public' AND table_name = $1
-        )
-      `;
-      const tableExists = await db.query(tableExistsQuery, [tableName]);
-
-      if (!tableExists.rows[0].exists) {
-        return res.status(404).json({ error: 'Table not found' });
-      }
-
-      const query = `SELECT * FROM "${tableName}" LIMIT $1 OFFSET $2`;
-      const result = await db.query(query, [limit, offset]);
-      res.json(result.rows);
-    } catch (error) {
-      console.error('Error fetching table data:', error);
-      res.status(500).json({ error: 'Failed to fetch table data' });
-    }
-  });
-
-  app.post("/api/admin/table/:tableName/add", async (req, res) => {
-    try {
-      const { tableName } = req.params;
-      const data = req.body;
-
-      // Validate table name
-      const tableExistsQuery = `
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_schema = 'public' AND table_name = $1
-        )
-      `;
-      const tableExists = await db.query(tableExistsQuery, [tableName]);
-
-      if (!tableExists.rows[0].exists) {
-        return res.status(404).json({ error: 'Table not found' });
-      }
-
-      const columns = Object.keys(data);
-      const values = Object.values(data);
-      const placeholders = values.map((_, index) => `$${index + 1}`);
-
-      const query = `
-        INSERT INTO "${tableName}" (${columns.map(col => `"${col}"`).join(', ')})
-        VALUES (${placeholders.join(', ')})
-        RETURNING *
-      `;
-
-      const result = await db.query(query, values);
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Error adding row:', error);
-      res.status(500).json({ error: 'Failed to add row: ' + error.message });
-    }
-  });
-
-  app.put("/api/admin/table/:tableName/update/:id", async (req, res) => {
-    try {
-      const { tableName, id } = req.params;
-      const data = req.body;
-
-      // Validate table name
-      const tableExistsQuery = `
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_schema = 'public' AND table_name = $1
-        )
-      `;
-      const tableExists = await db.query(tableExistsQuery, [tableName]);
-
-      if (!tableExists.rows[0].exists) {
-        return res.status(404).json({ error: 'Table not found' });
-      }
-
-      const columns = Object.keys(data);
-      const values = Object.values(data);
-      const setClause = columns.map((col, index) => `"${col}" = $${index + 1}`);
-
-      const query = `
-        UPDATE "${tableName}" 
-        SET ${setClause.join(', ')}
-        WHERE id = $${values.length + 1}
-        RETURNING *
-      `;
-
-      const result = await db.query(query, [...values, id]);
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Row not found' });
-      }
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Error updating row:', error);
-      res.status(500).json({ error: 'Failed to update row: ' + error.message });
-    }
-  });
-
-  app.delete("/api/admin/table/:tableName/delete/:id", async (req, res) => {
-    try {
-      const { tableName, id } = req.params;
-
-      // Validate table name
-      const tableExistsQuery = `
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_schema = 'public' AND table_name = $1
-        )
-      `;
-      const tableExists = await db.query(tableExistsQuery, [tableName]);
-
-      if (!tableExists.rows[0].exists) {
-        return res.status(404).json({ error: 'Table not found' });
-      }
-
-      const query = `DELETE FROM "${tableName}" WHERE id = $1 RETURNING *`;
-      const result = await db.query(query, [id]);
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Row not found' });
-      }
-
-      res.json({ message: 'Row deleted successfully' });
-    } catch (error) {
-      console.error('Error deleting row:', error);
-      res.status(500).json({ error: 'Failed to delete row: ' + error.message });
-    }
-  });
-
-  app.post("/api/admin/sql/execute", async (req, res) => {
+  // Admin API endpoints for comprehensive database management
+  
+  // Execute SQL query
+  app.post("/api/admin/sql", async (req, res) => {
     try {
       const { query } = req.body;
-
-      if (!query || typeof query !== 'string') {
+      if (!query) {
         return res.status(400).json({ error: 'Query is required' });
       }
-
-      // Basic SQL injection protection - block certain dangerous keywords
-      const dangerousKeywords = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER', 'CREATE', 'INSERT', 'UPDATE'];
-      const upperQuery = query.toUpperCase();
-      const isDangerous = dangerousKeywords.some(keyword => 
-        upperQuery.includes(keyword) && !upperQuery.startsWith('SELECT')
-      );
-
-      if (isDangerous) {
-        return res.status(403).json({ 
-          error: 'Dangerous query detected. Only SELECT queries are allowed for safety.' 
-        });
-      }
-
-      const result = await db.query(query);
-
-      // Format response for different query types
-      if (result.rows && Array.isArray(result.rows)) {
-        const columns = result.fields ? result.fields.map(field => field.name) : [];
-        const rows = result.rows.map(row => columns.map(col => row[col]));
-
-        res.json({
-          columns,
-          rows,
-          row_count: result.rowCount || 0
-        });
-      } else {
-        res.json({
-          columns: [],
-          rows: [],
-          row_count: result.rowCount || 0,
-          message: 'Query executed successfully'
-        });
-      }
-    } catch (error) {
-      console.error('Error executing query:', error);
+      const result = await storage.executeQuery(query);
+      res.json({ rows: result, success: true });
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.get("/api/admin/schema", async (req, res) => {
+  // Get all tables
+  app.get("/api/admin/tables", async (req, res) => {
     try {
-      // Get all tables with their columns and constraints
-      const tablesQuery = `
-        SELECT DISTINCT table_name 
+      const query = `
+        SELECT table_name, table_type 
         FROM information_schema.tables 
         WHERE table_schema = 'public' 
         ORDER BY table_name
       `;
-      const tables = await db.query(tablesQuery);
-
-      const schemaInfo = await Promise.all(
-        tables.rows.map(async (table) => {
-          const tableName = table.table_name;
-
-          // Get columns
-          const columnsQuery = `
-            SELECT 
-              column_name,
-              data_type,
-              is_nullable,
-              column_default,
-              character_maximum_length
-            FROM information_schema.columns 
-            WHERE table_schema = 'public' AND table_name = $1
-            ORDER BY ordinal_position
-          `;
-          const columns = await db.query(columnsQuery, [tableName]);
-
-          // Get constraints
-          const constraintsQuery = `
-            SELECT 
-              tc.constraint_name,
-              tc.constraint_type,
-              ccu.column_name
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.constraint_column_usage ccu 
-              ON tc.constraint_name = ccu.constraint_name
-            WHERE tc.table_schema = 'public' AND tc.table_name = $1
-          `;
-          const constraints = await db.query(constraintsQuery, [tableName]);
-
-          return {
-            table_name: tableName,
-            columns: columns.rows,
-            constraints: constraints.rows
-          };
-        })
-      );
-
-      res.json(schemaInfo);
-    } catch (error) {
-      console.error('Error fetching schema:', error);
-      res.status(500).json({ error: 'Failed to fetch schema' });
+      const result = await storage.executeQuery(query);
+      // Extract rows from PostgreSQL result object
+      const tables = Array.isArray(result) ? result : (result?.rows || []);
+      res.json(tables);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
+
+
+
+
 
   const httpServer = createServer(app);
 
