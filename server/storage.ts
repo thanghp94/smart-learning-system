@@ -343,6 +343,74 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // Employee Clock-in CRUD operations
+  async getEmployeeClockIn() {
+    console.log('Fetching all employee clock-in records...');
+    try {
+      // Placeholder for database query using Drizzle ORM.
+      // Replace with actual Drizzle query when schema is available.
+      return [];
+    } catch (error) {
+      console.error('Error fetching employee clock-in records:', error);
+      throw error;
+    }
+  }
+
+  async getEmployeeClockInById(id: string) {
+    try {
+       // Placeholder for database query using Drizzle ORM.
+      // Replace with actual Drizzle query when schema is available.
+      return undefined;
+    } catch (error) {
+      console.error('Error fetching employee clock-in record:', error);
+      throw error;
+    }
+  }
+
+  async getEmployeeClockInByMonth(month: number, year: number) {
+    try {
+      // Placeholder for database query using Drizzle ORM.
+      // Replace with actual Drizzle query when schema is available.
+      return [];
+    } catch (error) {
+      console.error('Error fetching employee clock-in records by month:', error);
+      throw error;
+    }
+  }
+
+  async createEmployeeClockIn(data: any) {
+    try {
+      // Placeholder for database query using Drizzle ORM.
+      // Replace with actual Drizzle query when schema is available.
+      return undefined;
+    } catch (error) {
+      console.error('Error creating employee clock-in record:', error);
+      throw error;
+    }
+  }
+
+  async updateEmployeeClockIn(id: string, data: any) {
+    try {
+       // Placeholder for database query using Drizzle ORM.
+      // Replace with actual Drizzle query when schema is available.
+      return undefined;
+    } catch (error) {
+      console.error('Error updating employee clock-in record:', error);
+      throw error;
+    }
+  }
+
+  async deleteEmployeeClockIn(id: string) {
+    try {
+       // Placeholder for database query using Drizzle ORM.
+      // Replace with actual Drizzle query when schema is available.
+      return false;
+    } catch (error) {
+      console.error('Error deleting employee clock-in record:', error);
+      throw error;
+    }
+  }
+
   // Task operations
   async getTasks(): Promise<any[]> {
     console.log('Fetching tasks from database...');

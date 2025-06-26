@@ -547,6 +547,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Employee clock-in routes
+  app.get("/api/employee-clock-in", async (req, res) => {
+    try {
+      const { month, year } = req.query;
+      let clockInData;
+      
+      if (month && year) {
+        clockInData = await storage.getEmployeeClockInByMonth(parseInt(month as string), parseInt(year as string));
+      } else {
+        clockInData = await storage.getEmployeeClockIn();
+      }
+      
+      res.json(clockInData);
+    } catch (error) {
+      console.error('Error fetching employee clock-in data:', error);
+      res.status(500).json({ error: "Failed to fetch employee clock-in data" });
+    }
+  });
+
+  app.get("/api/employee-clock-in/:id", async (req, res) => {
+    try {
+      const clockInRecord = await storage.getEmployeeClockInById(req.params.id);
+      if (!clockInRecord) {
+        return res.status(404).json({ error: "Clock-in record not found" });
+      }
+      res.json(clockInRecord);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch clock-in record" });
+    }
+  });
+
+  app.post("/api/employee-clock-in", async (req, res) => {
+    try {
+      const clockInRecord = await storage.createEmployeeClockIn(req.body);
+      res.json(clockInRecord);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid clock-in data" });
+    }
+  });
+
+  app.patch("/api/employee-clock-in/:id", async (req, res) => {
+    try {
+      const clockInRecord = await storage.updateEmployeeClockIn(req.params.id, req.body);
+      if (!clockInRecord) {
+        return res.status(404).json({ error: "Clock-in record not found" });
+      }
+      res.json(clockInRecord);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update clock-in record" });
+    }
+  });
+
+  app.delete("/api/employee-clock-in/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteEmployeeClockIn(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Clock-in record not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete clock-in record" });
+    }
+  });
+
   // AI Command processing route (migrated from Supabase Edge Function)
   app.post("/api/ai/generate", async (req, res) => {
     try {

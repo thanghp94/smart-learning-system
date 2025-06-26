@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, PlusCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
@@ -37,16 +36,16 @@ const MonthlyAttendanceView = () => {
 
   useEffect(() => {
     fetchAttendanceData();
-    
+
     // Calculate days in month
     const date = new Date(currentYear, currentMonth - 1, 1);
     const days = [];
     const lastDay = new Date(currentYear, currentMonth, 0).getDate();
-    
+
     for (let i = 1; i <= lastDay; i++) {
       days.push(i);
     }
-    
+
     setDaysInMonth(days);
   }, [currentMonth, currentYear]);
 
@@ -54,7 +53,7 @@ const MonthlyAttendanceView = () => {
     setLoading(true);
     try {
       console.log("Fetching attendance data for month:", currentMonth, "year:", currentYear);
-      
+
       // Call the stored function to get monthly attendance data
       const { data, error } = await supabase.rpc(
         'get_monthly_attendance_summary',
@@ -65,16 +64,16 @@ const MonthlyAttendanceView = () => {
         console.error("Error fetching attendance data:", error);
         throw error;
       }
-      
+
       console.log("Received data:", data);
 
       // Process data for component state
       const groupedData: Record<string, any> = {};
-      
+
       if (data && data.length > 0) {
         data.forEach((record: MonthlyAttendanceSummary) => {
           const employeeId = record.employee_id;
-          
+
           if (!groupedData[employeeId]) {
             groupedData[employeeId] = {
               employee_id: employeeId,
@@ -87,7 +86,7 @@ const MonthlyAttendanceView = () => {
               }
             };
           }
-          
+
           if (record.day_of_month > 0) {
             groupedData[employeeId].records[record.day_of_month] = {
               status: record.status,
@@ -96,7 +95,7 @@ const MonthlyAttendanceView = () => {
           }
         });
       }
-      
+
       setAttendanceData(Object.values(groupedData));
     } catch (error) {
       console.error('Error fetching monthly attendance data:', error);
@@ -113,7 +112,7 @@ const MonthlyAttendanceView = () => {
   const handleAddAttendance = async (formData: any) => {
     try {
       console.log("Adding attendance data:", formData);
-      
+
       const { data, error } = await supabase
         .from('employee_clock_in_out')
         .insert([formData]);
@@ -171,7 +170,7 @@ const MonthlyAttendanceView = () => {
             Chấm công tháng {currentMonth}/{currentYear}
           </h2>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <div className="flex gap-2">
             <Select value={currentMonth.toString()} onValueChange={handleMonthChange}>
@@ -186,7 +185,7 @@ const MonthlyAttendanceView = () => {
                 ))}
               </SelectContent>
             </Select>
-            
+
             <Select value={currentYear.toString()} onValueChange={handleYearChange}>
               <SelectTrigger className="w-[100px]">
                 <SelectValue placeholder="Năm" />
@@ -200,14 +199,14 @@ const MonthlyAttendanceView = () => {
               </SelectContent>
             </Select>
           </div>
-          
+
           <Button onClick={() => setShowDialog(true)} className="gap-1">
             <PlusCircle className="h-4 w-4" />
             Thêm chấm công
           </Button>
         </div>
       </div>
-      
+
       {loading ? (
         <div className="flex justify-center py-8">
           <Spinner />
@@ -261,7 +260,7 @@ const MonthlyAttendanceView = () => {
           </Table>
         </div>
       )}
-      
+
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>

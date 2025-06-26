@@ -95,19 +95,14 @@ export const employeeClockInService = {
 
   async getMonthlyAttendance(month: number, year: number) {
     try {
-      const response = await fetch(`/api/employee-clock-ins?month=${month}&year=${year}&includeEmployee=true`);
+      const response = await fetch(`/api/employee-clock-in?month=${month}&year=${year}`);
       if (!response.ok) {
         throw new Error('Failed to fetch monthly attendance');
       }
-
       const data = await response.json();
-      // Format the data to include employee name
-      return data.map((record: any) => ({
-        ...record,
-        employee_name: record.employees?.ten_nhan_su || 'Unknown Employee'
-      }));
+      return data || [];
     } catch (error) {
-      console.error('Error fetching monthly attendance:', error);
+      console.error('Error in getMonthlyAttendance:', error);
       throw error;
     }
   }
