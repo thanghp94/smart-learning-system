@@ -66,16 +66,16 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="ten_tieng_anh">Tên tiếng Anh</Label>
+          <Label htmlFor="ten_ngan">Tên ngắn</Label>
           {isEditing ? (
             <Input
-              id="ten_tieng_anh"
-              name="ten_tieng_anh"
-              value={employee.ten_tieng_anh || ''}
+              id="ten_ngan"
+              name="ten_ngan"
+              value={employee.ten_ngan || ''}
               onChange={handleChange}
             />
           ) : (
-            <div className="p-2 border rounded bg-gray-50">{employee.ten_tieng_anh || '—'}</div>
+            <div className="p-2 border rounded bg-gray-50">{employee.ten_ngan || '—'}</div>
           )}
         </div>
 

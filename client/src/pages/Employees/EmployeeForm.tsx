@@ -30,7 +30,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       ten_nhan_vien: initialData?.ten_nhan_vien || '',
-      ten_tieng_anh: initialData?.ten_tieng_anh || '',
+      ten_ngan: initialData?.ten_ngan || '',
       bo_phan: initialData?.bo_phan || '',
       chuc_vu: initialData?.chuc_vu || '',
       so_dien_thoai: initialData?.so_dien_thoai || '',
@@ -110,8 +110,8 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
           </div>
 
           <div>
-            <Label htmlFor="ten_tieng_anh">Tên tiếng Anh</Label>
-            <Input id="ten_tieng_anh" {...register('ten_tieng_anh')} />
+            <Label htmlFor="ten_ngan">Tên ngắn</Label>
+            <Input id="ten_ngan" {...register('ten_ngan')} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

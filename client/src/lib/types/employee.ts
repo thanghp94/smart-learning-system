@@ -15,7 +15,7 @@ export interface Employee {
   ghi_chu?: string;
   created_at?: string;
   updated_at?: string;
-  ten_tieng_anh?: string;
+  ten_ngan?: string;
   
   // Additional fields for contract management
   luong_co_ban?: number | string;
