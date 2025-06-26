@@ -1,124 +1,119 @@
 
-import { supabase } from './client';
-import { Employee } from '../types';
+import { Employee } from '@/lib/types';
 
-export const employeeService = {
-  getAll: async (): Promise<Employee[]> => {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .order('created_at', { ascending: false });
+class EmployeeService {
+  private apiUrl = '/api';
 
-    if (error) {
+  async getAll(): Promise<Employee[]> {
+    console.log('Fetching all employees...');
+    try {
+      const response = await fetch(`${this.apiUrl}/employees`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Successfully fetched ${data?.length || 0} employees`);
+      return data || [];
+    } catch (error) {
       console.error('Error fetching employees:', error);
       throw error;
     }
-
-    return data || [];
-  },
-
-  getById: async (id: string): Promise<Employee> => {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching employee:', error);
-      throw error;
-    }
-
-    return data;
-  },
-  
-  getByEmail: async (email: string): Promise<Employee | null> => {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching employee by email:', error);
-      throw error;
-    }
-
-    return data;
-  },
-
-  create: async (employee: Partial<Employee>): Promise<Employee> => {
-    const { data, error } = await supabase
-      .from('employees')
-      .insert(employee)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating employee:', error);
-      throw error;
-    }
-
-    return data;
-  },
-
-  update: async (id: string, updates: Partial<Employee>): Promise<Employee> => {
-    const { data, error } = await supabase
-      .from('employees')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating employee:', error);
-      throw error;
-    }
-
-    return data;
-  },
-
-  delete: async (id: string): Promise<void> => {
-    const { error } = await supabase
-      .from('employees')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting employee:', error);
-      throw error;
-    }
-  },
-
-  getByRole: async (role: string): Promise<Employee[]> => {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('bo_phan', role)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching employees by role:', error);
-      throw error;
-    }
-
-    return data || [];
-  },
-
-  getActive: async (): Promise<Employee[]> => {
-    const { data, error } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('tinh_trang_lao_dong', 'active')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching active employees:', error);
-      throw error;
-    }
-
-    return data || [];
   }
-};
 
-export default employeeService;
+  async getById(id: string): Promise<Employee | null> {
+    try {
+      const response = await fetch(`${this.apiUrl}/employees/${id}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error in getById for employee:', error);
+      throw error;
+    }
+  }
+
+  async create(employeeData: Omit<Employee, 'id'> & { id?: string }): Promise<Employee | null> {
+    try {
+      const response = await fetch(`${this.apiUrl}/employees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(employeeData),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error in create for employee:', error);
+      throw error;
+    }
+  }
+
+  async update(id: string, updates: Partial<Employee>): Promise<Employee | null> {
+    try {
+      const response = await fetch(`${this.apiUrl}/employees/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error in update for employee:', error);
+      throw error;
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.apiUrl}/employees/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Employee not found');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error in delete for employee:', error);
+      throw error;
+    }
+  }
+
+  async getTeachers(): Promise<Employee[]> {
+    try {
+      const allEmployees = await this.getAll();
+      // Filter for teachers - assuming there's a role field or similar
+      return allEmployees.filter(emp => emp.chuc_vu?.toLowerCase().includes('giáo viên') || emp.chuc_vu?.toLowerCase().includes('teacher'));
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+      return [];
+    }
+  }
+}
+
+export const employeeService = new EmployeeService();
