@@ -1,0 +1,127 @@
+# School Management System
+
+## Overview
+
+This is a comprehensive school management system built with a modern full-stack architecture. The application provides features for managing students, classes, teaching sessions, employees, facilities, and various administrative tasks. It includes an AI-powered command interface for natural language interactions and comprehensive data management capabilities.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development and optimized builds
+- **UI Library**: Shadcn/ui components with Radix UI primitives
+- **Styling**: Tailwind CSS with custom design system
+- **State Management**: TanStack Query for server state management
+- **Routing**: React Router for client-side navigation
+- **Forms**: React Hook Form with Zod validation
+
+### Backend Architecture
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Express.js for API routes
+- **Database**: PostgreSQL with Drizzle ORM
+- **Database Provider**: Neon Database (serverless PostgreSQL)
+- **Session Management**: PostgreSQL session store
+- **Development**: Development server with hot reload
+
+### Database Architecture
+- **ORM**: Drizzle ORM for type-safe database operations
+- **Schema**: Centralized schema definition in `shared/schema.ts`
+- **Migrations**: Managed through Drizzle Kit
+- **Connection**: Serverless connection pooling with Neon
+
+## Key Components
+
+### Core Entities
+1. **Students**: Student management with personal information, enrollment status, and academic tracking
+2. **Classes**: Class organization with scheduling, teacher assignments, and curriculum management
+3. **Teaching Sessions**: Individual lesson management with attendance, evaluations, and materials
+4. **Employees**: Staff management including teachers and administrative personnel
+5. **Facilities**: Physical resource management including classrooms and equipment
+6. **Enrollments**: Student-class relationship management
+7. **Attendance**: Session-based attendance tracking
+8. **Finances**: Fee management and financial tracking
+
+### AI Integration
+- **Command Interface**: Natural language command processing using OpenAI GPT models
+- **Supabase Edge Functions**: Serverless functions for AI command processing
+- **Multi-modal Support**: Text and image generation capabilities
+- **Vietnamese Language Support**: Optimized for Vietnamese educational context
+
+### Authentication & Authorization
+- **Context-based Auth**: React context for authentication state management
+- **Protected Routes**: Route-level access control
+- **Role-based Access**: Different interfaces for different user types
+
+## Data Flow
+
+### Client-Server Communication
+1. **API Layer**: RESTful API endpoints with Express.js
+2. **Data Fetching**: TanStack Query for efficient data fetching and caching
+3. **Form Handling**: React Hook Form with server-side validation
+4. **Real-time Updates**: Optimistic updates with query invalidation
+
+### Database Operations
+1. **Type Safety**: End-to-end type safety with TypeScript and Drizzle
+2. **Connection Management**: Serverless connection pooling
+3. **Schema Synchronization**: Automated schema updates with migrations
+4. **Query Optimization**: Efficient queries with proper indexing
+
+### AI Command Processing
+1. **Command Analysis**: Natural language understanding using OpenAI
+2. **Intent Recognition**: Multi-step processing for command execution
+3. **Database Integration**: Direct database operations from AI commands
+4. **Response Generation**: Human-friendly response generation
+
+## External Dependencies
+
+### Core Dependencies
+- **@neondatabase/serverless**: Serverless PostgreSQL connection
+- **drizzle-orm**: Type-safe ORM for database operations
+- **@tanstack/react-query**: Server state management
+- **react-hook-form**: Form handling and validation
+- **zod**: Schema validation
+
+### UI Dependencies
+- **@radix-ui/***: Comprehensive UI component primitives
+- **tailwindcss**: Utility-first CSS framework
+- **lucide-react**: Icon library
+- **date-fns**: Date manipulation utilities
+
+### Development Dependencies
+- **vite**: Build tool and development server
+- **typescript**: Type checking and compilation
+- **tsx**: TypeScript execution for development
+
+### AI & External Services
+- **OpenAI API**: For natural language processing and image generation
+- **Supabase**: Backend-as-a-Service for edge functions and storage
+
+## Deployment Strategy
+
+### Production Build
+- **Frontend**: Static assets built with Vite and served from `/dist/public`
+- **Backend**: Node.js server bundled with esbuild for optimal performance
+- **Database**: Serverless PostgreSQL deployment with automatic scaling
+
+### Development Environment
+- **Hot Reload**: Vite development server with React Fast Refresh
+- **TypeScript**: Real-time type checking during development
+- **Database**: Local development with production-like schema
+
+### Hosting Configuration
+- **Platform**: Replit with autoscale deployment
+- **Port Configuration**: Express server on port 5000
+- **Environment Variables**: Secure configuration for database and API keys
+
+## Changelog
+
+```
+Changelog:
+- June 26, 2025. Initial setup
+```
+
+## User Preferences
+
+```
+Preferred communication style: Simple, everyday language.
+```
