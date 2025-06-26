@@ -38,7 +38,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
       chuc_vu: initialData?.chuc_vu || '',
       so_dien_thoai: initialData?.so_dien_thoai || '',
       email: initialData?.email || '',
-      co_so_id: initialData?.co_so_id?.length ? initialData.co_so_id[0] : '',
+      co_so_id: Array.isArray(initialData?.co_so_id) ? (initialData.co_so_id.length > 0 ? initialData.co_so_id[0] : '') : (initialData?.co_so_id || ''),
       trang_thai: initialData?.trang_thai || 'active',
       ngay_sinh: initialData?.ngay_sinh || null,
       dia_chi: initialData?.dia_chi || '',
@@ -74,7 +74,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
       const processedData = {
         ...formData,
         ngay_sinh: formData.ngay_sinh || null,
-        co_so_id: formData.co_so_id ? [formData.co_so_id] : [],
+        co_so_id: formData.co_so_id || null,
         hinh_anh: employeeImage
       };
 

@@ -99,7 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let coSoId = data.co_so_id;
       if (Array.isArray(coSoId)) {
         coSoId = coSoId.length > 0 ? coSoId[0] : null;
-      } else if (coSoId === '') {
+      } else if (coSoId === '' || coSoId === undefined) {
         coSoId = null;
       }
 
@@ -138,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let coSoId = data.co_so_id;
       if (Array.isArray(coSoId)) {
         coSoId = coSoId.length > 0 ? coSoId[0] : null;
-      } else if (coSoId === '') {
+      } else if (coSoId === '' || coSoId === undefined) {
         coSoId = null;
       }
 
