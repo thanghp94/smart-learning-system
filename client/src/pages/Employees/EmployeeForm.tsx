@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,11 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Employee } from '@/lib/types';
+import { Employee, Facility } from '@/lib/types';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import ImageUpload from "@/components/common/ImageUpload";
+import { facilityService } from '@/lib/supabase';
 
 interface EmployeeFormProps {
   initialData?: Partial<Employee>;
@@ -26,6 +27,8 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [employeeImage, setEmployeeImage] = useState(initialData?.hinh_anh || '');
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [isLoadingFacilities, setIsLoadingFacilities] = useState(true);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
@@ -43,6 +46,22 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
       ghi_chu: initialData?.ghi_chu || ''
     }
   });
+
+  useEffect(() => {
+    loadFacilities();
+  }, []);
+
+  const loadFacilities = async () => {
+    try {
+      setIsLoadingFacilities(true);
+      const facilitiesData = await facilityService.getAll();
+      setFacilities(facilitiesData);
+    } catch (error) {
+      console.error('Error loading facilities:', error);
+    } finally {
+      setIsLoadingFacilities(false);
+    }
+  };
 
   const handleImageChange = (url: string) => {
     setEmployeeImage(url);
@@ -235,14 +254,17 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
               <Select
                 onValueChange={(value) => setValue('co_so_id', value)}
                 defaultValue={watch('co_so_id')}
+                disabled={isLoadingFacilities}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn cơ sở" />
+                  <SelectValue placeholder={isLoadingFacilities ? "Đang tải..." : "Chọn cơ sở"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="facility1">Cơ sở Hà Nội</SelectItem>
-                  <SelectItem value="facility2">Cơ sở Hồ Chí Minh</SelectItem>
-                  <SelectItem value="facility3">Cơ sở Đà Nẵng</SelectItem>
+                  {facilities.map((facility) => (
+                    <SelectItem key={facility.id} value={facility.id}>
+                      {facility.ten_co_so}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

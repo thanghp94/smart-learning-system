@@ -90,99 +90,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create employee
-    app.post("/api/employees", async (req, res) => {
-      try {
-        const employeeData = req.body;
-        console.log("Creating employee with data:", employeeData);
+  app.post("/api/employees", async (req, res) => {
+    try {
+      const data = req.body;
+      console.log("Creating employee:", data);
 
-        // Handle co_so_id array conversion
-        if (employeeData.co_so_id && Array.isArray(employeeData.co_so_id)) {
-          employeeData.co_so_id = employeeData.co_so_id;
-        }
-
-        const result = await db.query(
-          `INSERT INTO employees (
-            id, ten_nhan_vien, email, so_dien_thoai, gioi_tinh, dia_chi, 
-            bo_phan, chuc_vu, ngay_sinh, co_so_id, trang_thai, hinh_anh, 
-            ghi_chu, luong_co_ban, ngay_vao_lam, ten_ngan
-          ) VALUES (
-            gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
-          ) RETURNING *`,
-          [
-            employeeData.ten_nhan_vien,
-            employeeData.email,
-            employeeData.so_dien_thoai,
-            employeeData.gioi_tinh,
-            employeeData.dia_chi,
-            employeeData.bo_phan,
-            employeeData.chuc_vu,
-            employeeData.ngay_sinh,
-            employeeData.co_so_id,
-            employeeData.trang_thai || 'active',
-            employeeData.hinh_anh,
-            employeeData.ghi_chu,
-            employeeData.luong_co_ban,
-            employeeData.ngay_vao_lam,
-            employeeData.ten_ngan
-          ]
-        );
-
-        res.json(result.rows[0]);
-      } catch (error) {
-        console.error("Error creating employee:", error);
-        res.status(500).json({ message: "Error creating employee", error: error.message });
+      // Handle co_so_id properly - convert array to single value if needed
+      let coSoId = data.co_so_id;
+      if (Array.isArray(coSoId)) {
+        coSoId = coSoId.length > 0 ? coSoId[0] : null;
       }
-    });
+
+      const result = await db.query(
+        `INSERT INTO employees (
+          ten_nhan_vien, ten_ngan, bo_phan, chuc_vu, so_dien_thoai, 
+          email, co_so_id, trang_thai, ngay_sinh, dia_chi, 
+          gioi_tinh, ghi_chu, hinh_anh
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
+        RETURNING *`,
+        [
+          data.ten_nhan_vien, data.ten_ngan, data.bo_phan, data.chuc_vu,
+          data.so_dien_thoai, data.email, coSoId, data.trang_thai,
+          data.ngay_sinh, data.dia_chi, data.gioi_tinh, data.ghi_chu,
+          data.hinh_anh
+        ]
+      );
+
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      console.error("Error details:", error.message);
+      res.status(500).json({ error: "Failed to create employee", details: error.message });
+    }
+  });
 
   // Update employee
-    app.put("/api/employees/:id", async (req, res) => {
-      try {
-        const { id } = req.params;
-        const employeeData = req.body;
-        console.log("Updating employee with data:", employeeData);
+  app.put("/api/employees/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = req.body;
 
-        // Handle co_so_id array conversion
-        if (employeeData.co_so_id && Array.isArray(employeeData.co_so_id)) {
-          employeeData.co_so_id = employeeData.co_so_id;
-        }
+      console.log("Updating employee:", id, data);
 
-        const result = await db.query(
-          `UPDATE employees SET 
-            ten_nhan_vien = $1, email = $2, so_dien_thoai = $3, gioi_tinh = $4, 
-            dia_chi = $5, bo_phan = $6, chuc_vu = $7, ngay_sinh = $8, co_so_id = $9, 
-            trang_thai = $10, hinh_anh = $11, ghi_chu = $12, luong_co_ban = $13, 
-            ngay_vao_lam = $14, ten_ngan = $15, updated_at = CURRENT_TIMESTAMP
-          WHERE id = $16 RETURNING *`,
-          [
-            employeeData.ten_nhan_vien,
-            employeeData.email,
-            employeeData.so_dien_thoai,
-            employeeData.gioi_tinh,
-            employeeData.dia_chi,
-            employeeData.bo_phan,
-            employeeData.chuc_vu,
-            employeeData.ngay_sinh,
-            employeeData.co_so_id,
-            employeeData.trang_thai,
-            employeeData.hinh_anh,
-            employeeData.ghi_chu,
-            employeeData.luong_co_ban,
-            employeeData.ngay_vao_lam,
-            employeeData.ten_ngan,
-            id
-          ]
-        );
-
-        if (result.rows.length === 0) {
-          return res.status(404).json({ message: "Employee not found" });
-        }
-
-        res.json(result.rows[0]);
-      } catch (error) {
-        console.error("Error updating employee:", error);
-        res.status(500).json({ message: "Error updating employee", error: error.message });
+      // Handle co_so_id properly - convert array to single value if needed
+      let coSoId = data.co_so_id;
+      if (Array.isArray(coSoId)) {
+        coSoId = coSoId.length > 0 ? coSoId[0] : null;
       }
-    });
+
+      const result = await db.query(
+        `UPDATE employees 
+         SET ten_nhan_vien = $1, ten_ngan = $2, bo_phan = $3, chuc_vu = $4, 
+             so_dien_thoai = $5, email = $6, co_so_id = $7, trang_thai = $8,
+             ngay_sinh = $9, dia_chi = $10, gioi_tinh = $11, ghi_chu = $12,
+             hinh_anh = $13, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $14 
+         RETURNING *`,
+        [
+          data.ten_nhan_vien, data.ten_ngan, data.bo_phan, data.chuc_vu,
+          data.so_dien_thoai, data.email, coSoId, data.trang_thai,
+          data.ngay_sinh, data.dia_chi, data.gioi_tinh, data.ghi_chu,
+          data.hinh_anh, id
+        ]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Employee not found" });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      console.error("Error details:", error.message);
+      res.status(500).json({ error: "Failed to update employee", details: error.message });
+    }
+  });
 
   app.delete("/api/employees/:id", async (req, res) => {
     try {
