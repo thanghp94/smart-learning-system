@@ -38,7 +38,7 @@ const FilterGroups: React.FC<FilterGroupProps> = ({
   onReset,
 }) => {
   const hasFilters = Object.keys(filters).length > 0;
-  const hasActiveFilters = Object.values(values).some(value => value !== '');
+  const hasActiveFilters = Object.values(values).some(value => value !== '' && value !== 'all');
   
   if (!hasFilters) return null;
 
@@ -63,14 +63,14 @@ const FilterGroups: React.FC<FilterGroupProps> = ({
               <div key={key} className="space-y-2">
                 <label className="text-sm font-medium">{filter.label}</label>
                 <Select
-                  value={values[key] || ''}
+                  value={values[key] || 'all'}
                   onValueChange={(value) => onChange(key, value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={`Tất cả ${filter.label.toLowerCase()}`} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">
+                    <SelectItem value="all">
                       {`Tất cả ${filter.label.toLowerCase()}`}
                     </SelectItem>
                     {filter.options.map((option) => (

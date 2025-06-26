@@ -126,7 +126,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, employees = [], onSubm
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="">Không có nhân viên</SelectItem>
+                      <SelectItem value="none">Không có nhân viên</SelectItem>
                     )}
                   </SelectContent>
                 </Select>

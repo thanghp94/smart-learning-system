@@ -114,7 +114,7 @@ const PayrollForm: React.FC<PayrollFormProps> = ({
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="">Không có nhân viên</SelectItem>
+                      <SelectItem value="none">Không có nhân viên</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -143,7 +143,7 @@ const PayrollForm: React.FC<PayrollFormProps> = ({
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="">Không có cơ sở</SelectItem>
+                      <SelectItem value="none">Không có cơ sở</SelectItem>
                     )}
                   </SelectContent>
                 </Select>

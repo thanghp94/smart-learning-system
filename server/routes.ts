@@ -403,6 +403,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Monthly attendance route
+  app.get("/api/attendances/monthly/:month/:year", async (req, res) => {
+    try {
+      const month = parseInt(req.params.month);
+      const year = parseInt(req.params.year);
+      
+      if (isNaN(month) || isNaN(year) || month < 1 || month > 12) {
+        return res.status(400).json({ error: "Invalid month or year" });
+      }
+      
+      const attendances = await storage.getAttendances();
+      // Filter by month and year if needed
+      const filteredAttendances = attendances.filter(attendance => {
+        if (attendance.ngay_diem_danh) {
+          const attendanceDate = new Date(attendance.ngay_diem_danh);
+          return attendanceDate.getMonth() + 1 === month && attendanceDate.getFullYear() === year;
+        }
+        return false;
+      });
+      
+      res.json(filteredAttendances);
+    } catch (error) {
+      console.error('Error fetching monthly attendance:', error);
+      res.status(500).json({ error: "Failed to fetch monthly attendance" });
+    }
+  });
+
   // Asset routes
   app.get("/api/assets", async (req, res) => {
     try {
@@ -466,6 +493,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json([]);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
+
+  // Finances routes
+  app.get("/api/finances", async (req, res) => {
+    try {
+      const finances = await storage.executeQuery('SELECT * FROM finances ORDER BY created_at DESC');
+      res.json(finances);
+    } catch (error) {
+      console.error('Error fetching finances:', error);
+      res.status(500).json({ error: "Failed to fetch finances" });
+    }
+  });
+
+  app.get("/api/finances/:id", async (req, res) => {
+    try {
+      const result = await storage.executeQuery('SELECT * FROM finances WHERE id = $1', [req.params.id]);
+      if (result.length === 0) {
+        return res.status(404).json({ error: "Finance record not found" });
+      }
+      res.json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch finance record" });
+    }
+  });
+
+  app.post("/api/finances", async (req, res) => {
+    try {
+      const result = await storage.executeQuery(
+        'INSERT INTO finances (loai_thu_chi, tong_tien, dien_giai, nguoi_tao, co_so, doi_tuong_id, loai_doi_tuong) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+        [req.body.loai_thu_chi, req.body.tong_tien, req.body.dien_giai, req.body.nguoi_tao, req.body.co_so, req.body.doi_tuong_id, req.body.loai_doi_tuong]
+      );
+      res.json(result[0]);
+    } catch (error) {
+      console.error('Error creating finance record:', error);
+      res.status(400).json({ error: "Invalid finance data" });
+    }
+  });
+
+  // Finance transaction types routes
+  app.get("/api/finance-transaction-types", async (req, res) => {
+    try {
+      const types = await storage.executeQuery('SELECT * FROM finance_transaction_types ORDER BY type_name');
+      res.json(types);
+    } catch (error) {
+      console.error('Error fetching finance transaction types:', error);
+      res.status(500).json({ error: "Failed to fetch transaction types" });
     }
   });
 

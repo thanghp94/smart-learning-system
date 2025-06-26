@@ -89,17 +89,17 @@ const FilterButton: React.FC<FilterButtonProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-sm">{category.name}</h4>
-                  {activeFilters[category.name] && <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => handleFilterChange(category.name, "")}>
+                  {activeFilters[category.name] && <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => handleFilterChange(category.name, "all")}>
                       <X className="h-3 w-3 mr-1" />
                       Xóa
                     </Button>}
                 </div>
-                <Select value={activeFilters[category.name] || ""} onValueChange={value => handleFilterChange(category.name, value)}>
+                <Select value={activeFilters[category.name] || "all"} onValueChange={value => handleFilterChange(category.name, value)}>
                   <SelectTrigger className="w-full h-8">
                     <SelectValue placeholder="Tất cả" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tất cả</SelectItem>
+                    <SelectItem value="all">Tất cả</SelectItem>
                     {category.options.map(option => <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>)}

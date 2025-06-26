@@ -77,7 +77,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
           <SelectValue placeholder="Trạng thái" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tất cả trạng thái</SelectItem>
+          <SelectItem value="all">Tất cả trạng thái</SelectItem>
           <SelectItem value="pending">Đang chờ</SelectItem>
           <SelectItem value="in_progress">Đang thực hiện</SelectItem>
           <SelectItem value="completed">Hoàn thành</SelectItem>
@@ -93,7 +93,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
           <SelectValue placeholder="Ưu tiên" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tất cả mức độ</SelectItem>
+          <SelectItem value="all">Tất cả mức độ</SelectItem>
           <SelectItem value="low">Thấp</SelectItem>
           <SelectItem value="medium">Trung bình</SelectItem>
           <SelectItem value="high">Cao</SelectItem>
@@ -108,7 +108,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
           <SelectValue placeholder="Người phụ trách" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tất cả</SelectItem>
+          <SelectItem value="all">Tất cả</SelectItem>
           {employees.map((employee) => (
             <SelectItem key={employee.id} value={employee.id}>
               {employee.ten_nhan_su}
@@ -125,7 +125,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
           <SelectValue placeholder="Cơ sở" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tất cả cơ sở</SelectItem>
+          <SelectItem value="all">Tất cả cơ sở</SelectItem>
           {facilities.map((facility) => (
             <SelectItem key={facility.id} value={facility.id}>
               {facility.ten_co_so}
@@ -141,10 +141,10 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
           className="h-8 text-xs"
           onClick={() =>
             setFilters({
-              status: '',
-              priority: '',
-              assignee: '',
-              facility: '',
+              status: 'all',
+              priority: 'all',
+              assignee: 'all',
+              facility: 'all',
             })
           }
         >
