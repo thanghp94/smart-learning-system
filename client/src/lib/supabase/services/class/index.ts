@@ -5,6 +5,19 @@ import { fetchAll, fetchById, insert, update, remove } from '../../base-service'
 export const classService = {
   async getAll() {
     try {
+      console.log('Fetching classes...');
+      const classes = await fetchAll<Class>('classes');
+      console.log('Classes data received:', classes);
+      console.log('Classes set to state:', classes.length);
+      return classes;
+    } catch (error) {
+      console.error('Error in getAll classes:', error);
+      throw error;
+    }
+  },
+
+  async getAllWithStudentCount() {
+    try {
       console.log('Fetching classes with student count...');
       const classes = await fetchAll<Class>('classes');
       console.log('Classes data received:', classes);

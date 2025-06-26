@@ -1,14 +1,19 @@
 // Base service for PostgreSQL API operations
-export async function fetchAll<T>(table: string): Promise<T[]> {
+export async function fetchAll<T>(endpoint: string): Promise<T[]> {
   try {
-    const response = await fetch(`/api/${table}`);
+    console.log(`Fetching all records from ${endpoint}...`);
+    const response = await fetch(`/api/${endpoint}`);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${table}`);
+      throw new Error(`Failed to fetch ${endpoint}: ${response.status} ${response.statusText}`);
     }
-    return await response.json();
+
+    const data = await response.json();
+    console.log(`Successfully fetched ${Array.isArray(data) ? data.length : 0} ${endpoint}`);
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error(`Error in fetchAll for ${table}:`, error);
-    return []; // Return empty array instead of throwing to prevent UI crashes
+    console.error(`Error in fetchAll for ${endpoint}:`, error);
+    throw error;
   }
 }
 

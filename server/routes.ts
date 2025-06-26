@@ -179,9 +179,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Class routes
   app.get("/api/classes", async (req, res) => {
     try {
+      console.log('Classes API endpoint called');
       const classes = await storage.getClasses();
+      console.log('Classes fetched from storage:', classes.length);
       res.json(classes);
     } catch (error) {
+      console.error('Error in classes endpoint:', error);
       res.status(500).json({ error: "Failed to fetch classes" });
     }
   });
