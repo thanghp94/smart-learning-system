@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, PlusCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { 
@@ -22,11 +22,24 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
-import { EmployeeClockInOut, MonthlyAttendanceSummary } from '@/lib/types/employee-clock-in-out';
 import AddAttendanceForm from './AddAttendanceForm';
 
+interface EmployeeAttendanceData {
+  employee_id: string;
+  employee_name: string;
+  status: string;
+  total_present: number;
+  total_late: number;
+  total_absent: number;
+  daily_records: Record<number, {
+    status: 'present' | 'absent' | 'late' | 'leave';
+    clock_in_time?: string;
+    clock_out_time?: string;
+  }>;
+}
+
 const MonthlyAttendanceView = () => {
-  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [attendanceData, setAttendanceData] = useState<EmployeeAttendanceData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [daysInMonth, setDaysInMonth] = useState<number[]>([]);
   const [showDialog, setShowDialog] = useState<boolean>(false);
@@ -52,49 +65,96 @@ const MonthlyAttendanceView = () => {
   const fetchAttendanceData = async () => {
     setLoading(true);
     try {
-      console.log("Fetching attendance data for month:", currentMonth, "year:", currentYear);
+      console.log("Fetching employee clock-in data for month:", currentMonth, "year:", currentYear);
 
-      // Use PostgreSQL API endpoint instead of Supabase
-      const response = await fetch(`/api/attendances/monthly/${currentMonth}/${currentYear}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch monthly attendance data');
+      // Fetch employees first
+      const employeesResponse = await fetch('/api/employees');
+      if (!employeesResponse.ok) {
+        throw new Error('Failed to fetch employees');
       }
+      const employees = await employeesResponse.json();
 
-      const data = await response.json();
-      console.log("Received data:", data);
+      // Fetch clock-in data for the month
+      const clockInResponse = await fetch(`/api/employee-clock-in?month=${currentMonth}&year=${currentYear}`);
+      if (!clockInResponse.ok) {
+        throw new Error('Failed to fetch clock-in data');
+      }
+      const clockInData = await clockInResponse.json();
 
-      // Process data for component state
-      const groupedData: Record<string, any> = {};
+      console.log("Received employees:", employees.length);
+      console.log("Received clock-in data:", clockInData.length);
 
-      if (data && data.length > 0) {
-        data.forEach((record: any) => {
-          const employeeId = record.enrollment_id || record.id;
+      // Process data for each employee
+      const processedData: EmployeeAttendanceData[] = employees.map((employee: any) => {
+        const employeeClockIns = clockInData.filter((record: any) => 
+          record.employee_id === employee.id
+        );
 
-          if (!groupedData[employeeId]) {
-            groupedData[employeeId] = {
-              employee_id: employeeId,
-              employee_name: `Attendance ${employeeId}`,
-              records: {},
-              summary: {
-                present: 0,
-                absent: 0,
-                late: 0
+        const dailyRecords: Record<number, any> = {};
+        let totalPresent = 0;
+        let totalLate = 0;
+        let totalAbsent = 0;
+
+        // Process clock-in records
+        employeeClockIns.forEach((record: any) => {
+          const workDate = new Date(record.work_date);
+          const day = workDate.getDate();
+          
+          if (day >= 1 && day <= 31) {
+            let status: 'present' | 'absent' | 'late' | 'leave' = 'present';
+            
+            // Determine status based on clock-in time
+            if (record.clock_in_time) {
+              const clockInTime = new Date(`1970-01-01T${record.clock_in_time}`);
+              const lateThreshold = new Date(`1970-01-01T09:00:00`); // 9 AM threshold
+              
+              if (clockInTime > lateThreshold) {
+                status = 'late';
+                totalLate++;
+              } else {
+                status = 'present';
+                totalPresent++;
               }
-            };
-          }
+            } else if (record.notes?.includes('nghỉ') || record.notes?.includes('leave')) {
+              status = 'leave';
+            } else {
+              status = 'absent';
+              totalAbsent++;
+            }
 
-          // Simple processing for attendance records
-          const day = new Date(record.created_at).getDate();
-          if (day > 0) {
-            groupedData[employeeId].records[day] = {
-              status: record.status || 'present',
-              date: record.created_at
+            dailyRecords[day] = {
+              status,
+              clock_in_time: record.clock_in_time,
+              clock_out_time: record.clock_out_time
             };
           }
         });
-      }
 
-      setAttendanceData(Object.values(groupedData));
+        // Fill in missing days as absent for working days
+        for (let day = 1; day <= daysInMonth.length; day++) {
+          if (!dailyRecords[day]) {
+            const date = new Date(currentYear, currentMonth - 1, day);
+            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            
+            if (!isWeekend) {
+              dailyRecords[day] = { status: 'absent' };
+              totalAbsent++;
+            }
+          }
+        }
+
+        return {
+          employee_id: employee.id,
+          employee_name: employee.ten_nhan_su || employee.ho_va_ten || `Employee ${employee.id}`,
+          status: `${totalPresent} ngày làm, ${totalLate} ngày trễ`,
+          total_present: totalPresent,
+          total_late: totalLate,
+          total_absent: totalAbsent,
+          daily_records: dailyRecords
+        };
+      });
+
+      setAttendanceData(processedData);
     } catch (error) {
       console.error('Error fetching monthly attendance data:', error);
       toast({
@@ -111,7 +171,7 @@ const MonthlyAttendanceView = () => {
     try {
       console.log("Adding attendance data:", formData);
 
-      const response = await fetch('/api/employee-clock-ins', {
+      const response = await fetch('/api/employee-clock-in', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,18 +201,38 @@ const MonthlyAttendanceView = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusCell = (record: any) => {
+    if (!record) {
+      return <span className="text-gray-300">-</span>;
+    }
+
+    switch (record.status) {
       case 'present':
-        return <Badge variant="outline" className="bg-green-100 text-green-800">Có mặt</Badge>;
-      case 'absent':
-        return <Badge variant="outline" className="bg-red-100 text-red-800">Vắng</Badge>;
+        return (
+          <div className="w-6 h-6 bg-green-500 rounded-sm flex items-center justify-center">
+            <span className="text-white text-xs font-bold">✓</span>
+          </div>
+        );
       case 'late':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Muộn</Badge>;
+        return (
+          <div className="w-6 h-6 bg-yellow-500 rounded-sm flex items-center justify-center">
+            <span className="text-white text-xs font-bold">!</span>
+          </div>
+        );
+      case 'absent':
+        return (
+          <div className="w-6 h-6 bg-red-500 rounded-sm flex items-center justify-center">
+            <span className="text-white text-xs font-bold">✗</span>
+          </div>
+        );
       case 'leave':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800">Nghỉ phép</Badge>;
+        return (
+          <div className="w-6 h-6 bg-blue-500 rounded-sm flex items-center justify-center">
+            <span className="text-white text-xs font-bold">L</span>
+          </div>
+        );
       default:
-        return <Badge variant="outline" className="bg-gray-100">-</Badge>;
+        return <span className="text-gray-300">-</span>;
     }
   };
 
@@ -210,6 +290,26 @@ const MonthlyAttendanceView = () => {
         </div>
       </div>
 
+      {/* Legend */}
+      <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-green-500 rounded-sm"></div>
+          <span>Có mặt</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-yellow-500 rounded-sm"></div>
+          <span>Muộn</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-red-500 rounded-sm"></div>
+          <span>Vắng</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-blue-500 rounded-sm"></div>
+          <span>Nghỉ phép</span>
+        </div>
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-8">
           <Spinner />
@@ -223,14 +323,15 @@ const MonthlyAttendanceView = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="overflow-x-auto">
-          <Table className="min-w-full border-collapse">
-            <TableHeader className="sticky top-0 bg-background">
-              <TableRow className="border-b">
-                <TableHead className="sticky left-0 bg-background z-10 min-w-[200px]">Nhân viên</TableHead>
-                <TableHead className="text-center min-w-[150px]">Tổng số</TableHead>
+        <div className="overflow-x-auto border rounded-lg">
+          <Table className="min-w-full">
+            <TableHeader>
+              <TableRow className="bg-gray-50">
+                <TableHead className="sticky left-0 bg-gray-50 z-10 min-w-[150px] border-r">Tên nhân viên</TableHead>
+                <TableHead className="min-w-[120px] border-r">Trạng thái</TableHead>
+                <TableHead className="text-center min-w-[40px] border-r">Tổng giờ</TableHead>
                 {daysInMonth.map(day => (
-                  <TableHead key={day} className="text-center p-1 min-w-[40px]">
+                  <TableHead key={day} className="text-center min-w-[30px] border-r text-xs">
                     {day}
                   </TableHead>
                 ))}
@@ -238,25 +339,21 @@ const MonthlyAttendanceView = () => {
             </TableHeader>
             <TableBody>
               {attendanceData.map(employee => (
-                <TableRow key={employee.employee_id} className="border-b">
-                  <TableCell className="font-medium sticky left-0 bg-background z-10 py-2">
+                <TableRow key={employee.employee_id} className="hover:bg-gray-50">
+                  <TableCell className="font-medium sticky left-0 bg-white z-10 border-r">
                     {employee.employee_name}
                   </TableCell>
-                  <TableCell className="text-center min-w-[150px] py-2">
-                    <div className="text-xs flex gap-1 justify-center items-center">
-                      <span className="text-green-600">CM: {employee.summary.present}</span>
-                      <span className="text-yellow-600">M: {employee.summary.late}</span>
-                      <span className="text-red-600">V: {employee.summary.absent}</span>
-                    </div>
+                  <TableCell className="text-xs border-r">
+                    {employee.status}
                   </TableCell>
-                  {daysInMonth.map(day => {
-                    const record = employee.records[day];
-                    return (
-                      <TableCell key={day} className="text-center p-1">
-                        {record ? getStatusBadge(record.status) : <span className="text-gray-300">-</span>}
-                      </TableCell>
-                    );
-                  })}
+                  <TableCell className="text-center text-xs border-r">
+                    {employee.total_present * 8}h
+                  </TableCell>
+                  {daysInMonth.map(day => (
+                    <TableCell key={day} className="text-center p-1 border-r">
+                      {getStatusCell(employee.daily_records[day])}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>
