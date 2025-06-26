@@ -104,7 +104,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createStudent(student: InsertStudent): Promise<Student> {
-    const result = await db.insert(students).values(student).returning();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const studentWithId = { 
+      ...student, 
+      id, 
+      created_at: now, 
+      updated_at: now 
+    };
+    const result = await db.insert(students).values(studentWithId).returning();
     return result[0];
   }
 
@@ -129,7 +137,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEmployee(employee: InsertEmployee): Promise<Employee> {
-    const result = await db.insert(employees).values(employee).returning();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const employeeWithId = { 
+      ...employee, 
+      id, 
+      created_at: now, 
+      updated_at: now 
+    };
+    const result = await db.insert(employees).values(employeeWithId).returning();
     return result[0];
   }
 
@@ -154,7 +170,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createFacility(facility: InsertFacility): Promise<Facility> {
-    const result = await db.insert(facilities).values(facility).returning();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const facilityWithId = { 
+      ...facility, 
+      id, 
+      created_at: now, 
+      updated_at: now 
+    };
+    const result = await db.insert(facilities).values(facilityWithId).returning();
     return result[0];
   }
 
@@ -179,7 +203,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createClass(classData: InsertClass): Promise<Class> {
-    const result = await db.insert(classes).values(classData).returning();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const classWithId = { 
+      ...classData, 
+      id, 
+      created_at: now, 
+      updated_at: now 
+    };
+    const result = await db.insert(classes).values(classWithId).returning();
     return result[0];
   }
 
@@ -204,7 +236,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTeachingSession(session: InsertTeachingSession): Promise<TeachingSession> {
-    const result = await db.insert(teachingSessions).values(session).returning();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const sessionWithId = { 
+      ...session, 
+      id, 
+      created_at: now, 
+      updated_at: now 
+    };
+    const result = await db.insert(teachingSessions).values(sessionWithId).returning();
     return result[0];
   }
 
@@ -229,7 +269,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment> {
-    const result = await db.insert(enrollments).values(enrollment).returning();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const enrollmentWithId = { 
+      ...enrollment, 
+      id, 
+      created_at: now, 
+      updated_at: now 
+    };
+    const result = await db.insert(enrollments).values(enrollmentWithId).returning();
     return result[0];
   }
 
@@ -254,7 +302,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAttendance(attendance: InsertAttendance): Promise<Attendance> {
-    const result = await db.insert(attendances).values(attendance).returning();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const attendanceWithId = { 
+      ...attendance, 
+      id, 
+      created_at: now, 
+      updated_at: now 
+    };
+    const result = await db.insert(attendances).values(attendanceWithId).returning();
     return result[0];
   }
 
@@ -279,7 +335,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAsset(asset: InsertAsset): Promise<Asset> {
-    const result = await db.insert(assets).values(asset).returning();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const assetWithId = { 
+      ...asset, 
+      id, 
+      created_at: now, 
+      updated_at: now 
+    };
+    const result = await db.insert(assets).values(assetWithId).returning();
     return result[0];
   }
 
