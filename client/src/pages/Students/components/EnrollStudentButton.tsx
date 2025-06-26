@@ -7,9 +7,10 @@ import { Student } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
-import { Loader, X } from 'lucide-react';
+import { Loader, X, Search } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 interface EnrollStudentButtonProps {
   student?: Student;
@@ -28,6 +29,7 @@ const EnrollStudentButton = ({
   const [selectedClassId, setSelectedClassId] = useState<string>(classId || '');
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const { toast } = useToast();
 
   // Load active classes
@@ -66,6 +68,14 @@ const EnrollStudentButton = ({
 
   const getSelectedStudents = () => {
     return students.filter(s => selectedStudentIds.includes(s.id));
+  };
+
+  const getFilteredStudents = () => {
+    if (!studentSearchQuery) return students;
+    return students.filter(student => {
+      const name = student.ho_va_ten || student.ten_hoc_sinh || '';
+      return name.toLowerCase().includes(studentSearchQuery.toLowerCase());
+    });
   };
 
   const handleSubmit = async () => {
@@ -155,6 +165,17 @@ const EnrollStudentButton = ({
                 </div>
               )}
 
+              {/* Search input for students */}
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Tìm kiếm học sinh..."
+                  value={studentSearchQuery}
+                  onChange={(e) => setStudentSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
               {/* Student selection list */}
               <div className="border rounded-md max-h-60 overflow-y-auto">
                 {isStudentsLoading ? (
@@ -163,7 +184,7 @@ const EnrollStudentButton = ({
                   </div>
                 ) : (
                   <div className="p-2">
-                    {students.map((student) => (
+                    {getFilteredStudents().map((student) => (
                       <div key={student.id} className="flex items-center space-x-2 py-2 px-2 hover:bg-muted rounded">
                         <Checkbox
                           id={`student-${student.id}`}
@@ -178,9 +199,9 @@ const EnrollStudentButton = ({
                         </label>
                       </div>
                     ))}
-                    {students.length === 0 && (
+                    {getFilteredStudents().length === 0 && (
                       <div className="text-center text-muted-foreground py-4">
-                        Không có học sinh nào
+                        {studentSearchQuery ? 'Không tìm thấy học sinh nào' : 'Không có học sinh nào'}
                       </div>
                     )}
                   </div>
