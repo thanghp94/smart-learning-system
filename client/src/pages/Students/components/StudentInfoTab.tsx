@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Student } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -128,7 +127,7 @@ const StudentInfoTab: React.FC<StudentInfoTabProps> = ({
                       </Badge>
                     </p>
                   </div>
-                  
+
                   <div className="space-y-1">
                     <span className="text-sm text-muted-foreground">Cơ sở</span>
                     <p className="font-medium flex items-center">
@@ -191,7 +190,7 @@ const StudentInfoTab: React.FC<StudentInfoTabProps> = ({
                     onChange={handleChange}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="han_hoc_phi">Hạn học phí</Label>
                   <Input
@@ -227,7 +226,7 @@ const StudentInfoTab: React.FC<StudentInfoTabProps> = ({
                   <span className="text-sm text-muted-foreground">Nguồn đến</span>
                   <p className="font-medium">{student.nguon_den || 'Chưa cập nhật'}</p>
                 </div>
-                
+
                 <div className="space-y-1">
                   <span className="text-sm text-muted-foreground">Hạn học phí</span>
                   <p className="font-medium flex items-center">
@@ -240,7 +239,7 @@ const StudentInfoTab: React.FC<StudentInfoTabProps> = ({
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
@@ -314,7 +313,7 @@ const StudentInfoTab: React.FC<StudentInfoTabProps> = ({
                     {student.email_ph1 || 'Chưa cập nhật'}
                   </p>
                 </div>
-                
+
                 <div className="space-y-1">
                   <span className="text-sm text-muted-foreground">Địa chỉ</span>
                   <p className="font-medium flex items-center">
@@ -326,7 +325,7 @@ const StudentInfoTab: React.FC<StudentInfoTabProps> = ({
             )}
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">

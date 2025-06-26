@@ -32,7 +32,7 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
     try {
       setIsLoading(true);
       const data = await studentService.getById(id);
-      
+
       if (data) {
         setStudent(data);
       } else {
@@ -60,7 +60,7 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
     try {
       setIsSaving(true);
       console.log("Submitting student data:", data);
-      
+
       // Format the data for API submission
       const formattedData = {
         ...data,
@@ -68,9 +68,9 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
         han_hoc_phi: data.han_hoc_phi ? data.han_hoc_phi.toISOString().split('T')[0] : null,
         ngay_bat_dau_hoc_phi: data.ngay_bat_dau_hoc_phi ? data.ngay_bat_dau_hoc_phi.toISOString().split('T')[0] : null,
       };
-      
+
       console.log("Formatted student data for submission:", formattedData);
-      
+
       let response;
       if (!isAdd && student) {
         response = await studentService.update(student.id, formattedData);
@@ -93,13 +93,13 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
           throw new Error("Không thể thêm học sinh mới");
         }
       }
-      
+
       navigate("/students");
     } catch (error) {
-      console.error("Error saving student:", error);
+      console.error("Error updating student:", error);
       toast({
         title: "Lỗi",
-        description: "Có lỗi xảy ra khi lưu thông tin học sinh",
+        description: error instanceof Error ? error.message : "Không thể lưu thông tin học sinh",
         variant: "destructive",
       });
     } finally {
@@ -117,7 +117,7 @@ const StudentFormContainer: React.FC<StudentFormContainerProps> = ({
         title={isAdd ? "Thêm Học Sinh" : "Sửa Thông Tin Học Sinh"}
         description={isAdd ? "Thêm học sinh mới vào hệ thống" : "Cập nhật thông tin học sinh"}
       />
-      
+
       {isLoading && !isAdd ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />

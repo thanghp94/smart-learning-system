@@ -66,12 +66,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Employee routes
-  app.get("/api/employees", async (req, res) => {
+  // Get all employees
+  app.get('/api/employees', async (req, res) => {
     try {
-      const employees = await storage.getEmployees();
-      res.json(employees);
+      const result = await db.query(`
+        SELECT 
+          id,
+          ten_nhan_vien,
+          ten_nhan_su,
+          ho_va_ten,
+          trang_thai,
+          created_at,
+          updated_at
+        FROM employees 
+        ORDER BY created_at DESC
+      `);
+      res.json(result.rows);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch employees" });
+      console.error('Error getting employees:', error);
+      res.status(500).json({ error: 'Failed to get employees' });
     }
   });
 
@@ -681,13 +694,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/employee-clock-in", async (req, res) => {
     try {
       const { employee_id, clock_in_time, work_date, location_lat, location_lng, facility_id, location_verified, notes } = req.body;
-      
+
       const result = await storage.executeQuery(
         `INSERT INTO employee_clock_ins (id, employee_id, clock_in_time, work_date, location_lat, location_lng, facility_id, location_verified, notes) 
          VALUES (gen_random_uuid()::text, '${employee_id}', '${clock_in_time}', '${work_date}', ${location_lat || 'NULL'}, ${location_lng || 'NULL'}, '${facility_id || ''}', ${location_verified}, '${notes || ''}') 
          RETURNING *`
       );
-      
+
       const clockInRecord = Array.isArray(result) ? result[0] : (result?.rows?.[0] || {});
       res.json(clockInRecord);
     } catch (error) {
@@ -1159,7 +1172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin API endpoints for comprehensive database management
-  
+
   // Execute SQL query
   app.post("/api/admin/sql", async (req, res) => {
     try {
@@ -1197,7 +1210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { tableName } = req.params;
       const { page = '1', pageSize = '50', search = '', sortColumn = '', sortDirection = 'asc' } = req.query;
-      
+
       const pageNum = parseInt(page as string);
       const pageSizeNum = parseInt(pageSize as string);
       const offset = (pageNum - 1) * pageSizeNum;
@@ -1214,7 +1227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Build data query with search and sorting
       let dataQuery = `SELECT * FROM "${tableName}"`;
-      
+
       if (search) {
         const searchConditions = columns.map(col => 
           `CAST("${col.column_name}" AS TEXT) ILIKE '%${search}%'`
@@ -1328,7 +1341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/table/:tableName/export", async (req, res) => {
     try {
       const { tableName } = req.params;
-      
+
       const query = `SELECT * FROM "${tableName}"`;
       const result = await storage.executeQuery(query);
       const rows = Array.isArray(result) ? result : (result?.rows || []);
