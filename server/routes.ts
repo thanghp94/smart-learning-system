@@ -1143,8 +1143,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-
-
   // Admin API endpoints for comprehensive database management
   
   // Execute SQL query
@@ -1175,6 +1173,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tables = Array.isArray(result) ? result : (result?.rows || []);
       res.json(tables);
     } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get table data with pagination, search, and sorting
+  app.get("/api/admin/table/:tableName/data", async (req, res) => {
+    try {
+      const { tableName } = req.params;
+      const { page = '1', pageSize = '50', search = '', sortColumn = '', sortDirection = 'asc' } = req.query;
+      
+      const pageNum = parseInt(page as string);
+      const pageSizeNum = parseInt(pageSize as string);
+      const offset = (pageNum - 1) * pageSizeNum;
+
+      // Get table columns
+      const columnsQuery = `
+        SELECT column_name, data_type, is_nullable, column_default, character_maximum_length
+        FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = '${tableName}'
+        ORDER BY ordinal_position
+      `;
+      const columnsResult = await storage.executeQuery(columnsQuery);
+      const columns = Array.isArray(columnsResult) ? columnsResult : (columnsResult?.rows || []);
+
+      // Build data query with search and sorting
+      let dataQuery = `SELECT * FROM "${tableName}"`;
+      
+      if (search) {
+        const searchConditions = columns.map(col => 
+          `CAST("${col.column_name}" AS TEXT) ILIKE '%${search}%'`
+        ).join(' OR ');
+        dataQuery += ` WHERE ${searchConditions}`;
+      }
+
+      if (sortColumn) {
+        dataQuery += ` ORDER BY "${sortColumn}" ${sortDirection.toUpperCase()}`;
+      }
+
+      // Get total count
+      let countQuery = `SELECT COUNT(*) as total FROM "${tableName}"`;
+      if (search) {
+        const searchConditions = columns.map(col => 
+          `CAST("${col.column_name}" AS TEXT) ILIKE '%${search}%'`
+        ).join(' OR ');
+        countQuery += ` WHERE ${searchConditions}`;
+      }
+
+      const countResult = await storage.executeQuery(countQuery);
+      const totalRows = Array.isArray(countResult) ? countResult[0]?.total : (countResult?.rows?.[0]?.total || 0);
+
+      // Add pagination
+      dataQuery += ` LIMIT ${pageSizeNum} OFFSET ${offset}`;
+
+      const dataResult = await storage.executeQuery(dataQuery);
+      const rows = Array.isArray(dataResult) ? dataResult : (dataResult?.rows || []);
+
+      res.json({
+        columns,
+        rows,
+        totalRows: parseInt(totalRows),
+        currentPage: pageNum,
+        pageSize: pageSizeNum
+      });
+    } catch (error: any) {
+      console.error('Error fetching table data:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create new row in table
+  app.post("/api/admin/table/:tableName/rows", async (req, res) => {
+    try {
+      const { tableName } = req.params;
+      const data = req.body;
+
+      const columns = Object.keys(data).map(key => `"${key}"`).join(', ');
+      const values = Object.values(data).map(value => 
+        value === null || value === undefined ? 'NULL' : `'${value}'`
+      ).join(', ');
+
+      const query = `INSERT INTO "${tableName}" (${columns}) VALUES (${values}) RETURNING *`;
+      const result = await storage.executeQuery(query);
+      const newRow = Array.isArray(result) ? result[0] : (result?.rows?.[0] || {});
+
+      res.json(newRow);
+    } catch (error: any) {
+      console.error('Error creating row:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update row in table
+  app.patch("/api/admin/table/:tableName/rows/:rowId", async (req, res) => {
+    try {
+      const { tableName, rowId } = req.params;
+      const data = req.body;
+
+      const setClause = Object.entries(data).map(([key, value]) => 
+        `"${key}" = ${value === null || value === undefined ? 'NULL' : `'${value}'`}`
+      ).join(', ');
+
+      const query = `UPDATE "${tableName}" SET ${setClause} WHERE id = '${rowId}' RETURNING *`;
+      const result = await storage.executeQuery(query);
+      const updatedRow = Array.isArray(result) ? result[0] : (result?.rows?.[0] || null);
+
+      if (!updatedRow) {
+        return res.status(404).json({ error: 'Row not found' });
+      }
+
+      res.json(updatedRow);
+    } catch (error: any) {
+      console.error('Error updating row:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete row from table
+  app.delete("/api/admin/table/:tableName/rows/:rowId", async (req, res) => {
+    try {
+      const { tableName, rowId } = req.params;
+
+      const query = `DELETE FROM "${tableName}" WHERE id = '${rowId}' RETURNING *`;
+      const result = await storage.executeQuery(query);
+      const deletedRow = Array.isArray(result) ? result[0] : (result?.rows?.[0] || null);
+
+      if (!deletedRow) {
+        return res.status(404).json({ error: 'Row not found' });
+      }
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error deleting row:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Export table data as CSV
+  app.get("/api/admin/table/:tableName/export", async (req, res) => {
+    try {
+      const { tableName } = req.params;
+      
+      const query = `SELECT * FROM "${tableName}"`;
+      const result = await storage.executeQuery(query);
+      const rows = Array.isArray(result) ? result : (result?.rows || []);
+
+      if (rows.length === 0) {
+        return res.status(404).json({ error: 'No data to export' });
+      }
+
+      // Create CSV content
+      const headers = Object.keys(rows[0]).join(',');
+      const csvRows = rows.map(row => 
+        Object.values(row).map(value => 
+          typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value
+        ).join(',')
+      );
+      const csvContent = [headers, ...csvRows].join('\n');
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${tableName}_export.csv"`);
+      res.send(csvContent);
+    } catch (error: any) {
+      console.error('Error exporting table:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get database schema
+  app.get("/api/admin/schema", async (req, res) => {
+    try {
+      const query = `
+        SELECT 
+          t.table_name,
+          t.table_type,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'column_name', c.column_name,
+                'data_type', c.data_type,
+                'is_nullable', c.is_nullable,
+                'column_default', c.column_default,
+                'character_maximum_length', c.character_maximum_length
+              ) ORDER BY c.ordinal_position
+            ) FILTER (WHERE c.column_name IS NOT NULL),
+            '[]'::json
+          ) as columns
+        FROM information_schema.tables t
+        LEFT JOIN information_schema.columns c ON t.table_name = c.table_name AND t.table_schema = c.table_schema
+        WHERE t.table_schema = 'public'
+        GROUP BY t.table_name, t.table_type
+        ORDER BY t.table_name
+      `;
+      const result = await storage.executeQuery(query);
+      const schema = Array.isArray(result) ? result : (result?.rows || []);
+      res.json(schema);
+    } catch (error: any) {
+      console.error('Error fetching schema:', error);
       res.status(500).json({ error: error.message });
     }
   });
