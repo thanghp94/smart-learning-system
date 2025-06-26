@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Settings, RefreshCw } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Edit, Trash2, Settings, RefreshCw, Database, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface EnumType {
@@ -18,18 +20,32 @@ interface EnumType {
   }>;
 }
 
+interface TableColumn {
+  column_name: string;
+  data_type: string;
+  table_name: string;
+}
+
 const EnumManager = () => {
   const [enumTypes, setEnumTypes] = useState<EnumType[]>([]);
+  const [tableColumns, setTableColumns] = useState<TableColumn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [editingEnum, setEditingEnum] = useState<EnumType | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<TableColumn | null>(null);
   const [newEnumName, setNewEnumName] = useState('');
   const [newEnumValues, setNewEnumValues] = useState('');
+  const [selectedEnumForApply, setSelectedEnumForApply] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchEnumTypes();
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    await Promise.all([fetchEnumTypes(), fetchTableColumns()]);
+  };
 
   const fetchEnumTypes = async () => {
     setIsLoading(true);
@@ -47,6 +63,28 @@ const EnumManager = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchTableColumns = async () => {
+    try {
+      const response = await fetch('/api/admin/schema');
+      if (!response.ok) throw new Error('Failed to fetch schema');
+      const data = await response.json();
+      
+      const columns: TableColumn[] = [];
+      data.forEach((table: any) => {
+        table.columns.forEach((col: any) => {
+          columns.push({
+            column_name: col.column_name,
+            data_type: col.data_type,
+            table_name: table.table_name
+          });
+        });
+      });
+      setTableColumns(columns);
+    } catch (error) {
+      console.error('Error fetching table columns:', error);
     }
   };
 
@@ -124,32 +162,6 @@ const EnumManager = () => {
     }
   };
 
-  const deleteEnumValue = async (enumName: string, value: string) => {
-    try {
-      const response = await fetch(`/api/admin/enums/${enumName}/values/${encodeURIComponent(value)}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete enum value');
-      }
-
-      toast({
-        title: "Success",
-        description: "Enum value deleted successfully"
-      });
-
-      fetchEnumTypes();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
   const deleteEnumType = async (enumName: string) => {
     try {
       const response = await fetch(`/api/admin/enums/${enumName}`, {
@@ -176,15 +188,55 @@ const EnumManager = () => {
     }
   };
 
+  const applyEnumToColumn = async () => {
+    if (!selectedColumn || !selectedEnumForApply) {
+      toast({
+        title: "Error",
+        description: "Please select both a column and an enum type",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/table/${selectedColumn.table_name}/column/${selectedColumn.column_name}/enum`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enumName: selectedEnumForApply })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to apply enum to column');
+      }
+
+      toast({
+        title: "Success",
+        description: `Enum applied to ${selectedColumn.table_name}.${selectedColumn.column_name} successfully`
+      });
+
+      setIsApplyDialogOpen(false);
+      setSelectedColumn(null);
+      setSelectedEnumForApply('');
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Settings className="h-8 w-8" />
-          Enum Type Manager
+          <Database className="h-8 w-8" />
+          PostgreSQL Enum Manager
         </h1>
         <p className="text-muted-foreground mt-2">
-          Manage PostgreSQL enum types and their values
+          Manage PostgreSQL enum types and apply them to table columns
         </p>
       </div>
 
@@ -193,10 +245,67 @@ const EnumManager = () => {
           {enumTypes.length} enum types found
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={fetchEnumTypes}>
+          <Button variant="outline" onClick={fetchData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
+          <Dialog open={isApplyDialogOpen} onOpenChange={setIsApplyDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Link className="h-4 w-4 mr-2" />
+                Apply Enum to Column
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Apply Enum to Column</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div>
+                  <label className="text-sm font-medium">Select Column</label>
+                  <Select onValueChange={(value) => {
+                    const [tableName, columnName] = value.split('.');
+                    const column = tableColumns.find(c => c.table_name === tableName && c.column_name === columnName);
+                    setSelectedColumn(column || null);
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a column" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tableColumns.map((col) => (
+                        <SelectItem key={`${col.table_name}.${col.column_name}`} value={`${col.table_name}.${col.column_name}`}>
+                          {col.table_name}.{col.column_name} ({col.data_type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Select Enum Type</label>
+                  <Select value={selectedEnumForApply} onValueChange={setSelectedEnumForApply}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an enum type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {enumTypes.map((enumType) => (
+                        <SelectItem key={enumType.enum_name} value={enumType.enum_name}>
+                          {enumType.enum_name} ({enumType.enum_values.length} values)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsApplyDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={applyEnumToColumn}>
+                  Apply Enum
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -267,18 +376,11 @@ const EnumManager = () => {
                           {enumType.enum_values.length} values
                         </Badge>
                         <Badge variant="outline">
-                          Used in {enumType.tables_using.length} tables
+                          Used in {enumType.tables_using.length} columns
                         </Badge>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingEnum(enumType)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button size="sm" variant="outline">
@@ -313,18 +415,8 @@ const EnumManager = () => {
                       <h4 className="font-semibold mb-2">Values</h4>
                       <div className="flex flex-wrap gap-2">
                         {enumType.enum_values.map((value) => (
-                          <Badge
-                            key={value}
-                            variant="outline"
-                            className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
-                            onClick={() => {
-                              if (confirm(`Delete enum value "${value}"?`)) {
-                                deleteEnumValue(enumType.enum_name, value);
-                              }
-                            }}
-                          >
+                          <Badge key={value} variant="outline">
                             {value}
-                            <Trash2 className="h-3 w-3 ml-1" />
                           </Badge>
                         ))}
                         <Button
@@ -346,7 +438,7 @@ const EnumManager = () => {
                     {/* Tables Using This Enum */}
                     {enumType.tables_using.length > 0 && (
                       <div>
-                        <h4 className="font-semibold mb-2">Used In Tables</h4>
+                        <h4 className="font-semibold mb-2">Used In Columns</h4>
                         <Table>
                           <TableHeader>
                             <TableRow>

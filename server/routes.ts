@@ -1402,6 +1402,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all enum types
+  app.get("/api/admin/enums", async (req, res) => {
+    try {
+      const query = `
+        SELECT 
+          t.typname as enum_name,
+          array_agg(e.enumlabel ORDER BY e.enumsortorder) as enum_values,
+          COALESCE(
+            (SELECT json_agg(
+              json_build_object(
+                'table_name', c.table_name,
+                'column_name', c.column_name
+              )
+            )
+            FROM information_schema.columns c
+            WHERE c.udt_name = t.typname
+            AND c.table_schema = 'public'),
+            '[]'::json
+          ) as tables_using
+        FROM pg_type t 
+        JOIN pg_enum e ON t.oid = e.enumtypid  
+        WHERE t.typtype = 'e'
+        GROUP BY t.typname
+        ORDER BY t.typname
+      `;
+      const result = await storage.executeQuery(query);
+      const enums = Array.isArray(result) ? result : (result?.rows || []);
+      res.json(enums);
+    } catch (error: any) {
+      console.error('Error fetching enums:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create new enum type
+  app.post("/api/admin/enums", async (req, res) => {
+    try {
+      const { name, values } = req.body;
+      if (!name || !values || !Array.isArray(values) || values.length === 0) {
+        return res.status(400).json({ error: 'Name and values array are required' });
+      }
+
+      // Validate enum name
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+        return res.status(400).json({ error: 'Invalid enum name. Use only letters, numbers, and underscores.' });
+      }
+
+      const valuesStr = values.map(v => `'${v.replace(/'/g, "''")}'`).join(', ');
+      const query = `CREATE TYPE ${name} AS ENUM (${valuesStr})`;
+      
+      await storage.executeQuery(query);
+      res.json({ success: true, message: 'Enum type created successfully' });
+    } catch (error: any) {
+      console.error('Error creating enum:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Add value to existing enum
+  app.post("/api/admin/enums/:enumName/values", async (req, res) => {
+    try {
+      const { enumName } = req.params;
+      const { value } = req.body;
+      
+      if (!value) {
+        return res.status(400).json({ error: 'Value is required' });
+      }
+
+      const query = `ALTER TYPE ${enumName} ADD VALUE '${value.replace(/'/g, "''")}'`;
+      await storage.executeQuery(query);
+      res.json({ success: true, message: 'Enum value added successfully' });
+    } catch (error: any) {
+      console.error('Error adding enum value:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete enum value (PostgreSQL doesn't support this directly, so we'll return an error)
+  app.delete("/api/admin/enums/:enumName/values/:value", async (req, res) => {
+    try {
+      res.status(400).json({ 
+        error: 'PostgreSQL does not support removing enum values. You would need to recreate the enum type.' 
+      });
+    } catch (error: any) {
+      console.error('Error deleting enum value:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete entire enum type
+  app.delete("/api/admin/enums/:enumName", async (req, res) => {
+    try {
+      const { enumName } = req.params;
+      
+      // Check if enum is being used
+      const checkQuery = `
+        SELECT table_name, column_name 
+        FROM information_schema.columns 
+        WHERE udt_name = '${enumName}' AND table_schema = 'public'
+      `;
+      const checkResult = await storage.executeQuery(checkQuery);
+      const usage = Array.isArray(checkResult) ? checkResult : (checkResult?.rows || []);
+      
+      if (usage.length > 0) {
+        return res.status(400).json({ 
+          error: `Cannot delete enum. It is being used in: ${usage.map(u => `${u.table_name}.${u.column_name}`).join(', ')}` 
+        });
+      }
+
+      const query = `DROP TYPE ${enumName}`;
+      await storage.executeQuery(query);
+      res.json({ success: true, message: 'Enum type deleted successfully' });
+    } catch (error: any) {
+      console.error('Error deleting enum:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Apply enum to column
+  app.post("/api/admin/table/:tableName/column/:columnName/enum", async (req, res) => {
+    try {
+      const { tableName, columnName } = req.params;
+      const { enumName } = req.body;
+      
+      if (!enumName) {
+        return res.status(400).json({ error: 'Enum name is required' });
+      }
+
+      const query = `ALTER TABLE "${tableName}" ALTER COLUMN "${columnName}" TYPE ${enumName} USING "${columnName}"::${enumName}`;
+      await storage.executeQuery(query);
+      res.json({ success: true, message: 'Enum applied to column successfully' });
+    } catch (error: any) {
+      console.error('Error applying enum to column:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
 
 
 
