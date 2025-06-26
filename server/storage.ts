@@ -332,6 +332,20 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(assets).where(eq(assets.id, id));
     return (result.rowCount ?? 0) > 0;
   }
+
+  // Generic method for other tables that don't have specific schemas yet
+  async executeQuery(query: string): Promise<any> {
+    return await db.execute(query);
+  }
+
+  async getTableExists(tableName: string): Promise<boolean> {
+    try {
+      const result = await db.execute(`SELECT to_regclass('${tableName}') as exists`);
+      return result.rows[0]?.exists !== null;
+    } catch (error) {
+      return false;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
