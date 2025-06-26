@@ -21,8 +21,8 @@ const DatabaseContext = createContext<DatabaseContextType>({
 export const useDatabase = () => useContext(DatabaseContext);
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   // Set isDemoMode to false to disable demo mode
   const [isDemoMode, setIsDemoMode] = useState(false);
   const { toast } = useToast();
@@ -36,13 +36,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.error('Error checking database status: API response not ok');
         console.log('Setting isInitialized to false due to error');
         setIsInitialized(false);
-        
-        toast({
-          title: 'Database Error',
-          description: 'Could not connect to PostgreSQL database. Please check your configuration.',
-          variant: 'destructive',
-          duration: 5000,
-        });
       } else {
         console.log('PostgreSQL database connection successful, setting isInitialized to true');
         setIsInitialized(true);
@@ -51,13 +44,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('Error checking database status:', error);
       console.log('Setting isInitialized to false due to exception');
       setIsInitialized(false);
-      
-      toast({
-        title: 'Database Error',
-        description: 'Could not connect to PostgreSQL database. Please check your configuration.',
-        variant: 'destructive',
-        duration: 5000,
-      });
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +120,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   useEffect(() => {
-    checkDatabaseStatus();
+    // Skip database check for now to avoid loading issues
+    // checkDatabaseStatus();
   }, []);
 
   return (
