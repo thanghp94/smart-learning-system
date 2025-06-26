@@ -70,25 +70,30 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
     const fetchEmployees = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('employees')
-          .select('id, ten_nhan_su')
-          .eq('tinh_trang_lao_dong', 'active')
-          .order('ten_nhan_su', { ascending: true });
-
-        if (error) {
-          console.error("Error fetching employees:", error);
-          toast({
-            title: "Lỗi",
-            description: "Không thể tải danh sách nhân viên",
-            variant: "destructive"
-          });
-          throw error;
+        const response = await fetch('/api/employees');
+        if (!response.ok) {
+          throw new Error('Failed to fetch employees');
         }
+        
+        const employees = await response.json();
+        
+        // Filter active employees and sort by name
+        const activeEmployees = employees
+          .filter((emp: any) => emp.trang_thai === 'active' || !emp.trang_thai)
+          .sort((a: any, b: any) => {
+            const nameA = a.ten_nhan_vien || a.ten_nhan_su || '';
+            const nameB = b.ten_nhan_vien || b.ten_nhan_su || '';
+            return nameA.localeCompare(nameB);
+          });
 
-        setEmployees(data || []);
+        setEmployees(activeEmployees);
       } catch (error) {
         console.error('Error fetching employees:', error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách nhân viên",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
@@ -101,12 +106,12 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
     try {
       setSubmitting(true);
       const formattedData = {
-        nhan_vien_id: values.employee_id,
-        ngay: values.date.toISOString().split('T')[0],
-        thoi_gian_bat_dau: values.time_in,
-        thoi_gian_ket_thuc: values.time_out,
-        trang_thai: values.status,
-        ghi_chu: values.notes,
+        employee_id: values.employee_id,
+        work_date: values.date.toISOString().split('T')[0],
+        clock_in_time: values.time_in,
+        clock_out_time: values.time_out,
+        status: values.status,
+        notes: values.notes,
       };
       
       await onSubmit(formattedData);
@@ -149,7 +154,7 @@ const AddAttendanceForm: React.FC<AddAttendanceFormProps> = ({ onSubmit, onCance
                 <SelectContent>
                   {employees.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
-                      {employee.ten_nhan_su}
+                      {employee.ten_nhan_vien || employee.ten_nhan_su || `Employee ${employee.id}`}
                     </SelectItem>
                   ))}
                 </SelectContent>

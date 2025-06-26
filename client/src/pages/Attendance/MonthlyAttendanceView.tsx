@@ -145,7 +145,7 @@ const MonthlyAttendanceView = () => {
 
         return {
           employee_id: employee.id,
-          employee_name: employee.ten_nhan_su || employee.ho_va_ten || `Employee ${employee.id}`,
+          employee_name: employee.ten_nhan_vien || employee.ten_nhan_su || employee.ho_va_ten || `Employee ${employee.id}`,
           status: `${totalPresent} ngày làm, ${totalLate} ngày trễ`,
           total_present: totalPresent,
           total_late: totalLate,
