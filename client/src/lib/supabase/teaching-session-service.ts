@@ -83,7 +83,7 @@ const teachingSessionService = {
   },
 
   // Add getWithAvgScore method
-  async getWithAvgScore(): Promise<any[]> => {
+  async getWithAvgScore(): Promise<any[]> {
     try {
       const response = await fetch('/api/teaching-sessions?includeEvaluations=true');
       if (!response.ok) {
