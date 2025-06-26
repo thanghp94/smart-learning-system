@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -53,19 +52,19 @@ const EnrollStudentButton = ({
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await enrollmentService.create({
         hoc_sinh_id: studentId,
         lop_chi_tiet_id: selectedClassId,
         tinh_trang_diem_danh: 'pending'
       });
-      
+
       toast({
         title: "Thành công",
         description: "Đã đăng ký học sinh vào lớp học"
       });
-      
+
       setOpen(false);
       await onEnrollmentCreated();
     } catch (error) {
@@ -81,58 +80,89 @@ const EnrollStudentButton = ({
   };
 
   return (
-    <>
-      <Button onClick={() => setOpen(true)}>Đăng ký vào lớp</Button>
-      
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Đăng ký học sinh vào lớp</DialogTitle>
-            <DialogDescription>
-              {student ? `Chọn lớp học để đăng ký học sinh ${student?.ten_hoc_sinh}` : 'Chọn lớp học để đăng ký'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Button onClick={() => setOpen(true)} size="sm">
+        {classId ? 'Thêm ghi danh' : 'Ghi danh'}
+      </Button>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Ghi danh học sinh</DialogTitle>
+          <DialogDescription>
+            {student ? `Ghi danh ${student.ho_va_ten || student.ten_hoc_sinh} vào lớp học` : 'Chọn học sinh và lớp học để ghi danh'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {!student && !studentId && (
+            <div>
+              <label className="text-sm font-medium">Học sinh</label>
+              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn học sinh" />
+                </SelectTrigger>
+                <SelectContent>
+                  {isStudentsLoading ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    students.map((student) => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.ho_va_ten || student.ten_hoc_sinh}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {!classId && (
+            <div>
               <label className="text-sm font-medium">Lớp học</label>
-              <Select 
-                value={selectedClassId} 
-                onValueChange={setSelectedClassId}
-                disabled={isClassesLoading}
-              >
+              <Select value={selectedClassId} onValueChange={setSelectedClassId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn lớp học" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classes.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.ten_lop_full || cls.ten_lop}
-                    </SelectItem>
-                  ))}
+                  {isClassesLoading ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    classes.map((cls) => (
+                      <SelectItem key={cls.id} value={cls.id}>
+                        {cls.ten_lop_full || cls.ten_lop}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
-                Hủy
-              </Button>
-              <Button onClick={handleSubmit} disabled={isSubmitting || !selectedClassId}>
-                {isSubmitting ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    Đang đăng ký...
-                  </>
-                ) : (
-                  'Đăng ký'
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+          )}
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Hủy
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader className="h-4 w-4 animate-spin mr-2" />
+                Đang xử lý...
+              </>
+            ) : (
+              'Xác nhận'
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

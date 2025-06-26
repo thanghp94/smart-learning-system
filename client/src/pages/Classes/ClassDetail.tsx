@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import AddTeachingSessionButton from './AddTeachingSessionButton';
 import ViewEvaluationsButton from '../Evaluations/ViewEvaluationsButton';
+import EnrollStudentButton from '../Students/components/EnrollStudentButton';
 import ClassHeaderSection from './components/ClassHeaderSection';
 import ClassInfoSection from './components/ClassInfoSection';
 import ClassSessionsList from './components/ClassSessionsList';
@@ -107,11 +108,20 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ classItem }) => {
         </TabsContent>
         
         <TabsContent value="students">
-          <ClassStudentsList 
-            enrollments={enrollments}
-            onRefresh={handleRefreshData}
-            isLoading={isLoading}
-          />
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">Danh sách học sinh</h3>
+              <EnrollStudentButton 
+                classId={classItem?.id}
+                onEnrollmentCreated={handleRefreshData}
+              />
+            </div>
+            <ClassStudentsList 
+              enrollments={enrollments}
+              onRefresh={handleRefreshData}
+              isLoading={isLoading}
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
