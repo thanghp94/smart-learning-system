@@ -42,16 +42,16 @@ const Evaluations = () => {
       // Fetch classes and teachers for displaying names
       const [classesData, teachersData] = await Promise.all([
         classService.getAll(),
-        employeeService.getByRole("Giáo viên")
+        fetch('/api/teachers').then(res => res.json()).catch(() => [])
       ]);
       
       // Create lookup objects for class and teacher data
-      const classesLookup = classesData.reduce((acc, cls) => {
+      const classesLookup = (classesData || []).reduce((acc: any, cls: any) => {
         acc[cls.id] = cls;
         return acc;
       }, {} as Record<string, Class>);
       
-      const teachersLookup = teachersData.reduce((acc, teacher) => {
+      const teachersLookup = (teachersData || []).reduce((acc: any, teacher: any) => {
         acc[teacher.id] = teacher;
         return acc;
       }, {} as Record<string, Employee>);

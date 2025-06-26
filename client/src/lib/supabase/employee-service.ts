@@ -70,4 +70,17 @@ export const employeeService = {
       throw error;
     }
   },
+
+  async getByRole(role: string): Promise<Employee[]> {
+    try {
+      const response = await fetch('/api/teachers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch teachers');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+      throw error;
+    }
+  },
 };
