@@ -1,4 +1,4 @@
-import { pgTable, text, integer, serial, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, serial, timestamp, decimal, boolean, date, time } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -139,6 +139,254 @@ export const assets = pgTable("assets", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Settings table
+export const settings = pgTable("settings", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  hang_muc: text("hang_muc"),
+  tuy_chon: text("tuy_chon"),
+  mo_ta: text("mo_ta"),
+  hien_thi: text("hien_thi"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Finance table
+export const finances = pgTable("finances", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  amount: decimal("amount", { precision: 15, scale: 2 }),
+  description: text("description"),
+  transaction_type: text("transaction_type"),
+  facility_id: text("facility_id"),
+  student_id: text("student_id"),
+  employee_id: text("employee_id"),
+  payment_method: text("payment_method"),
+  transaction_date: date("transaction_date"),
+  created_by: text("created_by"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Finance transaction types table
+export const financeTransactionTypes = pgTable("finance_transaction_types", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Asset transfers table
+export const assetTransfers = pgTable("asset_transfers", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  asset_id: text("asset_id"),
+  from_facility_id: text("from_facility_id"),
+  to_facility_id: text("to_facility_id"),
+  transfer_date: date("transfer_date"),
+  notes: text("notes"),
+  transferred_by: text("transferred_by"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Activities table
+export const activities = pgTable("activities", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  user_id: text("user_id"),
+  action: text("action"),
+  table_name: text("table_name"),
+  record_id: text("record_id"),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Images table
+export const images = pgTable("images", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  file_name: text("file_name"),
+  file_path: text("file_path"),
+  file_size: integer("file_size"),
+  mime_type: text("mime_type"),
+  uploaded_by: text("uploaded_by"),
+  related_id: text("related_id"),
+  related_type: text("related_type"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Files table
+export const files = pgTable("files", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  ten_file: text("ten_file"),
+  file_name: text("file_name"),
+  file_path: text("file_path"),
+  file_size: integer("file_size"),
+  mime_type: text("mime_type"),
+  loai_file: text("loai_file"),
+  mo_ta: text("mo_ta"),
+  uploaded_by: text("uploaded_by"),
+  entity_type: text("entity_type"),
+  entity_id: text("entity_id"),
+  is_public: boolean("is_public").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Events table
+export const events = pgTable("events", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  description: text("description"),
+  event_date: date("event_date"),
+  start_time: time("start_time"),
+  end_time: time("end_time"),
+  location: text("location"),
+  event_type: text("event_type"),
+  facility_id: text("facility_id"),
+  created_by: text("created_by"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Contacts table
+export const contacts = pgTable("contacts", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  ten_lien_he: text("ten_lien_he").notNull(),
+  email: text("email"),
+  so_dien_thoai: text("so_dien_thoai"),
+  dia_chi: text("dia_chi"),
+  loai_lien_he: text("loai_lien_he"),
+  ghi_chu: text("ghi_chu"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Requests table
+export const requests = pgTable("requests", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  employee_id: text("employee_id"),
+  title: text("title"),
+  description: text("description"),
+  request_type: text("request_type"),
+  status: text("status").default("pending"),
+  priority: text("priority").default("medium"),
+  due_date: date("due_date"),
+  approved_by: text("approved_by"),
+  approved_at: timestamp("approved_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Tasks table
+export const tasks = pgTable("tasks", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  description: text("description"),
+  assigned_to: text("assigned_to"),
+  assigned_by: text("assigned_by"),
+  status: text("status").default("pending"),
+  priority: text("priority").default("medium"),
+  due_date: date("due_date"),
+  completed_at: timestamp("completed_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Evaluations table
+export const evaluations = pgTable("evaluations", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  student_id: text("student_id"),
+  class_id: text("class_id"),
+  evaluation_type: text("evaluation_type"),
+  score: integer("score"),
+  max_score: integer("max_score"),
+  notes: text("notes"),
+  evaluation_date: date("evaluation_date"),
+  created_by: text("created_by"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Student assignments table
+export const studentAssignments = pgTable("student_assignments", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  student_id: text("student_id"),
+  teaching_session_id: text("teaching_session_id"),
+  assignment_title: text("assignment_title"),
+  assignment_description: text("assignment_description"),
+  due_date: date("due_date"),
+  status: text("status").default("assigned"),
+  score: integer("score"),
+  feedback: text("feedback"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Payroll table
+export const payroll = pgTable("payroll", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  employee_id: text("employee_id"),
+  month: integer("month"),
+  year: integer("year"),
+  base_salary: decimal("base_salary", { precision: 15, scale: 2 }),
+  bonuses: decimal("bonuses", { precision: 15, scale: 2 }).default("0"),
+  deductions: decimal("deductions", { precision: 15, scale: 2 }).default("0"),
+  total_salary: decimal("total_salary", { precision: 15, scale: 2 }),
+  payment_date: date("payment_date"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Employee clock ins table
+export const employeeClockIns = pgTable("employee_clock_ins", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  employee_id: text("employee_id"),
+  clock_in_time: timestamp("clock_in_time"),
+  clock_out_time: timestamp("clock_out_time"),
+  work_date: date("work_date"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Admissions table
+export const admissions = pgTable("admissions", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  ten_hoc_sinh: text("ten_hoc_sinh").notNull(),
+  ngay_sinh: date("ngay_sinh"),
+  gioi_tinh: text("gioi_tinh"),
+  dia_chi: text("dia_chi"),
+  so_dien_thoai: text("so_dien_thoai"),
+  email: text("email"),
+  ten_phu_huynh: text("ten_phu_huynh"),
+  so_dien_thoai_phu_huynh: text("so_dien_thoai_phu_huynh"),
+  email_phu_huynh: text("email_phu_huynh"),
+  status: text("status").default("pending"),
+  notes: text("notes"),
+  application_date: date("application_date").defaultNow(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Sessions table
+export const sessionSchedules = pgTable("sessions", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  session_name: text("session_name"),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// Enums table
+export const enums = pgTable("enums", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  category: text("category").notNull(),
+  value: text("value").notNull(),
+  display_text: text("display_text"),
+  sort_order: integer("sort_order").default(0),
+  is_active: boolean("is_active").default(true),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -193,6 +441,111 @@ export const insertAssetSchema = createInsertSchema(assets).omit({
   updated_at: true,
 });
 
+// Insert schemas for new tables
+export const insertSettingsSchema = createInsertSchema(settings).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertFinancesSchema = createInsertSchema(finances).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertFinanceTransactionTypesSchema = createInsertSchema(financeTransactionTypes).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertAssetTransfersSchema = createInsertSchema(assetTransfers).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertActivitiesSchema = createInsertSchema(activities).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertImagesSchema = createInsertSchema(images).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertFilesSchema = createInsertSchema(files).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertEventsSchema = createInsertSchema(events).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertContactsSchema = createInsertSchema(contacts).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertRequestsSchema = createInsertSchema(requests).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertTasksSchema = createInsertSchema(tasks).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertEvaluationsSchema = createInsertSchema(evaluations).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertStudentAssignmentsSchema = createInsertSchema(studentAssignments).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertPayrollSchema = createInsertSchema(payroll).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertEmployeeClockInsSchema = createInsertSchema(employeeClockIns).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertAdmissionsSchema = createInsertSchema(admissions).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertSessionSchedulesSchema = createInsertSchema(sessionSchedules).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertEnumsSchema = createInsertSchema(enums).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // Export types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -213,158 +566,40 @@ export type Attendance = typeof attendances.$inferSelect;
 export type InsertAsset = z.infer<typeof insertAssetSchema>;
 export type Asset = typeof assets.$inferSelect;
 
-// Additional tables that are referenced in the codebase
-export const settings = pgTable("settings", {
-  id: text("id").primaryKey(),
-  hang_muc: text("hang_muc"),
-  tuy_chon: text("tuy_chon"),
-  mo_ta: text("mo_ta"),
-  hien_thi: text("hien_thi"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-export const finances = pgTable("finances", {
-  id: text("id").primaryKey(),
-  amount: text("amount"), // Using text for decimal values
-  description: text("description"),
-  transaction_type: text("transaction_type"),
-  facility_id: text("facility_id"),
-  student_id: text("student_id"),
-  employee_id: text("employee_id"),
-  payment_method: text("payment_method"),
-  transaction_date: text("transaction_date"),
-  created_by: text("created_by"),
-  notes: text("notes"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-export const activities = pgTable("activities", {
-  id: text("id").primaryKey(),
-  user_id: text("user_id"),
-  action: text("action"),
-  table_name: text("table_name"),
-  record_id: text("record_id"),
-  description: text("description"),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const images = pgTable("images", {
-  id: text("id").primaryKey(),
-  file_name: text("file_name"),
-  file_path: text("file_path"),
-  file_size: integer("file_size"),
-  mime_type: text("mime_type"),
-  uploaded_by: text("uploaded_by"),
-  related_id: text("related_id"),
-  related_type: text("related_type"),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const files = pgTable("files", {
-  id: text("id").primaryKey(),
-  ten_file: text("ten_file"),
-  file_name: text("file_name"),
-  file_path: text("file_path"),
-  file_size: integer("file_size"),
-  mime_type: text("mime_type"),
-  loai_file: text("loai_file"),
-  mo_ta: text("mo_ta"),
-  uploaded_by: text("uploaded_by"),
-  entity_type: text("entity_type"),
-  entity_id: text("entity_id"),
-  is_public: text("is_public"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-export const requests = pgTable("requests", {
-  id: text("id").primaryKey(),
-  employee_id: text("employee_id"),
-  title: text("title"),
-  description: text("description"),
-  request_type: text("request_type"),
-  status: text("status").default("pending"),
-  priority: text("priority").default("medium"),
-  due_date: text("due_date"),
-  approved_by: text("approved_by"),
-  approved_at: timestamp("approved_at"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-export const tasks = pgTable("tasks", {
-  id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description"),
-  assigned_to: text("assigned_to"),
-  assigned_by: text("assigned_by"),
-  status: text("status").default("pending"),
-  priority: text("priority").default("medium"),
-  due_date: text("due_date"),
-  completed_at: timestamp("completed_at"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-export const admissions = pgTable("admissions", {
-  id: text("id").primaryKey(),
-  ten_hoc_sinh: text("ten_hoc_sinh").notNull(),
-  ngay_sinh: text("ngay_sinh"),
-  gioi_tinh: text("gioi_tinh"),
-  dia_chi: text("dia_chi"),
-  so_dien_thoai: text("so_dien_thoai"),
-  email: text("email"),
-  ten_phu_huynh: text("ten_phu_huynh"),
-  so_dien_thoai_phu_huynh: text("so_dien_thoai_phu_huynh"),
-  email_phu_huynh: text("email_phu_huynh"),
-  status: text("status").default("pending"),
-  notes: text("notes"),
-  application_date: text("application_date"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-// Insert schemas for new tables
-export const insertSettingSchema = createInsertSchema(settings).omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
-
-export const insertFinanceSchema = createInsertSchema(finances).omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
-
-export const insertAdmissionSchema = createInsertSchema(admissions).omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
-
-export const insertRequestSchema = createInsertSchema(requests).omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
-
-export const insertTaskSchema = createInsertSchema(tasks).omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
-
-// Export types for new tables
-export type Setting = typeof settings.$inferSelect;
-export type InsertSetting = z.infer<typeof insertSettingSchema>;
-export type Finance = typeof finances.$inferSelect;
-export type InsertFinance = z.infer<typeof insertFinanceSchema>;
-export type Admission = typeof admissions.$inferSelect;
-export type InsertAdmission = z.infer<typeof insertAdmissionSchema>;
-export type Request = typeof requests.$inferSelect;
-export type InsertRequest = z.infer<typeof insertRequestSchema>;
-export type Task = typeof tasks.$inferSelect;
-export type InsertTask = z.infer<typeof insertTaskSchema>;
+// New table types
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+export type Settings = typeof settings.$inferSelect;
+export type InsertFinances = z.infer<typeof insertFinancesSchema>;
+export type Finances = typeof finances.$inferSelect;
+export type InsertFinanceTransactionTypes = z.infer<typeof insertFinanceTransactionTypesSchema>;
+export type FinanceTransactionTypes = typeof financeTransactionTypes.$inferSelect;
+export type InsertAssetTransfers = z.infer<typeof insertAssetTransfersSchema>;
+export type AssetTransfers = typeof assetTransfers.$inferSelect;
+export type InsertActivities = z.infer<typeof insertActivitiesSchema>;
+export type Activities = typeof activities.$inferSelect;
+export type InsertImages = z.infer<typeof insertImagesSchema>;
+export type Images = typeof images.$inferSelect;
+export type InsertFiles = z.infer<typeof insertFilesSchema>;
+export type Files = typeof files.$inferSelect;
+export type InsertEvents = z.infer<typeof insertEventsSchema>;
+export type Events = typeof events.$inferSelect;
+export type InsertContacts = z.infer<typeof insertContactsSchema>;
+export type Contacts = typeof contacts.$inferSelect;
+export type InsertRequests = z.infer<typeof insertRequestsSchema>;
+export type Requests = typeof requests.$inferSelect;
+export type InsertTasks = z.infer<typeof insertTasksSchema>;
+export type Tasks = typeof tasks.$inferSelect;
+export type InsertEvaluations = z.infer<typeof insertEvaluationsSchema>;
+export type Evaluations = typeof evaluations.$inferSelect;
+export type InsertStudentAssignments = z.infer<typeof insertStudentAssignmentsSchema>;
+export type StudentAssignments = typeof studentAssignments.$inferSelect;
+export type InsertPayroll = z.infer<typeof insertPayrollSchema>;
+export type Payroll = typeof payroll.$inferSelect;
+export type InsertEmployeeClockIns = z.infer<typeof insertEmployeeClockInsSchema>;
+export type EmployeeClockIns = typeof employeeClockIns.$inferSelect;
+export type InsertAdmissions = z.infer<typeof insertAdmissionsSchema>;
+export type Admissions = typeof admissions.$inferSelect;
+export type InsertSessionSchedules = z.infer<typeof insertSessionSchedulesSchema>;
+export type SessionSchedules = typeof sessionSchedules.$inferSelect;
+export type InsertEnums = z.infer<typeof insertEnumsSchema>;
+export type Enums = typeof enums.$inferSelect;
