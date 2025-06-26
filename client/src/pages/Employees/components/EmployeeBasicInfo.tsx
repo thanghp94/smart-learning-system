@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Employee } from '@/lib/types';
 import { Input } from '@/components/ui/input';
@@ -31,7 +30,7 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Thông tin cơ bản</h3>
-      
+
       <div className="flex flex-col items-center mb-4">
         {isEditing ? (
           <ImageUpload
@@ -50,7 +49,7 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
           </div>
         )}
       </div>
-      
+
       <div className="grid grid-cols-1 gap-4">
         <div>
           <Label htmlFor="ten_nhan_su">Họ và tên</Label>
@@ -65,7 +64,7 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
             <div className="p-2 border rounded bg-gray-50">{employee.ten_nhan_su}</div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="ten_tieng_anh">Tên tiếng Anh</Label>
           {isEditing ? (
@@ -79,7 +78,7 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
             <div className="p-2 border rounded bg-gray-50">{employee.ten_tieng_anh || '—'}</div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="ngay_sinh">Ngày sinh</Label>
           {isEditing ? (
@@ -129,7 +128,7 @@ const EmployeeBasicInfo: React.FC<EmployeeBasicInfoProps> = ({
             </div>
           )}
         </div>
-        
+
         <div>
           <Label htmlFor="gioi_tinh">Giới tính</Label>
           {isEditing ? (
