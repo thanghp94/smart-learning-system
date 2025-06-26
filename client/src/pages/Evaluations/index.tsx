@@ -30,9 +30,14 @@ const Evaluations = () => {
     try {
       setIsLoading(true);
       
-      // Fetch teaching sessions with average score
-      const data = await teachingSessionService.getWithAvgScore();
-      console.log('Fetched teaching sessions:', data);
+      // Use PostgreSQL API instead of teaching sessions
+      const response = await fetch('/api/evaluations');
+      if (!response.ok) {
+        throw new Error('Failed to fetch evaluations');
+      }
+      
+      const data = await response.json();
+      console.log('Fetched evaluations:', data);
       
       // Fetch classes and teachers for displaying names
       const [classesData, teachersData] = await Promise.all([
@@ -53,7 +58,7 @@ const Evaluations = () => {
       
       setClassesInfo(classesLookup);
       setTeachersInfo(teachersLookup);
-      setEvaluations(data);
+      setEvaluations(data || []);
     } catch (error) {
       console.error('Error fetching evaluations:', error);
       toast({

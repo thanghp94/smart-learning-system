@@ -946,6 +946,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enrollments routes
+  app.get("/api/enrollments", async (req, res) => {
+    try {
+      const enrollments = await storage.getEnrollments();
+      res.json(enrollments);
+    } catch (error) {
+      console.error('Error fetching enrollments:', error);
+      res.status(500).json({ error: "Failed to fetch enrollments" });
+    }
+  });
+
+  app.get("/api/enrollments/:id", async (req, res) => {
+    try {
+      const enrollment = await storage.getEnrollment(req.params.id);
+      if (!enrollment) {
+        return res.status(404).json({ error: "Enrollment not found" });
+      }
+      res.json(enrollment);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch enrollment" });
+    }
+  });
+
+  app.post("/api/enrollments", async (req, res) => {
+    try {
+      const enrollment = await storage.createEnrollment(req.body);
+      res.json(enrollment);
+    } catch (error) {
+      console.error('Error creating enrollment:', error);
+      res.status(400).json({ error: "Invalid enrollment data" });
+    }
+  });
+
   // Admissions routes
   app.get("/api/admissions", async (req, res) => {
     try {

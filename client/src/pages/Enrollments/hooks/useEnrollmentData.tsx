@@ -23,39 +23,16 @@ export const useEnrollmentData = () => {
       setIsLoading(true);
       console.log('Fetching enrollment data...');
       
-      // Fetch enrollments with joined student and class data to get names
-      const { data: enrollmentsData, error } = await supabase
-        .from('enrollments')
-        .select(`
-          *,
-          students:hoc_sinh_id (id, ten_hoc_sinh),
-          classes:lop_chi_tiet_id (id, ten_lop_full, ten_lop, ct_hoc)
-        `)
-        .order('created_at', { ascending: false });
-        
-      if (error) {
-        console.error('Error fetching enrollments:', error);
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải dữ liệu ghi danh",
-          variant: "destructive"
-        });
-        setEnrollments([]);
-        setFilteredEnrollments([]);
-      } else {
-        // Process the joined data to flatten it
-        const processedEnrollments = enrollmentsData.map(enrollment => ({
-          ...enrollment,
-          ten_hoc_sinh: enrollment.students?.ten_hoc_sinh || 'Không có thông tin',
-          ten_lop_full: enrollment.classes?.ten_lop_full || 'Không có thông tin',
-          ten_lop: enrollment.classes?.ten_lop || 'Không có thông tin',
-          ct_hoc: enrollment.classes?.ct_hoc || 'Không có thông tin'
-        }));
-        
-        console.log('Enrollment data loaded:', processedEnrollments.length || 0);
-        setEnrollments(processedEnrollments);
-        setFilteredEnrollments(processedEnrollments);
+      // Use PostgreSQL API instead of Supabase
+      const response = await fetch('/api/enrollments');
+      if (!response.ok) {
+        throw new Error('Failed to fetch enrollments');
       }
+      
+      const enrollmentsData = await response.json();
+      console.log('Enrollment data loaded:', enrollmentsData.length || 0);
+      setEnrollments(enrollmentsData || []);
+      setFilteredEnrollments(enrollmentsData || []);
       
       // Then try to get students for reference
       let studentsData;

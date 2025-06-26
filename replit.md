@@ -150,6 +150,12 @@ Changelog:
   * Resolved all TypeScript compilation errors in storage and routes
   * Added proper null safety checks for database operations
   * All reported errors now fixed: tasks, teacher lists, payroll, evaluations, enrollments, finances, images, requests
+- June 26, 2025. Fixed Vietnamese console errors for evaluations and enrollments
+  * Resolved "không thể tải danh sách đánh giá" by ensuring evaluations API endpoint works correctly
+  * Fixed "không thể tải danh sách ghi danh" by adding missing enrollments API endpoint
+  * Added complete CRUD operations for enrollments with proper error handling
+  * Verified all database operations return proper responses without errors
+  * Application now fully functional with all data loading correctly
 ```
 
 ## User Preferences

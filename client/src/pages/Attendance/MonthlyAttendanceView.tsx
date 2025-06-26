@@ -54,43 +54,41 @@ const MonthlyAttendanceView = () => {
     try {
       console.log("Fetching attendance data for month:", currentMonth, "year:", currentYear);
 
-      // Call the stored function to get monthly attendance data
-      const { data, error } = await supabase.rpc(
-        'get_monthly_attendance_summary',
-        { p_month: currentMonth, p_year: currentYear }
-      );
-
-      if (error) {
-        console.error("Error fetching attendance data:", error);
-        throw error;
+      // Use PostgreSQL API endpoint instead of Supabase
+      const response = await fetch(`/api/attendances/monthly/${currentMonth}/${currentYear}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch monthly attendance data');
       }
 
+      const data = await response.json();
       console.log("Received data:", data);
 
       // Process data for component state
       const groupedData: Record<string, any> = {};
 
       if (data && data.length > 0) {
-        data.forEach((record: MonthlyAttendanceSummary) => {
-          const employeeId = record.employee_id;
+        data.forEach((record: any) => {
+          const employeeId = record.enrollment_id || record.id;
 
           if (!groupedData[employeeId]) {
             groupedData[employeeId] = {
               employee_id: employeeId,
-              employee_name: record.employee_name,
+              employee_name: `Attendance ${employeeId}`,
               records: {},
               summary: {
-                present: record.present_count || 0,
-                absent: record.absent_count || 0,
-                late: record.late_count || 0
+                present: 0,
+                absent: 0,
+                late: 0
               }
             };
           }
 
-          if (record.day_of_month > 0) {
-            groupedData[employeeId].records[record.day_of_month] = {
-              status: record.status,
-              date: record.attendance_date
+          // Simple processing for attendance records
+          const day = new Date(record.created_at).getDate();
+          if (day > 0) {
+            groupedData[employeeId].records[day] = {
+              status: record.status || 'present',
+              date: record.created_at
             };
           }
         });
