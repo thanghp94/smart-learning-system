@@ -30,14 +30,14 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
-      ten_nhan_su: initialData?.ten_nhan_su || '',
+      ten_nhan_vien: initialData?.ten_nhan_vien || '',
       ten_tieng_anh: initialData?.ten_tieng_anh || '',
       bo_phan: initialData?.bo_phan || '',
-      chuc_danh: initialData?.chuc_danh || '',
-      dien_thoai: initialData?.dien_thoai || '',
+      chuc_vu: initialData?.chuc_vu || '',
+      so_dien_thoai: initialData?.so_dien_thoai || '',
       email: initialData?.email || '',
       co_so_id: initialData?.co_so_id?.length ? initialData.co_so_id[0] : '',
-      tinh_trang_lao_dong: initialData?.tinh_trang_lao_dong || 'active',
+      trang_thai: initialData?.trang_thai || 'active',
       ngay_sinh: initialData?.ngay_sinh || null,
       dia_chi: initialData?.dia_chi || '',
       gioi_tinh: initialData?.gioi_tinh || '',
@@ -101,13 +101,13 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
           </div>
 
           <div>
-            <Label htmlFor="ten_nhan_su">Tên nhân viên*</Label>
+            <Label htmlFor="ten_nhan_vien">Tên nhân viên*</Label>
             <Input
-              id="ten_nhan_su"
-              {...register('ten_nhan_su', { required: true })}
-              className={errors.ten_nhan_su ? 'border-red-500' : ''}
+              id="ten_nhan_vien"
+              {...register('ten_nhan_vien', { required: true })}
+              className={errors.ten_nhan_vien ? 'border-red-500' : ''}
             />
-            {errors.ten_nhan_su && <p className="text-red-500 text-xs mt-1">Vui lòng nhập tên nhân viên</p>}
+            {errors.ten_nhan_vien && <p className="text-red-500 text-xs mt-1">Vui lòng nhập tên nhân viên</p>}
           </div>
 
           <div>
@@ -136,10 +136,10 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="chuc_danh">Chức danh</Label>
+              <Label htmlFor="chuc_vu">Chức danh</Label>
               <Select
-                onValueChange={(value) => setValue('chuc_danh', value)}
-                defaultValue={watch('chuc_danh')}
+                onValueChange={(value) => setValue('chuc_vu', value)}
+                defaultValue={watch('chuc_vu')}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn chức danh" />
@@ -165,8 +165,8 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
         <TabsContent value="contact" className="space-y-4 pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="dien_thoai">Số điện thoại</Label>
-              <Input id="dien_thoai" {...register('dien_thoai')} />
+              <Label htmlFor="so_dien_thoai">Số điện thoại</Label>
+              <Input id="so_dien_thoai" {...register('so_dien_thoai')} />
             </div>
 
             <div>
@@ -249,10 +249,10 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="tinh_trang_lao_dong">Trạng thái</Label>
+              <Label htmlFor="trang_thai">Trạng thái</Label>
               <Select
-                onValueChange={(value) => setValue('tinh_trang_lao_dong', value)}
-                defaultValue={watch('tinh_trang_lao_dong')}
+                onValueChange={(value) => setValue('trang_thai', value)}
+                defaultValue={watch('trang_thai')}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn trạng thái" />

@@ -111,13 +111,18 @@ const MonthlyAttendanceView = () => {
     try {
       console.log("Adding attendance data:", formData);
 
-      const { data, error } = await supabase
-        .from('employee_clock_in_out')
-        .insert([formData]);
+      const response = await fetch('/api/employee-clock-ins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (error) {
+      if (!response.ok) {
+        const error = await response.text();
         console.error("Error adding attendance:", error);
-        throw error;
+        throw new Error(error);
       }
 
       toast({

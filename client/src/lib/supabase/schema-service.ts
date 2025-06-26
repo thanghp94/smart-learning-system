@@ -1,19 +1,10 @@
 
-import { supabase } from './client';
-
 /**
- * Creates the get_schema_info function in Supabase if it doesn't exist
+ * Creates the get_schema_info function - now uses PostgreSQL API
  */
 export const setupSchemaFunction = async () => {
   try {
-    // Create the function that returns database schema information
-    const { error } = await supabase.rpc('create_schema_info_function');
-    
-    if (error && !error.message.includes('already exists')) {
-      console.error('Error creating schema info function:', error);
-      return { success: false, error };
-    }
-    
+    // Since we're using PostgreSQL API now, this function is not needed
     return { success: true };
   } catch (error) {
     console.error('Error setting up schema function:', error);
@@ -22,17 +13,15 @@ export const setupSchemaFunction = async () => {
 };
 
 /**
- * Gets database schema information
+ * Gets database schema information via PostgreSQL API
  */
 export const getSchemaInfo = async () => {
   try {
-    const { data, error } = await supabase.rpc('get_schema_info');
-    
-    if (error) {
-      console.error('Error getting schema info:', error);
-      return { success: false, error };
+    const response = await fetch('/api/database-schema');
+    if (!response.ok) {
+      throw new Error('Failed to fetch schema info');
     }
-    
+    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error getting schema info:', error);

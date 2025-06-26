@@ -1113,6 +1113,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database Schema routes
+  app.get("/api/database-schema", async (req, res) => {
+    try {
+      const query = `
+        SELECT 
+          table_name,
+          COUNT(column_name) as column_count 
+        FROM 
+          information_schema.columns 
+        WHERE 
+          table_schema = 'public' 
+        GROUP BY 
+          table_name 
+        ORDER BY 
+          table_name
+      `;
+      const result = await storage.executeQuery(query);
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching database schema:', error);
+      res.status(500).json({ error: "Failed to fetch database schema" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

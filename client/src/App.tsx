@@ -18,6 +18,7 @@ import StudentFormContainer from '@/pages/Students/components/StudentFormContain
 import Employees from '@/pages/Employees';
 import EmployeeDetail from '@/pages/Employees/EmployeeDetail';
 import EmployeeForm from '@/pages/Employees/EmployeeForm';
+import EmployeeFormContainer from '@/pages/Employees/EmployeeFormContainer';
 import Classes from '@/pages/Classes';
 import ClassDetail from '@/pages/Classes/ClassDetail';
 import ClassForm from '@/pages/Classes/ClassForm';
@@ -126,8 +127,8 @@ function App() {
             
             <Route path="employees" element={<Employees />} />
             <Route path="employees/:id" element={<EmployeeDetailRoute />} />
-            <Route path="employees/add" element={<EmployeeFormWrapper />} />
-            <Route path="employees/edit/:id" element={<EmployeeFormWrapper />} />
+            <Route path="employees/add" element={<EmployeeFormContainer isAdd={true} />} />
+            <Route path="employees/edit/:id" element={<EmployeeFormContainer />} />
             <Route path="employees/contracts" element={<ContractTemplateManagerPage />} />
             
             <Route path="classes" element={<Classes />} />

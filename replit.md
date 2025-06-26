@@ -156,6 +156,15 @@ Changelog:
   * Added complete CRUD operations for enrollments with proper error handling
   * Verified all database operations return proper responses without errors
   * Application now fully functional with all data loading correctly
+- June 26, 2025. Completed final error fixes and employee saving functionality
+  * Fixed all remaining schema-related errors by updating schema service to use PostgreSQL API
+  * Added database schema API endpoint (/api/database-schema) for schema information
+  * Resolved employee saving issue by fixing field mappings between form and database schema
+  * Updated Employee type definition to match PostgreSQL schema (ten_nhan_vien, chuc_vu, so_dien_thoai, trang_thai)
+  * Created EmployeeFormContainer component with proper form submission handling
+  * Fixed Supabase references in MonthlyAttendanceView to use PostgreSQL API
+  * Added getByRole method to employee service for teacher filtering
+  * All console errors eliminated, employee data now saves successfully to database
 ```
 
 ## User Preferences
