@@ -5,19 +5,26 @@ import TablePageLayout from '@/components/common/TablePageLayout';
 import DataTable from '@/components/ui/data-table';
 import { Employee } from '@/lib/types';
 import { employeeService } from '@/lib/supabase';
-import { Plus, FileDown, Filter, RotateCw } from 'lucide-react';
+import { Plus, FileDown, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import EmployeeFilters from './components/EmployeeFilters';
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState({ facility: 'all', status: 'all' });
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchEmployees();
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [employees, filters]);
 
   const fetchEmployees = async () => {
     try {
@@ -34,6 +41,45 @@ const Employees = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...employees];
+
+    // Filter by facility
+    if (filters.facility !== 'all') {
+      filtered = filtered.filter(employee => {
+        if (Array.isArray(employee.co_so_id)) {
+          return employee.co_so_id.includes(filters.facility);
+        }
+        return employee.co_so_id === filters.facility;
+      });
+    }
+
+    // Filter by status
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(employee => {
+        const status = employee.tinh_trang_lao_dong || employee.trang_thai;
+        if (filters.status === 'active') {
+          return status === 'active' || status === 'Đang làm việc';
+        } else if (filters.status === 'inactive') {
+          return status === 'inactive' || status === 'Đã nghỉ việc';
+        } else if (filters.status === 'on_leave') {
+          return status === 'on_leave' || status === 'Tạm nghỉ';
+        }
+        return true;
+      });
+    }
+
+    setFilteredEmployees(filtered);
+  };
+
+  const handleFilterChange = (newFilters: { facility: string; status: string }) => {
+    setFilters(newFilters);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({ facility: 'all', status: 'all' });
   };
 
   const handleRowClick = (employee: Employee) => {
@@ -95,9 +141,10 @@ const Employees = () => {
       <Button variant="outline" size="sm" className="h-8" onClick={fetchEmployees}>
         <RotateCw className="h-4 w-4 mr-1" /> Làm mới
       </Button>
-      <Button variant="outline" size="sm" className="h-8">
-        <Filter className="h-4 w-4 mr-1" /> Lọc
-      </Button>
+      <EmployeeFilters 
+        onFilterChange={handleFilterChange}
+        onResetFilters={handleResetFilters}
+      />
       <Button variant="outline" size="sm" className="h-8">
         <FileDown className="h-4 w-4 mr-1" /> Xuất
       </Button>
@@ -115,7 +162,7 @@ const Employees = () => {
     >
       <DataTable
         columns={columns}
-        data={employees}
+        data={filteredEmployees}
         isLoading={isLoading}
         onRowClick={handleRowClick}
         searchable={true}
