@@ -119,6 +119,30 @@ CREATE TABLE IF NOT EXISTS contacts (
 -- Requests table
 CREATE TABLE IF NOT EXISTS requests (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  noi_dung TEXT NOT NULL,
+  nguoi_de_xuat_id TEXT,
+  ngay_de_xuat DATE DEFAULT CURRENT_DATE,
+  trang_thai TEXT DEFAULT 'pending',
+  ly_do TEXT,
+  muc TEXT,
+  ngay_bat_dau DATE,
+  ngay_ket_thuc DATE,
+  ngay_di_lam_lai DATE,
+  so_luong INTEGER,
+  so_ngay_nghi INTEGER,
+  tong_so INTEGER,
+  thoi_gian_bat_dau TIME,
+  thoi_gian_ket_thuc TIME,
+  file TEXT,
+  ghi_chu TEXT,
+  tg_tao TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Requests table
+CREATE TABLE IF NOT EXISTS requests (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   employee_id TEXT,
   title TEXT,
   description TEXT,

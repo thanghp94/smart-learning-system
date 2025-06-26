@@ -81,6 +81,35 @@ export interface IStorage {
   createTask(task: any): Promise<any>;
   updateTask(id: string, task: any): Promise<any | undefined>;
   deleteTask(id: string): Promise<boolean>;
+
+   // Files methods
+  getFiles(): Promise<any[]>;
+  getFile(id: string): Promise<any | null>;
+  createFile(fileData: any): Promise<any>;
+  updateFile(id: string, updates: any): Promise<any | null>;
+  deleteFile(id: string): Promise<boolean>;
+
+  // Contacts methods
+  getContacts(): Promise<any[]>;
+  getContact(id: string): Promise<any | null>;
+  createContact(contactData: any): Promise<any>;
+  updateContact(id: string, updates: any): Promise<any | null>;
+  deleteContact(id: string): Promise<boolean>;
+
+  // Requests methods
+  getRequests(): Promise<any[]>;
+  getRequest(id: string): Promise<any | null>;
+  createRequest(requestData: any): Promise<any>;
+  updateRequest(id: string, updates: any): Promise<any | null>;
+  deleteRequest(id: string): Promise<boolean>;
+
+    // Employee Clock-in CRUD operations
+  getEmployeeClockIn(): Promise<any[]>;
+  getEmployeeClockInById(id: string): Promise<any | undefined>;
+  getEmployeeClockInByMonth(month: number, year: number): Promise<any[]>;
+  createEmployeeClockIn(data: any): Promise<any>;
+  updateEmployeeClockIn(id: string, data: any): Promise<any | undefined>;
+  deleteEmployeeClockIn(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -343,8 +372,257 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // Task operations
+  async getTasks(): Promise<any[]> {
+    console.log('Fetching tasks from database...');
+    const result = await db.select().from(tasks);
+    console.log('Tasks found in database:', result.length);
+    return result;
+  }
+
+  async getTask(id: string): Promise<any | undefined> {
+    const result = await db.select().from(tasks).where(eq(tasks.id, id));
+    return result[0];
+  }
+
+  async createTask(task: any): Promise<any> {
+    const id = crypto.randomUUID();
+    const taskWithId = {
+      ...task,
+      id
+    };
+    const result = await db.insert(tasks).values(taskWithId).returning();
+    return result[0];
+  }
+
+  async updateTask(id: string, task: any): Promise<any | undefined> {
+    const result = await db.update(tasks).set(task).where(eq(tasks.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Files methods
+  async getFiles(): Promise<any[]> {
+    try {
+      console.log('Fetching all files...');
+      //const result = await this.pool.query('SELECT * FROM files ORDER BY created_at DESC');
+      const result = await db.select().from(assets);
+      console.log(`Successfully fetched ${result.length} files`);
+      return result;
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      throw error;
+    }
+  }
+
+  async getFile(id: string): Promise<any | null> {
+    try {
+      //const result = await this.pool.query('SELECT * FROM files WHERE id = $1', [id]);
+      const result = await db.select().from(assets).where(eq(assets.id, id));
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error fetching file:', error);
+      throw error;
+    }
+  }
+
+  async createFile(fileData: any): Promise<any> {
+    try {
+      //const fields = Object.keys(fileData).join(', ');
+      //const values = Object.values(fileData);
+      //const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+
+      //const query = `INSERT INTO files (${fields}) VALUES (${placeholders}) RETURNING *`;
+      //const result = await this.pool.query(query, values);
+      const id = crypto.randomUUID();
+      const assetWithId = {
+        ...fileData,
+        id
+      };
+      const result = await db.insert(assets).values(assetWithId).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating file:', error);
+      throw error;
+    }
+  }
+
+  async updateFile(id: string, updates: any): Promise<any | null> {
+    try {
+      //const updateFields = Object.keys(updates).map((key, index) => `${key} = $${index + 2}`).join(', ');
+      //const values = [id, ...Object.values(updates)];
+
+      //const query = `UPDATE files SET ${updateFields}, updated_at = NOW() WHERE id = $1 RETURNING *`;
+      //const result = await this.pool.query(query, values);
+       const result = await db.update(assets).set(updates).where(eq(assets.id, id)).returning();
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error updating file:', error);
+      throw error;
+    }
+  }
+
+  async deleteFile(id: string): Promise<boolean> {
+    try {
+      //const result = await this.pool.query('DELETE FROM files WHERE id = $1', [id]);
+      const result = await db.delete(assets).where(eq(assets.id, id));
+      return (result.rowCount ?? 0) > 0;
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      throw error;
+    }
+  }
+
+  // Contacts methods
+  async getContacts(): Promise<any[]> {
+    try {
+      console.log('Fetching all contacts...');
+      //const result = await this.pool.query('SELECT * FROM contacts ORDER BY created_at DESC');
+      const result = await db.select().from(employees);
+      console.log(`Successfully fetched ${result.length} contacts`);
+      return result;
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      throw error;
+    }
+  }
+
+  async getContact(id: string): Promise<any | null> {
+    try {
+      //const result = await this.pool.query('SELECT * FROM contacts WHERE id = $1', [id]);
+      const result = await db.select().from(employees).where(eq(employees.id, id));
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error fetching contact:', error);
+      throw error;
+    }
+  }
+
+  async createContact(contactData: any): Promise<any> {
+    try {
+      //const fields = Object.keys(contactData).join(', ');
+      //const values = Object.values(contactData);
+      //const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+
+      //const query = `INSERT INTO contacts (${fields}) VALUES (${placeholders}) RETURNING *`;
+      //const result = await this.pool.query(query, values);
+      const id = crypto.randomUUID();
+      const employeeWithId = {
+        ...contactData,
+        id
+      };
+      const result = await db.insert(employees).values(employeeWithId).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating contact:', error);
+      throw error;
+    }
+  }
+
+  async updateContact(id: string, updates: any): Promise<any | null> {
+    try {
+      //const updateFields = Object.keys(updates).map((key, index) => `${key} = $${index + 2}`).join(', ');
+      //const values = [id, ...Object.values(updates)];
+
+      //const query = `UPDATE contacts SET ${updateFields} WHERE id = $1 RETURNING *`;
+      //const result = await this.pool.query(query, values);
+       const result = await db.update(employees).set(updates).where(eq(employees.id, id)).returning();
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error updating contact:', error);
+      throw error;
+    }
+  }
+
+  async deleteContact(id: string): Promise<boolean> {
+    try {
+      //const result = await this.pool.query('DELETE FROM contacts WHERE id = $1', [id]);
+      const result = await db.delete(employees).where(eq(employees.id, id));
+      return (result.rowCount ?? 0) > 0;
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+      throw error;
+    }
+  }
+
+  // Requests methods
+  async getRequests(): Promise<any[]> {
+    try {
+      console.log('Fetching all requests...');
+      //const result = await this.pool.query('SELECT * FROM requests ORDER BY created_at DESC');
+      const result = await db.select().from(tasks);
+      console.log(`Successfully fetched ${result.length} requests`);
+      return result;
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      throw error;
+    }
+  }
+
+  async getRequest(id: string): Promise<any | null> {
+    try {
+      //const result = await this.pool.query('SELECT * FROM requests WHERE id = $1', [id]);
+      const result = await db.select().from(tasks).where(eq(tasks.id, id));
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error fetching request:', error);
+      throw error;
+    }
+  }
+
+  async createRequest(requestData: any): Promise<any> {
+    try {
+      //const fields = Object.keys(requestData).join(', ');
+      //const values = Object.values(requestData);
+      //const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+
+      //const query = `INSERT INTO requests (${fields}) VALUES (${placeholders}) RETURNING *`;
+      //const result = await this.pool.query(query, values);
+      const id = crypto.randomUUID();
+      const taskWithId = {
+        ...requestData,
+        id
+      };
+      const result = await db.insert(tasks).values(taskWithId).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating request:', error);
+      throw error;
+    }
+  }
+
+  async updateRequest(id: string, updates: any): Promise<any | null> {
+    try {
+      //const updateFields = Object.keys(updates).map((key, index) => `${key} = $${index + 2}`).join(', ');
+      //const values = [id, ...Object.values(updates)];
+
+      //const query = `UPDATE requests SET ${updateFields} WHERE id = $1 RETURNING *`;
+      //const result = await this.pool.query(query, values);
+      const result = await db.update(tasks).set(updates).where(eq(tasks.id, id)).returning();
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error updating request:', error);
+      throw error;
+    }
+  }
+
+  async deleteRequest(id: string): Promise<boolean> {
+    try {
+      //const result = await this.pool.query('DELETE FROM requests WHERE id = $1', [id]);
+      const result = await db.delete(tasks).where(eq(tasks.id, id));
+      return (result.rowCount ?? 0) > 0;
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      throw error;
+    }
+  }
+
   // Employee Clock-in CRUD operations
-  async getEmployeeClockIn() {
+  async getEmployeeClockIn(): Promise<any[]> {
     console.log('Fetching all employee clock-in records...');
     try {
       // Placeholder for database query using Drizzle ORM.
@@ -409,39 +687,6 @@ export class DatabaseStorage implements IStorage {
       console.error('Error deleting employee clock-in record:', error);
       throw error;
     }
-  }
-
-  // Task operations
-  async getTasks(): Promise<any[]> {
-    console.log('Fetching tasks from database...');
-    const result = await db.select().from(tasks);
-    console.log('Tasks found in database:', result.length);
-    return result;
-  }
-
-  async getTask(id: string): Promise<any | undefined> {
-    const result = await db.select().from(tasks).where(eq(tasks.id, id));
-    return result[0];
-  }
-
-  async createTask(task: any): Promise<any> {
-    const id = crypto.randomUUID();
-    const taskWithId = {
-      ...task,
-      id
-    };
-    const result = await db.insert(tasks).values(taskWithId).returning();
-    return result[0];
-  }
-
-  async updateTask(id: string, task: any): Promise<any | undefined> {
-    const result = await db.update(tasks).set(task).where(eq(tasks.id, id)).returning();
-    return result[0];
-  }
-
-  async deleteTask(id: string): Promise<boolean> {
-    const result = await db.delete(tasks).where(eq(tasks.id, id));
-    return (result.rowCount ?? 0) > 0;
   }
 
   // Generic method for other tables that don't have specific schemas yet

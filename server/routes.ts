@@ -611,6 +611,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Files routes
+  app.get("/api/files", async (req, res) => {
+    try {
+      const files = await storage.getFiles();
+      res.json(files);
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      res.status(500).json({ error: "Failed to fetch files" });
+    }
+  });
+
+  app.get("/api/files/:id", async (req, res) => {
+    try {
+      const file = await storage.getFile(req.params.id);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      res.json(file);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch file" });
+    }
+  });
+
+  app.post("/api/files", async (req, res) => {
+    try {
+      const file = await storage.createFile(req.body);
+      res.json(file);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid file data" });
+    }
+  });
+
+  app.patch("/api/files/:id", async (req, res) => {
+    try {
+      const file = await storage.updateFile(req.params.id, req.body);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      res.json(file);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update file" });
+    }
+  });
+
+  app.delete("/api/files/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteFile(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete file" });
+    }
+  });
+
+  // Contacts routes
+  app.get("/api/contacts", async (req, res) => {
+    try {
+      const contacts = await storage.getContacts();
+      res.json(contacts);
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      res.status(500).json({ error: "Failed to fetch contacts" });
+    }
+  });
+
+  app.get("/api/contacts/:id", async (req, res) => {
+    try {
+      const contact = await storage.getContact(req.params.id);
+      if (!contact) {
+        return res.status(404).json({ error: "Contact not found" });
+      }
+      res.json(contact);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contact" });
+    }
+  });
+
+  app.post("/api/contacts", async (req, res) => {
+    try {
+      const contact = await storage.createContact(req.body);
+      res.json(contact);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid contact data" });
+    }
+  });
+
+  app.patch("/api/contacts/:id", async (req, res) => {
+    try {
+      const contact = await storage.updateContact(req.params.id, req.body);
+      if (!contact) {
+        return res.status(404).json({ error: "Contact not found" });
+      }
+      res.json(contact);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update contact" });
+    }
+  });
+
+  app.delete("/api/contacts/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteContact(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Contact not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete contact" });
+    }
+  });
+
+  // Requests routes
+  app.get("/api/requests", async (req, res) => {
+    try {
+      const requests = await storage.getRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      res.status(500).json({ error: "Failed to fetch requests" });
+    }
+  });
+
+  app.get("/api/requests/:id", async (req, res) => {
+    try {
+      const request = await storage.getRequest(req.params.id);
+      if (!request) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch request" });
+    }
+  });
+
+  app.post("/api/requests", async (req, res) => {
+    try {
+      const request = await storage.createRequest(req.body);
+      res.json(request);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid request data" });
+    }
+  });
+
+  app.patch("/api/requests/:id", async (req, res) => {
+    try {
+      const request = await storage.updateRequest(req.params.id, req.body);
+      if (!request) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update request" });
+    }
+  });
+
+  app.delete("/api/requests/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteRequest(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete request" });
+    }
+  });
+
   // AI Command processing route (migrated from Supabase Edge Function)
   app.post("/api/ai/generate", async (req, res) => {
     try {
