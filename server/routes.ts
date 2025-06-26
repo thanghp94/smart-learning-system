@@ -416,8 +416,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const attendances = await storage.getAttendances();
       // Filter by month and year if needed
       const filteredAttendances = attendances.filter(attendance => {
-        if (attendance.ngay_diem_danh) {
-          const attendanceDate = new Date(attendance.ngay_diem_danh);
+        if (attendance.created_at) {
+          const attendanceDate = new Date(attendance.created_at);
           return attendanceDate.getMonth() + 1 === month && attendanceDate.getFullYear() === year;
         }
         return false;
@@ -499,8 +499,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Finances routes
   app.get("/api/finances", async (req, res) => {
     try {
-      const finances = await storage.executeQuery('SELECT * FROM finances ORDER BY created_at DESC');
-      res.json(finances);
+      const result = await storage.executeQuery('SELECT * FROM finances ORDER BY created_at DESC');
+      res.json(result.rows || []);
     } catch (error) {
       console.error('Error fetching finances:', error);
       res.status(500).json({ error: "Failed to fetch finances" });
@@ -509,11 +509,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/finances/:id", async (req, res) => {
     try {
-      const result = await storage.executeQuery('SELECT * FROM finances WHERE id = $1', [req.params.id]);
-      if (result.length === 0) {
+      const result = await storage.executeQuery(`SELECT * FROM finances WHERE id = '${req.params.id}'`);
+      if (!result.rows || result.rows.length === 0) {
         return res.status(404).json({ error: "Finance record not found" });
       }
-      res.json(result[0]);
+      res.json(result.rows[0]);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch finance record" });
     }
@@ -521,11 +521,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/finances", async (req, res) => {
     try {
+      const { loai_thu_chi, tong_tien, dien_giai, nguoi_tao, co_so, doi_tuong_id, loai_doi_tuong } = req.body;
       const result = await storage.executeQuery(
-        'INSERT INTO finances (loai_thu_chi, tong_tien, dien_giai, nguoi_tao, co_so, doi_tuong_id, loai_doi_tuong) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [req.body.loai_thu_chi, req.body.tong_tien, req.body.dien_giai, req.body.nguoi_tao, req.body.co_so, req.body.doi_tuong_id, req.body.loai_doi_tuong]
+        `INSERT INTO finances (loai_thu_chi, tong_tien, dien_giai, nguoi_tao, co_so, doi_tuong_id, loai_doi_tuong) 
+         VALUES ('${loai_thu_chi}', ${tong_tien}, '${dien_giai}', '${nguoi_tao || null}', '${co_so || null}', '${doi_tuong_id || null}', '${loai_doi_tuong}') RETURNING *`
       );
-      res.json(result[0]);
+      res.json(result.rows[0]);
     } catch (error) {
       console.error('Error creating finance record:', error);
       res.status(400).json({ error: "Invalid finance data" });
@@ -535,11 +536,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Finance transaction types routes
   app.get("/api/finance-transaction-types", async (req, res) => {
     try {
-      const types = await storage.executeQuery('SELECT * FROM finance_transaction_types ORDER BY type_name');
-      res.json(types);
+      const result = await storage.executeQuery('SELECT * FROM finance_transaction_types ORDER BY type_name');
+      res.json(result.rows || []);
     } catch (error) {
       console.error('Error fetching finance transaction types:', error);
       res.status(500).json({ error: "Failed to fetch transaction types" });
+    }
+  });
+
+  // Teachers endpoint (using employees with role filter)
+  app.get("/api/teachers", async (req, res) => {
+    try {
+      const employees = await storage.getEmployees();
+      const teachers = employees.filter(emp => 
+        emp.chuc_vu === 'teacher' || 
+        emp.chuc_vu === 'giao_vien' || 
+        emp.chuc_vu === 'Giáo viên' ||
+        emp.chuc_vu?.toLowerCase().includes('teacher') ||
+        emp.chuc_vu?.toLowerCase().includes('giáo viên')
+      );
+      res.json(teachers);
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+      res.status(500).json({ error: "Failed to fetch teachers" });
     }
   });
 
@@ -913,6 +932,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(payrollRecord);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch payroll record" });
+    }
+  });
+
+  // Sessions routes
+  app.get("/api/sessions", async (req, res) => {
+    try {
+      const result = await storage.executeQuery('SELECT * FROM sessions ORDER BY created_at DESC');
+      res.json(result.rows || []);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      res.status(500).json({ error: "Failed to fetch sessions" });
     }
   });
 
