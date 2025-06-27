@@ -210,7 +210,15 @@ class DatabaseService {
     }
   }
 
-  // Missing methods that are called in various components
+  // Generic CRUD methods for compatibility with existing frontend code
+  async create(tableName: string, record: any) {
+    return this.createRecord(tableName, record);
+  }
+
+  async update(tableName: string, id: string, record: any) {
+    return this.updateRecord(tableName, id, record);
+  }
+
   async getById(id: string) {
     // Generic getById for compatibility 
     return null;

@@ -176,6 +176,16 @@ Changelog:
   * Created comprehensive admin interface with tabbed navigation for migration, SQL execution, schema management
   * Implemented automatic database detection and fallback mechanisms for seamless operation
   * System architecture now supports full PostgreSQL to Supabase migration with data integrity preservation
+- June 27, 2025. Fixed critical database insertion issues and console errors post-migration
+  * Added UUID auto-generation (gen_random_uuid()::text) for all table ID columns to resolve insertion failures
+  * Removed blocking NOT NULL constraints from optional fields in classes and assets tables
+  * Fixed database service to use Supabase exclusively, eliminating "Load failed" console errors
+  * Verified record insertion capability across all 12 main tables with proper column mapping
+  * Replaced frontend database.ts with Supabase-only implementation removing PostgreSQL fallback
+  * Added comprehensive error handling and logging for all database operations
+  * Fixed schema mismatches between Vietnamese and English column names across tables
+  * All database tables now accept new records properly with auto-generated UUIDs
+  * Console errors resolved - application loads data cleanly from Supabase without failures
 ```
 
 ## User Preferences
