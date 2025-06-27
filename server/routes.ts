@@ -1295,6 +1295,226 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create Supabase tables endpoint
+  app.post('/api/migrate/create-supabase-tables', async (req, res) => {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+      const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        return res.status(400).json({ error: 'Supabase credentials not configured' });
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+      // Create tables one by one with individual SQL statements
+      const tables = [
+        {
+          name: 'students',
+          sql: `CREATE TABLE IF NOT EXISTS students (
+            id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+            ma_hoc_sinh TEXT UNIQUE,
+            ten_hoc_sinh TEXT NOT NULL,
+            ngay_sinh DATE,
+            gioi_tinh TEXT,
+            dia_chi TEXT,
+            so_dien_thoai TEXT,
+            email TEXT,
+            ngay_nhap_hoc DATE,
+            trang_thai TEXT DEFAULT 'hoat_dong',
+            ghi_chu TEXT,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );`
+        },
+        {
+          name: 'employees',
+          sql: `CREATE TABLE IF NOT EXISTS employees (
+            id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+            ma_nhan_vien TEXT UNIQUE,
+            ten_nhan_vien TEXT NOT NULL,
+            ngay_sinh DATE,
+            gioi_tinh TEXT,
+            dia_chi TEXT,
+            so_dien_thoai TEXT,
+            email TEXT,
+            chuc_vu TEXT,
+            ngay_vao_lam DATE,
+            luong_co_ban DECIMAL(15,2),
+            trang_thai TEXT DEFAULT 'hoat_dong',
+            ghi_chu TEXT,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );`
+        },
+        {
+          name: 'facilities',
+          sql: `CREATE TABLE IF NOT EXISTS facilities (
+            id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+            ten_co_so TEXT NOT NULL,
+            loai_co_so TEXT,
+            dia_chi TEXT,
+            dien_tich DECIMAL(10,2),
+            suc_chua INTEGER,
+            trang_thai TEXT DEFAULT 'hoat_dong',
+            mo_ta TEXT,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );`
+        },
+        {
+          name: 'classes',
+          sql: `CREATE TABLE IF NOT EXISTS classes (
+            id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+            ten_lop TEXT NOT NULL,
+            mo_ta TEXT,
+            trinh_do TEXT,
+            so_hoc_sinh_toi_da INTEGER,
+            hoc_phi DECIMAL(15,2),
+            trang_thai TEXT DEFAULT 'hoat_dong',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );`
+        }
+      ];
+
+      const results = [];
+      
+      // Create tables using direct SQL execution
+      for (const table of tables) {
+        try {
+          const { error } = await supabase
+            .from('_sql')
+            .select('*')
+            .limit(0); // This will test the connection
+
+          // If connection works, use raw SQL
+          const response = await fetch(`${supabaseUrl}/rest/v1/rpc/exec_sql`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+              'apikey': supabaseAnonKey
+            },
+            body: JSON.stringify({ sql: table.sql })
+          });
+
+          if (response.ok) {
+            results.push({ table: table.name, success: true });
+          } else {
+            results.push({ table: table.name, success: false, error: await response.text() });
+          }
+        } catch (error) {
+          results.push({ 
+            table: table.name, 
+            success: false, 
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          });
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Table creation process completed',
+        results
+      });
+
+    } catch (error) {
+      console.error('Create tables error:', error);
+      res.status(500).json({ 
+        error: 'Failed to create Supabase tables', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Migrate data to Supabase endpoint
+  app.post('/api/migrate/migrate-data', async (req, res) => {
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const { createClient } = await import('@supabase/supabase-js');
+      
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+      const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        return res.status(400).json({ error: 'Supabase credentials not configured' });
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      const dataDir = './data_export';
+      const results = [];
+
+      // Get all JSON files from export directory
+      const files = await fs.readdir(dataDir);
+      const jsonFiles = files.filter(f => f.endsWith('.json') && f !== 'export_summary.json');
+
+      for (const file of jsonFiles) {
+        const tableName = file.replace('.json', '');
+        try {
+          const filePath = path.join(dataDir, file);
+          const fileContent = await fs.readFile(filePath, 'utf-8');
+          const data = JSON.parse(fileContent);
+
+          if (data.length > 0) {
+            // Insert data into Supabase table
+            const { error } = await supabase
+              .from(tableName)
+              .insert(data);
+
+            if (error) {
+              results.push({ 
+                table: tableName, 
+                success: false, 
+                recordCount: data.length,
+                error: error.message 
+              });
+            } else {
+              results.push({ 
+                table: tableName, 
+                success: true, 
+                recordCount: data.length 
+              });
+            }
+          } else {
+            results.push({ 
+              table: tableName, 
+              success: true, 
+              recordCount: 0,
+              message: 'No data to migrate'
+            });
+          }
+        } catch (error) {
+          results.push({ 
+            table: tableName, 
+            success: false, 
+            recordCount: 0,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      const totalRecords = results.reduce((sum, r) => sum + (r.recordCount || 0), 0);
+      const successfulTables = results.filter(r => r.success).length;
+
+      res.json({
+        success: true,
+        message: `Migration completed: ${successfulTables}/${results.length} tables migrated`,
+        totalRecords,
+        results
+      });
+
+    } catch (error) {
+      console.error('Migration error:', error);
+      res.status(500).json({ 
+        error: 'Failed to migrate data to Supabase', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Migration endpoint
   app.post('/api/admin/migrate-to-supabase', async (req, res) => {
     try {
