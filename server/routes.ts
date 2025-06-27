@@ -1235,6 +1235,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Migration endpoint
+  app.post('/api/admin/migrate-to-supabase', async (req, res) => {
+    try {
+      const { DataMigrator } = await import('./migrate-to-supabase');
+      const migrator = new DataMigrator();
+      
+      const results = await migrator.migrateAllTables();
+      
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+      const totalRecords = successful.reduce((sum, r) => sum + r.recordCount, 0);
+      
+      res.json({
+        success: failed.length === 0,
+        summary: {
+          totalTables: results.length,
+          successfulMigrations: successful.length,
+          failedMigrations: failed.length,
+          totalRecords: totalRecords
+        },
+        results: results,
+        successful: successful,
+        failed: failed
+      });
+      
+    } catch (error) {
+      console.error('Migration failed:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Migration failed', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
   // Admin API endpoints for comprehensive database management
 
   // Execute SQL query

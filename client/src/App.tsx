@@ -79,6 +79,7 @@ import TableManager from '@/pages/Admin/TableManager';
 import SQLRunner from '@/pages/Admin/SQLRunner';
 import SchemaViewer from '@/pages/Admin/SchemaViewer';
 import EnumManager from '@/pages/Admin/EnumManager';
+import MigrationTool from '@/pages/Admin/MigrationTool';
 
 // Wrapper components for route props
 const EmployeeDetailRoute = () => {
@@ -220,6 +221,7 @@ function App() {
             <Route path="admin/schema" element={<SchemaViewer />} />
             <Route path="admin/table/:tableName" element={<TableManager />} />
             <Route path="admin/enums" element={<EnumManager />} />
+            <Route path="admin/migration" element={<MigrationTool />} />
             
             <Route path="enum-manager" element={<EnumManager />} />
             <Route path="ai-tools" element={<AITools />} />
