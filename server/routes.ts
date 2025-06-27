@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { getStorage } from "./database-config";
 import { db, pool } from "./db";
 import { 
   insertStudentSchema, insertEmployeeSchema, insertFacilitySchema,
@@ -12,7 +12,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Student routes
   app.get("/api/students", async (req, res) => {
     try {
-      const students = await storage.getStudents();
+      const storageInstance = await getStorage();
+      const students = await storageInstance.getStudents();
       res.json(students);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch students" });
@@ -21,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/students/:id", async (req, res) => {
     try {
-      const student = await storage.getStudent(req.params.id);
+      const student = await (await getStorage()).getStudent(req.params.id);
       if (!student) {
         return res.status(404).json({ error: "Student not found" });
       }
@@ -34,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/students", async (req, res) => {
     try {
       const validatedData = insertStudentSchema.parse(req.body);
-      const student = await storage.createStudent(validatedData);
+      const student = await (await getStorage()).createStudent(validatedData);
       res.json(student);
     } catch (error) {
       res.status(400).json({ error: "Invalid student data" });
@@ -43,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/students/:id", async (req, res) => {
     try {
-      const student = await storage.updateStudent(req.params.id, req.body);
+      const student = await (await getStorage()).updateStudent(req.params.id, req.body);
       if (!student) {
         return res.status(404).json({ error: "Student not found" });
       }
@@ -55,7 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/students/:id", async (req, res) => {
     try {
-      const success = await storage.deleteStudent(req.params.id);
+      const success = await (await getStorage()).deleteStudent(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Student not found" });
       }
@@ -69,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all employees
   app.get('/api/employees', async (req, res) => {
     try {
-      const employees = await storage.getEmployees();
+      const employees = await (await getStorage()).getEmployees();
       res.json(employees);
     } catch (error) {
       console.error('Error getting employees:', error);
@@ -79,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/employees/:id", async (req, res) => {
     try {
-      const employee = await storage.getEmployee(req.params.id);
+      const employee = await (await getStorage()).getEmployee(req.params.id);
       if (!employee) {
         return res.status(404).json({ error: "Employee not found" });
       }
@@ -188,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/employees/:id", async (req, res) => {
     try {
-      const success = await storage.deleteEmployee(req.params.id);
+      const success = await (await getStorage()).deleteEmployee(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Employee not found" });
       }
@@ -201,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Facility routes
   app.get("/api/facilities", async (req, res) => {
     try {
-      const facilities = await storage.getFacilities();
+      const facilities = await (await getStorage()).getFacilities();
       res.json(facilities);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch facilities" });
@@ -210,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/facilities/:id", async (req, res) => {
     try {
-      const facility = await storage.getFacility(req.params.id);
+      const facility = await (await getStorage()).getFacility(req.params.id);
       if (!facility) {
         return res.status(404).json({ error: "Facility not found" });
       }
@@ -223,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/facilities", async (req, res) => {
     try {
       const validatedData = insertFacilitySchema.parse(req.body);
-      const facility = await storage.createFacility(validatedData);
+      const facility = await (await getStorage()).createFacility(validatedData);
       res.json(facility);
     } catch (error) {
       res.status(400).json({ error: "Invalid facility data" });
@@ -232,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/facilities/:id", async (req, res) => {
     try {
-      const facility = await storage.updateFacility(req.params.id, req.body);
+      const facility = await (await getStorage()).updateFacility(req.params.id, req.body);
       if (!facility) {
         return res.status(404).json({ error: "Facility not found" });
       }
@@ -244,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/facilities/:id", async (req, res) => {
     try {
-      const success = await storage.deleteFacility(req.params.id);
+      const success = await (await getStorage()).deleteFacility(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Facility not found" });
       }
@@ -258,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/classes", async (req, res) => {
     try {
       console.log('Classes API endpoint called');
-      const classes = await storage.getClasses();
+      const classes = await (await getStorage()).getClasses();
       console.log('Classes fetched from storage:', classes.length);
       res.json(classes);
     } catch (error) {
@@ -269,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/classes/:id", async (req, res) => {
     try {
-      const classData = await storage.getClass(req.params.id);
+      const classData = await (await getStorage()).getClass(req.params.id);
       if (!classData) {
         return res.status(404).json({ error: "Class not found" });
       }
@@ -282,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/classes", async (req, res) => {
     try {
       const validatedData = insertClassSchema.parse(req.body);
-      const classData = await storage.createClass(validatedData);
+      const classData = await (await getStorage()).createClass(validatedData);
       res.json(classData);
     } catch (error) {
       res.status(400).json({ error: "Invalid class data" });
@@ -291,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/classes/:id", async (req, res) => {
     try {
-      const classData = await storage.updateClass(req.params.id, req.body);
+      const classData = await (await getStorage()).updateClass(req.params.id, req.body);
       if (!classData) {
         return res.status(404).json({ error: "Class not found" });
       }
@@ -303,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/classes/:id", async (req, res) => {
     try {
-      const success = await storage.deleteClass(req.params.id);
+      const success = await (await getStorage()).deleteClass(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Class not found" });
       }
@@ -316,7 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Teaching Session routes
   app.get("/api/teaching-sessions", async (req, res) => {
     try {
-      const sessions = await storage.getTeachingSessions();
+      const sessions = await (await getStorage()).getTeachingSessions();
       res.json(sessions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch teaching sessions" });
@@ -325,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/teaching-sessions/:id", async (req, res) => {
     try {
-      const session = await storage.getTeachingSession(req.params.id);
+      const session = await (await getStorage()).getTeachingSession(req.params.id);
       if (!session) {
         return res.status(404).json({ error: "Teaching session not found" });
       }
@@ -338,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/teaching-sessions", async (req, res) => {
     try {
       const validatedData = insertTeachingSessionSchema.parse(req.body);
-      const session = await storage.createTeachingSession(validatedData);
+      const session = await (await getStorage()).createTeachingSession(validatedData);
       res.json(session);
     } catch (error) {
       res.status(400).json({ error: "Invalid teaching session data" });
@@ -347,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/teaching-sessions/:id", async (req, res) => {
     try {
-      const session = await storage.updateTeachingSession(req.params.id, req.body);
+      const session = await (await getStorage()).updateTeachingSession(req.params.id, req.body);
       if (!session) {
         return res.status(404).json({ error: "Teaching session not found" });
       }
@@ -359,7 +360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/teaching-sessions/:id", async (req, res) => {
     try {
-      const success = await storage.deleteTeachingSession(req.params.id);
+      const success = await (await getStorage()).deleteTeachingSession(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Teaching session not found" });
       }
@@ -372,7 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enrollment routes
   app.get("/api/enrollments", async (req, res) => {
     try {
-      const enrollments = await storage.getEnrollments();
+      const enrollments = await (await getStorage()).getEnrollments();
       res.json(enrollments);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch enrollments" });
@@ -381,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/enrollments/:id", async (req, res) => {
     try {
-      const enrollment = await storage.getEnrollment(req.params.id);
+      const enrollment = await (await getStorage()).getEnrollment(req.params.id);
       if (!enrollment) {
         return res.status(404).json({ error: "Enrollment not found" });
       }
@@ -394,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/enrollments", async (req, res) => {
     try {
       const validatedData = insertEnrollmentSchema.parse(req.body);
-      const enrollment = await storage.createEnrollment(validatedData);
+      const enrollment = await (await getStorage()).createEnrollment(validatedData);
       res.json(enrollment);
     } catch (error) {
       res.status(400).json({ error: "Invalid enrollment data" });
@@ -403,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/enrollments/:id", async (req, res) => {
     try {
-      const enrollment = await storage.updateEnrollment(req.params.id, req.body);
+      const enrollment = await (await getStorage()).updateEnrollment(req.params.id, req.body);
       if (!enrollment) {
         return res.status(404).json({ error: "Enrollment not found" });
       }
@@ -415,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/enrollments/:id", async (req, res) => {
     try {
-      const success = await storage.deleteEnrollment(req.params.id);
+      const success = await (await getStorage()).deleteEnrollment(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Enrollment not found" });
       }
@@ -428,7 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Attendance routes
   app.get("/api/attendances", async (req, res) => {
     try {
-      const attendances = await storage.getAttendances();
+      const attendances = await (await getStorage()).getAttendances();
       res.json(attendances);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch attendances" });
@@ -437,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/attendances/:id", async (req, res) => {
     try {
-      const attendance = await storage.getAttendance(req.params.id);
+      const attendance = await (await getStorage()).getAttendance(req.params.id);
       if (!attendance) {
         return res.status(404).json({ error: "Attendance not found" });
       }
@@ -450,7 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/attendances", async (req, res) => {
     try {
       const validatedData = insertAttendanceSchema.parse(req.body);
-      const attendance = await storage.createAttendance(validatedData);
+      const attendance = await (await getStorage()).createAttendance(validatedData);
       res.json(attendance);
     } catch (error) {
       res.status(400).json({ error: "Invalid attendance data" });
@@ -459,7 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/attendances/:id", async (req, res) => {
     try {
-      const attendance = await storage.updateAttendance(req.params.id, req.body);
+      const attendance = await (await getStorage()).updateAttendance(req.params.id, req.body);
       if (!attendance) {
         return res.status(404).json({ error: "Attendance not found" });
       }
@@ -471,7 +472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/attendances/:id", async (req, res) => {
     try {
-      const success = await storage.deleteAttendance(req.params.id);
+      const success = await (await getStorage()).deleteAttendance(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Attendance not found" });
       }
@@ -491,7 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid month or year" });
       }
 
-      const attendances = await storage.getAttendances();
+      const attendances = await (await getStorage()).getAttendances();
       // Filter by month and year if needed
       const filteredAttendances = attendances.filter(attendance => {
         if (attendance.created_at) {
@@ -511,7 +512,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Asset routes
   app.get("/api/assets", async (req, res) => {
     try {
-      const assets = await storage.getAssets();
+      const assets = await (await getStorage()).getAssets();
       res.json(assets);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch assets" });
@@ -520,7 +521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/assets/:id", async (req, res) => {
     try {
-      const asset = await storage.getAsset(req.params.id);
+      const asset = await (await getStorage()).getAsset(req.params.id);
       if (!asset) {
         return res.status(404).json({ error: "Asset not found" });
       }
@@ -533,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/assets", async (req, res) => {
     try {
       const validatedData = insertAssetSchema.parse(req.body);
-      const asset = await storage.createAsset(validatedData);
+      const asset = await (await getStorage()).createAsset(validatedData);
       res.json(asset);
     } catch (error) {
       res.status(400).json({ error: "Invalid asset data" });
@@ -542,7 +543,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/assets/:id", async (req, res) => {
     try {
-      const asset = await storage.updateAsset(req.params.id, req.body);
+      const asset = await (await getStorage()).updateAsset(req.params.id, req.body);
       if (!asset) {
         return res.status(404).json({ error: "Asset not found" });
       }
@@ -554,7 +555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/assets/:id", async (req, res) => {
     try {
-      const success = await storage.deleteAsset(req.params.id);
+      const success = await (await getStorage()).deleteAsset(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Asset not found" });
       }
@@ -577,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Finances routes
   app.get("/api/finances", async (req, res) => {
     try {
-      const result = await storage.executeQuery('SELECT * FROM finances ORDER BY created_at DESC');
+      const result = await (await getStorage()).executeQuery('SELECT * FROM finances ORDER BY created_at DESC');
       res.json(result.rows || []);
     } catch (error) {
       console.error('Error fetching finances:', error);
@@ -587,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/finances/:id", async (req, res) => {
     try {
-      const result = await storage.executeQuery(`SELECT * FROM finances WHERE id = '${req.params.id}'`);
+      const result = await (await getStorage()).executeQuery(`SELECT * FROM finances WHERE id = '${req.params.id}'`);
       if (!result.rows || result.rows.length === 0) {
         return res.status(404).json({ error: "Finance record not found" });
       }
@@ -600,7 +601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/finances", async (req, res) => {
     try {
       const { loai_thu_chi, tong_tien, dien_giai, nguoi_tao, co_so, doi_tuong_id, loai_doi_tuong } = req.body;
-      const result = await storage.executeQuery(
+      const result = await (await getStorage()).executeQuery(
         `INSERT INTO finances (loai_thu_chi, tong_tien, dien_giai, nguoi_tao, co_so, doi_tuong_id, loai_doi_tuong) 
          VALUES ('${loai_thu_chi}', ${tong_tien}, '${dien_giai}', '${nguoi_tao || null}', '${co_so || null}', '${doi_tuong_id || null}', '${loai_doi_tuong}') RETURNING *`
       );
@@ -614,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Finance transaction types routes
   app.get("/api/finance-transaction-types", async (req, res) => {
     try {
-      const result = await storage.executeQuery('SELECT * FROM finance_transaction_types ORDER BY type_name');
+      const result = await (await getStorage()).executeQuery('SELECT * FROM finance_transaction_types ORDER BY type_name');
       res.json(result.rows || []);
     } catch (error) {
       console.error('Error fetching finance transaction types:', error);
@@ -625,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Teachers endpoint (using employees with role filter)
   app.get("/api/teachers", async (req, res) => {
     try {
-      const employees = await storage.getEmployees();
+      const employees = await (await getStorage()).getEmployees();
       const teachers = employees.filter(emp => 
         emp.chuc_vu === 'teacher' || 
         emp.chuc_vu === 'giao_vien' || 
@@ -644,7 +645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tasks", async (req, res) => {
     try {
       console.log('Tasks API endpoint called');
-      const tasks = await storage.getTasks();
+      const tasks = await (await getStorage()).getTasks();
       console.log('Tasks fetched from storage:', tasks.length);
       res.json(tasks);
     } catch (error) {
@@ -655,7 +656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/tasks/:id", async (req, res) => {
     try {
-      const task = await storage.getTask(req.params.id);
+      const task = await (await getStorage()).getTask(req.params.id);
       if (!task) {
         return res.status(404).json({ error: "Task not found" });
       }
@@ -667,7 +668,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tasks", async (req, res) => {
     try {
-      const task = await storage.createTask(req.body);
+      const task = await (await getStorage()).createTask(req.body);
       res.json(task);
     } catch (error) {
       res.status(400).json({ error: "Invalid task data" });
@@ -676,7 +677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/tasks/:id", async (req, res) => {
     try {
-      const task = await storage.updateTask(req.params.id, req.body);
+      const task = await (await getStorage()).updateTask(req.params.id, req.body);
       if (!task) {
         return res.status(404).json({ error: "Task not found" });
       }
@@ -688,7 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/tasks/:id", async (req, res) => {
     try {
-      const success = await storage.deleteTask(req.params.id);
+      const success = await (await getStorage()).deleteTask(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Task not found" });
       }
@@ -726,14 +727,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (date) {
         // Filter by specific date
-        const result = await storage.executeQuery(
+        const result = await (await getStorage()).executeQuery(
           `SELECT * FROM employee_clock_ins WHERE work_date = '${date}' ORDER BY clock_in_time DESC`
         );
         clockInData = Array.isArray(result) ? result : (result?.rows || []);
       } else if (month && year) {
-        clockInData = await storage.getEmployeeClockInByMonth(parseInt(month as string), parseInt(year as string));
+        clockInData = await (await getStorage()).getEmployeeClockInByMonth(parseInt(month as string), parseInt(year as string));
       } else {
-        clockInData = await storage.getEmployeeClockIn();
+        clockInData = await (await getStorage()).getEmployeeClockIn();
       }
 
       res.json(clockInData);
@@ -745,7 +746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/employee-clock-in/:id", async (req, res) => {
     try {
-      const clockInRecord = await storage.getEmployeeClockInById(req.params.id);
+      const clockInRecord = await (await getStorage()).getEmployeeClockInById(req.params.id);
       if (!clockInRecord) {
         return res.status(404).json({ error: "Clock-in record not found" });
       }
@@ -759,7 +760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { employee_id, clock_in_time, work_date, location_lat, location_lng, facility_id, location_verified, notes } = req.body;
 
-      const result = await storage.executeQuery(
+      const result = await (await getStorage()).executeQuery(
         `INSERT INTO employee_clock_ins (id, employee_id, clock_in_time, work_date, location_lat, location_lng, facility_id, location_verified, notes) 
          VALUES (gen_random_uuid()::text, '${employee_id}', '${clock_in_time}', '${work_date}', ${location_lat || 'NULL'}, ${location_lng || 'NULL'}, '${facility_id || ''}', ${location_verified}, '${notes || ''}') 
          RETURNING *`
@@ -775,7 +776,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/employee-clock-in/:id", async (req, res) => {
     try {
-      const clockInRecord = await storage.updateEmployeeClockIn(req.params.id, req.body);
+      const clockInRecord = await (await getStorage()).updateEmployeeClockIn(req.params.id, req.body);
       if (!clockInRecord) {
         return res.status(404).json({ error: "Clock-in record not found" });
       }
@@ -787,7 +788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/employee-clock-in/:id", async (req, res) => {
     try {
-      const success = await storage.deleteEmployeeClockIn(req.params.id);
+      const success = await (await getStorage()).deleteEmployeeClockIn(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Clock-in record not found" });
       }
@@ -800,7 +801,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Files routes
   app.get("/api/files", async (req, res) => {
     try {
-      const files = await storage.getFiles();
+      const files = await (await getStorage()).getFiles();
       res.json(files);
     } catch (error) {
       console.error('Error fetching files:', error);
@@ -810,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/files/:id", async (req, res) => {
     try {
-      const file = await storage.getFile(req.params.id);
+      const file = await (await getStorage()).getFile(req.params.id);
       if (!file) {
         return res.status(404).json({ error: "File not found" });
       }
@@ -822,7 +823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/files", async (req, res) => {
     try {
-      const file = await storage.createFile(req.body);
+      const file = await (await getStorage()).createFile(req.body);
       res.json(file);
     } catch (error) {
       res.status(400).json({ error: "Invalid file data" });
@@ -831,7 +832,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/files/:id", async (req, res) => {
     try {
-      const file = await storage.updateFile(req.params.id, req.body);
+      const file = await (await getStorage()).updateFile(req.params.id, req.body);
       if (!file) {
         return res.status(404).json({ error: "File not found" });
       }
@@ -843,7 +844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/files/:id", async (req, res) => {
     try {
-      const success = await storage.deleteFile(req.params.id);
+      const success = await (await getStorage()).deleteFile(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "File not found" });
       }
@@ -856,7 +857,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contacts routes
   app.get("/api/contacts", async (req, res) => {
     try {
-      const contacts = await storage.getContacts();
+      const contacts = await (await getStorage()).getContacts();
       res.json(contacts);
     } catch (error) {
       console.error('Error fetching contacts:', error);
@@ -866,7 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/contacts/:id", async (req, res) => {
     try {
-      const contact = await storage.getContact(req.params.id);
+      const contact = await (await getStorage()).getContact(req.params.id);
       if (!contact) {
         return res.status(404).json({ error: "Contact not found" });
       }
@@ -878,7 +879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/contacts", async (req, res) => {
     try {
-      const contact = await storage.createContact(req.body);
+      const contact = await (await getStorage()).createContact(req.body);
       res.json(contact);
     } catch (error) {
       res.status(400).json({ error: "Invalid contact data" });
@@ -887,7 +888,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/contacts/:id", async (req, res) => {
     try {
-      const contact = await storage.updateContact(req.params.id, req.body);
+      const contact = await (await getStorage()).updateContact(req.params.id, req.body);
       if (!contact) {
         return res.status(404).json({ error: "Contact not found" });
       }
@@ -899,7 +900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/contacts/:id", async (req, res) => {
     try {
-      const success = await storage.deleteContact(req.params.id);
+      const success = await (await getStorage()).deleteContact(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Contact not found" });
       }
@@ -912,7 +913,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Requests routes
   app.get("/api/requests", async (req, res) => {
     try {
-      const requests = await storage.getRequests();
+      const requests = await (await getStorage()).getRequests();
       res.json(requests);
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -922,7 +923,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/requests/:id", async (req, res) => {
     try {
-      const request = await storage.getRequest(req.params.id);
+      const request = await (await getStorage()).getRequest(req.params.id);
       if (!request) {
         return res.status(404).json({ error: "Request not found" });
       }
@@ -934,7 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/requests", async (req, res) => {
     try {
-      const request = await storage.createRequest(req.body);
+      const request = await (await getStorage()).createRequest(req.body);
       res.json(request);
     } catch (error) {
       res.status(400).json({ error: "Invalid request data" });
@@ -943,7 +944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/requests/:id", async (req, res) => {
     try {
-      const request = await storage.updateRequest(req.params.id, req.body);
+      const request = await (await getStorage()).updateRequest(req.params.id, req.body);
       if (!request) {
         return res.status(404).json({ error: "Request not found" });
       }
@@ -955,7 +956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/requests/:id", async (req, res) => {
     try {
-      const success = await storage.deleteRequest(req.params.id);
+      const success = await (await getStorage()).deleteRequest(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "Request not found" });
       }
@@ -968,7 +969,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Evaluations routes
   app.get("/api/evaluations", async (req, res) => {
     try {
-      const evaluations = await storage.getEvaluations();
+      const evaluations = await (await getStorage()).getEvaluations();
       res.json(evaluations);
     } catch (error) {
       console.error('Error fetching evaluations:', error);
@@ -978,7 +979,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/evaluations/:id", async (req, res) => {
     try {
-      const evaluation = await storage.getEvaluation(req.params.id);
+      const evaluation = await (await getStorage()).getEvaluation(req.params.id);
       if (!evaluation) {
         return res.status(404).json({ error: "Evaluation not found" });
       }
@@ -990,7 +991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/evaluations", async (req, res) => {
     try {
-      const evaluation = await storage.createEvaluation(req.body);
+      const evaluation = await (await getStorage()).createEvaluation(req.body);
       res.json(evaluation);
     } catch (error) {
       res.status(400).json({ error: "Invalid evaluation data" });
@@ -1004,9 +1005,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let payrollData;
 
       if (month && year) {
-        payrollData = await storage.getPayrollByMonth(parseInt(month as string), parseInt(year as string));
+        payrollData = await (await getStorage()).getPayrollByMonth(parseInt(month as string), parseInt(year as string));
       } else {
-        payrollData = await storage.getPayroll();
+        payrollData = await (await getStorage()).getPayroll();
       }
 
       res.json(payrollData);
@@ -1018,7 +1019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/payroll/:id", async (req, res) => {
     try {
-      const payrollRecord = await storage.getPayrollById(req.params.id);
+      const payrollRecord = await (await getStorage()).getPayrollById(req.params.id);
       if (!payrollRecord) {
         return res.status(404).json({ error: "Payroll record not found" });
       }
@@ -1031,7 +1032,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sessions routes
   app.get("/api/sessions", async (req, res) => {
     try {
-      const result = await storage.executeQuery('SELECT * FROM sessions ORDER BY created_at DESC');
+      const result = await (await getStorage()).executeQuery('SELECT * FROM sessions ORDER BY created_at DESC');
       res.json(result.rows || []);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -1042,7 +1043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enrollments routes
   app.get("/api/enrollments", async (req, res) => {
     try {
-      const enrollments = await storage.getEnrollments();
+      const enrollments = await (await getStorage()).getEnrollments();
       res.json(enrollments);
     } catch (error) {
       console.error('Error fetching enrollments:', error);
@@ -1052,7 +1053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/enrollments/:id", async (req, res) => {
     try {
-      const enrollment = await storage.getEnrollment(req.params.id);
+      const enrollment = await (await getStorage()).getEnrollment(req.params.id);
       if (!enrollment) {
         return res.status(404).json({ error: "Enrollment not found" });
       }
@@ -1064,7 +1065,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/enrollments", async (req, res) => {
     try {
-      const enrollment = await storage.createEnrollment(req.body);
+      const enrollment = await (await getStorage()).createEnrollment(req.body);
       res.json(enrollment);
     } catch (error) {
       console.error('Error creating enrollment:', error);
@@ -1075,7 +1076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admissions routes
   app.get("/api/admissions", async (req, res) => {
     try {
-      const admissions = await storage.getAdmissions();
+      const admissions = await (await getStorage()).getAdmissions();
       res.json(admissions);
     } catch (error) {
       console.error('Error fetching admissions:', error);
@@ -1085,7 +1086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admissions/:id", async (req, res) => {
     try {
-      const admission = await storage.getAdmission(req.params.id);
+      const admission = await (await getStorage()).getAdmission(req.params.id);
       if (!admission) {
         return res.status(404).json({ error: "Admission not found" });
       }
@@ -1097,7 +1098,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admissions", async (req, res) => {
     try {
-      const admission = await storage.createAdmission(req.body);
+      const admission = await (await getStorage()).createAdmission(req.body);
       res.json(admission);
     } catch (error) {
       res.status(400).json({ error: "Invalid admission data" });
@@ -1107,7 +1108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Images routes
   app.get("/api/images", async (req, res) => {
     try {
-      const images = await storage.getImages();
+      const images = await (await getStorage()).getImages();
       res.json(images);
     } catch (error) {
       console.error('Error fetching images:', error);
@@ -1117,7 +1118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/images/:id", async (req, res) => {
     try {
-      const image = await storage.getImage(req.params.id);
+      const image = await (await getStorage()).getImage(req.params.id);
       if (!image) {
         return res.status(404).json({ error: "Image not found" });
       }
@@ -1129,7 +1130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/images", async (req, res) => {
     try {
-      const image = await storage.createImage(req.body);
+      const image = await (await getStorage()).createImage(req.body);
       res.json(image);
     } catch (error) {
       res.status(400).json({ error: "Invalid image data" });
@@ -1222,7 +1223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY 
           table_name
       `;
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       res.json(result);
     } catch (error) {
       console.error('Error fetching database schema:', error);
@@ -1233,6 +1234,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  // Migration endpoints
+  app.post("/api/migrate/table/:tableName", async (req, res) => {
+    try {
+      const { DataMigrator } = await import("./migrate-to-supabase");
+      const migrator = new DataMigrator();
+      const result = await migrator.migrateTable(req.params.tableName);
+      res.json(result);
+    } catch (error) {
+      console.error('Migration error:', error);
+      res.status(500).json({ error: "Migration failed", details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.post("/api/migrate/all", async (req, res) => {
+    try {
+      const { DataMigrator } = await import("./migrate-to-supabase");
+      const migrator = new DataMigrator();
+      const results = await migrator.migrateAllTables();
+      res.json(results);
+    } catch (error) {
+      console.error('Full migration error:', error);
+      res.status(500).json({ error: "Full migration failed", details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.get("/api/migrate/status", async (req, res) => {
+    try {
+      const { checkSupabaseConnection } = await import("./database-config");
+      const isSupabaseAvailable = await checkSupabaseConnection();
+      res.json({ 
+        supabaseAvailable: isSupabaseAvailable,
+        postgresAvailable: true,
+        currentDatabase: isSupabaseAvailable ? 'supabase' : 'postgresql'
+      });
+    } catch (error) {
+      res.json({ 
+        supabaseAvailable: false,
+        postgresAvailable: true,
+        currentDatabase: 'postgresql',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   });
 
   // Migration endpoint
@@ -1279,7 +1324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!query) {
         return res.status(400).json({ error: 'Query is required' });
       }
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       res.json({ rows: result, success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -1295,7 +1340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE table_schema = 'public' 
         ORDER BY table_name
       `;
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       // Extract rows from PostgreSQL result object
       const tables = Array.isArray(result) ? result : (result?.rows || []);
       res.json(tables);
@@ -1321,7 +1366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE table_schema = 'public' AND table_name = '${tableName}'
         ORDER BY ordinal_position
       `;
-      const columnsResult = await storage.executeQuery(columnsQuery);
+      const columnsResult = await (await getStorage()).executeQuery(columnsQuery);
       const columns = Array.isArray(columnsResult) ? columnsResult : (columnsResult?.rows || []);
 
       // Build data query with search and sorting
@@ -1347,13 +1392,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         countQuery += ` WHERE ${searchConditions}`;
       }
 
-      const countResult = await storage.executeQuery(countQuery);
+      const countResult = await (await getStorage()).executeQuery(countQuery);
       const totalRows = Array.isArray(countResult) ? countResult[0]?.total : (countResult?.rows?.[0]?.total || 0);
 
       // Add pagination
       dataQuery += ` LIMIT ${pageSizeNum} OFFSET ${offset}`;
 
-      const dataResult = await storage.executeQuery(dataQuery);
+      const dataResult = await (await getStorage()).executeQuery(dataQuery);
       const rows = Array.isArray(dataResult) ? dataResult : (dataResult?.rows || []);
 
       res.json({
@@ -1381,7 +1426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ).join(', ');
 
       const query = `INSERT INTO "${tableName}" (${columns}) VALUES (${values}) RETURNING *`;
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       const newRow = Array.isArray(result) ? result[0] : (result?.rows?.[0] || {});
 
       res.json(newRow);
@@ -1402,7 +1447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ).join(', ');
 
       const query = `UPDATE "${tableName}" SET ${setClause} WHERE id = '${rowId}' RETURNING *`;
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       const updatedRow = Array.isArray(result) ? result[0] : (result?.rows?.[0] || null);
 
       if (!updatedRow) {
@@ -1422,7 +1467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { tableName, rowId } = req.params;
 
       const query = `DELETE FROM "${tableName}" WHERE id = '${rowId}' RETURNING *`;
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       const deletedRow = Array.isArray(result) ? result[0] : (result?.rows?.[0] || null);
 
       if (!deletedRow) {
@@ -1442,7 +1487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { tableName } = req.params;
 
       const query = `SELECT * FROM "${tableName}"`;
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       const rows = Array.isArray(result) ? result : (result?.rows || []);
 
       if (rows.length === 0) {
@@ -1492,7 +1537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         GROUP BY t.table_name, t.table_type
         ORDER BY t.table_name
       `;
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       const schema = Array.isArray(result) ? result : (result?.rows || []);
       res.json(schema);
     } catch (error: any) {
@@ -1526,7 +1571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         GROUP BY t.typname
         ORDER BY t.typname
       `;
-      const result = await storage.executeQuery(query);
+      const result = await (await getStorage()).executeQuery(query);
       const enums = Array.isArray(result) ? result : (result?.rows || []);
       res.json(enums);
     } catch (error: any) {
@@ -1551,7 +1596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const valuesStr = values.map(v => `'${v.replace(/'/g, "''")}'`).join(', ');
       const query = `CREATE TYPE ${name} AS ENUM (${valuesStr})`;
 
-      await storage.executeQuery(query);
+      await (await getStorage()).executeQuery(query);
       res.json({ success: true, message: 'Enum type created successfully' });
     } catch (error: any) {
       console.error('Error creating enum:', error);
@@ -1570,7 +1615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const query = `ALTER TYPE ${enumName} ADD VALUE '${value.replace(/'/g, "''")}'`;
-      await storage.executeQuery(query);
+      await (await getStorage()).executeQuery(query);
       res.json({ success: true, message: 'Enum value added successfully' });
     } catch (error: any) {
       console.error('Error adding enum value:', error);
@@ -1601,7 +1646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM information_schema.columns 
         WHERE udt_name = '${enumName}' AND table_schema = 'public'
       `;
-      const checkResult = await storage.executeQuery(checkQuery);
+      const checkResult = await (await getStorage()).executeQuery(checkQuery);
       const usage = Array.isArray(checkResult) ? checkResult : (checkResult?.rows || []);
 
       if (usage.length > 0) {
@@ -1611,7 +1656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const query = `DROP TYPE ${enumName}`;
-      await storage.executeQuery(query);
+      await (await getStorage()).executeQuery(query);
       res.json({ success: true, message: 'Enum type deleted successfully' });
     } catch (error: any) {
       console.error('Error deleting enum:', error);
@@ -1630,7 +1675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const query = `ALTER TABLE "${tableName}" ALTER COLUMN "${columnName}" TYPE ${enumName} USING "${columnName}"::${enumName}`;
-      await storage.executeQuery(query);
+      await (await getStorage()).executeQuery(query);
       res.json({ success: true, message: 'Enum applied to column successfully' });
     } catch (error: any) {
       console.error('Error applying enum to column:', error);

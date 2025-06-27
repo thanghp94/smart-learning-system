@@ -7,6 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MigrationTool from './MigrationTool';
+import SchemaViewer from './SchemaViewer';
+import SQLRunner from './SQLRunner';
+import EnumManager from './EnumManager';
+import TableManager from './TableManager';
 
 interface DatabaseTable {
   table_name: string;
@@ -50,102 +54,134 @@ const AdminDashboard = () => {
           Database Admin Panel
         </h1>
         <p className="text-muted-foreground mt-2">
-          Manage your PostgreSQL database tables and data
+          Manage your database, migrate to Supabase, and execute administrative tasks
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tables</CardTitle>
-            <TableIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{tables.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="cursor-pointer hover:bg-muted/50" onClick={() => navigate('/admin/sql')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">SQL Runner</CardTitle>
-            <Code className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">Execute custom queries</div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="migration">Migration</TabsTrigger>
+          <TabsTrigger value="sql">SQL Runner</TabsTrigger>
+          <TabsTrigger value="schema">Schema</TabsTrigger>
+          <TabsTrigger value="enums">Enums</TabsTrigger>
+          <TabsTrigger value="tables">Tables</TabsTrigger>
+        </TabsList>
 
-        <Card className="cursor-pointer hover:bg-muted/50" onClick={() => navigate('/admin/schema')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Schema Viewer</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">View database structure</div>
-          </CardContent>
-        </Card>
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Tables</CardTitle>
+                <TableIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{tables.length}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Database Migration</CardTitle>
+                <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground">PostgreSQL → Supabase</div>
+              </CardContent>
+            </Card>
 
-        <Card className="cursor-pointer hover:bg-muted/50" onClick={() => navigate('/admin/enums')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Enum Manager</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">Manage enum types</div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">SQL Execution</CardTitle>
+                <Code className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground">Run custom queries</div>
+              </CardContent>
+            </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Database Tables</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading tables...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Table Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Row Count</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tables.map((table) => (
-                  <TableRow key={table.table_name}>
-                    <TableCell className="font-medium">{table.table_name}</TableCell>
-                    <TableCell>{table.table_type}</TableCell>
-                    <TableCell>{table.row_count}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => navigate(`/admin/table/${table.table_name}`)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => navigate(`/admin/table/${table.table_name}/edit`)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Schema Management</CardTitle>
+                <Settings className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground">View & manage structure</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Database Tables Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-center py-8">Loading tables...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Table Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Row Count</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tables.slice(0, 10).map((table) => (
+                      <TableRow key={table.table_name}>
+                        <TableCell className="font-medium">{table.table_name}</TableCell>
+                        <TableCell>{table.table_type}</TableCell>
+                        <TableCell>{table.row_count}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => navigate(`/admin/table/${table.table_name}`)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+              {tables.length > 10 && (
+                <div className="text-center mt-4">
+                  <Button variant="outline" onClick={() => navigate('/admin/tables')}>
+                    View All {tables.length} Tables
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="migration">
+          <MigrationTool />
+        </TabsContent>
+
+        <TabsContent value="sql">
+          <SQLRunner />
+        </TabsContent>
+
+        <TabsContent value="schema">
+          <SchemaViewer />
+        </TabsContent>
+
+        <TabsContent value="enums">
+          <EnumManager />
+        </TabsContent>
+
+        <TabsContent value="tables">
+          <TableManager />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

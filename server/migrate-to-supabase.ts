@@ -1,43 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-import { storage } from './storage';
-
-// Supabase configuration
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase credentials not found. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Table mapping for migration
-const TABLES = [
-  'students',
-  'employees', 
-  'facilities',
-  'classes',
-  'teaching_sessions',
-  'enrollments',
-  'attendances',
-  'assets',
-  'asset_transfers',
-  'tasks',
-  'files',
-  'contacts',
-  'requests',
-  'employee_clock_ins',
-  'evaluations',
-  'payroll',
-  'admissions',
-  'images',
-  'finances',
-  'finance_transaction_types',
-  'activities',
-  'events',
-  'sessions',
-  'settings'
-];
+import { storage } from "./storage";
+import { supabaseStorage } from "./supabase-storage";
 
 interface MigrationResult {
   table: string;
@@ -53,122 +15,135 @@ class DataMigrator {
     try {
       console.log(`Starting migration for table: ${tableName}`);
       
-      // Get all data from PostgreSQL
-      const response = await fetch(`http://localhost:5000/api/${tableName}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch data from ${tableName}: ${response.statusText}`);
-      }
+      // Get data from PostgreSQL
+      const query = `SELECT * FROM ${tableName} ORDER BY created_at DESC`;
+      const pgData = await storage.executeQuery(query);
+      const records = pgData.rows || pgData || [];
       
-      const data = await response.json();
-      
-      if (!Array.isArray(data) || data.length === 0) {
-        console.log(`No data found in table: ${tableName}`);
-        return { table: tableName, success: true, recordCount: 0 };
+      if (!Array.isArray(records) || records.length === 0) {
+        return {
+          table: tableName,
+          success: true,
+          recordCount: 0,
+          error: 'No data to migrate'
+        };
       }
 
-      console.log(`Found ${data.length} records in ${tableName}`);
-      
-      // Insert data into Supabase in batches
-      const batchSize = 100;
-      let totalInserted = 0;
-      
-      for (let i = 0; i < data.length; i += batchSize) {
-        const batch = data.slice(i, i + batchSize);
-        
-        const { error } = await supabase
-          .from(tableName)
-          .insert(batch);
-          
-        if (error) {
-          throw new Error(`Supabase insert error for ${tableName}: ${error.message}`);
+      // Insert data into Supabase using appropriate method
+      let insertedCount = 0;
+      for (const record of records) {
+        try {
+          await this.insertRecord(tableName, record);
+          insertedCount++;
+        } catch (error) {
+          console.error(`Failed to insert record in ${tableName}:`, error);
         }
-        
-        totalInserted += batch.length;
-        console.log(`Migrated ${totalInserted}/${data.length} records for ${tableName}`);
       }
-      
-      return { 
-        table: tableName, 
-        success: true, 
-        recordCount: totalInserted 
+
+      return {
+        table: tableName,
+        success: insertedCount > 0,
+        recordCount: insertedCount,
+        error: insertedCount === 0 ? 'Failed to insert any records' : undefined
       };
-      
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`Migration failed for ${tableName}:`, errorMessage);
-      
-      return { 
-        table: tableName, 
-        success: false, 
-        recordCount: 0, 
-        error: errorMessage 
+      console.error(`Migration failed for ${tableName}:`, error);
+      return {
+        table: tableName,
+        success: false,
+        recordCount: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
 
+  private async insertRecord(tableName: string, record: any): Promise<void> {
+    // Map table names to Supabase storage methods
+    const methodMap: Record<string, string> = {
+      'students': 'createStudent',
+      'employees': 'createEmployee',
+      'facilities': 'createFacility',
+      'classes': 'createClass',
+      'teaching_sessions': 'createTeachingSession',
+      'enrollments': 'createEnrollment',
+      'attendances': 'createAttendance',
+      'assets': 'createAsset',
+      'tasks': 'createTask',
+      'files': 'createFile',
+      'contacts': 'createContact',
+      'requests': 'createRequest',
+      'employee_clock_ins': 'createEmployeeClockIn',
+      'evaluations': 'createEvaluation',
+      'payroll': 'createPayroll',
+      'admissions': 'createAdmission',
+      'images': 'createImage',
+      'finances': 'createFinance',
+      'asset_transfers': 'createAssetTransfer',
+      'activities': 'createActivity',
+      'events': 'createEvent'
+    };
+
+    const methodName = methodMap[tableName];
+    if (!methodName) {
+      throw new Error(`No migration method found for table: ${tableName}`);
+    }
+
+    const method = (supabaseStorage as any)[methodName];
+    if (typeof method !== 'function') {
+      throw new Error(`Method ${methodName} not found in Supabase storage`);
+    }
+
+    // Remove PostgreSQL-specific fields
+    const { created_at, updated_at, ...cleanRecord } = record;
+    
+    await method.call(supabaseStorage, cleanRecord);
+  }
+
   async migrateAllTables(): Promise<MigrationResult[]> {
-    console.log('Starting data migration from PostgreSQL to Supabase...');
-    console.log(`Migrating ${TABLES.length} tables`);
+    const tables = [
+      'students', 'employees', 'facilities', 'classes', 'teaching_sessions',
+      'enrollments', 'attendances', 'assets', 'tasks', 'files', 'contacts',
+      'requests', 'employee_clock_ins', 'evaluations', 'payroll', 'admissions',
+      'images', 'finances', 'asset_transfers', 'activities', 'events'
+    ];
+
+    console.log('Starting full database migration to Supabase...');
     
-    this.results = [];
-    
-    for (const table of TABLES) {
+    for (const table of tables) {
       const result = await this.migrateTable(table);
       this.results.push(result);
-      
-      // Add delay between tables to avoid overwhelming the services
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log(`Migration result for ${table}:`, result);
     }
-    
+
     return this.results;
   }
 
   printSummary(): void {
     console.log('\n=== Migration Summary ===');
+    const successful = this.results.filter(r => r.success).length;
+    const totalRecords = this.results.reduce((sum, r) => sum + r.recordCount, 0);
     
-    const successful = this.results.filter(r => r.success);
-    const failed = this.results.filter(r => !r.success);
-    const totalRecords = successful.reduce((sum, r) => sum + r.recordCount, 0);
-    
-    console.log(`Total tables: ${this.results.length}`);
-    console.log(`Successfully migrated: ${successful.length}`);
-    console.log(`Failed: ${failed.length}`);
+    console.log(`Tables migrated: ${successful}/${this.results.length}`);
     console.log(`Total records migrated: ${totalRecords}`);
     
-    if (successful.length > 0) {
-      console.log('\n✅ Successful migrations:');
-      successful.forEach(r => {
-        console.log(`  ${r.table}: ${r.recordCount} records`);
-      });
-    }
-    
+    const failed = this.results.filter(r => !r.success);
     if (failed.length > 0) {
-      console.log('\n❌ Failed migrations:');
-      failed.forEach(r => {
-        console.log(`  ${r.table}: ${r.error}`);
-      });
+      console.log('\nFailed migrations:');
+      failed.forEach(r => console.log(`- ${r.table}: ${r.error}`));
     }
   }
 }
 
-// Export for use in other files
-export { DataMigrator };
-
-// Run migration if called directly
 async function runMigration() {
+  const migrator = new DataMigrator();
   try {
-    const migrator = new DataMigrator();
     await migrator.migrateAllTables();
     migrator.printSummary();
-    
-    console.log('\nMigration completed!');
-    process.exit(0);
   } catch (error) {
-    console.error('Migration failed:', error);
-    process.exit(1);
+    console.error('Migration process failed:', error);
   }
 }
 
-if (require.main === module) {
-  runMigration();
-}
+export { DataMigrator, runMigration };
+export type { MigrationResult };

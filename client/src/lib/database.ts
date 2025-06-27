@@ -12,13 +12,13 @@ const isSupabaseConfigured = () => {
 // Only create Supabase client if configured
 const supabase = isSupabaseConfigured() ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
-// Unified database service that works with both Supabase and PostgreSQL API
+// Unified database service that prioritizes Supabase with PostgreSQL fallback
 class DatabaseService {
   private useSupabase: boolean;
 
   constructor() {
     this.useSupabase = isSupabaseConfigured();
-    console.log(this.useSupabase ? 'Using Supabase database' : 'Using PostgreSQL database instead of Supabase');
+    console.log(this.useSupabase ? 'Using Supabase database' : 'Using PostgreSQL API fallback');
   }
 
   async getEmployees() {
