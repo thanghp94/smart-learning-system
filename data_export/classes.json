@@ -1,0 +1,77 @@
+{
+  "table": "classes",
+  "exported_at": "2025-06-27T01:25:23.916Z",
+  "record_count": 5,
+  "records": [
+    {
+      "id": "bf6486a1-35e2-4dc9-9c3e-551367d935e7",
+      "ten_lop": "GS2",
+      "ten_lop_full": "GS 02",
+      "co_so": "",
+      "gv_chinh": "",
+      "ct_hoc": "",
+      "ngay_bat_dau": null,
+      "tinh_trang": "active",
+      "ghi_chu": "",
+      "created_at": "2025-06-26 12:48:57.957357",
+      "updated_at": "2025-06-26 12:48:57.957357",
+      "unit": null
+    },
+    {
+      "id": "39370f0f-759c-491b-8e6f-a168e813e119",
+      "ten_lop": "GS1",
+      "ten_lop_full": "Grapeseed 01",
+      "co_so": "",
+      "gv_chinh": "",
+      "ct_hoc": "Grapeseed",
+      "ngay_bat_dau": null,
+      "tinh_trang": "active",
+      "ghi_chu": "",
+      "created_at": "2025-06-26 12:48:18.424954",
+      "updated_at": "2025-06-26 12:48:18.424954",
+      "unit": null
+    },
+    {
+      "id": "54ae7a54-e01b-43f2-a1be-0b2d38bf73c9",
+      "ten_lop": "GS1",
+      "ten_lop_full": "Grapeseed 01",
+      "co_so": "",
+      "gv_chinh": "",
+      "ct_hoc": "Grapeseed",
+      "ngay_bat_dau": null,
+      "tinh_trang": "active",
+      "ghi_chu": "",
+      "created_at": "2025-06-26 12:48:18.350039",
+      "updated_at": "2025-06-26 12:48:18.350039",
+      "unit": null
+    },
+    {
+      "id": "f079a7e2-4a58-429b-a35e-f7f425f0e324",
+      "ten_lop": "GS1",
+      "ten_lop_full": "Grapeseed 01",
+      "co_so": "",
+      "gv_chinh": "",
+      "ct_hoc": "Grapeseed",
+      "ngay_bat_dau": null,
+      "tinh_trang": "active",
+      "ghi_chu": "",
+      "created_at": "2025-06-26 12:48:17.5453",
+      "updated_at": "2025-06-26 12:48:17.5453",
+      "unit": null
+    },
+    {
+      "id": "f70e05d1-ed49-4ad2-87e3-ef81f7cdc415",
+      "ten_lop": "GS1",
+      "ten_lop_full": "Grapeseed 01",
+      "co_so": "",
+      "gv_chinh": "",
+      "ct_hoc": "Grapeseed",
+      "ngay_bat_dau": null,
+      "tinh_trang": "active",
+      "ghi_chu": "",
+      "created_at": "2025-06-26 12:48:17.242613",
+      "updated_at": "2025-06-26 12:48:17.242613",
+      "unit": null
+    }
+  ]
+}

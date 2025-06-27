@@ -1,0 +1,39 @@
+{
+  "table": "students",
+  "exported_at": "2025-06-27T01:25:23.171Z",
+  "record_count": 2,
+  "records": [
+    {
+      "id": "1a5fe685-c748-4974-a126-c80153eadff6",
+      "ten_hoc_sinh": "ABC",
+      "ngay_sinh": null,
+      "gioi_tinh": "",
+      "dia_chi": "",
+      "so_dien_thoai": null,
+      "email": null,
+      "ten_phu_huynh": null,
+      "so_dien_thoai_phu_huynh": null,
+      "email_phu_huynh": null,
+      "trang_thai": "active",
+      "ghi_chu": "",
+      "created_at": "2025-06-26 14:18:53.726201",
+      "updated_at": "2025-06-26 14:18:53.726201"
+    },
+    {
+      "id": "ce043ecc-8153-4a0f-883a-0bbee5fa49ee",
+      "ten_hoc_sinh": "hachi",
+      "ngay_sinh": "2025-06-25",
+      "gioi_tinh": "Nữ",
+      "dia_chi": "",
+      "so_dien_thoai": null,
+      "email": null,
+      "ten_phu_huynh": null,
+      "so_dien_thoai_phu_huynh": null,
+      "email_phu_huynh": null,
+      "trang_thai": "active",
+      "ghi_chu": "",
+      "created_at": "2025-06-26 09:36:33.033589",
+      "updated_at": "2025-06-26 09:36:33.033589"
+    }
+  ]
+}

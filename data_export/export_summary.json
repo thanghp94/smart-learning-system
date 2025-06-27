@@ -1,0 +1,134 @@
+{
+  "exported_at": "2025-06-27T01:25:28.122Z",
+  "total_tables": 21,
+  "successful_exports": 21,
+  "total_records": 18,
+  "results": [
+    {
+      "table": "students",
+      "recordCount": 2,
+      "success": true,
+      "filePath": "data_export/students.json"
+    },
+    {
+      "table": "employees",
+      "recordCount": 4,
+      "success": true,
+      "filePath": "data_export/employees.json"
+    },
+    {
+      "table": "facilities",
+      "recordCount": 5,
+      "success": true,
+      "filePath": "data_export/facilities.json"
+    },
+    {
+      "table": "classes",
+      "recordCount": 5,
+      "success": true,
+      "filePath": "data_export/classes.json"
+    },
+    {
+      "table": "teaching_sessions",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/teaching_sessions.json"
+    },
+    {
+      "table": "enrollments",
+      "recordCount": 2,
+      "success": true,
+      "filePath": "data_export/enrollments.json"
+    },
+    {
+      "table": "attendances",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/attendances.json"
+    },
+    {
+      "table": "assets",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/assets.json"
+    },
+    {
+      "table": "tasks",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/tasks.json"
+    },
+    {
+      "table": "files",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/files.json"
+    },
+    {
+      "table": "contacts",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/contacts.json"
+    },
+    {
+      "table": "requests",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/requests.json"
+    },
+    {
+      "table": "employee_clock_ins",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/employee_clock_ins.json"
+    },
+    {
+      "table": "evaluations",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/evaluations.json"
+    },
+    {
+      "table": "payroll",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/payroll.json"
+    },
+    {
+      "table": "admissions",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/admissions.json"
+    },
+    {
+      "table": "images",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/images.json"
+    },
+    {
+      "table": "finances",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/finances.json"
+    },
+    {
+      "table": "asset_transfers",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/asset_transfers.json"
+    },
+    {
+      "table": "activities",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/activities.json"
+    },
+    {
+      "table": "events",
+      "recordCount": 0,
+      "success": true,
+      "filePath": "data_export/events.json"
+    }
+  ]
+}

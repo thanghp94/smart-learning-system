@@ -1251,13 +1251,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/migrate/all", async (req, res) => {
     try {
-      const { DataMigrator } = await import("./migrate-to-supabase");
-      const migrator = new DataMigrator();
-      const results = await migrator.migrateAllTables();
+      // Export all data as JSON files for manual import
+      const { exportAllData } = await import("./export-data");
+      const results = await exportAllData();
       res.json(results);
     } catch (error) {
-      console.error('Full migration error:', error);
-      res.status(500).json({ error: "Full migration failed", details: error instanceof Error ? error.message : 'Unknown error' });
+      console.error('Export error:', error);
+      res.status(500).json({ error: "Data export failed", details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.get("/api/export/download/:table", async (req, res) => {
+    try {
+      const tableName = req.params.table;
+      const filePath = `./data_export/${tableName}.json`;
+      
+      if (require('fs').existsSync(filePath)) {
+        res.download(filePath, `${tableName}_export.json`);
+      } else {
+        res.status(404).json({ error: "Export file not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Download failed" });
     }
   });
 

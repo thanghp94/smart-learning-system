@@ -1,0 +1,62 @@
+{
+  "table": "facilities",
+  "exported_at": "2025-06-27T01:25:23.668Z",
+  "record_count": 5,
+  "records": [
+    {
+      "id": "7db40207-a607-4eee-aebc-0727b9ba0268",
+      "ten_co_so": "CS2",
+      "dia_chi": null,
+      "so_dien_thoai": null,
+      "email": "",
+      "mo_ta": null,
+      "trang_thai": "active",
+      "created_at": "2025-06-26 11:48:56.634154",
+      "updated_at": "2025-06-26 11:48:56.634154"
+    },
+    {
+      "id": "38d1295a-c62f-4bd3-b738-8612dc2c6334",
+      "ten_co_so": "CS1",
+      "dia_chi": null,
+      "so_dien_thoai": null,
+      "email": "",
+      "mo_ta": null,
+      "trang_thai": "active",
+      "created_at": "2025-06-26 11:48:47.927053",
+      "updated_at": "2025-06-26 11:48:47.927053"
+    },
+    {
+      "id": "5162bb6e-1480-4836-b4f0-a0ad23efa108",
+      "ten_co_so": "CS1",
+      "dia_chi": null,
+      "so_dien_thoai": null,
+      "email": "",
+      "mo_ta": null,
+      "trang_thai": "active",
+      "created_at": "2025-06-26 11:48:47.434247",
+      "updated_at": "2025-06-26 11:48:47.434247"
+    },
+    {
+      "id": "d9a7a6b9-33dd-47c1-bb4a-306eb5690704",
+      "ten_co_so": "CS1",
+      "dia_chi": null,
+      "so_dien_thoai": null,
+      "email": "",
+      "mo_ta": null,
+      "trang_thai": "active",
+      "created_at": "2025-06-26 11:48:47.17584",
+      "updated_at": "2025-06-26 11:48:47.17584"
+    },
+    {
+      "id": "06b6c98d-3aee-4ed6-9ca8-75eb6ebc7c68",
+      "ten_co_so": "CS1",
+      "dia_chi": null,
+      "so_dien_thoai": null,
+      "email": "",
+      "mo_ta": null,
+      "trang_thai": "active",
+      "created_at": "2025-06-26 11:48:46.820004",
+      "updated_at": "2025-06-26 11:48:46.820004"
+    }
+  ]
+}
