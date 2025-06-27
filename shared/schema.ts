@@ -44,7 +44,6 @@ export const facilities = pgTable("facilities", {
 export const employees = pgTable("employees", {
   id: text("id").primaryKey(),
   ten_nhan_vien: text("ten_nhan_vien").notNull(),
-  ten_ngan: text("ten_ngan"),
   ngay_sinh: text("ngay_sinh"),
   gioi_tinh: text("gioi_tinh"),
   dia_chi: text("dia_chi"),
@@ -52,10 +51,8 @@ export const employees = pgTable("employees", {
   email: text("email"),
   chuc_vu: text("chuc_vu"),
   bo_phan: text("bo_phan"),
-  co_so_id: text("co_so_id"),
   ngay_vao_lam: text("ngay_vao_lam"),
   trang_thai: text("trang_thai").default("active"),
-  hinh_anh: text("hinh_anh"),
   ghi_chu: text("ghi_chu"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
