@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import TablePageLayout from '@/components/common/TablePageLayout';
 import DataTable from '@/components/ui/data-table';
 import { Employee } from '@/lib/types';
-import { employeeService } from '@/lib/supabase';
+import { employeeService } from '@/lib/database';
 import { Plus, FileDown, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,8 @@ const Employees = () => {
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({ facility: 'all', status: 'all' });
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -43,23 +45,46 @@ const Employees = () => {
     }
   };
 
+  const handleSaveEmployee = async (employeeData: Partial<Employee>) => {
+    try {
+      console.log("Submitting employee data:", employeeData);
+      
+      if (editingEmployee) {
+        await employeeService.update(editingEmployee.id, employeeData);
+      } else {
+        await employeeService.create(employeeData);
+      }
+      
+      await fetchEmployees();
+      setIsFormOpen(false);
+      setEditingEmployee(null);
+      
+      toast({
+        title: "Thành công",
+        description: editingEmployee ? "Cập nhật nhân viên thành công" : "Tạo nhân viên thành công",
+      });
+    } catch (error: any) {
+      console.error("Error saving employee:", error);
+      toast({
+        title: "Lỗi",
+        description: `Không thể lưu nhân viên: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  };
+
   const applyFilters = () => {
     let filtered = [...employees];
 
     // Filter by facility
     if (filters.facility !== 'all') {
-      filtered = filtered.filter(employee => {
-        if (Array.isArray(employee.co_so_id)) {
-          return employee.co_so_id.includes(filters.facility);
-        }
-        return employee.co_so_id === filters.facility;
-      });
+      filtered = filtered.filter(employee => employee.co_so === filters.facility);
     }
 
     // Filter by status
     if (filters.status !== 'all') {
       filtered = filtered.filter(employee => {
-        const status = employee.tinh_trang_lao_dong || employee.trang_thai;
+        const status = employee.trang_thai;
         if (filters.status === 'active') {
           return status === 'active' || status === 'Đang làm việc';
         } else if (filters.status === 'inactive') {
@@ -98,7 +123,7 @@ const Employees = () => {
       thumbnail: true,
       width: "25%",
       render: (value: string, record: Employee) => {
-        return record.ten_nhan_vien || record.ten_nhan_su || record.ho_va_ten || `Employee ${record.id}`;
+        return record.ten_nhan_vien || `Employee ${record.id}`;
       },
     },
     {
@@ -173,32 +198,3 @@ const Employees = () => {
 };
 
 export default Employees;
-const handleSaveEmployee = async (employeeData: Partial<Employee>) => {
-    try {
-      console.log("handleSaveEmployee called with:", JSON.stringify(employeeData, null, 2));
-
-      if (editingEmployee) {
-        console.log("Updating employee ID:", editingEmployee.id);
-        const result = await employeeService.update(editingEmployee.id, employeeData);
-        console.log("Update result:", result);
-      } else {
-        console.log("Creating new employee");
-        const result = await employeeService.create(employeeData);
-        console.log("Create result:", result);
-      }
-      await loadEmployees();
-      setIsFormOpen(false);
-      setEditingEmployee(null);
-    } catch (error) {
-      console.error("Error in handleSaveEmployee:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        response: error.response?.data
-      });
-
-      // Show user-friendly error message
-      const errorMessage = error.response?.data?.details || error.message || 'Unknown error occurred';
-      alert(`Failed to save employee: ${errorMessage}`);
-    }
-  };

@@ -16,7 +16,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import ImageUpload from "@/components/common/ImageUpload";
-import { facilityService } from '@/lib/supabase';
+import { facilityService } from '@/lib/database';
 
 interface EmployeeFormProps {
   initialData?: Partial<Employee>;
@@ -38,7 +38,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
       chuc_vu: initialData?.chuc_vu || '',
       so_dien_thoai: initialData?.so_dien_thoai || '',
       email: initialData?.email || '',
-      co_so_id: Array.isArray(initialData?.co_so_id) ? (initialData.co_so_id.length > 0 ? initialData.co_so_id[0] : '') : (initialData?.co_so_id || ''),
+      co_so: initialData?.co_so || '',
       trang_thai: initialData?.trang_thai || 'active',
       ngay_sinh: initialData?.ngay_sinh || null,
       dia_chi: initialData?.dia_chi || '',
@@ -255,10 +255,10 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
         <TabsContent value="additional" className="space-y-4 pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="co_so_id">Cơ sở</Label>
+              <Label htmlFor="co_so">Cơ sở</Label>
               <Select
-                onValueChange={(value) => setValue('co_so_id', value)}
-                defaultValue={watch('co_so_id')}
+                onValueChange={(value) => setValue('co_so', value)}
+                defaultValue={watch('co_so')}
                 disabled={isLoadingFacilities}
               >
                 <SelectTrigger>
@@ -266,7 +266,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   {facilities.map((facility) => (
-                    <SelectItem key={facility.id} value={facility.id}>
+                    <SelectItem key={facility.id} value={facility.ten_co_so}>
                       {facility.ten_co_so}
                     </SelectItem>
                   ))}

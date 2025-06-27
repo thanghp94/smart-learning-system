@@ -9,7 +9,7 @@ export interface Employee {
   bo_phan?: string;
   chuc_vu?: string;
   ngay_sinh?: Date | string;
-  co_so_id?: string[] | string;
+  co_so?: string;
   trang_thai?: string;
   hinh_anh?: string;
   ghi_chu?: string;

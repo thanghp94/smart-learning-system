@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Asset, AssetTransfer } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { assetService } from "@/lib/supabase";
+import { assetService } from "@/lib/database";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

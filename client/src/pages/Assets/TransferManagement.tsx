@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AssetTransfer, Asset } from "@/lib/types";
-import { assetTransferService, assetService } from "@/lib/supabase";
+import { assetTransferService, assetService } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import DataTable from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/button";

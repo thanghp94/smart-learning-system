@@ -13,7 +13,7 @@ import DataTable from "@/components/ui/DataTable";
 import CommandInterface from "@/components/CommandInterface";
 import { useAssetData } from "./hooks/useAssetData";
 import AssetActionsToolbar from "./components/AssetActionsToolbar";
-import { assetService } from "@/lib/supabase";
+import { assetService } from "@/lib/database";
 import { formatCurrency } from "@/lib/utils";
 
 const Assets = () => {

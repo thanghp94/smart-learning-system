@@ -82,32 +82,25 @@ const EmployeeWorkInfo: React.FC<EmployeeWorkInfoProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="co_so_id">Cơ sở</Label>
+          <Label htmlFor="co_so">Cơ sở</Label>
           {isEditing ? (
             <select
-              id="co_so_id"
-              name="co_so_id"
-              multiple
-              value={Array.isArray(employee.co_so_id) ? employee.co_so_id : employee.co_so_id ? [employee.co_so_id] : []}
-              onChange={handleFacilityChange}
-              className="w-full p-2 border rounded h-24"
+              id="co_so"
+              name="co_so"
+              value={employee.co_so || ''}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
             >
+              <option value="">Chọn cơ sở</option>
               {facilities.map((facility) => (
-                <option key={facility.id} value={facility.id}>
+                <option key={facility.id} value={facility.ten_co_so}>
                   {facility.ten_co_so}
                 </option>
               ))}
             </select>
           ) : (
             <div className="p-2 border rounded bg-gray-50">
-              {Array.isArray(employee.co_so_id) && employee.co_so_id.length > 0
-                ? facilities
-                    .filter(f => employee.co_so_id?.includes(f.id))
-                    .map(f => f.ten_co_so)
-                    .join(', ')
-                : typeof employee.co_so_id === 'string' && employee.co_so_id
-                  ? facilities.find(f => f.id === employee.co_so_id)?.ten_co_so || employee.co_so_id
-                  : '—'}
+              {employee.co_so || '—'}
             </div>
           )}
         </div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Asset } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { assetService, assetTransferService, facilityService, studentService, employeeService, classService } from "@/lib/supabase";
+import { assetService, assetTransferService, facilityService, studentService, employeeService, classService } from "@/lib/database";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

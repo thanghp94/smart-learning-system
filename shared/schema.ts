@@ -52,7 +52,7 @@ export const employees = pgTable("employees", {
   email: text("email"),
   chuc_vu: text("chuc_vu"),
   bo_phan: text("bo_phan"),
-  co_so_id: text("co_so_id"),
+  co_so: text("co_so"),
   ngay_vao_lam: text("ngay_vao_lam"),
   trang_thai: text("trang_thai").default("active"),
   hinh_anh: text("hinh_anh"),

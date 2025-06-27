@@ -1,5 +1,41 @@
+import { createClient } from '@supabase/supabase-js';
 
-// This file re-exports all services from the new structure for backward compatibility
-// Consider updating imports in your components to use the new structure directly
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export * from './supabase/index';
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase URL or Anon Key is missing. Using PostgreSQL directly.');
+}
+
+// Only create Supabase client if configured
+export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+// Check if Supabase is configured
+export const isSupabaseConfigured = () => {
+  return !!(supabaseUrl && supabaseAnonKey);
+};
+
+// Re-export all services from the database service for backward compatibility
+export {
+  databaseService,
+  employeeService,
+  facilityService,
+  assetService,
+  classService,
+  studentService,
+  teachingSessionService,
+  enrollmentService,
+  contactService,
+  eventService,
+  taskService,
+  financeService,
+  fileService,
+  attendanceService,
+  settingService,
+  employeeClockInService,
+  imageService,
+  payrollService,
+  requestService,
+  evaluationService,
+  assetTransferService
+} from './database';
