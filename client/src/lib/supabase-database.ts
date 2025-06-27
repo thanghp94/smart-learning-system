@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client with hardcoded values for stability
+// Initialize Supabase client with proper configuration
 const supabaseUrl = 'http://supabasekong-u08sgc0kgggw8gwsoo4gswc8.112.213.86.84.sslip.io';
 const supabaseAnonKey = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc1MDk4Mzk2MCwiZXhwIjo0OTA2NjU3NTYwLCJyb2xlIjoiYW5vbiJ9.6qgWioaZ4cDwwsIQUJ73_YcjrZfA03h_3_Z7RXESYtM';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Unified database service for Supabase exclusively
-class DatabaseService {
+class SupabaseDatabaseService {
   constructor() {
     console.log('Using Supabase database exclusively');
   }
@@ -20,12 +20,8 @@ class DatabaseService {
       return data || [];
     } catch (error) {
       console.error('Error fetching employees:', error);
-      return [];
+      throw error;
     }
-  }
-
-  async getAll() {
-    return this.getEmployees();
   }
 
   async createEmployee(employee: any) {
@@ -69,7 +65,7 @@ class DatabaseService {
       return data || [];
     } catch (error) {
       console.error('Error fetching students:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -95,29 +91,6 @@ class DatabaseService {
     }
   }
 
-  // Facility methods
-  async getFacilities() {
-    try {
-      const { data, error } = await supabase.from('facilities').select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching facilities:', error);
-      return [];
-    }
-  }
-
-  async createFacility(facility: any) {
-    try {
-      const { data, error } = await supabase.from('facilities').insert(facility).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error('Error creating facility:', error);
-      throw error;
-    }
-  }
-
   // Class methods
   async getClasses() {
     try {
@@ -126,7 +99,7 @@ class DatabaseService {
       return data || [];
     } catch (error) {
       console.error('Error fetching classes:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -141,6 +114,29 @@ class DatabaseService {
     }
   }
 
+  // Facility methods
+  async getFacilities() {
+    try {
+      const { data, error } = await supabase.from('facilities').select('*');
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching facilities:', error);
+      throw error;
+    }
+  }
+
+  async createFacility(facility: any) {
+    try {
+      const { data, error } = await supabase.from('facilities').insert(facility).select();
+      if (error) throw error;
+      return data[0];
+    } catch (error) {
+      console.error('Error creating facility:', error);
+      throw error;
+    }
+  }
+
   // Teaching session methods
   async getTeachingSessions() {
     try {
@@ -149,7 +145,7 @@ class DatabaseService {
       return data || [];
     } catch (error) {
       console.error('Error fetching teaching sessions:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -161,8 +157,13 @@ class DatabaseService {
       return data || [];
     } catch (error) {
       console.error('Error fetching enrollments:', error);
-      return [];
+      throw error;
     }
+  }
+
+  // Generic getAll method for compatibility
+  async getAll() {
+    return this.getEmployees();
   }
 
   // Generic table access
@@ -173,7 +174,7 @@ class DatabaseService {
       return data || [];
     } catch (error) {
       console.error(`Error fetching ${tableName}:`, error);
-      return [];
+      throw error;
     }
   }
 
@@ -209,30 +210,9 @@ class DatabaseService {
       throw error;
     }
   }
-
-  // Missing methods that are called in various components
-  async getById(id: string) {
-    // Generic getById for compatibility 
-    return null;
-  }
-
-  async getTransfersByAssetId(assetId: string) {
-    // Asset transfer method for compatibility
-    return [];
-  }
-
-  async approveTransfer(id: string) {
-    // Transfer approval method for compatibility
-    return true;
-  }
-
-  async rejectTransfer(id: string) {
-    // Transfer rejection method for compatibility
-    return true;
-  }
 }
 
-export const databaseService = new DatabaseService();
+export const databaseService = new SupabaseDatabaseService();
 export const employeeService = databaseService;
 export const facilityService = databaseService;
 export const assetService = databaseService;
