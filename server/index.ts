@@ -38,9 +38,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize PostgreSQL database
-  console.log("Initializing PostgreSQL database...");
-  await initializeDatabase();
+  // Database migration completed - using Supabase exclusively
+  console.log("Using Supabase database exclusively...");
   
   const server = await registerRoutes(app);
 
