@@ -12,7 +12,7 @@ import EmployeeFilters from './components/EmployeeFilters';
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>(([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({ facility: 'all', status: 'all' });
   const { toast } = useToast();
