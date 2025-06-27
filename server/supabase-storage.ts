@@ -697,8 +697,8 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await this.supabase
       .from('employee_clock_ins')
       .select('*')
-      .gte('ngay_cham_cong', `${year}-${month.toString().padStart(2, '0')}-01`)
-      .lt('ngay_cham_cong', `${year}-${(month + 1).toString().padStart(2, '0')}-01`);
+      .gte('work_date', `${year}-${month.toString().padStart(2, '0')}-01`)
+      .lt('work_date', `${year}-${(month + 1).toString().padStart(2, '0')}-01`);
     if (error) throw error;
     return data || [];
   }

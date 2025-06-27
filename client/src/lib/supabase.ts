@@ -15,7 +15,7 @@ export const isSupabaseConfigured = () => {
   return !!(supabaseUrl && supabaseAnonKey);
 };
 
-// Re-export all services from the database service for backward compatibility
+// Re-export all services from the API-based database service for backward compatibility
 export {
   databaseService,
   employeeService,
@@ -38,4 +38,4 @@ export {
   requestService,
   evaluationService,
   assetTransferService
-} from './database';
+} from './api-database';

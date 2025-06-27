@@ -219,6 +219,8 @@ class DatabaseService {
     return this.updateRecord(tableName, id, record);
   }
 
+
+
   async getById(id: string) {
     // Generic getById for compatibility 
     return null;
