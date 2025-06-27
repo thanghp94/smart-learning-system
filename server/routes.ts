@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { 
   insertStudentSchema, insertEmployeeSchema, insertFacilitySchema,
   insertClassSchema, insertTeachingSessionSchema, insertEnrollmentSchema,
@@ -109,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Final co_so_id value:", coSoId);
 
-      const result = await db.query(
+      const result = await pool.query(
         `INSERT INTO employees (
           ten_nhan_vien, ten_ngan, bo_phan, chuc_vu, so_dien_thoai, 
           email, co_so_id, trang_thai, ngay_sinh, dia_chi, 
@@ -128,8 +128,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(result.rows[0]);
     } catch (error) {
       console.error("Error creating employee:", error);
-      console.error("Error stack:", error.stack);
-      res.status(500).json({ error: "Failed to create employee", details: error.message });
+      console.error("Error stack:", error?.stack);
+      res.status(500).json({ error: "Failed to create employee", details: error?.message || "Unknown error" });
     }
   });
 
@@ -156,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Final co_so_id value:", coSoId);
 
-      const result = await db.query(
+      const result = await pool.query(
         `UPDATE employees 
          SET ten_nhan_vien = $1, ten_ngan = $2, bo_phan = $3, chuc_vu = $4, 
              so_dien_thoai = $5, email = $6, co_so_id = $7, trang_thai = $8,
@@ -181,8 +181,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result.rows[0]);
     } catch (error) {
       console.error("Error updating employee:", error);
-      console.error("Error stack:", error.stack);
-      res.status(500).json({ error: "Failed to update employee", details: error.message });
+      console.error("Error stack:", error?.stack);
+      res.status(500).json({ error: "Failed to update employee", details: error?.message || "Unknown error" });
     }
   });
 
