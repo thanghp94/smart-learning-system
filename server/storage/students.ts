@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "../database/connection";
 import { students } from "@shared/schema";
 import type { Student, InsertStudent } from "@shared/schema";
 import crypto from "crypto";

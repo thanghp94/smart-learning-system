@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "../database/connection";
 import { employeeClockIns } from "@shared/schema";
 import type { EmployeeClockIns, InsertEmployeeClockIns } from "@shared/schema";
 import crypto from "crypto";

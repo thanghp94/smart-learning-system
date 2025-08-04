@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { getStorage } from "./database-config";
-import { db, pool } from "./db";
+import { getStorage } from "./database/config";
+import { db, pool } from "./database/connection";
 import { 
   insertStudentSchema, insertEmployeeSchema, insertFacilitySchema,
   insertClassSchema, insertTeachingSessionSchema, insertEnrollmentSchema,
@@ -395,7 +395,7 @@ const createSpecialRoutes = (app: Express) => {
   // Migration status endpoint
   app.get("/api/migrate/status", async (req: Request, res: Response) => {
     try {
-      const { checkPostgreSQLConnection } = await import("./database-config");
+      const { checkPostgreSQLConnection } = await import("./database/config");
       const isPostgreSQLAvailable = await checkPostgreSQLConnection();
       res.json({ 
         postgresAvailable: isPostgreSQLAvailable,
@@ -416,7 +416,7 @@ const routeConfigs = [
   // Core entities with validation schemas
   { path: 'students', entity: 'Student', method: 'Student', schema: insertStudentSchema },
   { path: 'facilities', entity: 'Facility', method: 'Facility', schema: insertFacilitySchema },
-  { path: 'classes', entity: 'Class', method: 'Class', schema: insertClassSchema },
+  { path: 'classes', entity: 'Class', method: 'Classe', schema: insertClassSchema },
   { path: 'teaching-sessions', entity: 'Teaching Session', method: 'TeachingSession', schema: insertTeachingSessionSchema },
   { path: 'enrollments', entity: 'Enrollment', method: 'Enrollment', schema: insertEnrollmentSchema },
   { path: 'attendances', entity: 'Attendance', method: 'Attendance', schema: insertAttendanceSchema },

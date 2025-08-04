@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./connection";
 
 // For PostgreSQL with Drizzle, the tables are created automatically by the push command
 // This function just verifies the database connection

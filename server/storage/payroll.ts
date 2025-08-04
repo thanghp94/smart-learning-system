@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "../database/connection";
 import { payroll } from "@shared/schema";
 import type { Payroll, InsertPayroll } from "@shared/schema";
 import crypto from "crypto";

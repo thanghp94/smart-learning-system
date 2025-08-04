@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "../database/connection";
 import { assets, assetTransfers } from "@shared/schema";
 import type { Asset, InsertAsset, AssetTransfers, InsertAssetTransfers } from "@shared/schema";
 import crypto from "crypto";

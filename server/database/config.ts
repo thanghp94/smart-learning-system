@@ -1,4 +1,4 @@
-import { storage } from "./storage";
+import { storage } from "../storage";
 
 // Database configuration - use PostgreSQL only
 const USE_POSTGRESQL = true;

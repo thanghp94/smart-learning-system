@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "../database/connection";
 import { evaluations } from "@shared/schema";
 import type { Evaluations, InsertEvaluations } from "@shared/schema";
 import crypto from "crypto";
