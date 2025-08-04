@@ -1,266 +1,425 @@
-import { createClient } from '@supabase/supabase-js';
+// PostgreSQL API-based database service
+// This replaces all Supabase client calls with direct API calls to our PostgreSQL backend
 
-// Initialize Supabase client with hardcoded values for stability
-const supabaseUrl = 'http://supabasekong-u08sgc0kgggw8gwsoo4gswc8.112.213.86.84.sslip.io';
-const supabaseAnonKey = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc1MDk4Mzk2MCwiZXhwIjo0OTA2NjU3NTYwLCJyb2xlIjoiYW5vbiJ9.6qgWioaZ4cDwwsIQUJ73_YcjrZfA03h_3_Z7RXESYtM';
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Unified database service for Supabase exclusively
 class DatabaseService {
+  private baseUrl = '/api';
+
   constructor() {
-    console.log('Using Supabase database exclusively');
+    console.log('Using PostgreSQL API database service');
+  }
+
+  // Generic API methods
+  private async apiCall(endpoint: string, options: RequestInit = {}) {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    });
+
+    if (!response.ok) {
+      throw new Error(`API call failed: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   // Employee methods
   async getEmployees() {
-    try {
-      const { data, error } = await supabase.from('employees').select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-      return [];
-    }
+    return this.apiCall('/employees');
   }
 
-  async getAll() {
-    return this.getEmployees();
+  async getEmployee(id: string) {
+    return this.apiCall(`/employees/${id}`);
   }
 
   async createEmployee(employee: any) {
-    try {
-      const { data, error } = await supabase.from('employees').insert(employee).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error('Error creating employee:', error);
-      throw error;
-    }
+    return this.apiCall('/employees', {
+      method: 'POST',
+      body: JSON.stringify(employee),
+    });
   }
 
   async updateEmployee(id: string, employee: any) {
-    try {
-      const { data, error } = await supabase.from('employees').update(employee).eq('id', id).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error('Error updating employee:', error);
-      throw error;
-    }
+    return this.apiCall(`/employees/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(employee),
+    });
   }
 
   async deleteEmployee(id: string) {
-    try {
-      const { error } = await supabase.from('employees').delete().eq('id', id);
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error deleting employee:', error);
-      throw error;
-    }
+    return this.apiCall(`/employees/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Student methods
   async getStudents() {
-    try {
-      const { data, error } = await supabase.from('students').select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      return [];
-    }
+    return this.apiCall('/students');
+  }
+
+  // Generic getAll method for compatibility with existing code
+  async getAll() {
+    return this.getStudents();
+  }
+
+  async getStudent(id: string) {
+    return this.apiCall(`/students/${id}`);
+  }
+
+  // Alias methods for compatibility
+  async getById(id: string) {
+    return this.getStudent(id);
+  }
+
+  async create(data: any) {
+    return this.createStudent(data);
+  }
+
+  async update(id: string, data: any) {
+    return this.updateStudent(id, data);
   }
 
   async createStudent(student: any) {
-    try {
-      const { data, error } = await supabase.from('students').insert(student).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error('Error creating student:', error);
-      throw error;
-    }
+    return this.apiCall('/students', {
+      method: 'POST',
+      body: JSON.stringify(student),
+    });
   }
 
   async updateStudent(id: string, student: any) {
-    try {
-      const { data, error } = await supabase.from('students').update(student).eq('id', id).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error('Error updating student:', error);
-      throw error;
-    }
+    return this.apiCall(`/students/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(student),
+    });
+  }
+
+  async deleteStudent(id: string) {
+    return this.apiCall(`/students/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Facility methods
   async getFacilities() {
-    try {
-      const { data, error } = await supabase.from('facilities').select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching facilities:', error);
-      return [];
-    }
+    return this.apiCall('/facilities');
+  }
+
+  async getFacility(id: string) {
+    return this.apiCall(`/facilities/${id}`);
   }
 
   async createFacility(facility: any) {
-    try {
-      const { data, error } = await supabase.from('facilities').insert(facility).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error('Error creating facility:', error);
-      throw error;
-    }
+    return this.apiCall('/facilities', {
+      method: 'POST',
+      body: JSON.stringify(facility),
+    });
+  }
+
+  async updateFacility(id: string, facility: any) {
+    return this.apiCall(`/facilities/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(facility),
+    });
+  }
+
+  async deleteFacility(id: string) {
+    return this.apiCall(`/facilities/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Class methods
   async getClasses() {
-    try {
-      const { data, error } = await supabase.from('classes').select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-      return [];
-    }
+    return this.apiCall('/classes');
+  }
+
+  async getClass(id: string) {
+    return this.apiCall(`/classes/${id}`);
   }
 
   async createClass(classData: any) {
-    try {
-      const { data, error } = await supabase.from('classes').insert(classData).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error('Error creating class:', error);
-      throw error;
-    }
+    return this.apiCall('/classes', {
+      method: 'POST',
+      body: JSON.stringify(classData),
+    });
   }
 
-  // Teaching session methods
+  async updateClass(id: string, classData: any) {
+    return this.apiCall(`/classes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(classData),
+    });
+  }
+
+  async deleteClass(id: string) {
+    return this.apiCall(`/classes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Teaching Session methods
   async getTeachingSessions() {
-    try {
-      const { data, error } = await supabase.from('teaching_sessions').select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching teaching sessions:', error);
-      return [];
-    }
+    return this.apiCall('/teaching-sessions');
+  }
+
+  async getTeachingSession(id: string) {
+    return this.apiCall(`/teaching-sessions/${id}`);
+  }
+
+  async getTeachingSessionsByClass(classId: string) {
+    return this.apiCall(`/teaching-sessions?lop_id=${classId}`);
+  }
+
+  async createTeachingSession(session: any) {
+    return this.apiCall('/teaching-sessions', {
+      method: 'POST',
+      body: JSON.stringify(session),
+    });
+  }
+
+  async updateTeachingSession(id: string, session: any) {
+    return this.apiCall(`/teaching-sessions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(session),
+    });
+  }
+
+  async deleteTeachingSession(id: string) {
+    return this.apiCall(`/teaching-sessions/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Enrollment methods
   async getEnrollments() {
-    try {
-      const { data, error } = await supabase.from('enrollments').select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching enrollments:', error);
-      return [];
-    }
+    return this.apiCall('/enrollments');
   }
 
-  // Generic table access
+  async getEnrollment(id: string) {
+    return this.apiCall(`/enrollments/${id}`);
+  }
+
+  async getEnrollmentsByClass(classId: string) {
+    return this.apiCall(`/enrollments?lop_id=${classId}`);
+  }
+
+  async createEnrollment(enrollment: any) {
+    return this.apiCall('/enrollments', {
+      method: 'POST',
+      body: JSON.stringify(enrollment),
+    });
+  }
+
+  async updateEnrollment(id: string, enrollment: any) {
+    return this.apiCall(`/enrollments/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(enrollment),
+    });
+  }
+
+  async deleteEnrollment(id: string) {
+    return this.apiCall(`/enrollments/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Attendance methods
+  async getAttendances() {
+    return this.apiCall('/attendances');
+  }
+
+  async getAttendance(id: string) {
+    return this.apiCall(`/attendances/${id}`);
+  }
+
+  async createAttendance(attendance: any) {
+    return this.apiCall('/attendances', {
+      method: 'POST',
+      body: JSON.stringify(attendance),
+    });
+  }
+
+  async updateAttendance(id: string, attendance: any) {
+    return this.apiCall(`/attendances/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(attendance),
+    });
+  }
+
+  async deleteAttendance(id: string) {
+    return this.apiCall(`/attendances/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Asset methods
+  async getAssets() {
+    return this.apiCall('/assets');
+  }
+
+  async getAsset(id: string) {
+    return this.apiCall(`/assets/${id}`);
+  }
+
+  async createAsset(asset: any) {
+    return this.apiCall('/assets', {
+      method: 'POST',
+      body: JSON.stringify(asset),
+    });
+  }
+
+  async updateAsset(id: string, asset: any) {
+    return this.apiCall(`/assets/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(asset),
+    });
+  }
+
+  async deleteAsset(id: string) {
+    return this.apiCall(`/assets/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Task methods
+  async getTasks() {
+    return this.apiCall('/tasks');
+  }
+
+  async getTask(id: string) {
+    return this.apiCall(`/tasks/${id}`);
+  }
+
+  async createTask(task: any) {
+    return this.apiCall('/tasks', {
+      method: 'POST',
+      body: JSON.stringify(task),
+    });
+  }
+
+  async updateTask(id: string, task: any) {
+    return this.apiCall(`/tasks/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(task),
+    });
+  }
+
+  async deleteTask(id: string) {
+    return this.apiCall(`/tasks/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Generic table operations
   async getTableData(tableName: string) {
-    try {
-      const { data, error } = await supabase.from(tableName).select('*');
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error(`Error fetching ${tableName}:`, error);
-      return [];
-    }
+    return this.apiCall(`/${tableName}`);
   }
 
   async createRecord(tableName: string, record: any) {
-    try {
-      const { data, error } = await supabase.from(tableName).insert(record).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error(`Error creating ${tableName} record:`, error);
-      throw error;
-    }
+    return this.apiCall(`/${tableName}`, {
+      method: 'POST',
+      body: JSON.stringify(record),
+    });
   }
 
   async updateRecord(tableName: string, id: string, record: any) {
-    try {
-      const { data, error } = await supabase.from(tableName).update(record).eq('id', id).select();
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error(`Error updating ${tableName} record:`, error);
-      throw error;
-    }
+    return this.apiCall(`/${tableName}/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(record),
+    });
   }
 
   async deleteRecord(tableName: string, id: string) {
+    return this.apiCall(`/${tableName}/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Schema operations for DatabaseSchema page
+  async getSchemaInfo() {
     try {
-      const { error } = await supabase.from(tableName).delete().eq('id', id);
-      if (error) throw error;
-      return true;
+      const response = await this.apiCall('/schema');
+      return { success: true, data: response };
     } catch (error) {
-      console.error(`Error deleting ${tableName} record:`, error);
-      throw error;
+      return { success: false, error };
     }
   }
 
-  // Generic CRUD methods for compatibility with existing frontend code
-  async create(tableName: string, record: any) {
-    return this.createRecord(tableName, record);
+  async setupSchemaFunction() {
+    // This is a no-op for API-based implementation
+    // Schema functions are handled on the server side
+    return Promise.resolve();
   }
 
-  async update(tableName: string, id: string, record: any) {
-    return this.updateRecord(tableName, id, record);
+  // Compatibility method for legacy Supabase code
+  from(tableName: string) {
+    return {
+      select: (columns: string = '*') => ({
+        eq: (column: string, value: any) => this.apiCall(`/${tableName}?${column}=${value}`),
+        data: () => this.apiCall(`/${tableName}`),
+      }),
+    };
   }
 
-
-
-  async getById(id: string) {
-    // Generic getById for compatibility 
-    return null;
+  // File service methods
+  async getByEntity(entityType: string, entityId: string) {
+    return this.apiCall(`/files?entity_type=${entityType}&entity_id=${entityId}`);
   }
 
-  async getTransfersByAssetId(assetId: string) {
-    // Asset transfer method for compatibility
-    return [];
-  }
-
-  async approveTransfer(id: string) {
-    // Transfer approval method for compatibility
-    return true;
-  }
-
-  async rejectTransfer(id: string) {
-    // Transfer rejection method for compatibility
-    return true;
+  // Generic delete method (alias for deleteRecord)
+  async delete(id: string) {
+    return this.deleteRecord('files', id);
   }
 }
 
+// Create and export the database service instance
 export const databaseService = new DatabaseService();
+
+// Create specialized service objects with specific methods
+class TeachingSessionService extends DatabaseService {
+  async getByClass(classId: string) {
+    return this.getTeachingSessionsByClass(classId);
+  }
+}
+
+class EnrollmentService extends DatabaseService {
+  async getByClass(classId: string) {
+    return this.getEnrollmentsByClass(classId);
+  }
+}
+
+// Export individual services for compatibility
 export const employeeService = databaseService;
-export const facilityService = databaseService;
-export const assetService = databaseService;
-export const classService = databaseService;
 export const studentService = databaseService;
-export const teachingSessionService = databaseService;
-export const enrollmentService = databaseService;
+export const facilityService = databaseService;
+export const classService = databaseService;
+export const teachingSessionService = new TeachingSessionService();
+export const enrollmentService = new EnrollmentService();
+export const attendanceService = databaseService;
+export const assetService = databaseService;
+export const taskService = databaseService;
+
+// Additional services
 export const contactService = databaseService;
 export const eventService = databaseService;
-export const taskService = databaseService;
 export const financeService = databaseService;
 export const fileService = databaseService;
-export const attendanceService = databaseService;
-export const settingService = databaseService;
-export const employeeClockInService = databaseService;
 export const imageService = databaseService;
-export const payrollService = databaseService;
 export const requestService = databaseService;
 export const evaluationService = databaseService;
-export const assetTransferService = databaseService;
+export const payrollService = databaseService;
+export const employeeClockInService = databaseService;
 export const admissionService = databaseService;
+export const sessionService = databaseService;
+export const assetTransferService = databaseService;
+export const enumService = databaseService;
+export const settingService = databaseService;
+
+// Export individual functions for compatibility
+export const getSchemaInfo = () => databaseService.getSchemaInfo();
+export const setupSchemaFunction = () => databaseService.setupSchemaFunction();
+
+// Default export
+export default databaseService;

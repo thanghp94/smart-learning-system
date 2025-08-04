@@ -18,11 +18,11 @@ import {
   TeachingSession,
   Session
 } from '@/lib/types';
-import { classService, employeeService } from '@/lib/supabase';
-import { sessionService } from '@/lib/supabase/session-service';
+import { classService, employeeService } from "@/lib/database";
+import { sessionService } from "@/lib/database";
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 
 interface EvaluationFormProps {
   initialData: TeachingSession;

@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { employeeService, facilityService } from '@/lib/supabase';
+import { employeeService, facilityService } from "@/lib/database";
 
 interface TaskFiltersProps {
   filters: {

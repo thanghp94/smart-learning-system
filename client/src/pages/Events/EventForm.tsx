@@ -15,7 +15,7 @@ import {
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Facility, Employee, Student } from '@/lib/types';
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 
 const eventSchema = z.object({

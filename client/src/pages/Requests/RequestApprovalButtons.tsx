@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { requestService, eventService } from '@/lib/supabase';
+import { requestService, eventService } from "@/lib/database";
 import ConfirmActionDialog from '@/components/ui/confirm-action-dialog';
 import { Request, Event } from '@/lib/types';
 

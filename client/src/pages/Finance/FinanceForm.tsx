@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Form } from '@/components/ui/form';
-import { employeeService, facilityService } from '@/lib/supabase';
+import { employeeService, facilityService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 import { Employee, Facility } from '@/lib/types';
 

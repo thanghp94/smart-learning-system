@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Student } from '@/lib/types';
 import { FilterCategory } from '@/components/ui/FilterButton';
-import { facilityService } from '@/lib/supabase';
+import { facilityService } from "@/lib/database";
 
 export default function useStudentFilters(data: Student[]) {
   const [filters, setFilters] = useState<Record<string, string>>({});

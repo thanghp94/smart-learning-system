@@ -5,7 +5,7 @@ import { Student } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import StudentForm from "../StudentForm";
 import PageHeader from "@/components/common/PageHeader";
-import { studentService } from "@/lib/supabase";
+import { studentService } from "@/lib/database";
 
 interface StudentFormContainerProps {
   studentId?: string;

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import DataTable from '@/components/ui/DataTable';
 import { useToast } from '@/hooks/use-toast';
 import { Admission } from '@/lib/types/admission';
-import { admissionService } from '@/lib/supabase/admission-service';
+import { admissionService } from "@/lib/database";
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 

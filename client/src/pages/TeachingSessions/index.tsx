@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import TablePageLayout from '@/components/common/TablePageLayout';
 import DataTable from '@/components/ui/data-table';
-import { teachingSessionService } from '@/lib/supabase';
+import { teachingSessionService } from '@/lib/database';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import PlaceholderPage from '@/components/common/PlaceholderPage';
 import DetailPanel from '@/components/ui/DetailPanel';

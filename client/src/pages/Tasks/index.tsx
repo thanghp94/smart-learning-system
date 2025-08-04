@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TablePageLayout from '@/components/common/TablePageLayout';
-import { taskService } from '@/lib/supabase';
+import { taskService } from "@/lib/database";
 import { Task } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';

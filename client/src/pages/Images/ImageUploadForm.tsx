@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Image, X, Upload } from 'lucide-react';
 import { Image as ImageType } from '@/lib/types';
-import { imageService } from '@/lib/supabase/image-service';
+import { imageService } from "@/lib/database";
 
 interface ImageUploadFormProps {
   onSuccess?: () => void;

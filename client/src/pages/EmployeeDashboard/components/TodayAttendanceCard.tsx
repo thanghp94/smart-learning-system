@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { employeeClockInService } from '@/lib/supabase';
+import { employeeClockInService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 import { Clock } from 'lucide-react';
 

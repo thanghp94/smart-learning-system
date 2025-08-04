@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/hooks/use-toast';
-import { employeeService } from '@/lib/supabase';
+import { employeeService } from '@/lib/database';
 import { Employee } from '@/lib/types';
 import EmployeeBasicInfo from './components/EmployeeBasicInfo';
 import EmployeeFilesTab from './components/EmployeeFilesTab';

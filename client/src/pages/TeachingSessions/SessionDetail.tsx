@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { TeachingSession } from "@/lib/types";
-import { teachingSessionService } from "@/lib/supabase";
+import { teachingSessionService } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import SessionDetailComponent from "./components/SessionDetail";
 

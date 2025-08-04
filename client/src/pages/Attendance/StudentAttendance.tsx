@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, GraduationCap, BookOpen, Clock } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 import DataTable from '@/components/ui/DataTable';
 import ExportButton from '@/components/ui/ExportButton';

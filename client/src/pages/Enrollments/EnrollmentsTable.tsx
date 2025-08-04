@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import DataTable from '@/components/ui/DataTable';
-import { enrollmentService } from '@/lib/supabase';
+import { enrollmentService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 
 interface EnrollmentsTableProps {

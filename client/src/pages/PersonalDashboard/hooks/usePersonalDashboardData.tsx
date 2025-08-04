@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { taskService } from '@/lib/supabase';
+import { taskService } from "@/lib/database";
 import { Task, Request } from '@/lib/types';
 
 export function usePersonalDashboardData() {

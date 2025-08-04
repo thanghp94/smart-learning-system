@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { EnumValuesList } from './EnumValuesList';
 import { EnumValueForm } from './EnumValueForm';
-import { EnumValue, EnumCategory, enumService } from '@/lib/supabase/enum-service';
+import { EnumValue, EnumCategory, enumService } from "@/lib/database";
 import PageHeader from '@/components/common/PageHeader';
 
 const EnumManager: React.FC = () => {

@@ -1,9 +1,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { enrollmentService, classService, studentService } from '@/lib/supabase';
+import { enrollmentService, classService, studentService } from "@/lib/database";
 import { Enrollment, Student, Class } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 
 export const useEnrollmentData = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);

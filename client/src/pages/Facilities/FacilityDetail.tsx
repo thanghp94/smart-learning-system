@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Facility, Asset, Event, Finance, File } from '@/lib/types';
-import { facilityService } from '@/lib/supabase/facility-service';
-import { assetService } from '@/lib/supabase/asset-service';
-import { eventService } from '@/lib/supabase/event-service';
-import { financeService } from '@/lib/supabase/finance-service';
-import { fileService } from '@/lib/supabase/file-service';
+import { facilityService } from "@/lib/database";
+import { assetService } from "@/lib/database";
+import { eventService } from "@/lib/database";
+import { financeService } from "@/lib/database";
+import { fileService } from "@/lib/database";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatStatus } from '@/utils/format';
 import { Button } from '@/components/ui/button';

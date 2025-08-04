@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Enrollment } from '@/lib/types';
-import { enrollmentService } from '@/lib/supabase';
+import { enrollmentService } from "@/lib/database";
 
 export const useEnrollmentForm = (
   fetchData: () => Promise<void>, 

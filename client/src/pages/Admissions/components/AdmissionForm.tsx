@@ -33,8 +33,8 @@ import {
 } from '@/components/ui/select';
 import { Admission, ADMISSION_STATUS_MAP, AdmissionStatus } from '@/lib/types/admission';
 import { useToast } from '@/hooks/use-toast';
-import { admissionService } from '@/lib/supabase/admission-service';
-import { employeeService } from '@/lib/supabase';
+import { admissionService } from "@/lib/database";
+import { employeeService } from "@/lib/database";
 
 // Define schema validation for form
 const formSchema = z.object({

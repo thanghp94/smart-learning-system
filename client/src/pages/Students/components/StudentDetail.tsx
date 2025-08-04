@@ -6,7 +6,7 @@ import { CalendarDays, MapPin, Book, School, Phone, Mail, FileText, User, Layers
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { facilityService, enrollmentService } from '@/lib/supabase';
+import { facilityService, enrollmentService } from "@/lib/database";
 import EntityFinancesView from '@/pages/Finance/components/EntityFinancesView';
 import StudentEmailButton from './StudentEmailButton';
 import { format } from 'date-fns';

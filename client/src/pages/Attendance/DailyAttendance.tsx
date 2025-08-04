@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, User, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { employeeClockInService } from '@/lib/supabase/employee-clock-in-service';
+import { employeeClockInService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 import DataTable from '@/components/ui/DataTable';
 import ExportButton from '@/components/ui/ExportButton';

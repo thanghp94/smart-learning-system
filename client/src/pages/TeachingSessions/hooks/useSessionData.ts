@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 import { TeachingSession } from '@/lib/types';
 import { EnrollmentWithStudent, ProcessedStudent } from '../types/student';
 

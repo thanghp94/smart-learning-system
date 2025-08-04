@@ -1,25 +1,24 @@
 import { storage } from "./storage";
-import { supabaseStorage } from "./supabase-storage";
 
-// Database configuration - force Supabase usage only
-const USE_SUPABASE = true;
+// Database configuration - use PostgreSQL only
+const USE_POSTGRESQL = true;
 
-// Export Supabase storage exclusively
-export const activeStorage = supabaseStorage;
+// Export PostgreSQL storage exclusively
+export const activeStorage = storage;
 
-// Helper function to check if Supabase is available
-export async function checkSupabaseConnection(): Promise<boolean> {
+// Helper function to check if PostgreSQL is available
+export async function checkPostgreSQLConnection(): Promise<boolean> {
   try {
-    await supabaseStorage.getStudents();
+    await storage.getStudents();
     return true;
   } catch (error) {
-    console.warn('Supabase connection failed, falling back to PostgreSQL:', error);
+    console.error('PostgreSQL connection failed:', error);
     return false;
   }
 }
 
-// Force Supabase storage usage only
+// Use PostgreSQL storage exclusively
 export async function getStorage() {
-  console.log('Using Supabase storage exclusively');
-  return supabaseStorage;
+  console.log('Using PostgreSQL storage exclusively');
+  return storage;
 }

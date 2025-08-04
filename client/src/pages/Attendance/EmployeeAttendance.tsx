@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { employeeClockInService } from '@/lib/supabase';
+import { employeeClockInService } from "@/lib/database";
 import { Clock } from 'lucide-react';
 import { EmployeeClockInOut } from '@/lib/types/employee-clock-in-out';
 import AttendanceHeader from './components/AttendanceHeader';

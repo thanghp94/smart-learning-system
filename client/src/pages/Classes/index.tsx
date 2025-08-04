@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
-import { classService } from "@/lib/supabase";
+import { classService } from "@/lib/database";
 import { Class } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useDatabase } from "@/contexts/DatabaseContext";

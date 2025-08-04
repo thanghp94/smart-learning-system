@@ -1,6 +1,6 @@
 
 import { File as FileDocument } from '../types';
-import { fileService } from '../supabase/file-service';
+import { fileService } from '../database';
 
 // Extended file type with client-side properties
 export interface ExtendedFile extends FileDocument {

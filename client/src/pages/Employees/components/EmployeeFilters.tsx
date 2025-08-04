@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { facilityService } from '@/lib/supabase';
+import { facilityService } from '@/lib/database';
 import { Facility } from '@/lib/types';
 
 interface EmployeeFiltersProps {

@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { admissionService } from '@/lib/supabase/admission-service';
-import { employeeService, facilityService } from '@/lib/supabase';
+import { admissionService } from "@/lib/database";
+import { employeeService, facilityService } from "@/lib/database";
 import { Admission, AdmissionStatus } from '@/lib/types/admission';
 import { useToast } from '@/hooks/use-toast';
 import { Facility } from '@/lib/types';

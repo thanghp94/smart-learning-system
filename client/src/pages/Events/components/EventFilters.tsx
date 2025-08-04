@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import FilterButton, { FilterCategory } from '@/components/ui/FilterButton';
-import { facilityService } from '@/lib/supabase';
+import { facilityService } from "@/lib/database";
 
 interface EventFiltersProps {
   onFilter: (filters: Record<string, string>) => void;

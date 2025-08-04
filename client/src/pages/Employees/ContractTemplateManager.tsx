@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Employee } from '@/lib/types';
-import { employeeService } from '@/lib/supabase';
+import { employeeService } from '@/lib/database';
 
 // Helper function to format date
 const formatDate = (dateValue: string | Date | undefined) => {

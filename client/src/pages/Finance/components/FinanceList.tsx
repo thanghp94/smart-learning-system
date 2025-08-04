@@ -7,7 +7,7 @@ import { Eye, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import ConfirmActionDialog from '@/components/ui/confirm-action-dialog';
-import { financeService } from '@/lib/supabase';
+import { financeService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 
 export interface FinanceListProps {

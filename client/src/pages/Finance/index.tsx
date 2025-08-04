@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FinanceForm from './FinanceForm';
 import EntityFinanceForm from './components/EntityFinanceForm';
-import { financeService } from '@/lib/supabase';
+import { financeService } from "@/lib/database";
 import FinancePageContent from './components/FinancePageContent';
 
 const Finance = () => {

@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { EnumValue } from '@/lib/supabase/enum-service';
+import { EnumValue } from "@/lib/database";
 import { Pencil, Trash2 } from 'lucide-react';
 
 interface EnumValuesListProps {

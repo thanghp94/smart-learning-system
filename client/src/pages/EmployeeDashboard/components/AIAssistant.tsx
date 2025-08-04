@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 
 interface AIAssistantProps {}
 
@@ -42,7 +42,7 @@ const AIAssistant: React.FC<AIAssistantProps> = () => {
 
     try {
       // Process the command with our Supabase function
-      const { data, error } = await supabase.rpc('process_ai_command', {
+      const { data, error } = await databaseService.rpc('process_ai_command', {
         command_text: input,
         context: { messages: messages.map(m => ({ content: m.content, role: m.isUser ? 'user' : 'assistant' })) }
       });

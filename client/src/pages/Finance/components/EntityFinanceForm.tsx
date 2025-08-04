@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FinanceForm from '../FinanceForm';
 import { useToast } from '@/hooks/use-toast';
-import { studentService, employeeService, facilityService } from '@/lib/supabase';
+import { studentService, employeeService, facilityService } from "@/lib/database";
 
 interface EntityFinanceFormProps {
   onSubmit: (data: any) => void;

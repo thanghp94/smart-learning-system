@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { contactService } from "@/lib/supabase";
+import { contactService } from "@/lib/database";
 import { Contact } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";

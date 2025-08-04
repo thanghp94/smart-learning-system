@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { employeeService } from '@/lib/supabase';
+import { employeeService } from '@/lib/database';
 import EmployeeForm from './EmployeeForm';
 import { Employee } from '@/lib/types';
 

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { financeService } from '@/lib/supabase';
+import { financeService } from "@/lib/database";
 import { Finance } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';

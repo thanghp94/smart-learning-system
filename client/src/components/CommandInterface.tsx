@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 
 const CommandInterface: React.FC = () => {
   const [input, setInput] = useState('');
@@ -41,7 +41,7 @@ const CommandInterface: React.FC = () => {
     setLastCommand(input);
     
     try {
-      const response = await supabase.functions.invoke('generate-with-openai', {
+      const response = await databaseService.functions.invoke('generate-with-openai', {
         body: { 
           prompt: input,
           model: 'gpt-4o-mini' // Sử dụng mô hình nhỏ hơn

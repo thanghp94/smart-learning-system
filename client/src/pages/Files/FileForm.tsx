@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { File as FileType, Contact, Employee, Facility, Class } from '@/lib/types';
 import { fileSchema, FileFormData } from './schemas/fileSchema';
-import { contactService, employeeService, facilityService, classService } from '@/lib/supabase';
+import { contactService, employeeService, facilityService, classService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '@/components/common/ImageUpload';
 

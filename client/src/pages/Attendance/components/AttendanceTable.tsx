@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Clock8, Check, X, AlertCircle, History } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { attendanceService } from '@/lib/supabase';
+import { attendanceService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

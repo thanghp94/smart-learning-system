@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { assetService } from "@/lib/supabase";
+import { assetService } from "@/lib/database";
 import { Asset } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 

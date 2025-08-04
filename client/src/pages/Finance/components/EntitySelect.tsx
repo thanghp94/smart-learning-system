@@ -11,7 +11,7 @@ import {
   eventService,
   enrollmentService,
   classService
-} from '@/lib/supabase';
+} from "@/lib/database";
 import { Student, Employee, Contact, Facility, Asset, Enrollment } from '@/lib/types';
 import { UseFormReturn } from 'react-hook-form';
 

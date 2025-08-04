@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Student } from "@/lib/types";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { facilityService } from "@/lib/supabase";
+import { facilityService } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import { studentSchema, StudentFormValues } from "./schemas/studentSchema";
 import PersonalInfoFields from "./components/PersonalInfoFields";

@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Facility, Employee, Class } from "@/lib/types";
-import { facilityService, employeeService } from "@/lib/supabase";
+import { facilityService, employeeService } from "@/lib/database";
 
 interface ClassFormProps {
   initialData?: Partial<Class>;

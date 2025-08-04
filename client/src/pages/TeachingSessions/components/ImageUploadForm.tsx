@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { imageService } from '@/lib/supabase';
+import { imageService } from "@/lib/database";
 import { Spinner } from '@/components/ui/spinner';
 
 interface ImageUploadFormProps {

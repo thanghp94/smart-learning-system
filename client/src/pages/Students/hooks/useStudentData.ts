@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Student } from '@/lib/types';
-import { studentService, enrollmentService, facilityService } from '@/lib/supabase';
+import { studentService, enrollmentService, facilityService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 
 export const useStudentData = (studentId?: string) => {

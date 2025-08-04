@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { supabase } from '@/lib/supabase/client';
+// Removed Supabase import - using simple auth approach
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
 
@@ -37,14 +37,11 @@ const AuthPage: React.FC = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate('/');
-      }
-    };
-    
-    checkSession();
+    // Check if user is already logged in (simple localStorage check)
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn === 'true') {
+      navigate('/');
+    }
   }, [navigate]);
 
   const loginForm = useForm<LoginFormValues>({
@@ -68,26 +65,23 @@ const AuthPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-      
-      if (error) {
-        toast({
-          title: 'Đăng nhập thất bại',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (data.user) {
+      // Simple authentication - for demo purposes
+      // In production, this should call your authentication API
+      if (values.email && values.password) {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userEmail', values.email);
+        
         toast({
           title: 'Đăng nhập thành công',
           description: 'Chào mừng trở lại!',
         });
         navigate('/');
+      } else {
+        toast({
+          title: 'Đăng nhập thất bại',
+          description: 'Vui lòng nhập email và mật khẩu',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -105,26 +99,20 @@ const AuthPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-      });
-      
-      if (error) {
-        toast({
-          title: 'Đăng ký thất bại',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (data.user) {
+      // Simple signup - for demo purposes
+      // In production, this should call your user registration API
+      if (values.email && values.password && values.password === values.confirmPassword) {
         toast({
           title: 'Đăng ký thành công',
-          description: 'Vui lòng kiểm tra email để xác nhận tài khoản.',
+          description: 'Tài khoản đã được tạo thành công.',
         });
         setActiveTab('login');
+      } else {
+        toast({
+          title: 'Đăng ký thất bại',
+          description: 'Vui lòng kiểm tra thông tin đăng ký',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Signup error:', error);

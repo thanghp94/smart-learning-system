@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { enrollmentService, attendanceService } from '@/lib/supabase';
+import { enrollmentService, attendanceService } from "@/lib/database";
 
 // Add or fix type definitions
 interface StudentInfo {

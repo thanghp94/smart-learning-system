@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { teachingSessionService } from "@/lib/supabase";
+import { teachingSessionService } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import { TeachingSession } from "@/lib/types";
 

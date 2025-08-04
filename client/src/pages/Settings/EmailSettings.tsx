@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { settingService } from '@/lib/supabase/setting-service'; 
+import { settingService } from "@/lib/database"; 
 
 const emailSchema = z.object({
   host: z.string().min(1, { message: 'SMTP host is required' }),

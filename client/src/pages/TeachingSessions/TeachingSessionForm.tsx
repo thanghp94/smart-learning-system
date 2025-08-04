@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { TeachingSession } from '@/lib/types';
 import { teachingSessionSchema } from './schemas/sessionSchema';
-import { classService, employeeService, facilityService, teachingSessionService } from '@/lib/supabase';
+import { classService, employeeService, facilityService, teachingSessionService } from "@/lib/database";
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';

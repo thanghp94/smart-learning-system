@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { classService } from "@/lib/supabase";
+import { classService } from "@/lib/database";
 import { Class } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 

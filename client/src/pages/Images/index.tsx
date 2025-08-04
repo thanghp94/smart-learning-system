@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, Image as ImageIcon, RotateCw, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Image } from "@/lib/types";
-import { imageService } from "@/lib/supabase/image-service";
+import { imageService } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import PlaceholderPage from "@/components/common/PlaceholderPage";

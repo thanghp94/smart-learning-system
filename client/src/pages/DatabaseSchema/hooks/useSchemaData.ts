@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { getSchemaInfo, setupSchemaFunction } from "@/lib/supabase/schema-service";
-import { supabase } from "@/lib/supabase/client";
+import { getSchemaInfo, setupSchemaFunction } from "@/lib/database";
+import { databaseService } from "@/lib/database";
 import { SchemaInfo } from "../types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,7 +31,7 @@ export const useSchemaData = () => {
           
           // Fallback to metadata API if RPC fails
           try {
-            const { data, error } = await supabase.from('pg_tables')
+            const { data, error } = await databaseService.from('pg_tables')
               .select('tablename')
               .eq('schemaname', 'public');
             

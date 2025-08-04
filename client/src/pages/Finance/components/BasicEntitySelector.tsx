@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import EntitySelect from './EntitySelect';
-import { facilityService } from '@/lib/supabase';
+import { facilityService } from "@/lib/database";
 
 interface BasicEntitySelectorProps {
   form: UseFormReturn<any>;

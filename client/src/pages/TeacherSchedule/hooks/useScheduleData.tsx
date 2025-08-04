@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { startOfWeek, endOfWeek, addWeeks, subWeeks, format } from 'date-fns';
-import { employeeService, facilityService, teachingSessionService } from '@/lib/supabase';
+import { employeeService, facilityService, teachingSessionService } from "@/lib/database";
 import { Employee, Facility, TeachingSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 

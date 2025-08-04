@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { TeachingSession } from '@/lib/types';
 import { teachingSessionSchema, SessionFormData } from './schemas/sessionSchema';
-import { classService, employeeService, facilityService } from '@/lib/supabase';
+import { classService, employeeService, facilityService } from "@/lib/database";
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';

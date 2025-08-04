@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Class, Student, TeachingSession, Enrollment, Evaluation } from '@/lib/types';
-import { enrollmentService, teachingSessionService, evaluationService, facilityService } from '@/lib/supabase';
+import { enrollmentService, teachingSessionService, evaluationService, facilityService } from '@/lib/database';
 import { formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';

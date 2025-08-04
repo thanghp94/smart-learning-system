@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { classService, facilityService } from '@/lib/supabase';
+import { classService, facilityService } from "@/lib/database";
 import { Class, Facility } from '@/lib/types';
 import { 
   Select, 

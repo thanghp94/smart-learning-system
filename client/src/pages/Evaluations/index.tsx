@@ -8,7 +8,7 @@ import EvaluationList from './components/EvaluationList';
 import EvaluationDetailPanel from './components/EvaluationDetailPanel';
 import AddEvaluationDialog from './components/AddEvaluationDialog';
 import { TeachingSession, Class, Employee } from '@/lib/types';
-import { teachingSessionService, classService, employeeService } from '@/lib/supabase';
+import { teachingSessionService, classService, employeeService } from "@/lib/database";
 import { DEFAULT_EMPTY_SESSION } from './constants';
 
 const Evaluations = () => {

@@ -1,5 +1,5 @@
 
-import { teachingSessionService } from '@/lib/supabase';
+import { teachingSessionService } from "@/lib/database";
 import { TeachingSession } from '@/lib/types';
 import { EnhancedTeachingSession } from './types';
 

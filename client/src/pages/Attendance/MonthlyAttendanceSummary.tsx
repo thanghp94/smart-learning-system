@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, getDaysInMonth, getMonth, getYear, isWeekend } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { employeeClockInService } from '@/lib/supabase';
+import { employeeClockInService } from "@/lib/database";
 import { EmployeeClockInOut } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import TablePageLayout from '@/components/common/TablePageLayout';

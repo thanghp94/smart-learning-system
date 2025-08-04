@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 import PageHeader from '@/components/common/PageHeader';
 
 const categories = [
@@ -77,7 +77,7 @@ const EnumManager = () => {
     if (!confirm('Bạn có chắc chắn muốn xóa giá trị này?')) return;
 
     try {
-      const { error } = await supabase.rpc('delete_enum_value', { p_id: id });
+      const { error } = await databaseService.rpc('delete_enum_value', { p_id: id });
 
       if (error) throw error;
 
@@ -105,14 +105,14 @@ const EnumManager = () => {
       
       if (currentValue) {
         // Update existing value
-        result = await supabase.rpc('update_enum_value', {
+        result = await databaseService.rpc('update_enum_value', {
           p_id: currentValue.id,
           p_value: formData.value,
           p_description: formData.description,
         });
       } else {
         // Add new value
-        result = await supabase.rpc('add_enum_value', {
+        result = await databaseService.rpc('add_enum_value', {
           p_category: activeCategory,
           p_value: formData.value,
           p_description: formData.description,

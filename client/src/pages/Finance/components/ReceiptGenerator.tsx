@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Finance } from '@/lib/types';
-import { financeService } from '@/lib/supabase';
+import { financeService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { Printer, FileDown, Check } from 'lucide-react';

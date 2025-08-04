@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TeachingSession } from "@/lib/types";
 import { UseFormReturn } from "react-hook-form";
 import { SessionFormData } from "../schemas/sessionSchema";
-import { facilityService } from "@/lib/supabase";
+import { facilityService } from "@/lib/database";
 
 interface SessionBasicInfoFieldsProps {
   form: UseFormReturn<SessionFormData>;

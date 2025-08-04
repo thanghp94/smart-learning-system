@@ -7,7 +7,7 @@ import { Session } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";
 import DetailPanel from "@/components/ui/DetailPanel";
-import { supabase } from "@/lib/supabase/client";
+import { databaseService } from "@/lib/database";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import PlaceholderPage from "@/components/common/PlaceholderPage";

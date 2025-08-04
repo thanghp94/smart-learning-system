@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import DataTable from '@/components/ui/DataTable';
-import { financeService } from '@/lib/supabase';
+import { financeService } from "@/lib/database";
 import { Finance } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FinanceForm from '../FinanceForm';

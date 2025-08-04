@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Finance } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
-import { financeService } from '@/lib/supabase';
+import { financeService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 
 export interface FinanceLedgerProps {

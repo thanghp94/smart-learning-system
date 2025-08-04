@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, FileDown, Filter, RotateCw, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/DataTable";
-import { payrollService, employeeService, facilityService } from "@/lib/supabase";
+import { payrollService, employeeService, facilityService } from "@/lib/database";
 import { Payroll, Employee, Facility } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import TablePageLayout from "@/components/common/TablePageLayout";

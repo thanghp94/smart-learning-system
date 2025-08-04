@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { taskService } from '@/lib/supabase';
+import { taskService } from "@/lib/database";
 import { Task } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 

@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase/client';
+import { databaseService } from "@/lib/database";
 
 interface Message {
   id: string;
@@ -53,7 +53,7 @@ export const useCommandProcessor = () => {
     setIsProcessing(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('process-command', {
+      const { data, error } = await databaseService.functions.invoke('process-command', {
         body: { command: command.trim() }
       });
       

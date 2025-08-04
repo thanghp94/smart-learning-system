@@ -5,7 +5,7 @@ import PlaceholderPage from "@/components/common/PlaceholderPage";
 import RequestForm from "./RequestForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase/client";
+import { databaseService } from "@/lib/database";
 import RequestsTable from "./RequestsTable";
 
 // Define a consistent request interface matching with RequestsTable

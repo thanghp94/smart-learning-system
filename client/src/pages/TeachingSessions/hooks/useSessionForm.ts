@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { teachingSessionSchema, SessionFormData } from '../schemas/sessionSchema';
-import { classService, employeeService, facilityService } from '@/lib/supabase';
+import { classService, employeeService, facilityService } from "@/lib/database";
 import { TeachingSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 

@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import TablePageLayout from '@/components/common/TablePageLayout';
 import DataTable from '@/components/ui/DataTable';
 import { Session } from '@/lib/types';
-import { sessionService } from '@/lib/supabase/session-service';
+import { sessionService } from "@/lib/database";
 import { format } from 'date-fns';
 import { Plus, FileDown, Filter, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';

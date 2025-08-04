@@ -19,7 +19,7 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import { Task } from '@/lib/types';
-import { taskService } from '@/lib/supabase';
+import { taskService } from "@/lib/database";
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';

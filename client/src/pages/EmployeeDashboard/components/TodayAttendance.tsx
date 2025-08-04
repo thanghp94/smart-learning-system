@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, XCircle } from 'lucide-react';
-import { employeeClockInService } from '@/lib/supabase';
+import { employeeClockInService } from "@/lib/database";
 import { EmployeeClockInOut } from '@/lib/types';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/spinner"
 import { CalendarIcon, CreditCard, User2Icon, GraduationCap, Briefcase, FileText, MessageSquare, CheckCircle2, LucideIcon } from "lucide-react"
 import { useToast } from '@/hooks/use-toast';
-import { employeeService } from '@/lib/supabase';
+import { employeeService } from "@/lib/database";
 
 interface DashboardNavItemProps {
   title: string;

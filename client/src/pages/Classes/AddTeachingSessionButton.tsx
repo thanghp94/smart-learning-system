@@ -4,7 +4,7 @@ import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Class, TeachingSession } from '@/lib/types';
-import { teachingSessionService } from '@/lib/supabase';
+import { teachingSessionService } from "@/lib/database";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import SessionForm from '../TeachingSessions/SessionForm';
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { attendanceService } from '@/lib/supabase';
+import { attendanceService } from "@/lib/database";
 
 export interface AttendanceDialogProps {
   open: boolean;
