@@ -66,9 +66,9 @@ const TeachingSessionForm: React.FC<TeachingSessionFormProps> = ({
       setIsLoading(true);
       try {
         // Use the correct service method to fetch classes
-        const classesData = await classService.getAll();
-        const teachersData = await employeeService.getAll();
-        const facilitiesData = await facilityService.getAll();
+        const classesData = await classService.getClasses();
+        const teachersData = await employeeService.getEmployees();
+        const facilitiesData = await facilityService.getFacilities();
         
         setClasses(classesData);
         setTeachers(teachersData);

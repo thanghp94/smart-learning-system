@@ -92,8 +92,8 @@ const FinanceForm: React.FC<FinanceFormProps> = ({
     const fetchData = async () => {
       try {
         const [empData, facData] = await Promise.all([
-          employeeService.getAll(),
-          facilityService.getAll(),
+          employeeService.getEmployees(),
+          facilityService.getFacilities(),
         ]);
         
         setEmployees(empData);

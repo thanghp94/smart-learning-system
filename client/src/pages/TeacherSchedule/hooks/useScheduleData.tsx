@@ -46,7 +46,7 @@ export function useScheduleData() {
       
       // If no teachers with role 'teacher', fetch all employees
       if (!teacherList || teacherList.length === 0) {
-        teacherList = await employeeService.getAll();
+        teacherList = await employeeService.getEmployees();
         console.log("Fetched all employees instead:", teacherList);
       }
       
@@ -65,7 +65,7 @@ export function useScheduleData() {
 
   const fetchFacilities = async () => {
     try {
-      const facilityList = await facilityService.getAll();
+      const facilityList = await facilityService.getFacilities();
       setFacilities(facilityList || []);
     } catch (error) {
       console.error('Error fetching facilities:', error);

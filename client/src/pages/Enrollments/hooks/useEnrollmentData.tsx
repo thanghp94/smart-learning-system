@@ -37,7 +37,7 @@ export const useEnrollmentData = () => {
       // Then try to get students for reference
       let studentsData;
       try {
-        studentsData = await studentService.getAll();
+        studentsData = await studentService.getStudents();
         console.log('Students data loaded:', studentsData?.length || 0);
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -47,7 +47,7 @@ export const useEnrollmentData = () => {
       // Then try to get classes for reference
       let classesData;
       try {
-        classesData = await classService.getAll();
+        classesData = await classService.getClasses();
         console.log('Classes data loaded:', classesData?.length || 0);
       } catch (error) {
         console.error('Error fetching classes:', error);

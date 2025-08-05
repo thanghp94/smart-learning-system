@@ -31,8 +31,8 @@ const Employees = () => {
   const fetchEmployees = async () => {
     try {
       setIsLoading(true);
-      const data = await employeeService.getAll();
-      setEmployees(data);
+      const data = await employeeService.getEmployees();
+      setEmployees(data as Employee[]);
     } catch (error) {
       console.error('Error fetching employees:', error);
       toast({
@@ -50,9 +50,9 @@ const Employees = () => {
       console.log("Submitting employee data:", employeeData);
       
       if (editingEmployee) {
-        await employeeService.update(editingEmployee.id, employeeData);
+        await employeeService.updateEmployee(editingEmployee.id, employeeData);
       } else {
-        await employeeService.create(employeeData);
+        await employeeService.createEmployee(employeeData);
       }
       
       await fetchEmployees();

@@ -32,7 +32,7 @@ const Events = () => {
   const fetchEvents = async () => {
     try {
       setIsLoading(true);
-      const data = await eventService.getAll();
+      const data = await eventService.getEvents();
       setEvents(data);
     } catch (error) {
       console.error("Error fetching events:", error);

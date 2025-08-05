@@ -40,7 +40,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     const loadFacilities = async () => {
       try {
         setIsLoadingFacilities(true);
-        const data = await facilityService.getAll();
+        const data = await facilityService.getFacilities();
         setFacilities(data);
       } catch (error) {
         console.error("Error loading facilities:", error);

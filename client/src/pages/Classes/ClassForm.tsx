@@ -57,7 +57,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
   useEffect(() => {
     const loadFacilities = async () => {
       try {
-        const data = await facilityService.getAll();
+        const data = await facilityService.getFacilities();
         setFacilities(data);
       } catch (error) {
         console.error("Error loading facilities:", error);

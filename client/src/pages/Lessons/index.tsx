@@ -24,7 +24,7 @@ const Lessons = () => {
   const fetchLessons = async () => {
     try {
       setIsLoading(true);
-      const data = await sessionService.getAll();
+      const data = await sessionService.getTeachingSessions();
       setLessons(data);
     } catch (error) {
       console.error('Error fetching lessons:', error);

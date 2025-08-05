@@ -36,7 +36,7 @@ const EnrollStudentButton = ({
   const { data: classes = [], isLoading: isClassesLoading } = useQuery({
     queryKey: ['active-classes'],
     queryFn: async () => {
-      const result = await classService.getAll();
+      const result = await classService.getClasses();
       return result.filter(c => c.tinh_trang === 'active');
     }
   });
@@ -44,7 +44,7 @@ const EnrollStudentButton = ({
   // Load students when needed
   const { data: students = [], isLoading: isStudentsLoading } = useQuery({
     queryKey: ['students'],
-    queryFn: () => studentService.getAll(),
+    queryFn: () => studentService.getStudents(),
     enabled: !student && !studentId
   });
 

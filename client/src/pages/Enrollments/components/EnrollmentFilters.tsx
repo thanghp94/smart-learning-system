@@ -33,8 +33,8 @@ const EnrollmentFilters: React.FC<EnrollmentFiltersProps> = ({
       setIsLoading(true);
       try {
         const [classesData, facilitiesData] = await Promise.all([
-          classService.getAll(),
-          facilityService.getAll()
+          classService.getClasses(),
+          facilityService.getFacilities()
         ]);
         
         setClasses(classesData || []);

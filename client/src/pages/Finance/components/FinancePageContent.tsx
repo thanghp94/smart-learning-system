@@ -33,7 +33,7 @@ const FinancePageContent: React.FC<FinancePageContentProps> = ({ onAddClick }) =
     setIsLoading(true);
     try {
       console.log('Fetching all records from finances...');
-      const data = await financeService.getAll();
+      const data = await financeService.getFinances();
       console.log('Successfully fetched', data.length, 'records from finances');
       setFinances(data);
     } catch (error) {

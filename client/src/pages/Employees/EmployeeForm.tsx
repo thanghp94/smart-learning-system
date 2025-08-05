@@ -54,7 +54,7 @@ const EmployeeForm = ({ initialData, onSubmit }: EmployeeFormProps) => {
   const loadFacilities = async () => {
     try {
       setIsLoadingFacilities(true);
-      const facilitiesData = await facilityService.getAll();
+      const facilitiesData = await facilityService.getFacilities();
       setFacilities(facilitiesData);
     } catch (error) {
       console.error('Error loading facilities:', error);

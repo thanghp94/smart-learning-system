@@ -29,7 +29,7 @@ export function usePersonalDashboardData() {
       // Fetch tasks
       try {
         console.log('Fetching tasks...');
-        const tasksData = await taskService.getAll();
+        const tasksData = await taskService.getTasks();
         console.log('Tasks fetched:', tasksData);
         setTasks(tasksData.slice(0, 5)); // Just get the first 5 tasks
       } catch (error) {

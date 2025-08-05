@@ -29,7 +29,7 @@ const FinanceLedger: React.FC<FinanceLedgerProps> = ({ finances: propFinances, i
   const fetchLedgerData = async () => {
     setIsLoading(true);
     try {
-      const data = await financeService.getAll();
+      const data = await financeService.getFinances();
       setFinances(data);
       groupFinancesByMonth(data);
     } catch (error) {

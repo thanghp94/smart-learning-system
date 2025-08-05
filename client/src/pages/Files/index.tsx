@@ -26,7 +26,7 @@ const FilesPage = () => {
   const fetchFiles = async () => {
     try {
       setIsLoading(true);
-      const data = await fileService.getAll();
+      const data = await fileService.getFiles();
       setFiles(data);
     } catch (error) {
       console.error("Error fetching files:", error);

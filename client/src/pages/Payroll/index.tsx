@@ -28,7 +28,7 @@ const PayrollPage = () => {
   const fetchPayrolls = async () => {
     try {
       setIsLoading(true);
-      const data = await payrollService.getAll();
+      const data = await payrollService.getPayroll();
       setPayrolls(data);
     } catch (error) {
       console.error("Error fetching payrolls:", error);
@@ -44,7 +44,7 @@ const PayrollPage = () => {
 
   const fetchEmployees = async () => {
     try {
-      const data = await employeeService.getAll();
+      const data = await employeeService.getEmployees();
       setEmployees(data);
     } catch (error) {
       console.error("Error fetching employees:", error);
@@ -53,7 +53,7 @@ const PayrollPage = () => {
   
   const fetchFacilities = async () => {
     try {
-      const data = await facilityService.getAll();
+      const data = await facilityService.getFacilities();
       setFacilities(data);
     } catch (error) {
       console.error("Error fetching facilities:", error);

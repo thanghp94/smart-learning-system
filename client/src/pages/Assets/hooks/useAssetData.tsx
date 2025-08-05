@@ -13,7 +13,7 @@ export function useAssetData() {
     try {
       setIsLoading(true);
       console.log("Fetching assets...");
-      const data = await assetService.getAll();
+      const data = await assetService.getAssets();
       console.log("Assets loaded:", data?.length || 0);
       setAssets(data);
       setFilteredAssets(data);

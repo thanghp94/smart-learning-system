@@ -28,7 +28,7 @@ const TransferManagement = () => {
   const fetchTransfers = async () => {
     try {
       setIsLoading(true);
-      const transferData = await assetTransferService.getAll();
+      const transferData = await assetTransferService.getAssetTransfers();
       setTransfers(transferData || []);
       
       // Fetch all assets referenced in the transfers

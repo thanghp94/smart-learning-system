@@ -16,7 +16,7 @@ const EventFilters: React.FC<EventFiltersProps> = ({ onFilter }) => {
       setLoading(true);
       try {
         // Fetch facilities
-        const facilitiesData = await facilityService.getAll();
+        const facilitiesData = await facilityService.getFacilities();
         setFacilities(facilitiesData);
       } catch (error) {
         console.error('Error fetching facilities:', error);

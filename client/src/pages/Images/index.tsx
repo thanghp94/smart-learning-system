@@ -35,7 +35,7 @@ const Images: React.FC = () => {
   const fetchImages = async () => {
     try {
       setIsLoading(true);
-      const data = await imageService.getAll();
+      const data = await imageService.getImages();
       setImages(data);
     } catch (error) {
       console.error("Error fetching images:", error);

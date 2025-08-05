@@ -69,9 +69,9 @@ const EvaluationForm = ({ initialData, onSubmit, onCancel, classInfo, teacherInf
         if (!initialData.id) {
           // Only load classes and teachers for new evaluations
           const [classesData, teachersData, sessionsData] = await Promise.all([
-            classService.getAll(),
+            classService.getClasses(),
             employeeService.getByRole("Giáo viên"),
-            sessionService.getAll()
+            sessionService.getTeachingSessions()
           ]);
           setClasses(classesData || []);
           setTeachers(teachersData || []);

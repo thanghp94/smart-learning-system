@@ -38,8 +38,8 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, setFilters }) => {
       try {
         setLoading(true);
         const [employeesData, facilitiesData] = await Promise.all([
-          employeeService.getAll(),
-          facilityService.getAll(),
+          employeeService.getEmployees(),
+          facilityService.getFacilities(),
         ]);
         setEmployees(employeesData || []);
         setFacilities(facilitiesData || []);

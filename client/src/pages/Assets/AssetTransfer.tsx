@@ -86,19 +86,19 @@ const AssetTransferForm = ({ asset, onTransferComplete }: AssetTransferProps) =>
       try {
         switch (destinationType) {
           case "facility":
-            const facilityData = await facilityService.getAll();
+            const facilityData = await facilityService.getFacilities();
             setFacilities(facilityData);
             break;
           case "student":
-            const studentData = await studentService.getAll();
+            const studentData = await studentService.getStudents();
             setStudents(studentData);
             break;
           case "employee":
-            const employeeData = await employeeService.getAll();
+            const employeeData = await employeeService.getEmployees();
             setEmployees(employeeData);
             break;
           case "class":
-            const classData = await classService.getAll();
+            const classData = await classService.getClasses();
             setClasses(classData);
             break;
         }

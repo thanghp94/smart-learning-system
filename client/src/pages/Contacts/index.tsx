@@ -28,7 +28,7 @@ const Contacts = () => {
   const fetchContacts = async () => {
     try {
       setIsLoading(true);
-      const data = await contactService.getAll();
+      const data = await contactService.getContacts();
       setContacts(data);
     } catch (error) {
       console.error("Error fetching contacts:", error);

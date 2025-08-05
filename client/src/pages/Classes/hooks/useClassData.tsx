@@ -16,12 +16,12 @@ export function useClassData() {
       console.log("Fetching classes...");
       
       // Using the service method to get all classes
-      const data = await classService.getAllWithStudentCount();
+      const data = await classService.getClasses();
       console.log("Classes data received:", data);
       
       if (data && Array.isArray(data)) {
         // Ensure all class objects have required properties
-        const processedClasses = data.map(cls => ({
+        const processedClasses = data.map((cls: any) => ({
           ...cls,
           id: cls.id || crypto.randomUUID(),
           ten_lop_full: cls.ten_lop_full || cls.Ten_lop_full || '',

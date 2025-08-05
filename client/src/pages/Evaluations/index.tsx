@@ -41,7 +41,7 @@ const Evaluations = () => {
       
       // Fetch classes and teachers for displaying names
       const [classesData, teachersData] = await Promise.all([
-        classService.getAll(),
+        classService.getClasses(),
         fetch('/api/teachers').then(res => res.json()).catch(() => [])
       ]);
       

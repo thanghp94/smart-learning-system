@@ -61,10 +61,10 @@ const FileForm = ({ initialData, onSubmit, onCancel }: FileFormProps) => {
     const fetchEntities = async () => {
       try {
         const [contactsData, employeesData, facilitiesData, classesData] = await Promise.all([
-          contactService.getAll(),
-          employeeService.getAll(),
-          facilityService.getAll(),
-          classService.getAll()
+          contactService.getContacts(),
+          employeeService.getEmployees(),
+          facilityService.getFacilities(),
+          classService.getClasses()
         ]);
 
         setContacts(contactsData);

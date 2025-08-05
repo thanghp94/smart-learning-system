@@ -30,7 +30,7 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
   const fetchStudents = async () => {
     try {
       setIsLoading(true);
-      const data = await studentService.getAll();
+      const data = await studentService.getStudents();
       console.log("Students data received:", data);
       
       if (Array.isArray(data)) {

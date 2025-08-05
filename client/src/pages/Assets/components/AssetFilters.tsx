@@ -28,8 +28,8 @@ const AssetFilters: React.FC<AssetFiltersProps> = ({ onFilterChange, onReset }) 
     setIsLoading(true);
     try {
       const [facilitiesData, employeesData] = await Promise.all([
-        facilityService.getAll(),
-        employeeService.getAll()
+        facilityService.getFacilities(),
+        employeeService.getEmployees()
       ]);
 
       setFacilities(facilitiesData || []);

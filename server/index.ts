@@ -32,18 +32,22 @@ app.use(performanceLogger(2000)); // Log slow requests over 2 seconds
   
   const server = await registerRoutes(app);
 
-  // Error handling middleware (must be last)
-  app.use(notFoundHandler);
-  app.use(errorHandler);
-
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
+  console.log("Environment:", app.get("env"));
   if (app.get("env") === "development") {
+    console.log("Setting up Vite middleware...");
     await setupVite(app, server);
+    console.log("Vite middleware setup complete");
   } else {
+    console.log("Setting up static file serving...");
     serveStatic(app);
   }
+
+  // Error handling middleware (must be last)
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   // Serve the app on port 3000 for testing
   // this serves both the API and the client.

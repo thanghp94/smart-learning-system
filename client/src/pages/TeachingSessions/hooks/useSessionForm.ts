@@ -47,9 +47,9 @@ export const useSessionForm = ({ initialData }: UseSessionFormProps) => {
       try {
         // Fetch all required data in parallel
         const [classesData, teachersData, facilitiesData] = await Promise.all([
-          classService.getAll(),
-          employeeService.getAll(),
-          facilityService.getAll()
+          classService.getClasses(),
+          employeeService.getEmployees(),
+          facilityService.getFacilities()
         ]);
         
         setClasses(classesData || []);

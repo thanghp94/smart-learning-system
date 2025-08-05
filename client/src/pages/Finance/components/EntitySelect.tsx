@@ -45,37 +45,37 @@ const EntitySelect: React.FC<EntitySelectProps> = ({
       setIsLoading(true);
       try {
         if (selectedEntityType === 'student' || !selectedEntityType) {
-          const data = await studentService.getAll();
+          const data = await studentService.getStudents();
           setStudents(data);
         }
         
         if (selectedEntityType === 'employee' || !selectedEntityType) {
-          const data = await employeeService.getAll();
+          const data = await employeeService.getEmployees();
           setEmployees(data);
         }
         
         if (selectedEntityType === 'contact' || !selectedEntityType) {
-          const data = await contactService.getAll();
+          const data = await contactService.getContacts();
           setContacts(data);
         }
         
         if (selectedEntityType === 'asset' || !selectedEntityType) {
-          const data = await assetService.getAll();
+          const data = await assetService.getAssets();
           setAssets(data);
         }
         
         if (selectedEntityType === 'event' || !selectedEntityType) {
-          const data = await eventService.getAll();
+          const data = await eventService.getEvents();
           setEvents(data);
         }
         
         if (selectedEntityType === 'enrollment' || !selectedEntityType) {
-          const data = await enrollmentService.getAll();
+          const data = await enrollmentService.getEnrollments();
           setEnrollments(data);
         }
         
         if (selectedEntityType === 'class' || !selectedEntityType) {
-          const data = await classService.getAll();
+          const data = await classService.getClasses();
           setClasses(data);
         }
       } catch (error) {

@@ -11,6 +11,7 @@ import { PayrollStorage } from "./payroll";
 import { AdmissionStorage } from "./admissions";
 import { ImageStorage } from "./images";
 import { EmployeeClockInStorage } from "./employeeClockIn";
+import { FacilityStorage } from "./facilities";
 
 import type { IStorage } from "../storage";
 
@@ -28,6 +29,7 @@ export class DatabaseStorage implements IStorage {
   private admissionStorage = new AdmissionStorage();
   private imageStorage = new ImageStorage();
   private employeeClockInStorage = new EmployeeClockInStorage();
+  private facilityStorage = new FacilityStorage();
 
   // Students
   getStudents = this.studentStorage.getStudents.bind(this.studentStorage);
@@ -150,30 +152,12 @@ export class DatabaseStorage implements IStorage {
     return {} as any;
   }
 
-  async getFacilities() {
-    // This would need to be implemented
-    return [];
-  }
-
-  async getFacility(id: string) {
-    // This would need to be implemented
-    return undefined;
-  }
-
-  async createFacility(facility: any) {
-    // This would need to be implemented
-    return {} as any;
-  }
-
-  async updateFacility(id: string, facility: any) {
-    // This would need to be implemented
-    return undefined;
-  }
-
-  async deleteFacility(id: string) {
-    // This would need to be implemented
-    return false;
-  }
+  // Facilities
+  getFacilitys = this.facilityStorage.getFacilitys.bind(this.facilityStorage);
+  getFacility = this.facilityStorage.getFacility.bind(this.facilityStorage);
+  createFacility = this.facilityStorage.createFacility.bind(this.facilityStorage);
+  updateFacility = this.facilityStorage.updateFacility.bind(this.facilityStorage);
+  deleteFacility = this.facilityStorage.deleteFacility.bind(this.facilityStorage);
 
   async getEnrollments() {
     // This would need to be implemented

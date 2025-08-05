@@ -44,7 +44,7 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({
         if (effectiveEntityId) {
           data = await financeService.getByEntity(entityType, effectiveEntityId);
         } else {
-          data = await financeService.getAll();
+          data = await financeService.getFinances();
         }
         
         setFinances(data);
@@ -74,7 +74,7 @@ const EntityFinancesView: React.FC<EntityFinancesViewProps> = ({
       const data = await financeService.getByEntity(entityType, effectiveEntityId);
       setFinances(data);
     } else {
-      const data = await financeService.getAll();
+      const data = await financeService.getFinances();
       setFinances(data);
     }
   };

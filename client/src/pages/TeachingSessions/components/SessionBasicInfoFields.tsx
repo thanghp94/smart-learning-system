@@ -28,7 +28,7 @@ const SessionBasicInfoFields: React.FC<SessionBasicInfoFieldsProps> = ({
   useEffect(() => {
     const fetchFacilities = async () => {
       try {
-        const data = await facilityService.getAll();
+        const data = await facilityService.getFacilities();
         setFacilities(data);
       } catch (error) {
         console.error("Error fetching facilities:", error);

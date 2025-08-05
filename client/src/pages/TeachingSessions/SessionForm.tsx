@@ -70,9 +70,9 @@ const SessionForm: React.FC<SessionFormProps> = ({
       try {
         // Fetch all required data
         const [classesData, teachersData, facilitiesData] = await Promise.all([
-          classService.getAll(),
-          employeeService.getAll(),
-          facilityService.getAll()
+          classService.getClasses(),
+          employeeService.getEmployees(),
+          facilityService.getFacilities()
         ]);
         
         // Ensure we have arrays even if the response is empty

@@ -8,18 +8,95 @@ import {
   insertAttendanceSchema, insertAssetSchema, insertTaskSchema
 } from "@shared/schema";
 
+// Helper function for manual JSON serialization using string concatenation
+function manualSerialize(obj: any): string {
+  if (obj === null) return 'null';
+  if (typeof obj === 'boolean') return obj.toString();
+  if (typeof obj === 'number') return obj.toString();
+  if (typeof obj === 'string') {
+    return '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '"';
+  }
+  if (obj instanceof Date) {
+    return '"' + obj.toISOString() + '"';
+  }
+  if (Array.isArray(obj)) {
+    let result = '[';
+    for (let i = 0; i < obj.length; i++) {
+      if (i > 0) result += ',';
+      result += manualSerialize(obj[i]);
+    }
+    result += ']';
+    return result;
+  }
+  if (typeof obj === 'object') {
+    let result = '{';
+    const keys = Object.keys(obj);
+    for (let i = 0; i < keys.length; i++) {
+      if (i > 0) result += ',';
+      result += '"' + keys[i] + '":' + manualSerialize(obj[keys[i]]);
+    }
+    result += '}';
+    return result;
+  }
+  return '"' + String(obj) + '"';
+}
+
+// Simple manual JSON builder to bypass Node.js JSON.stringify bug completely
+function buildJsonString(obj: any): string {
+  if (obj === null) return 'null';
+  if (obj === undefined) return 'null';
+  if (typeof obj === 'boolean') return obj.toString();
+  if (typeof obj === 'number') return obj.toString();
+  if (typeof obj === 'string') {
+    return '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  }
+  if (obj instanceof Date) {
+    return '"' + obj.toISOString() + '"';
+  }
+  if (Array.isArray(obj)) {
+    const items = obj.map(item => buildJsonString(item));
+    return '[' + items.join(',') + ']';
+  }
+  if (typeof obj === 'object') {
+    const pairs: string[] = [];
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        pairs.push('"' + key + '":' + buildJsonString(obj[key]));
+      }
+    }
+    return '{' + pairs.join(',') + '}';
+  }
+  return 'null';
+}
+
+// Safe JSON response helper that bypasses the JSON.stringify bug completely
+function safeJsonResponse(res: Response, data: any, statusCode: number = 200) {
+  try {
+    console.log('Using manual JSON builder to bypass Node.js bug completely');
+    
+    // Build JSON manually to avoid Node.js JSON.stringify bug
+    const jsonString = buildJsonString(data);
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.status(statusCode).send(jsonString);
+  } catch (error) {
+    console.error('Safe JSON response error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 // Helper function for error handling
 const handleError = (res: Response, error: any, message: string, statusCode: number = 500) => {
   console.error(`${message}:`, error);
-  res.status(statusCode).json({ 
+  safeJsonResponse(res, { 
     error: message, 
     details: error instanceof Error ? error.message : 'Unknown error' 
-  });
+  }, statusCode);
 };
 
 // Helper function for not found responses
 const handleNotFound = (res: Response, entity: string) => {
-  res.status(404).json({ error: `${entity} not found` });
+  safeJsonResponse(res, { error: `${entity} not found` }, 404);
 };
 
 // Generic CRUD route factory
@@ -43,7 +120,7 @@ const createCrudRoutes = (
       }
       
       const items = await (storage as any)[methodName]();
-      res.json(items);
+      safeJsonResponse(res, items);
     } catch (error) {
       handleError(res, error, `Failed to fetch ${basePath}`);
     }
@@ -65,7 +142,7 @@ const createCrudRoutes = (
       if (!item) {
         return handleNotFound(res, entityName);
       }
-      res.json(item);
+      safeJsonResponse(res, item);
     } catch (error) {
       handleError(res, error, `Failed to fetch ${entityName.toLowerCase()}`);
     }
@@ -91,7 +168,7 @@ const createCrudRoutes = (
       }
       
       const item = await (storage as any)[methodName](data);
-      res.status(201).json(item);
+      safeJsonResponse(res, item, 201);
     } catch (error) {
       handleError(res, error, `Invalid ${entityName.toLowerCase()} data`, 400);
     }
@@ -113,7 +190,7 @@ const createCrudRoutes = (
       if (!item) {
         return handleNotFound(res, entityName);
       }
-      res.json(item);
+      safeJsonResponse(res, item);
     } catch (error) {
       handleError(res, error, `Failed to update ${entityName.toLowerCase()}`);
     }
@@ -138,7 +215,7 @@ const createCrudRoutes = (
       if (!success) {
         return handleNotFound(res, entityName);
       }
-      res.json({ success: true });
+      safeJsonResponse(res, { success: true });
     } catch (error) {
       handleError(res, error, `Failed to delete ${entityName.toLowerCase()}`);
     }
@@ -150,7 +227,7 @@ const createEmployeeRoutes = (app: Express) => {
   app.get('/api/employees', async (req: Request, res: Response) => {
     try {
       const employees = await (await getStorage()).getEmployees();
-      res.json(employees);
+      safeJsonResponse(res, employees);
     } catch (error) {
       handleError(res, error, 'Failed to get employees');
     }
@@ -162,7 +239,7 @@ const createEmployeeRoutes = (app: Express) => {
       if (!employee) {
         return handleNotFound(res, 'Employee');
       }
-      res.json(employee);
+      safeJsonResponse(res, employee);
     } catch (error) {
       handleError(res, error, 'Failed to fetch employee');
     }
@@ -195,7 +272,7 @@ const createEmployeeRoutes = (app: Express) => {
         ]
       );
 
-      res.status(201).json(result.rows[0]);
+      safeJsonResponse(res, result.rows[0], 201);
     } catch (error) {
       handleError(res, error, 'Failed to create employee');
     }
@@ -234,7 +311,7 @@ const createEmployeeRoutes = (app: Express) => {
         return handleNotFound(res, 'Employee');
       }
 
-      res.json(result.rows[0]);
+      safeJsonResponse(res, result.rows[0]);
     } catch (error) {
       handleError(res, error, 'Failed to update employee');
     }
@@ -246,7 +323,7 @@ const createEmployeeRoutes = (app: Express) => {
       if (!success) {
         return handleNotFound(res, 'Employee');
       }
-      res.json({ success: true });
+      safeJsonResponse(res, { success: true });
     } catch (error) {
       handleError(res, error, 'Failed to delete employee');
     }
@@ -274,7 +351,7 @@ const createSpecialRoutes = (app: Express) => {
         return false;
       });
 
-      res.json(filteredAttendances);
+      safeJsonResponse(res, filteredAttendances);
     } catch (error) {
       handleError(res, error, 'Failed to fetch monthly attendance');
     }
@@ -291,7 +368,7 @@ const createSpecialRoutes = (app: Express) => {
         emp.chuc_vu?.toLowerCase().includes('teacher') ||
         emp.chuc_vu?.toLowerCase().includes('giáo viên')
       );
-      res.json(teachers);
+      safeJsonResponse(res, teachers);
     } catch (error) {
       handleError(res, error, 'Failed to fetch teachers');
     }
@@ -330,7 +407,7 @@ const createSpecialRoutes = (app: Express) => {
           throw new Error(data.error.message || 'Failed to generate image');
         }
 
-        res.json({ 
+        safeJsonResponse(res, { 
           imageUrls: data.data.map((img: any) => img.url),
           data: data
         });
@@ -357,7 +434,7 @@ const createSpecialRoutes = (app: Express) => {
         }
 
         const generatedText = data.choices[0]?.message?.content || '';
-        res.json({ generatedText, data });
+        safeJsonResponse(res, { generatedText, data });
       }
     } catch (error) {
       handleError(res, error, 'AI generation failed');
@@ -381,7 +458,7 @@ const createSpecialRoutes = (app: Express) => {
           table_name
       `;
       const result = await (await getStorage()).executeQuery(query);
-      res.json(result);
+      safeJsonResponse(res, result);
     } catch (error) {
       handleError(res, error, 'Failed to fetch database schema');
     }
@@ -389,7 +466,7 @@ const createSpecialRoutes = (app: Express) => {
 
   // Health check endpoint
   app.get("/api/health", (req: Request, res: Response) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
+    safeJsonResponse(res, { status: "ok", timestamp: new Date().toISOString() });
   });
 
   // Migration status endpoint
@@ -397,12 +474,12 @@ const createSpecialRoutes = (app: Express) => {
     try {
       const { checkPostgreSQLConnection } = await import("./database/config");
       const isPostgreSQLAvailable = await checkPostgreSQLConnection();
-      res.json({ 
+      safeJsonResponse(res, { 
         postgresAvailable: isPostgreSQLAvailable,
         currentDatabase: 'postgresql'
       });
     } catch (error) {
-      res.json({ 
+      safeJsonResponse(res, { 
         postgresAvailable: false,
         currentDatabase: 'postgresql',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -445,7 +522,7 @@ const createPayrollRoutes = (app: Express) => {
   app.get("/api/payroll", async (req: Request, res: Response) => {
     try {
       const payroll = await (await getStorage()).getPayroll();
-      res.json(payroll);
+      safeJsonResponse(res, payroll);
     } catch (error) {
       handleError(res, error, 'Failed to fetch payroll');
     }
@@ -457,7 +534,7 @@ const createPayrollRoutes = (app: Express) => {
       if (!payroll) {
         return handleNotFound(res, 'Payroll record');
       }
-      res.json(payroll);
+      safeJsonResponse(res, payroll);
     } catch (error) {
       handleError(res, error, 'Failed to fetch payroll record');
     }
@@ -466,7 +543,7 @@ const createPayrollRoutes = (app: Express) => {
   app.post("/api/payroll", async (req: Request, res: Response) => {
     try {
       const payroll = await (await getStorage()).createPayroll(req.body);
-      res.status(201).json(payroll);
+      safeJsonResponse(res, payroll, 201);
     } catch (error) {
       handleError(res, error, 'Invalid payroll data', 400);
     }
@@ -478,7 +555,7 @@ const createPayrollRoutes = (app: Express) => {
       if (!payroll) {
         return handleNotFound(res, 'Payroll record');
       }
-      res.json(payroll);
+      safeJsonResponse(res, payroll);
     } catch (error) {
       handleError(res, error, 'Failed to update payroll record');
     }
@@ -490,7 +567,7 @@ const createPayrollRoutes = (app: Express) => {
       if (!success) {
         return handleNotFound(res, 'Payroll record');
       }
-      res.json({ success: true });
+      safeJsonResponse(res, { success: true });
     } catch (error) {
       handleError(res, error, 'Failed to delete payroll record');
     }

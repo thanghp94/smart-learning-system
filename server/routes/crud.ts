@@ -2,6 +2,44 @@ import type { Express, Request, Response } from "express";
 import { getStorage } from "../database/config";
 import { handleError, handleNotFound } from "./utils";
 
+// Helper function for manual JSON serialization
+function manualSerialize(obj: any): string {
+  if (obj === null) return 'null';
+  if (typeof obj === 'boolean') return obj.toString();
+  if (typeof obj === 'number') return obj.toString();
+  if (typeof obj === 'string') {
+    return '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '"';
+  }
+  if (obj instanceof Date) {
+    return '"' + obj.toISOString() + '"';
+  }
+  if (Array.isArray(obj)) {
+    const items = obj.map(item => manualSerialize(item));
+    return '[' + items.join(',') + ']';
+  }
+  if (typeof obj === 'object') {
+    const props = Object.keys(obj).map(key => {
+      return '"' + key + '":' + manualSerialize(obj[key]);
+    });
+    return '{' + props.join(',') + '}';
+  }
+  return '"' + String(obj) + '"';
+}
+
+// Safe JSON response helper that bypasses the JSON.stringify bug
+function safeJsonResponse(res: Response, data: any, statusCode: number = 200) {
+  try {
+    // Force manual serialization to bypass JSON.stringify bug completely
+    console.log('Using manual JSON serialization to bypass Node.js bug');
+    const manualJson = manualSerialize(data);
+    res.setHeader('Content-Type', 'application/json');
+    res.status(statusCode).send(manualJson);
+  } catch (error) {
+    console.error('Safe JSON response error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 // Generic CRUD route factory
 export const createCrudRoutes = (
   app: Express,
@@ -23,7 +61,7 @@ export const createCrudRoutes = (
       }
       
       const items = await (storage as any)[methodName]();
-      res.json(items);
+      safeJsonResponse(res, items);
     } catch (error) {
       handleError(res, error, `Failed to fetch ${basePath}`);
     }
@@ -45,7 +83,7 @@ export const createCrudRoutes = (
       if (!item) {
         return handleNotFound(res, entityName);
       }
-      res.json(item);
+      safeJsonResponse(res, item);
     } catch (error) {
       handleError(res, error, `Failed to fetch ${entityName.toLowerCase()}`);
     }
@@ -71,7 +109,7 @@ export const createCrudRoutes = (
       }
       
       const item = await (storage as any)[methodName](data);
-      res.status(201).json(item);
+      safeJsonResponse(res, item, 201);
     } catch (error) {
       handleError(res, error, `Invalid ${entityName.toLowerCase()} data`, 400);
     }
@@ -93,7 +131,7 @@ export const createCrudRoutes = (
       if (!item) {
         return handleNotFound(res, entityName);
       }
-      res.json(item);
+      safeJsonResponse(res, item);
     } catch (error) {
       handleError(res, error, `Failed to update ${entityName.toLowerCase()}`);
     }
@@ -118,7 +156,7 @@ export const createCrudRoutes = (
       if (!success) {
         return handleNotFound(res, entityName);
       }
-      res.json({ success: true });
+      safeJsonResponse(res, { success: true });
     } catch (error) {
       handleError(res, error, `Failed to delete ${entityName.toLowerCase()}`);
     }

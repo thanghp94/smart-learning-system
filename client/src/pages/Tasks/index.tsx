@@ -32,7 +32,7 @@ const Tasks = () => {
     try {
       setIsLoading(true);
       console.log('Fetching tasks...');
-      const data = await taskService.getAll();
+      const data = await taskService.getTasks();
       console.log('Fetched tasks:', data);
       setTasks(data);
     } catch (error) {

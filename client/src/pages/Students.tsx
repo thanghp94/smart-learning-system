@@ -30,12 +30,12 @@ const Students: React.FC<StudentsProps> = ({ add = false, edit = false }) => {
   const fetchStudents = async () => {
     try {
       setIsLoading(true);
-      const data = await studentService.getAll();
+      const data = await studentService.getStudents();
       console.log("Dữ liệu học sinh đã nhận:", data);
       
       if (Array.isArray(data)) {
         // Ensure we have proper Student objects with all required fields
-        const studentsWithRequiredFields = data.map(student => ({
+        const studentsWithRequiredFields = data.map((student: any) => ({
           ...student,
           id: student.id || crypto.randomUUID(),
           ho_va_ten: student.ho_va_ten || student.ten_hoc_sinh || '',

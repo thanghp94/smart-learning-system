@@ -10,7 +10,7 @@ const TasksOverview = () => {
   useEffect(() => {
     const loadTasks = async () => {
       try {
-        const data = await taskService.getAll();
+        const data = await taskService.getTasks();
         setTasks(data.filter(task => task.trang_thai !== 'completed').slice(0, 5));
       } catch (error) {
         console.error('Error loading tasks:', error);

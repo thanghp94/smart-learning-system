@@ -12,9 +12,9 @@ export default function useStudentFilters(data: Student[]) {
   useEffect(() => {
     const fetchFacilities = async () => {
       try {
-        const facilitiesData = await facilityService.getAll();
-        const facilitiesMap = {};
-        facilitiesData.forEach(facility => {
+        const facilitiesData = await facilityService.getFacilities();
+        const facilitiesMap: {[key: string]: string} = {};
+        facilitiesData.forEach((facility: any) => {
           facilitiesMap[facility.id] = facility.ten_co_so;
         });
         setFacilities(facilitiesMap);
@@ -28,7 +28,7 @@ export default function useStudentFilters(data: Student[]) {
 
   // Extract unique status values for filter options
   const statusOptions = useMemo(() => {
-    return [...new Set(data.map(s => s.trang_thai || 'active'))].map(status => ({
+    return Array.from(new Set(data.map(s => s.trang_thai || 'active'))).map(status => ({
       label: status === 'active' ? 'Đang học' : 
              status === 'inactive' ? 'Đã nghỉ' : 
              status === 'pending' ? 'Chờ xử lý' : status,
@@ -39,7 +39,7 @@ export default function useStudentFilters(data: Student[]) {
 
   // Extract unique facility values for filter options
   const facilityOptions = useMemo(() => {
-    const facilityIds = [...new Set(data.map(s => s.co_so_id || '').filter(Boolean))];
+    const facilityIds = Array.from(new Set(data.map(s => s.co_so_id || '').filter(Boolean)));
     return facilityIds.map(id => ({
       label: facilities[id] || id,
       value: id,
@@ -49,7 +49,7 @@ export default function useStudentFilters(data: Student[]) {
 
   // Extract unique tuition status for filter options
   const tuitionStatusOptions = useMemo(() => {
-    return [...new Set(data.map(s => s.trang_thai_hoc_phi || 'unknown').filter(Boolean))].map(status => ({
+    return Array.from(new Set(data.map(s => s.trang_thai_hoc_phi || 'unknown').filter(Boolean))).map(status => ({
       label: status === 'paid' ? 'Đã đóng' : 
              status === 'pending' ? 'Chưa đóng' : 
              status === 'partial' ? 'Đóng một phần' :

@@ -22,7 +22,7 @@ export const useAdmissionData = () => {
     const fetchAdmissions = async () => {
       setIsLoading(true);
       try {
-        const data = await admissionService.getAll();
+        const data = await admissionService.getAdmissions();
         console.log('Fetched admissions:', data);
         setAdmissions(data);
         setFilteredAdmissions(data);
@@ -45,8 +45,8 @@ export const useAdmissionData = () => {
     const fetchData = async () => {
       try {
         const [employeesData, facilitiesData] = await Promise.all([
-          employeeService.getAll(),
-          facilityService.getAll()
+          employeeService.getEmployees(),
+          facilityService.getFacilities()
         ]);
         console.log('Fetched employees:', employeesData?.length || 0);
         console.log('Fetched facilities:', facilitiesData?.length || 0);

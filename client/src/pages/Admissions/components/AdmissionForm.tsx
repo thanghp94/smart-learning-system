@@ -91,7 +91,7 @@ const AdmissionForm = ({ initialData, onSubmit, onCancel }: AdmissionFormProps) 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const data = await employeeService.getAll();
+        const data = await employeeService.getEmployees();
         setEmployees(data || []);
       } catch (error) {
         console.error('Error fetching employees:', error);

@@ -16,7 +16,7 @@ const AdmissionTable = () => {
     const fetchAdmissions = async () => {
       try {
         setIsLoading(true);
-        const data = await admissionService.getAll();
+        const data = await admissionService.getAdmissions();
         setAdmissions(data);
       } catch (error) {
         console.error('Error fetching admissions:', error);

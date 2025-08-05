@@ -41,7 +41,7 @@ const MonthlyAttendanceSummary = () => {
     setIsLoading(true);
     try {
       // Fetch all clock in/out records
-      const allRecords = await employeeClockInService.getAll();
+      const allRecords = await employeeClockInService.getEmployeeClockIns();
       
       if (!allRecords || !Array.isArray(allRecords)) {
         toast({
