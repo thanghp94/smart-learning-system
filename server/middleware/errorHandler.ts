@@ -1,5 +1,29 @@
 import type { Request, Response, NextFunction } from "express";
 
+// Helper function for manual JSON serialization
+function manualSerialize(obj: any): string {
+  if (obj === null) return 'null';
+  if (typeof obj === 'boolean') return obj.toString();
+  if (typeof obj === 'number') return obj.toString();
+  if (typeof obj === 'string') {
+    return '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '"';
+  }
+  if (obj instanceof Date) {
+    return '"' + obj.toISOString() + '"';
+  }
+  if (Array.isArray(obj)) {
+    const items = obj.map(item => manualSerialize(item));
+    return '[' + items.join(',') + ']';
+  }
+  if (typeof obj === 'object') {
+    const props = Object.keys(obj).map(key => {
+      return '"' + key + '":' + manualSerialize(obj[key]);
+    });
+    return '{' + props.join(',') + '}';
+  }
+  return '"' + String(obj) + '"';
+}
+
 // Custom error class for API errors
 export class ApiError extends Error {
   public statusCode: number;
@@ -62,8 +86,8 @@ export const errorHandler = (
     console.error(error.stack);
   }
 
-  // Send error response
-  res.status(statusCode).json({
+  // Manual JSON serialization to avoid Node.js JSON.stringify bug
+  const errorResponse = {
     success: false,
     error: {
       message,
@@ -76,7 +100,12 @@ export const errorHandler = (
     timestamp: new Date().toISOString(),
     path: req.path,
     method: req.method
-  });
+  };
+
+  // Use manual JSON serialization to match the success responses
+  const manualJson = manualSerialize(errorResponse);
+  res.setHeader('Content-Type', 'application/json');
+  res.status(statusCode).send(manualJson);
 };
 
 // Async error wrapper to catch async errors

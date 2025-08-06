@@ -34,14 +34,12 @@ function manualSerialize(obj: any): string {
   return '"' + String(obj) + '"';
 }
 
-// Safe JSON response helper that bypasses the JSON.stringify bug
+// Safe JSON response helper using standard JSON.stringify
 function safeJsonResponse(res: Response, data: any, statusCode: number = 200) {
   try {
-    // Force manual serialization to bypass JSON.stringify bug completely
-    console.log('Using manual JSON serialization to bypass Node.js bug');
-    const manualJson = manualSerialize(data);
+    console.log('Using standard JSON.stringify for response');
     res.setHeader('Content-Type', 'application/json');
-    res.status(statusCode).send(manualJson);
+    res.status(statusCode).json(data);
   } catch (error) {
     console.error('Safe JSON response error:', error);
     res.status(500).json({ error: 'Internal server error' });

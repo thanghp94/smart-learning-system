@@ -88,12 +88,10 @@ export const logger = new Logger();
 // Request logging middleware
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
-  const originalSend = res.send;
 
-  // Override res.send to capture response
-  res.send = function(body) {
+  // Log on response finish instead of intercepting res.send
+  res.on('finish', () => {
     const duration = Date.now() - start;
-    const contentLength = Buffer.byteLength(body || '', 'utf8');
     
     logger.apiRequest(
       req.method,
@@ -103,14 +101,11 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
       {
         userAgent: req.get('User-Agent'),
         ip: req.ip,
-        contentLength,
         query: Object.keys(req.query).length > 0 ? req.query : undefined,
         body: req.method !== 'GET' && req.body ? 'present' : undefined
       }
     );
-
-    return originalSend.call(this, body);
-  };
+  });
 
   next();
 };

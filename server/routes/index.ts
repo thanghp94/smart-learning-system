@@ -6,7 +6,7 @@ import { registerAdminRoutes } from "./admin";
 import { registerAIRoutes } from "./ai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Register domain-specific routes
+  // Register domain-specific routes - back to original working system
   registerEducationRoutes(app);
   registerHRRoutes(app);
   registerAdminRoutes(app);

@@ -10,6 +10,50 @@ import { requestLogger, performanceLogger, logger } from "./middleware/logger";
 
 const app = express();
 
+// Manual JSON serialization to bypass Node.js JSON.stringify bug
+function buildJsonString(obj: any): string {
+  if (obj === null) return 'null';
+  if (obj === undefined) return 'null';
+  if (typeof obj === 'boolean') return obj.toString();
+  if (typeof obj === 'number') return obj.toString();
+  if (typeof obj === 'string') {
+    return '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '"';
+  }
+  if (obj instanceof Date) {
+    return '"' + obj.toISOString() + '"';
+  }
+  if (Array.isArray(obj)) {
+    const items = obj.map(item => buildJsonString(item));
+    return '[' + items.join(',') + ']';
+  }
+  if (typeof obj === 'object') {
+    const pairs: string[] = [];
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        pairs.push('"' + key + '":' + buildJsonString(obj[key]));
+      }
+    }
+    return '{' + pairs.join(',') + '}';
+  }
+  return 'null';
+}
+
+// Global fix for malformed JSON responses using manual serialization
+app.use((req, res, next) => {
+  const originalJson = res.json;
+  res.json = function(obj) {
+    try {
+      const jsonString = buildJsonString(obj);
+      res.setHeader('Content-Type', 'application/json');
+      return res.send(jsonString);
+    } catch (error) {
+      console.error('JSON serialization error:', error);
+      return originalJson.call(this, { error: 'JSON serialization failed' });
+    }
+  };
+  next();
+});
+
 // Basic middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));

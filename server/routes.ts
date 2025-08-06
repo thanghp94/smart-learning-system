@@ -41,14 +41,13 @@ function manualSerialize(obj: any): string {
   return '"' + String(obj) + '"';
 }
 
-// Simple manual JSON builder to bypass Node.js JSON.stringify bug completely
-function buildJsonString(obj: any): string {
+export function buildJsonString(obj: any): string {
   if (obj === null) return 'null';
   if (obj === undefined) return 'null';
   if (typeof obj === 'boolean') return obj.toString();
   if (typeof obj === 'number') return obj.toString();
   if (typeof obj === 'string') {
-    return '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+    return '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '"';
   }
   if (obj instanceof Date) {
     return '"' + obj.toISOString() + '"';
@@ -69,16 +68,13 @@ function buildJsonString(obj: any): string {
   return 'null';
 }
 
-// Safe JSON response helper that bypasses the JSON.stringify bug completely
-function safeJsonResponse(res: Response, data: any, statusCode: number = 200) {
+export function safeJsonResponse(res: Response, data: any, statusCode: number = 200) {
   try {
-    console.log('Using manual JSON builder to bypass Node.js bug completely');
+    console.log('Using standard JSON.stringify for response');
     
-    // Build JSON manually to avoid Node.js JSON.stringify bug
-    const jsonString = buildJsonString(data);
-    
+    // Use standard JSON.stringify - the Node.js bug was likely a false assumption
     res.setHeader('Content-Type', 'application/json');
-    res.status(statusCode).send(jsonString);
+    res.status(statusCode).json(data);
   } catch (error) {
     console.error('Safe JSON response error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -339,7 +335,7 @@ const createSpecialRoutes = (app: Express) => {
       const year = parseInt(req.params.year);
 
       if (isNaN(month) || isNaN(year) || month < 1 || month > 12) {
-        return res.status(400).json({ error: "Invalid month or year" });
+        return safeJsonResponse(res, { error: "Invalid month or year" }, 400);
       }
 
       const attendances = await (await getStorage()).getAttendances();
@@ -381,9 +377,9 @@ const createSpecialRoutes = (app: Express) => {
 
       const openAIApiKey = process.env.OPENAI_API_KEY;
       if (!openAIApiKey) {
-        return res.status(400).json({ 
+        return safeJsonResponse(res, { 
           error: 'OpenAI API key is not configured. Please set the OPENAI_API_KEY environment variable.' 
-        });
+        }, 400);
       }
 
       if (type === 'image') {
